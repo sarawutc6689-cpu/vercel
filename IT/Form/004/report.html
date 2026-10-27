@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ระบบขอยืมอุปกรณ์สารสนเทศ | องค์กรสุภาพ</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Sarabun', 'Angsana New', 'Cordia New', 'IBM Plex Sans Thai', 'Noto Sans Thai', sans-serif;
+  background: #F0F4FA;
+  color: #1E2F45;
+  line-height: 1.5;
+  font-size: 15px;
+}
+
+.app-container {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar {
+  width: 280px;
+  background: #FFFFFF;
+  border-right: 1px solid #E4ECF5;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 100;
+  transition: all 0.25s ease;
+  box-shadow: 0 0 20px rgba(0, 28, 48, 0.02);
+}
+
+.sidebar-header {
+  padding: 28px 24px 20px;
+  border-bottom: 1px solid #EFF3FA;
+  margin-bottom: 16px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-text h2 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #0C2F4C;
+  letter-spacing: -0.2px;
+}
+
+.brand-text p {
+  font-size: 11px;
+  color: #6A88A6;
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+.nav-menu {
+  flex: 1;
+  padding: 0 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 18px;
+  border-radius: 16px;
+  font-size: 15px;
+  font-weight: 500;
+  background: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #3C607F;
+}
+
+.nav-item .nav-icon {
+  font-size: 20px;
+  width: 28px;
+  color: #7192B4;
+  transition: 0.2s;
+}
+
+.nav-item.active {
+  background: #EFF6FF;
+  color: #1D6CAE;
+}
+
+.nav-item.active .nav-icon {
+  color: #1D6CAE;
+}
+
+.nav-item:hover:not(.active) {
+  background: #F6F9FE;
+  color: #1F5780;
+}
+
+.sidebar-footer {
+  padding: 20px 24px 28px;
+  border-top: 1px solid #ECF2F9;
+  margin-top: auto;
+}
+
+.info-card {
+  background: #F8FBFE;
+  border-radius: 20px;
+  padding: 14px 18px;
+  text-align: left;
+}
+
+.info-card .label {
+  font-size: 10px;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: #7A97B5;
+  letter-spacing: 0.5px;
+}
+
+.info-card .name {
+  font-weight: 700;
+  font-size: 15px;
+  color: #1A4568;
+  margin: 6px 0 2px;
+}
+
+.main-content {
+  margin-left: 280px;
+  flex: 1;
+  padding: 28px 36px;
+  width: calc(100% - 280px);
+}
+
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+}
+
+.page-title h1 {
+  font-size: 26px;
+  font-weight: 700;
+  color: #0E3250;
+  letter-spacing: -0.3px;
+}
+
+.page-title p {
+  font-size: 14px;
+  color: #6082A8;
+  margin-top: 4px;
+}
+
+.hero-card {
+  background: linear-gradient(115deg, #FFFFFF 0%, #F6FAFF 100%);
+  border-radius: 32px;
+  padding: 24px 32px;
+  margin-bottom: 28px;
+  border: 1px solid #E9F0F8;
+  box-shadow: 0 6px 14px rgba(0, 28, 48, 0.02);
+}
+
+.hero-card h2 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1A4A6F;
+  margin-bottom: 6px;
+}
+
+.hero-card p {
+  color: #5C7F9E;
+  font-size: 14px;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  margin-bottom: 28px;
+}
+
+.summary-card {
+  background: white;
+  border-radius: 28px;
+  padding: 18px 20px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.02);
+  border: 1px solid #E9F0F8;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: all 0.2s;
+}
+
+.summary-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 22px -8px rgba(27, 73, 104, 0.12);
+  border-color: #DAE6F2;
+}
+
+.summary-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.summary-icon.blue-light { background: #EAF3FE; color: #267BB0; }
+.summary-icon.amber-light { background: #FFF3E6; color: #CD8B32; }
+.summary-icon.green-light { background: #EAF9EE; color: #2A7A47; }
+.summary-icon.red-light { background: #FEF0F0; color: #C55A5A; }
+
+.summary-info .number {
+  font-size: 30px;
+  font-weight: 800;
+  color: #103A5A;
+  line-height: 1.2;
+}
+
+.summary-info .label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6A8DAD;
+  letter-spacing: 0.3px;
+  margin-top: 4px;
+}
+
+.filter-panel {
+  background: white;
+  border-radius: 28px;
+  border: 1px solid #E9F0F8;
+  padding: 20px 24px;
+  margin-bottom: 22px;
+}
+
+.filter-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1D5985;
+  margin-bottom: 14px;
+  letter-spacing: 0.4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.filter-group label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #6F8EAE;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+input, select {
+  border: 1.5px solid #E2ECF5;
+  border-radius: 20px;
+  padding: 10px 14px;
+  font-family: 'Sarabun', 'Angsana New', 'Cordia New', sans-serif;
+  font-size: 14px;
+  background: white;
+  transition: 0.2s;
+  outline: none;
+  color: #1C405E;
+}
+
+input:focus, select:focus {
+  border-color: #86B3D9;
+  box-shadow: 0 0 0 3px rgba(38, 112, 163, 0.08);
+}
+
+.filter-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.btn {
+  padding: 8px 22px;
+  border-radius: 40px;
+  font-family: 'Sarabun', 'Angsana New', 'Cordia New', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-outline {
+  background: white;
+  border: 1.5px solid #D5E2EF;
+  color: #4E7395;
+}
+
+.btn-outline:hover {
+  background: #F8FCFE;
+  border-color: #A9C3DD;
+}
+
+.btn-primary {
+  background: #1D6CAE;
+  color: white;
+  box-shadow: 0 2px 6px rgba(27, 90, 135, 0.16);
+}
+
+.btn-primary:hover {
+  background: #135A93;
+  transform: translateY(-1px);
+}
+
+.btn-export {
+  background: #328F5A;
+  color: white;
+}
+
+.btn-export:hover {
+  background: #247A49;
+}
+
+.tab-bar {
+  display: flex;
+  gap: 8px;
+  background: white;
+  border-radius: 60px;
+  padding: 6px;
+  margin-bottom: 22px;
+  border: 1px solid #E9F0F8;
+  width: fit-content;
+}
+
+.tab-btn {
+  padding: 8px 22px;
+  border-radius: 50px;
+  border: none;
+  background: transparent;
+  font-family: 'Sarabun', 'Angsana New', 'Cordia New', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: #6F8DAB;
+  cursor: pointer;
+  transition: 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tab-btn.active {
+  background: #1D6CAE;
+  color: white;
+  box-shadow: 0 3px 8px rgba(29, 108, 174, 0.18);
+}
+
+.tab-count {
+  background: rgba(0,0,0,0.08);
+  border-radius: 40px;
+  padding: 2px 8px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.tab-btn.active .tab-count {
+  background: rgba(255,255,255,0.2);
+  color: white;
+}
+
+.table-card {
+  background: white;
+  border-radius: 28px;
+  border: 1px solid #ECF3FA;
+  overflow: hidden;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.02);
+}
+
+.table-header {
+  padding: 16px 22px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1.5px solid #F0F5FC;
+  font-size: 13px;
+  color: #6F8DAB;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+thead tr {
+  background: #F9FCFE;
+  border-bottom: 1.5px solid #ECF3FA;
+}
+
+thead th {
+  padding: 14px 16px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 700;
+  color: #6181A3;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+tbody tr {
+  border-bottom: 1px solid #F0F6FD;
+  transition: background 0.15s;
+}
+
+tbody tr:hover {
+  background: #F9FDFF;
+}
+
+td {
+  padding: 14px 16px;
+  vertical-align: middle;
+  color: #1F4464;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 40px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.badge-active {
+  background: #FFF1E0;
+  color: #C47D2E;
+  border: 1px solid #FFE2BB;
+}
+
+.badge-returned {
+  background: #E1F7EA;
+  color: #2A7A47;
+  border: 1px solid #BDE5CD;
+}
+
+.badge-damaged {
+  background: #FEEFEF;
+  color: #C25B5B;
+  border: 1px solid #FCD7D7;
+}
+
+.badge-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.request-no {
+  font-weight: 700;
+  color: #256E9E;
+  font-size: 13px;
+}
+
+.btn-return-sm {
+  background: #FFFAF0;
+  border: 1px solid #F7DEB4;
+  padding: 5px 14px;
+  border-radius: 30px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #B7762E;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-return-sm:hover {
+  background: #FEF3E2;
+  transform: scale(0.98);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 52px 20px;
+  color: #8AACCB;
+  font-size: 14px;
+}
+
+.loading-state {
+  text-align: center;
+  padding: 48px;
+}
+
+.loading-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid #E1ECF7;
+  border-top-color: #2F7DB0;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  margin: 0 auto 12px;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 22px;
+  border-top: 1.5px solid #F0F5FC;
+  font-size: 13px;
+  color: #6082A5;
+}
+
+.page-btns {
+  display: flex;
+  gap: 6px;
+}
+
+.page-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  border: 1.5px solid #E1EAF3;
+  background: white;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  color: #507193;
+  transition: all 0.15s;
+}
+
+.page-btn.active {
+  background: #1D6CAE;
+  border-color: #1D6CAE;
+  color: white;
+}
+
+.page-btn:hover:not(.active):not(:disabled) {
+  border-color: #8EB3D5;
+  color: #135A93;
+}
+
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 45, 70, 0.4);
+  backdrop-filter: blur(3px);
+  z-index: 200;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modal-overlay.show {
+  display: flex;
+  animation: fadeIn 0.2s;
+}
+
+.modal {
+  background: white;
+  border-radius: 28px;
+  max-width: 460px;
+  width: 100%;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.2);
+  animation: slideUp 0.25s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+}
+
+.modal-header {
+  background: #F9FCFE;
+  padding: 14px 20px;
+  border-bottom: 1px solid #EDF4FC;
+  flex-shrink: 0;
+}
+
+.modal-header h3 {
+  font-size: 16px;
+  color: #134A70;
+  font-weight: 700;
+}
+
+.modal-body {
+  padding: 16px 20px;
+  overflow-y: auto;
+}
+
+.modal-info {
+  background: #F7FBFE;
+  border-radius: 18px;
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  font-size: 13px;
+}
+
+.modal-info-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.modal-info-label {
+  width: 85px;
+  font-weight: 700;
+  color: #6A8AAD;
+}
+
+.modal-info-value {
+  font-weight: 500;
+  color: #1F4D72;
+}
+
+.field-group {
+  margin-bottom: 12px;
+}
+
+.field-group label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: #6C8FB0;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+
+.field-group input {
+  width: 100%;
+  border-radius: 18px;
+  padding: 9px 14px;
+  font-size: 14px;
+}
+
+.field-row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.condition-radio-group {
+  display: flex;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.cond-option {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 40px;
+  border: 1.5px solid #E1EAF3;
+  background: white;
+  cursor: pointer;
+  transition: 0.2s;
+  font-weight: 600;
+  font-size: 13px;
+  color: #4F7396;
+}
+
+.cond-option.active-normal {
+  background: #E6F6EC;
+  border-color: #328F5A;
+  color: #247A49;
+}
+
+.cond-option.active-damaged {
+  background: #FEF0F0;
+  border-color: #D46B6B;
+  color: #B94B4B;
+}
+
+.pin-field-group {
+  background: #FFF8ED;
+  border: 1.5px solid #F5DFAF;
+  border-radius: 18px;
+  padding: 10px 14px 12px;
+  margin-bottom: 4px;
+}
+
+.pin-field-group label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #9A6E1F;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+
+.pin-field-group input {
+  width: 100%;
+  border-radius: 16px;
+  padding: 9px 14px;
+  font-size: 15px;
+  letter-spacing: 4px;
+  border: 1.5px solid #EBD6A2;
+}
+
+.pin-error {
+  display: none;
+  color: #C25B5B;
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 8px;
+}
+
+.pin-error.show {
+  display: block;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 12px 20px;
+  border-top: 1px solid #F0F5FC;
+  flex-shrink: 0;
+}
+
+.btn-modal {
+  padding: 9px 22px;
+  border-radius: 40px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+.btn-modal-cancel {
+  background: #F0F5FC;
+  color: #4C6F91;
+}
+
+.btn-modal-save {
+  background: #1D6CAE;
+  color: white;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-modal-save:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.toast {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: #103A5A;
+  color: white;
+  padding: 12px 26px;
+  border-radius: 100px;
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 1000;
+  transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.toast.show {
+  transform: translateX(-50%) translateY(0);
+}
+
+@media (max-width: 900px) {
+  .summary-grid { grid-template-columns: repeat(2,1fr); gap: 14px; }
+  .filter-grid { grid-template-columns: repeat(2,1fr); }
+}
+
+@media (max-width: 768px) {
+  .sidebar { transform: translateX(-100%); }
+  .sidebar.mobile-open { transform: translateX(0); }
+  .main-content { margin-left: 0; width: 100%; padding: 20px; }
+  .filter-grid { grid-template-columns: 1fr; }
+  .top-bar { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .menu-toggle-btn {
+    display: block;
+    background: white;
+    border: 1px solid #DCE7F0;
+    border-radius: 30px;
+    padding: 8px 14px;
+    margin-right: 12px;
+  }
+}
+
+.menu-toggle-btn {
+  display: none;
+}
+
+@media (max-width: 480px) {
+  .modal-overlay { padding: 10px; }
+  .modal { max-height: 94vh; border-radius: 22px; }
+  .field-row-2 { grid-template-columns: 1fr; gap: 0; }
+}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  // Supabase project credentials (project: hr-master)
+  // Project Settings → API → Project URL / anon public key
+  // ⚠️ ต้องเป็น URL/anon key ชุดเดียวกับที่ index.html ใช้งานได้แล้ว
+  const SUPABASE_URL = 'https://fnbkcgkuykdabbensvif.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZuYmtjZ2t1eWtkYWJiZW5zdmlmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkzMDE0MTQsImV4cCI6MjEwNDg3NzQxNH0.L6x3nqAy2rqcxdtzyTs4MHLPubtBqD3Tnk9e97EfEJE';
+</script>
+</head>
+<body>
+<div class="app-container">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="brand">
+        <div class="brand-text">
+          <h2>แบบฟอร์มขอยืมอุปกรณ์</h2>
+          <p>ระบบยืม-คืนอุปกรณ์</p>
+        </div>
+      </div>
+    </div>
+    <div class="nav-menu">
+      <button class="nav-item" id="navFormBtn">
+        <span class="nav-icon">📋</span>
+        <span>แบบฟอร์มขอยืม</span>
+      </button>
+      <button class="nav-item active" id="navReportBtn">
+        <span class="nav-icon">📊</span>
+        <span>รายงานการยืม</span>
+      </button>
+    </div>
+    <div class="sidebar-footer">
+      <div class="info-card">
+         <div class="label">ระบบการจัดการแบบฟอร์ม</div>
+        <div class="name">พัฒนาโดย Sarawut.C</div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main-content">
+    <div class="top-bar">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <button class="menu-toggle-btn" id="menuToggleBtn">☰</button>
+        <div class="page-title">
+          <h1>รายงานการยืมอุปกรณ์</h1>
+          <p>IT Equipment Borrowing Report</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-card">
+      <h2>📋 สรุปสถานะการยืม-คืน</h2>
+      <p>ตรวจสอบประวัติการขอยืมอุปกรณ์สารสนเทศ และดำเนินการรับคืน</p>
+    </div>
+
+    <div class="summary-grid">
+      <div class="summary-card"><div class="summary-icon blue-light">📦</div><div class="summary-info"><div class="number" id="sumAll">0</div><div class="label">รายการทั้งหมด</div></div></div>
+      <div class="summary-card"><div class="summary-icon amber-light">⏳</div><div class="summary-info"><div class="number" id="sumActive">0</div><div class="label">กำลังยืม</div></div></div>
+      <div class="summary-card"><div class="summary-icon green-light">✅</div><div class="summary-info"><div class="number" id="sumReturned">0</div><div class="label">ส่งคืนแล้ว</div></div></div>
+      <div class="summary-card"><div class="summary-icon red-light">⚠️</div><div class="summary-info"><div class="number" id="sumDamaged">0</div><div class="label">อุปกรณ์ชำรุด</div></div></div>
+    </div>
+
+    <div class="filter-panel">
+      <div class="filter-title">🔍 ตัวกรองข้อมูล</div>
+      <div class="filter-grid">
+        <div class="filter-group"><label>วันที่ยืม (เริ่ม)</label><input type="date" id="fDateFrom" /></div>
+        <div class="filter-group"><label>วันที่ยืม (ถึง)</label><input type="date" id="fDateTo" /></div>
+        <div class="filter-group"><label>พนักงาน (รหัส/ชื่อ)</label><input type="text" id="fEmployee" placeholder="ค้นหา..." /></div>
+        <div class="filter-group"><label>แผนก / ฝ่าย</label><input type="text" id="fDept" placeholder="แผนก..." /></div>
+        <div class="filter-group"><label>อุปกรณ์</label><input type="text" id="fEquip" placeholder="ชื่ออุปกรณ์..." /></div>
+      </div>
+      <div class="filter-actions">
+        <button class="btn btn-outline" onclick="clearFilters()">⟳ รีเซ็ต</button>
+        <button class="btn btn-export" onclick="exportCSV()">📎 Export CSV</button>
+        <button class="btn btn-primary" onclick="applyFilters()">🔎 ค้นหา</button>
+      </div>
+    </div>
+
+    <div class="tab-bar">
+      <button class="tab-btn active" id="tabAll" onclick="setTab('all')">ทั้งหมด <span class="tab-count" id="tcAll">0</span></button>
+      <button class="tab-btn" id="tabActive" onclick="setTab('active')">กำลังยืม <span class="tab-count" id="tcActive">0</span></button>
+      <button class="tab-btn" id="tabReturned" onclick="setTab('returned')">ส่งคืนแล้ว <span class="tab-count" id="tcReturned">0</span></button>
+      <button class="tab-btn" id="tabDamaged" onclick="setTab('damaged')">ชำรุด <span class="tab-count" id="tcDamaged">0</span></button>
+    </div>
+
+    <div class="table-card">
+      <div class="table-header"><span>แสดง <strong id="rowCount">0</strong> รายการ</span><span id="updateTime"></span></div>
+      <div id="tableContainer"><div class="loading-state"><div class="loading-spinner"></div><p>กำลังโหลดข้อมูล...</p></div></div>
+      <div class="pagination" id="paginationSection" style="display: none;"><div id="pageInfo"></div><div class="page-btns" id="paginationBtns"></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="returnModal">
+  <div class="modal">
+    <div class="modal-header"><h3>↩️ บันทึกการรับคืน</h3></div>
+    <div class="modal-body">
+      <div class="modal-info"><div class="modal-info-row"><span class="modal-info-label">เลขที่คำขอ</span><span class="modal-info-value" id="modalReqNo">-</span></div><div class="modal-info-row"><span class="modal-info-label">ผู้ยืม</span><span class="modal-info-value" id="modalBorrower">-</span></div><div class="modal-info-row"><span class="modal-info-label">อุปกรณ์</span><span class="modal-info-value" id="modalEquip">-</span></div><div class="modal-info-row"><span class="modal-info-label">วันที่ยืม</span><span class="modal-info-value" id="modalBorrowDate">-</span></div></div>
+      <div class="field-row-2">
+        <div class="field-group"><label>ผู้ส่งคืน <span style="color:#cf5c5c;">*</span></label><input type="text" id="returnSignature" placeholder="ชื่อ-นามสกุล"></div>
+        <div class="field-group"><label>วันที่ส่งคืน <span style="color:#cf5c5c;">*</span></label><input type="date" id="returnDateInput"></div>
+      </div>
+      <div class="field-group"><label>สภาพอุปกรณ์</label><div class="condition-radio-group"><div class="cond-option" id="condNormalOpt" onclick="selectCondition('ปกติ')">✅ ปกติ</div><div class="cond-option" id="condDamagedOpt" onclick="selectCondition('ชำรุด')">⚠️ ชำรุด</div></div></div>
+      <div class="field-row-2">
+        <div class="field-group"><label>เจ้าหน้าที่</label><input type="text" id="officerSignature" placeholder="ชื่อ-นามสกุล"></div>
+        <div class="field-group"><label>วันที่ตรวจสอบ</label><input type="date" id="officerDateInput"></div>
+      </div>
+      <div class="pin-field-group">
+        <label>🔒 รหัส PIN ยืนยันเจ้าหน้าที่ IT <span style="color:#cf5c5c;">*</span></label>
+        <input type="password" id="officerPin" placeholder="กรอกรหัส PIN" maxlength="12" inputmode="numeric">
+        <div class="pin-error" id="pinError">รหัส PIN ไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง</div>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn-modal btn-modal-cancel" onclick="closeModal()">ยกเลิก</button><button class="btn-modal btn-modal-save" id="saveReturnBtn" onclick="confirmReturn()">💾 บันทึกการคืน</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toastMsg"></div>
+
+<script>
+  // ⚠️ ตั้งค่ารหัส PIN ยืนยันสำหรับเจ้าหน้าที่ IT ที่มีสิทธิ์บันทึกการรับคืนอุปกรณ์
+  // เปลี่ยนค่านี้เป็นรหัสที่ต้องการ แล้วแจ้งเฉพาะเจ้าหน้าที่ IT เท่านั้น
+  const OFFICER_RETURN_PIN = 'mm169Moo4';
+
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  let fullData = [], filteredMaster = [], currentTabData = [];
+  let currentTab = 'all', currentPage = 1, rowsPerPage = 12;
+  let selectedCondition = '', currentReturnRecord = null;
+
+  document.getElementById('returnDateInput').valueAsDate = new Date();
+  window.onload = () => { loadReports(); };
+
+  function mapRow(r) {
+    return {
+      requestNo: r.request_no,
+      employeeCode: r.employee_code,
+      borrowerName: r.borrower_name,
+      department: r.department,
+      section: r.section,
+      position: r.position,
+      equipment: r.equipment,
+      quantity: r.quantity,
+      purpose: r.purpose,
+      borrowDate: r.borrow_date,
+      borrowSignature: r.borrow_signature,
+      returnDate: r.return_date,
+      returnSignature: r.return_signature,
+      condition: r.condition,
+      officerSignature: r.officer_signature,
+      officerDate: r.officer_date
+    };
+  }
+
+  async function loadReports() {
+    showTableLoading();
+    const { data, error } = await sb
+      .from('equipment_borrow_records')
+      .select('*')
+      .order('id', { ascending: false });
+    if (error) {
+      document.getElementById('tableContainer').innerHTML = '<div class="empty-state">❌ โหลดข้อมูลไม่สำเร็จ</div>';
+      return;
+    }
+    onReceiveData((data || []).map(mapRow));
+  }
+
+  function onReceiveData(data) {
+    fullData = data || [];
+    updateSummaryCards();
+    applyFilters();
+    document.getElementById('updateTime').innerText = 'อัปเดต: ' + new Date().toLocaleTimeString('th-TH');
+  }
+
+  function updateSummaryCards() {
+    document.getElementById('sumAll').innerText = fullData.length;
+    document.getElementById('sumActive').innerText = fullData.filter(r => !r.returnDate).length;
+    document.getElementById('sumReturned').innerText = fullData.filter(r => r.returnDate).length;
+    document.getElementById('sumDamaged').innerText = fullData.filter(r => r.condition === 'ชำรุด').length;
+  }
+
+  function applyFilters() {
+    const from = document.getElementById('fDateFrom').value, to = document.getElementById('fDateTo').value;
+    const emp = document.getElementById('fEmployee').value.trim().toLowerCase();
+    const dept = document.getElementById('fDept').value.trim().toLowerCase();
+    const equip = document.getElementById('fEquip').value.trim().toLowerCase();
+    filteredMaster = fullData.filter(r => {
+      if (from && r.borrowDate < from) return false;
+      if (to && r.borrowDate > to) return false;
+      if (emp && !(r.employeeCode||'').toLowerCase().includes(emp) && !(r.borrowerName||'').toLowerCase().includes(emp)) return false;
+      if (dept && !(r.department||'').toLowerCase().includes(dept) && !(r.section||'').toLowerCase().includes(dept)) return false;
+      if (equip && !(r.equipment||'').toLowerCase().includes(equip)) return false;
+      return true;
+    });
+    setTab(currentTab, true);
+  }
+
+  function clearFilters() {
+    document.getElementById('fEmployee').value = ''; document.getElementById('fDept').value = ''; document.getElementById('fEquip').value = '';
+    document.getElementById('fDateFrom').value = ''; document.getElementById('fDateTo').value = '';
+    filteredMaster = [...fullData];
+    setTab(currentTab, true);
+  }
+
+  function setTab(tab, resetPage = true) {
+    currentTab = tab;
+    if (resetPage) currentPage = 1;
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    if (tab === 'all') document.getElementById('tabAll').classList.add('active');
+    if (tab === 'active') document.getElementById('tabActive').classList.add('active');
+    if (tab === 'returned') document.getElementById('tabReturned').classList.add('active');
+    if (tab === 'damaged') document.getElementById('tabDamaged').classList.add('active');
+    if (tab === 'all') currentTabData = [...filteredMaster];
+    else if (tab === 'active') currentTabData = filteredMaster.filter(r => !r.returnDate);
+    else if (tab === 'returned') currentTabData = filteredMaster.filter(r => r.returnDate);
+    else currentTabData = filteredMaster.filter(r => r.condition === 'ชำรุด');
+    document.getElementById('tcAll').innerText = filteredMaster.length;
+    document.getElementById('tcActive').innerText = filteredMaster.filter(r => !r.returnDate).length;
+    document.getElementById('tcReturned').innerText = filteredMaster.filter(r => r.returnDate).length;
+    document.getElementById('tcDamaged').innerText = filteredMaster.filter(r => r.condition === 'ชำรุด').length;
+    renderTable();
+  }
+
+  function renderTable() {
+    const totalRows = currentTabData.length;
+    document.getElementById('rowCount').innerText = totalRows;
+    if (totalRows === 0) { document.getElementById('tableContainer').innerHTML = '<div class="empty-state">📭 ไม่พบข้อมูลตามเงื่อนไข</div>'; document.getElementById('paginationSection').style.display = 'none'; return; }
+    const totalPages = Math.ceil(totalRows / rowsPerPage);
+    const start = (currentPage - 1) * rowsPerPage;
+    const pageRows = currentTabData.slice(start, start + rowsPerPage);
+    let html = `<div class="table-wrap"><table><thead><tr><th>#</th><th>เลขที่คำขอ</th><th>รหัสพนักงาน</th><th>ชื่อผู้ยืม</th><th>แผนก/ฝ่าย</th><th>อุปกรณ์</th><th>จำนวน</th><th>วันที่ยืม</th><th>วันที่คืน</th><th>สภาพ</th><th>สถานะ</th><th>จัดการ</th></tr></thead><tbody>`;
+    pageRows.forEach((r, idx) => {
+      const isActive = !r.returnDate;
+      const statusClass = isActive ? 'badge-active' : 'badge-returned';
+      const statusText = isActive ? 'กำลังยืม' : 'คืนแล้ว';
+      const condText = r.condition === 'ชำรุด' ? '<span class="badge badge-damaged">⚠️ ชำรุด</span>' : (r.returnDate ? '<span class="badge badge-returned">✅ ปกติ</span>' : '<span class="badge-dot" style="background:#B1C9E3;"></span> —');
+      html += `<tr><td>${start+idx+1}</td><td><span class="request-no">${r.requestNo||'-'}</span></td><td>${r.employeeCode||'-'}</td><td style="font-weight:600;">${r.borrowerName||'-'}</td><td style="font-size:13px;">${r.section||''} ${r.department?'('+r.department+')':''}</td><td><strong>${r.equipment||'-'}</strong><div style="font-size:11px;color:#7D9DC0;">${r.purpose ? (r.purpose.length>38?r.purpose.slice(0,38)+'…':r.purpose) : ''}</div></td><td style="text-align:center;">${r.quantity||1}</td><td>${formatDate(r.borrowDate)}</td><td>${r.returnDate ? formatDate(r.returnDate) : '<span style="color:#A1BFD9;">—</span>'}</td><td>${condText}</td><td><span class="badge ${statusClass}"><span class="badge-dot"></span>${statusText}</span></td><td>${isActive ? `<button class="btn-return-sm" onclick='openReturnModal("${r.requestNo}")'>↩️ บันทึกคืน</button>` : '<span style="color:#9DB8D3;">—</span>'}</td></tr>`;
+    });
+    html += `</tbody></table></div>`;
+    document.getElementById('tableContainer').innerHTML = html;
+    if (totalPages > 1) {
+      document.getElementById('paginationSection').style.display = 'flex';
+      document.getElementById('pageInfo').innerHTML = `หน้า ${currentPage} / ${totalPages} (${totalRows} รายการ)`;
+      let btns = '';
+      for (let i = 1; i <= totalPages; i++) btns += `<button class="page-btn ${i===currentPage?'active':''}" onclick="goPage(${i})">${i}</button>`;
+      document.getElementById('paginationBtns').innerHTML = btns;
+    } else document.getElementById('paginationSection').style.display = 'none';
+  }
+
+  function goPage(p) { currentPage = p; renderTable(); }
+  function formatDate(str) { if(!str) return '-'; const parts = str.split('-'); return parts.length===3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : str; }
+  function showTableLoading() { document.getElementById('tableContainer').innerHTML = '<div class="loading-state"><div class="loading-spinner"></div><p>กำลังโหลดข้อมูล...</p></div>'; }
+
+  function openReturnModal(reqNo) {
+    const record = fullData.find(r => r.requestNo === reqNo);
+    if (!record) return;
+    currentReturnRecord = record;
+    document.getElementById('modalReqNo').innerText = record.requestNo || '-';
+    document.getElementById('modalBorrower').innerText = record.borrowerName || '-';
+    document.getElementById('modalEquip').innerText = `${record.equipment} (x${record.quantity})`;
+    document.getElementById('modalBorrowDate').innerText = formatDate(record.borrowDate);
+    document.getElementById('returnSignature').value = record.borrowerName || '';
+    document.getElementById('returnDateInput').valueAsDate = new Date();
+    document.getElementById('officerSignature').value = '';
+    document.getElementById('officerDateInput').value = '';
+    document.getElementById('officerPin').value = '';
+    document.getElementById('pinError').classList.remove('show');
+    selectedCondition = '';
+    document.getElementById('condNormalOpt').classList.remove('active-normal');
+    document.getElementById('condDamagedOpt').classList.remove('active-damaged');
+    document.getElementById('returnModal').classList.add('show');
+  }
+
+  function selectCondition(cond) {
+    selectedCondition = cond;
+    document.getElementById('condNormalOpt').classList.toggle('active-normal', cond === 'ปกติ');
+    document.getElementById('condDamagedOpt').classList.toggle('active-damaged', cond === 'ชำรุด');
+  }
+
+  function confirmReturn() {
+    const signature = document.getElementById('returnSignature').value.trim();
+    const retDate = document.getElementById('returnDateInput').value;
+    const officerSig = document.getElementById('officerSignature').value.trim();
+    const officerDate = document.getElementById('officerDateInput').value;
+    const enteredPin = document.getElementById('officerPin').value.trim();
+    const pinErrorEl = document.getElementById('pinError');
+    if (!signature) { alert('กรุณากรอกลายมือชื่อผู้ส่งคืน'); return; }
+    if (!retDate) { alert('กรุณาเลือกวันที่ส่งคืน'); return; }
+    if (!selectedCondition) { alert('กรุณาเลือกสภาพอุปกรณ์'); return; }
+    if (!enteredPin) { pinErrorEl.innerText = 'กรุณากรอกรหัส PIN ยืนยัน'; pinErrorEl.classList.add('show'); return; }
+    if (enteredPin !== OFFICER_RETURN_PIN) {
+      pinErrorEl.innerText = 'รหัส PIN ไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง';
+      pinErrorEl.classList.add('show');
+      document.getElementById('officerPin').value = '';
+      document.getElementById('officerPin').focus();
+      return;
+    }
+    pinErrorEl.classList.remove('show');
+    if (!currentReturnRecord) return;
+    const saveBtn = document.getElementById('saveReturnBtn');
+    saveBtn.disabled = true; saveBtn.innerText = '⏳ กำลังบันทึก...';
+    (async () => {
+      const { error } = await sb
+        .from('equipment_borrow_records')
+        .update({
+          return_signature: signature,
+          return_date: retDate,
+          condition: selectedCondition,
+          officer_signature: officerSig || null,
+          officer_date: officerDate || null
+        })
+        .eq('request_no', currentReturnRecord.requestNo);
+      saveBtn.disabled = false; saveBtn.innerText = '💾 บันทึกการคืน';
+      if (!error) { closeModal(); showToast('✅ บันทึกการคืนสำเร็จ'); loadReports(); }
+      else alert('บันทึกไม่สำเร็จ: ' + error.message);
+    })();
+  }
+
+  function closeModal() { document.getElementById('returnModal').classList.remove('show'); currentReturnRecord = null; }
+  function exportCSV() { if(!currentTabData.length){ alert('ไม่มีข้อมูล'); return; } const headers = ['เลขที่คำขอ','รหัสพนักงาน','ชื่อผู้ยืม','แผนก','ฝ่าย','อุปกรณ์','จำนวน','วัตถุประสงค์','วันที่ยืม','ผู้ยืม','วันที่คืน','ผู้คืน','สภาพ','เจ้าหน้าที่','วันตรวจ']; const rows = currentTabData.map(r => [r.requestNo,r.employeeCode,r.borrowerName,r.department,r.section,r.equipment,r.quantity,r.purpose,r.borrowDate,r.borrowSignature,r.returnDate,r.returnSignature,r.condition,r.officerSignature,r.officerDate].map(v => `"${(v||'').replace(/"/g,'""')}"`).join(',')); const blob = new Blob(['\uFEFF'+[headers.join(','),...rows].join('\n')],{type:'text/csv'}); const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`IT_Borrow_${new Date().toISOString().slice(0,10)}.csv`; a.click(); showToast('📎 ส่งออก CSV สำเร็จ'); }
+  function showToast(msg) { const t = document.getElementById('toastMsg'); t.innerText = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); }
+  document.getElementById('navFormBtn').onclick = () => { window.location.href = 'index.html'; };
+  document.getElementById('menuToggleBtn').onclick = () => document.getElementById('sidebar').classList.toggle('mobile-open');
+  document.addEventListener('click', (e) => { if(window.innerWidth <= 768 && !document.getElementById('sidebar').contains(e.target) && e.target !== document.getElementById('menuToggleBtn')) document.getElementById('sidebar').classList.remove('mobile-open'); });
+</script>
+</body>
+</html>
