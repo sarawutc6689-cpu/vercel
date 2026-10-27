@@ -1,0 +1,1226 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ระบบ CCTV — บริษัท โมลด์เมท จำกัด</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-database-compat.js"></script>
+
+<style>
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+body {
+  font-family: 'Sarabun', sans-serif;
+  font-size: 15px;
+  background: #1a3d6b;
+  color: #1a2a3a;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* HEADER */
+header {
+  height: 44px;
+  background: #1a3d6b;
+  border-bottom: 2px solid #2e7dd1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  flex-shrink: 0;
+}
+.hdr-left { display: flex; align-items: center; gap: 8px; }
+.hdr-icon { width: 28px; height: 28px; background: rgba(255,255,255,.12); border: 1.5px solid rgba(255,255,255,.3); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+.hdr-sub { font-size: 9px; color: rgba(255,255,255,.5); letter-spacing: 2px; text-transform: uppercase; }
+.hdr-title { font-size: 14px; font-weight: 700; color: #fff; }
+.hdr-right { display: flex; align-items: center; gap: 8px; }
+.live-badge { display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; color: #6eeebb; padding: 3px 9px; border: 1px solid rgba(110,238,187,.4); border-radius: 20px; background: rgba(110,238,187,.08); }
+.live-dot { width: 6px; height: 6px; border-radius: 50%; background: #6eeebb; animation: blink 1.2s infinite; }
+#clock { font-size: 13px; font-weight: 700; color: #fff; letter-spacing: 2px; }
+.sync-status { font-size: 10px; padding: 3px 8px; border-radius: 15px; background: rgba(255,255,255,.15); color: #fff; }
+.sync-status.synced { background: rgba(110,238,187,.2); color: #6eeebb; }
+@keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: .25; } }
+
+/* MAIN LAYOUT */
+.layout { display: grid; grid-template-columns: 1fr 280px; flex: 1; overflow: hidden; gap: 0; }
+
+/* LEFT PANEL */
+.map-panel { display: flex; flex-direction: column; padding: 4px; gap: 4px; overflow: hidden; background: #e8f0f8; }
+
+/* TOOLBAR */
+.toolbar { display: flex; align-items: center; gap: 5px; flex-shrink: 0; flex-wrap: wrap; }
+.panel-title { font-size: 12px; font-weight: 700; color: #1a5fa8; flex: 1; }
+.chip { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; border: 1px solid; }
+.chip.ok { background: #e8f5ee; color: #1a7a46; border-color: #9dcfb5; }
+.chip.maint { background: #fff4e0; color: #b86c00; border-color: #f0c070; }
+.tbtn { padding: 3px 9px; font-size: 11px; font-weight: 700; border-radius: 5px; border: 1px solid #c5d5e8; background: #fff; color: #3a5068; cursor: pointer; transition: all .15s; }
+.tbtn:hover { border-color: #2e7dd1; color: #1a5fa8; background: #e8f1fb; }
+.tbtn.active-cam { border-color: #b86c00; color: #b86c00; background: #fff4e0; }
+.tbtn.active-bld { border-color: #1a5fa8; color: #1a5fa8; background: #e8f1fb; }
+.save-btn { background: #1a5fa8; color: #fff; border-color: #1a5fa8; }
+.upload-btn { background: #4a7aaa; color: #fff; border-color: #4a7aaa; }
+.reset-bg-btn { background: #c5d5e8; color: #3a5068; }
+.check-status-btn { background: #2e7dd1; color: #fff; border-color: #2e7dd1; }
+
+/* HINT BAR */
+.hint-bar { display: none; align-items: center; gap: 5px; padding: 4px 8px; border-radius: 5px; border: 1px solid; font-size: 10px; font-weight: 600; }
+.hint-bar.cam { background: #fff4e0; border-color: #f0c070; color: #b86c00; }
+.hint-bar.bld { background: #e8f1fb; border-color: #a3c4e8; color: #1a5fa8; }
+.hint-bar.show { display: flex; }
+
+/* MAP WRAPPER */
+.map-wrap { flex: 1; position: relative; background: #f5f9ff; border: 1px solid #b8cfe8; border-radius: 6px; overflow: hidden; }
+#mapSvg { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; background: transparent; }
+#mapBackground { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; display: flex; align-items: center; justify-content: center; background: #f5f9ff; }
+#mapBackground img, #mapBackground svg { width: 100%; height: 100%; object-fit: contain; }
+#camLayer { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
+
+/* CAMERA DOTS */
+.cdot { position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; cursor: pointer; z-index: 10; pointer-events: all; }
+.cdot:hover { transform: translate(-50%, -50%) scale(1.35); z-index: 20; }
+.cdot .icon-wrap { width: 28px; height: 22px; border-radius: 5px; border: 2px solid; background: #fff; display: flex; align-items: center; justify-content: center; transition: transform .3s; position: relative; }
+.cdot.online .icon-wrap { border-color: #1a7a46; }
+.cdot.maint .icon-wrap { border-color: #b86c00; }
+.cdot .pip { width: 5px; height: 5px; border-radius: 50%; margin-top: 2px; }
+.cdot.online .pip { background: #1a7a46; }
+.cdot.maint .pip { background: #b86c00; }
+.cdot .tip { display: none; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: #fff; border: 1px solid #c5d5e8; border-radius: 7px; padding: 6px 11px; white-space: nowrap; font-size: 11px; z-index: 100; box-shadow: 0 4px 16px rgba(26,63,107,.13); }
+.cdot:hover .tip { display: block; }
+.tip-id { font-size: 10px; font-weight: 700; color: #1a5fa8; }
+.tip-name { font-weight: 600; color: #1a2a3a; }
+.tip-ang { font-size: 10px; color: #1a5fa8; }
+.tip-st { font-size: 10px; font-weight: 700; }
+.tip-st.online { color: #1a7a46; }
+.tip-st.maint { color: #b86c00; }
+.cam-badge { position: absolute; bottom: -2px; right: -4px; font-size: 8px; background: rgba(0,0,0,0.6); border-radius: 10px; padding: 0 3px; color: #fff; }
+
+/* SIDEBAR */
+.sidebar { display: flex; flex-direction: column; overflow: hidden; background: #fff; border-left: 1px solid #c5d5e8; }
+.sb-head { padding: 10px 12px; border-bottom: 1px solid #dce8f5; background: #f4f7fb; }
+.sb-title { font-size: 13px; font-weight: 800; color: #1a5fa8; margin-bottom: 7px; }
+.sb-stats { display: flex; gap: 4px; margin-bottom: 7px; }
+.sstat { flex: 1; background: #fff; border: 1px solid #c5d5e8; border-radius: 6px; padding: 5px; text-align: center; }
+.sstat-num { font-size: 16px; font-weight: 800; }
+.sstat-num.blue { color: #1a5fa8; }
+.sstat-num.green { color: #1a7a46; }
+.sstat-num.yellow { color: #b86c00; }
+.sstat-lbl { font-size: 9px; color: #7a96b0; }
+.ftabs { display: flex; gap: 4px; margin-bottom: 7px; }
+.ftab { flex: 1; padding: 5px; font-size: 11px; font-weight: 700; border: 1px solid #c5d5e8; border-radius: 6px; background: #fff; cursor: pointer; text-align: center; }
+.ftab.a-all { border-color: #1a5fa8; color: #1a5fa8; background: #e8f1fb; }
+.addrow { display: flex; gap: 5px; }
+.abtn { flex: 1; padding: 5px; font-size: 11px; font-weight: 700; border-radius: 6px; border: 1px solid; background: #fff; cursor: pointer; text-align: center; }
+.abtn.add { border-color: #2e7dd1; color: #1a5fa8; }
+.abtn.del { border-color: #c0524a; color: #b03030; }
+.cam-list { flex: 1; overflow-y: auto; padding: 4px 6px; }
+.zone-hd { font-size: 9px; font-weight: 800; color: #7a96b0; padding: 6px 5px 2px; border-top: 1px solid #dce8f5; }
+.citem { display: flex; align-items: center; gap: 6px; padding: 5px 7px; border-radius: 6px; cursor: pointer; margin-bottom: 1px; }
+.citem:hover { background: #e8f1fb; }
+.citem.sel { background: #e8f1fb; border: 1px solid #a3c4e8; }
+.ci-info { flex: 1; }
+.ci-id { font-size: 9px; color: #7a96b0; }
+.ci-name { font-size: 12px; font-weight: 600; }
+.ci-st { font-size: 10px; padding: 1px 7px; border-radius: 10px; }
+.ci-st.online { color: #1a7a46; background: #e8f5ee; }
+.ci-st.maint { color: #b86c00; background: #fff4e0; }
+.detail { border-top: 1px solid #c5d5e8; padding: 10px; background: #f4f7fb; overflow-y: auto; max-height: 45%; }
+.det-title { font-size: 10px; font-weight: 800; color: #7a96b0; margin-bottom: 6px; }
+.det-empty { color: #7a96b0; font-size: 12px; text-align: center; padding: 14px; }
+.det-body { display: none; }
+.det-body.show { display: block; }
+.det-id { font-size: 17px; font-weight: 800; color: #1a5fa8; }
+.det-name { font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+.drow { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #dce8f5; }
+.badge { padding: 2px 8px; border-radius: 10px; font-size: 11px; }
+.badge.online { color: #1a7a46; background: #e8f5ee; }
+.badge.maint { color: #b86c00; background: #fff4e0; }
+.rot-row, .act-row { display: flex; gap: 5px; margin-top: 6px; }
+.rbtn, .actbtn { flex: 1; padding: 6px; font-size: 11px; font-weight: 700; border-radius: 6px; border: 1px solid #c5d5e8; background: #fff; cursor: pointer; }
+.preview-area { margin-top: 12px; padding-top: 8px; border-top: 1px solid #dce8f5; }
+.preview-title { font-size: 10px; font-weight: 800; color: #7a96b0; margin-bottom: 6px; }
+.preview-container { background: #fff; border-radius: 8px; border: 1px solid #c5d5e8; padding: 8px; text-align: center; }
+.preview-img { max-width: 100%; max-height: 140px; border-radius: 6px; cursor: pointer; }
+.preview-placeholder { color: #7a96b0; font-size: 12px; padding: 20px; text-align: center; }
+.upload-img-btn { margin-top: 8px; padding: 4px 8px; font-size: 10px; background: #e8f1fb; border: 1px solid #a3c4e8; border-radius: 15px; cursor: pointer; color: #1a5fa8; }
+
+/* MODAL */
+.modal-bg { display: none; position: fixed; inset: 0; background: rgba(20,40,70,.42); z-index: 500; align-items: center; justify-content: center; }
+.modal-bg.show { display: flex; }
+.modal { background: #fff; border-radius: 12px; padding: 22px; width: 340px; max-width: 90%; }
+.modal h3 { font-size: 15px; font-weight: 800; color: #1a5fa8; margin-bottom: 14px; }
+.mfield { margin-bottom: 10px; }
+.mfield label { font-size: 11px; font-weight: 700; display: block; margin-bottom: 3px; }
+.mfield input, .mfield select { width: 100%; padding: 7px 10px; border: 1px solid #c5d5e8; border-radius: 6px; font-family: 'Sarabun', sans-serif; }
+.mbtns { display: flex; gap: 7px; margin-top: 14px; }
+.mok { flex: 1; padding: 9px; background: #1a5fa8; border: none; border-radius: 7px; color: #fff; font-weight: 700; cursor: pointer; }
+.mcancel { flex: 1; padding: 9px; background: #f4f7fb; border: 1px solid #c5d5e8; border-radius: 7px; cursor: pointer; }
+
+/* LOGIN */
+#loginScreen { position: fixed; inset: 0; z-index: 9999; background: linear-gradient(135deg, #0f2744, #1a3d6b, #1a5fa8); display: flex; align-items: center; justify-content: center; }
+.login-box { background: rgba(255,255,255,.97); border-radius: 16px; padding: 40px; width: 360px; }
+.login-logo { text-align: center; margin-bottom: 24px; }
+.login-logo .cam-ico { font-size: 40px; background: #e8f1fb; width: 72px; height: 72px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 10px; }
+.login-field { margin-bottom: 14px; }
+.login-field input { width: 100%; padding: 10px; border: 1.5px solid #c5d5e8; border-radius: 8px; font-family: 'Sarabun', sans-serif; }
+.login-btn { width: 100%; padding: 11px; background: #1a3d6b; border: none; border-radius: 8px; color: #fff; font-weight: 700; cursor: pointer; }
+.login-err { display: none; text-align: center; margin-top: 10px; color: #c0392b; }
+.login-err.show { display: block; }
+.role-badge { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px; background: rgba(255,255,255,.1); color: #fff; }
+.logout-btn { padding: 5px 12px; font-size: 12px; font-weight: 700; border-radius: 6px; border: 1px solid rgba(255,255,255,.3); background: rgba(255,255,255,.12); color: #fff; cursor: pointer; }
+</style>
+</head>
+<body>
+
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="cam-ico">📹</div>
+      <h2>ระบบ CCTV โมลด์เมท</h2>
+      <p>MOULDMATE CO., LTD.</p>
+    </div>
+    <div class="login-field">
+      <label>ชื่อผู้ใช้</label>
+      <input id="loginUser" type="text" placeholder="username">
+    </div>
+    <div class="login-field">
+      <label>รหัสผ่าน</label>
+      <input id="loginPass" type="password" placeholder="password">
+    </div>
+    <button class="login-btn" onclick="doLogin()">เข้าสู่ระบบ</button>
+    <div class="login-err" id="loginErr">ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง</div>
+    <div class="login-footer" style="text-align:center;margin-top:18px;font-size:11px">admin / admin1234 | viewer / view5678</div>
+  </div>
+</div>
+
+<header>
+  <div class="hdr-left">
+    <div class="hdr-icon">📹</div>
+    <div>
+      <div class="hdr-sub">MOULDMATE CO., LTD.</div>
+      <div class="hdr-title">ระบบ CCTV — แผนผังโรงงาน</div>
+    </div>
+  </div>
+  <div class="hdr-right">
+    <div class="live-badge"><div class="live-dot"></div>LIVE</div>
+    <div class="sync-status" id="syncStatus">☁️ เชื่อมต่อ</div>
+    <div class="role-badge" id="roleBadge">👤 —</div>
+    <div id="clock">--:--:--</div>
+    <button class="logout-btn" onclick="doLogout()">ออกจากระบบ</button>
+  </div>
+</header>
+
+<div class="layout">
+  <div class="map-panel">
+    <div class="toolbar">
+      <span class="panel-title">▶ แผนผังการติดตั้งกล้อง CCTV</span>
+      <div class="chip ok" id="chipOk">● ปกติ: 0</div>
+      <div class="chip maint" id="chipMaint">● ซ่อมแซม: 0</div>
+      <button class="tbtn" id="btnCamEdit" onclick="toggleCamMode()">✏ แก้ไขกล้อง</button>
+      <button class="tbtn" id="btnBldEdit" onclick="toggleBldMode()">🏢 แก้ไขอาคาร</button>
+      <button class="tbtn save-btn" onclick="manualSync()">💾 บันทึก</button>
+      <button class="tbtn upload-btn" onclick="document.getElementById('layoutFile').click()">🗺️ อัพโหลดแผนผัง</button>
+      <button class="tbtn reset-bg-btn" onclick="resetBackground()">🗑️ ล้างพื้นหลัง</button>
+      <button class="tbtn check-status-btn" id="btnCheckStatus" onclick="checkAllCamerasStatus()">📡 ตรวจสอบสถานะ</button>
+      <input type="file" id="layoutFile" accept="image/svg+xml,image/png,image/jpeg,image/jpg" style="display:none" onchange="uploadBackground(this)">
+    </div>
+    <div class="hint-bar cam" id="hintCam">✏ ลากกล้อง=ย้าย | Scroll=หมุน | คลิกขวา=หมุน45° | คลิกพื้นที่ว่าง=เพิ่ม</div>
+    <div class="hint-bar bld" id="hintBld">🏢 ลากอาคาร=ย้าย | ลากมุมขวาล่าง=ปรับขนาด | ดับเบิลคลิก=แก้ชื่อ | คลิกขวา=ลบ</div>
+    <div class="map-wrap" id="mapWrap">
+      <div id="mapBackground"></div>
+      <svg id="mapSvg" viewBox="0 0 900 600" xmlns="http://www.w3.org/2000/svg">
+        <rect width="900" height="600" fill="transparent"/>
+        <g id="bldLayer"></g>
+      </svg>
+      <div id="camLayer"></div>
+    </div>
+  </div>
+
+  <div class="sidebar">
+    <div class="sb-head">
+      <div class="sb-title">▶ รายการกล้อง CCTV</div>
+      <div class="sb-stats">
+        <div class="sstat"><div class="sstat-num blue" id="sTotal">0</div><div class="sstat-lbl">ทั้งหมด</div></div>
+        <div class="sstat"><div class="sstat-num green" id="sOk">0</div><div class="sstat-lbl">ปกติ</div></div>
+        <div class="sstat"><div class="sstat-num yellow" id="sMaint">0</div><div class="sstat-lbl">ซ่อม</div></div>
+        <div class="sstat"><div class="sstat-num green" id="sPct">0%</div><div class="sstat-lbl">อัตรา</div></div>
+      </div>
+      <div class="ftabs">
+        <button class="ftab a-all" onclick="setFilter('all',this)">ทั้งหมด</button>
+        <button class="ftab" onclick="setFilter('online',this)">ปกติ</button>
+        <button class="ftab" onclick="setFilter('maint',this)">ซ่อมแซม</button>
+      </div>
+      <div class="addrow">
+        <button class="abtn add" onclick="openAddCam()">＋ เพิ่มกล้อง</button>
+        <button class="abtn del" onclick="delSelected()">－ ลบที่เลือก</button>
+      </div>
+    </div>
+    <div class="cam-list" id="camList"></div>
+    <div class="detail">
+      <div class="det-title">▶ รายละเอียดกล้อง</div>
+      <div class="det-empty" id="detEmpty">เลือกกล้องเพื่อดูรายละเอียด</div>
+      <div class="det-body" id="detBody">
+        <div class="det-id" id="dId"></div>
+        <div class="det-name" id="dName"></div>
+        <div class="drow"><span class="dlbl">สถานะ</span><span class="dval" id="dSt"></span></div>
+        <div class="drow"><span class="dlbl">โซน</span><span class="dval" id="dZone"></span></div>
+        <div class="drow"><span class="dlbl">ความละเอียด</span><span class="dval" id="dRes"></span></div>
+        <div class="drow"><span class="dlbl">มุมกล้อง</span><span class="dval" id="dAng">0°</span></div>
+        <div class="rot-row">
+          <button class="rbtn" onclick="rotateSel(-45)">↺ 45°</button>
+          <button class="rbtn" onclick="rotateSel(-15)">↺ 15°</button>
+          <button class="rbtn" onclick="rotateSel(15)">15° ↻</button>
+          <button class="rbtn" onclick="rotateSel(45)">45° ↻</button>
+        </div>
+        <div class="act-row">
+          <button class="actbtn" onclick="toggleStatus()">⇄ เปลี่ยนสถานะ</button>
+          <button class="actbtn" onclick="delSelected()">🗑 ลบกล้อง</button>
+        </div>
+        
+        <div class="preview-area" id="previewArea" style="display: none;">
+          <div class="preview-title">📸 ภาพตัวอย่างกล้อง</div>
+          <div class="preview-container" id="previewContainer">
+            <div class="preview-placeholder" id="previewPlaceholder">ยังไม่มีภาพตัวอย่าง</div>
+            <img class="preview-img" id="previewImage" style="display: none;" onclick="openImageFullscreen()">
+            <div>
+              <button class="upload-img-btn" id="uploadImageBtn" onclick="openImageUploadModal()">📷 อัพโหลดภาพ</button>
+              <button class="upload-img-btn" id="removeImageBtn" onclick="removeCameraImage()" style="display: none; background:#fdf0ef; color:#b03030;">🗑 ลบภาพ</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="renameModalBg"><div class="modal"><h3>✎ แก้ไขชื่ออาคาร</h3><div class="mfield"><input id="renameInput" placeholder="ชื่ออาคาร"></div><div class="mbtns"><button class="mok" onclick="confirmRename()">บันทึก</button><button class="mcancel" onclick="closeRenameModal()">ยกเลิก</button></div></div></div>
+<div class="modal-bg" id="modalBg"><div class="modal"><h3>➕ เพิ่มกล้อง CCTV</h3><div class="mfield"><label>รหัสกล้อง</label><input id="mId"></div><div class="mfield"><label>ชื่อตำแหน่ง</label><input id="mName"></div><div class="mfield"><label>โซน</label><input id="mZone"></div><div class="mfield"><label>ความละเอียด</label><select id="mRes"><option>1080p</option><option>2MP</option><option>720p</option><option>4K</option></select></div><div class="mfield"><label>สถานะ</label><select id="mSt"><option value="online">ปกติ</option><option value="maint">ซ่อมแซม</option></select></div><div class="mbtns"><button class="mok" onclick="confirmAdd()">เพิ่มกล้อง</button><button class="mcancel" onclick="closeModal()">ยกเลิก</button></div></div></div>
+
+<div class="modal-bg" id="imageUploadModal">
+  <div class="modal">
+    <h3>📸 อัพโหลดภาพตัวอย่าง</h3>
+    <div class="mfield">
+      <label>เลือกไฟล์ภาพ (JPG, PNG)</label>
+      <input type="file" id="cameraImageFile" accept="image/jpeg,image/png,image/jpg">
+    </div>
+    <div class="mfield">
+      <label>หรือใส่ URL รูปภาพ</label>
+      <input type="text" id="cameraImageUrl" placeholder="https://...">
+    </div>
+    <div class="mbtns">
+      <button class="mok" onclick="saveCameraImage()">💾 บันทึก</button>
+      <button class="mcancel" onclick="closeImageUploadModal()">ยกเลิก</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ==================== FIREBASE CONFIG ====================
+const firebaseConfig = {
+  apiKey: "AIzaSyDMiHlZ9cKoRoXf1Loh1ZS2Lfjbu8QgCog",
+  authDomain: "moldmate-cctv.firebaseapp.com",
+  databaseURL: "https://moldmate-cctv-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "moldmate-cctv",
+  storageBucket: "moldmate-cctv.firebasestorage.app",
+  messagingSenderId: "115419290387",
+  appId: "1:115419290387:web:3797285df11cd0145318e6"
+};
+
+// ==================== NVR CONFIG (HIKVISION) ====================
+const NVR_CONFIG = {
+  ip: '192.168.93.3',
+  port: 80,
+  username: 'admin',
+  password: 'TBK@service'
+};
+
+// กำหนดช่องกล้อง (ปรับตามจริงว่ากล้องแต่ละตัวต่อ NVR ช่องไหน)
+const CAMERA_CHANNEL = {
+  'CAM-001': 1, 'CAM-002': 2, 'CAM-003': 3,
+  'CAM-011': 4, 'CAM-012': 5, 'CAM-013': 6,
+  'CAM-021': 7, 'CAM-022': 8, 'CAM-023': 9,
+  'CAM-031': 10, 'CAM-032': 11, 'CAM-033': 12, 'CAM-034': 13,
+  'CAM-041': 14, 'CAM-042': 15, 'CAM-043': 16, 'CAM-044': 17,
+  'CAM-051': 18, 'CAM-052': 19, 'CAM-053': 20,
+  'CAM-061': 21, 'CAM-062': 22, 'CAM-063': 23,
+  'CAM-071': 24, 'CAM-072': 25,
+  'CAM-081': 26, 'CAM-082': 27, 'CAM-083': 28
+};
+
+// ==================== GLOBAL ====================
+let db = null;
+let firebaseReady = false;
+let buildings = [];
+let cameras = [];
+let selCamId = null;
+let filterMode = 'all';
+let camEditMode = false;
+let bldEditMode = false;
+let pendingPos = null;
+let selBldId = null;
+let currentRole = null;
+let syncTimer = null;
+let autoCheckInterval = null;
+
+// ==================== DEFAULT DATA ====================
+function getDefaultBuildings() {
+  return [
+    {id:'b0',label:'เขตโรงงาน',x:30,y:60,w:840,h:480,type:'boundary'},
+    {id:'b1',label:'หอพักพนักงาน',x:285,y:80,w:115,h:75,type:'solid'},
+    {id:'b2',label:'กรอกคาร์บอน/บดเศษยาง',x:430,y:72,w:140,h:68,type:'solid'},
+    {id:'b3',label:'คลังวัตถุดิบ',x:615,y:72,w:125,h:75,type:'solid'},
+    {id:'b4',label:'เตรียมวัตถุดิบ',x:762,y:72,w:100,h:75,type:'solid'},
+    {id:'b5',label:'อาคาร T10',x:235,y:202,w:155,h:115,type:'solid'},
+    {id:'b6',label:'คลังสินค้าและพัสดุ',x:415,y:202,w:220,h:195,type:'solid'},
+    {id:'b7',label:'เก็บรถโฟล์คลิฟท์',x:398,y:187,w:78,h:38,type:'solid'},
+    {id:'b8',label:'ผสมยาง',x:655,y:178,w:225,h:108,type:'solid'},
+    {id:'b9',label:'ซ่อมบำรุงรถแทรค',x:655,y:302,w:195,h:98,type:'solid'},
+    {id:'b10',label:'ซ่อมแบตเตอรี่',x:553,y:302,w:88,h:98,type:'solid'},
+    {id:'b11',label:'เก็บแม่พิมพ์',x:135,y:263,w:88,h:78,type:'solid'},
+    {id:'b12',label:'เก็บปลอก',x:148,y:358,w:78,h:58,type:'solid'},
+    {id:'b13',label:'ผลิตแม่พิมพ์',x:148,y:432,w:108,h:68,type:'solid'},
+    {id:'b14',label:'สำนักงาน',x:62,y:402,w:78,h:68,type:'solid'},
+    {id:'b15',label:'อาคาร R&D',x:82,y:487,w:88,h:58,type:'solid'},
+    {id:'b16',label:'โรงอาหาร',x:118,y:182,w:78,h:63,type:'solid'},
+    {id:'b17',label:'อาคารการผลิต',x:265,y:283,w:125,h:115,type:'solid'},
+    {id:'b18',label:'ซ่อมบำรุง',x:762,y:163,w:100,h:88,type:'solid'},
+    {id:'b19',label:'พื้นที่ทดสอบแทรค',x:625,y:422,w:225,h:78,type:'dashed'},
+    {id:'b20',label:'ที่จอดรถพนักงาน',x:255,y:432,w:175,h:78,type:'dashed'},
+    {id:'b21',label:'พื้นที่ว่างเปล่า',x:625,y:508,w:235,h:38,type:'dotted'},
+  ];
+}
+
+function getDefaultCameras() {
+  return [
+    {id:'CAM-001',name:'ประตูหลักทางเข้า',zone:'ทางเข้า-ออก',x:4,y:60,st:'online',res:'1080p',ang:0,imageUrl:null},
+    {id:'CAM-002',name:'ทางออกหลัก',zone:'ทางเข้า-ออก',x:4,y:75,st:'online',res:'1080p',ang:180,imageUrl:null},
+    {id:'CAM-003',name:'รั้วด้านใต้',zone:'ทางเข้า-ออก',x:38,y:93,st:'maint',res:'720p',ang:90,imageUrl:null},
+    {id:'CAM-011',name:'สำนักงาน (ด้านหน้า)',zone:'สำนักงาน/R&D',x:9,y:66,st:'online',res:'1080p',ang:45,imageUrl:null},
+    {id:'CAM-012',name:'สำนักงาน (ภายใน)',zone:'สำนักงาน/R&D',x:11,y:72,st:'online',res:'1080p',ang:270,imageUrl:null},
+    {id:'CAM-013',name:'อาคาร R&D',zone:'สำนักงาน/R&D',x:12,y:84,st:'maint',res:'720p',ang:135,imageUrl:null},
+    {id:'CAM-021',name:'โรงอาหาร',zone:'โรงอาหาร/หอพัก',x:16,y:32,st:'online',res:'1080p',ang:90,imageUrl:null},
+    {id:'CAM-022',name:'หอพักพนักงาน (หน้า)',zone:'โรงอาหาร/หอพัก',x:37,y:15,st:'online',res:'1080p',ang:180,imageUrl:null},
+    {id:'CAM-023',name:'หอพักพนักงาน (หลัง)',zone:'โรงอาหาร/หอพัก',x:44,y:15,st:'online',res:'720p',ang:225,imageUrl:null},
+    {id:'CAM-031',name:'อาคาร T10 (ทิศเหนือ)',zone:'อาคาร T10/ผลิต',x:28,y:36,st:'online',res:'1080p',ang:180,imageUrl:null},
+    {id:'CAM-032',name:'อาคาร T10 (ทิศใต้)',zone:'อาคาร T10/ผลิต',x:28,y:54,st:'online',res:'1080p',ang:0,imageUrl:null},
+    {id:'CAM-033',name:'อาคารการผลิต',zone:'อาคาร T10/ผลิต',x:34,y:59,st:'maint',res:'720p',ang:315,imageUrl:null},
+    {id:'CAM-034',name:'เก็บแม่พิมพ์',zone:'อาคาร T10/ผลิต',x:19,y:48,st:'online',res:'1080p',ang:90,imageUrl:null},
+    {id:'CAM-041',name:'คลังสินค้า (หน้า)',zone:'คลังสินค้า/พัสดุ',x:52,y:38,st:'online',res:'2MP',ang:270,imageUrl:null},
+    {id:'CAM-042',name:'คลังสินค้า (กลาง)',zone:'คลังสินค้า/พัสดุ',x:58,y:49,st:'online',res:'2MP',ang:180,imageUrl:null},
+    {id:'CAM-043',name:'คลังสินค้า (หลัง)',zone:'คลังสินค้า/พัสดุ',x:52,y:57,st:'online',res:'2MP',ang:0,imageUrl:null},
+    {id:'CAM-044',name:'รถโฟล์คลิฟท์',zone:'คลังสินค้า/พัสดุ',x:47,y:32,st:'maint',res:'720p',ang:135,imageUrl:null},
+    {id:'CAM-051',name:'คลังวัตถุดิบ',zone:'วัตถุดิบ/เตรียม',x:72,y:14,st:'online',res:'1080p',ang:270,imageUrl:null},
+    {id:'CAM-052',name:'เตรียมวัตถุดิบ',zone:'วัตถุดิบ/เตรียม',x:87,y:14,st:'online',res:'1080p',ang:225,imageUrl:null},
+    {id:'CAM-053',name:'กรอกคาร์บอน/บดยาง',zone:'วัตถุดิบ/เตรียม',x:54,y:14,st:'online',res:'720p',ang:180,imageUrl:null},
+    {id:'CAM-061',name:'ผสมยาง (หน้า)',zone:'ผสมยาง/ซ่อมบำรุง',x:76,y:33,st:'online',res:'2MP',ang:270,imageUrl:null},
+    {id:'CAM-062',name:'ผสมยาง (หลัง)',zone:'ผสมยาง/ซ่อมบำรุง',x:89,y:33,st:'online',res:'2MP',ang:180,imageUrl:null},
+    {id:'CAM-063',name:'ซ่อมบำรุง',zone:'ผสมยาง/ซ่อมบำรุง',x:89,y:28,st:'maint',res:'720p',ang:90,imageUrl:null},
+    {id:'CAM-071',name:'ซ่อมรถแทรค',zone:'ซ่อมรถ/แบตเตอรี่',x:80,y:58,st:'online',res:'1080p',ang:315,imageUrl:null},
+    {id:'CAM-072',name:'ซ่อมแบตเตอรี่',zone:'ซ่อมรถ/แบตเตอรี่',x:64,y:58,st:'online',res:'720p',ang:45,imageUrl:null},
+    {id:'CAM-081',name:'พื้นที่ทดสอบแทรค',zone:'ทดสอบ/กลางแจ้ง',x:75,y:76,st:'online',res:'2MP',ang:225,imageUrl:null},
+    {id:'CAM-082',name:'พื้นที่ทดสอบ (ปลาย)',zone:'ทดสอบ/กลางแจ้ง',x:89,y:76,st:'maint',res:'720p',ang:270,imageUrl:null},
+    {id:'CAM-083',name:'ที่จอดรถพนักงาน',zone:'ทดสอบ/กลางแจ้ง',x:37,y:76,st:'online',res:'1080p',ang:90,imageUrl:null},
+  ];
+}
+
+// ==================== FIREBASE FUNCTIONS ====================
+function initFirebase() {
+  try {
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.database();
+    firebaseReady = true;
+    document.getElementById('syncStatus').textContent = '☁️ เชื่อมต่อ';
+    document.getElementById('syncStatus').classList.add('synced');
+    return true;
+  } catch(e) {
+    console.error('Firebase init error:', e);
+    return false;
+  }
+}
+
+function syncToFirebase() {
+  if(!firebaseReady || !db || currentRole !== 'admin') return;
+  const data = { buildings, cameras, lastUpdated: Date.now() };
+  db.ref('cctvData').set(data).catch(err => console.error('Sync error:', err));
+}
+
+function debounceSync() {
+  if(syncTimer) clearTimeout(syncTimer);
+  syncTimer = setTimeout(() => syncToFirebase(), 500);
+}
+
+function manualSync() { syncToFirebase(); }
+
+function loadFromFirebase() {
+  if(!firebaseReady || !db) return;
+  db.ref('cctvData').once('value').then(snapshot => {
+    const data = snapshot.val();
+    if(data && data.buildings && data.cameras) {
+      buildings = data.buildings;
+      cameras = data.cameras;
+    } else {
+      buildings = getDefaultBuildings();
+      cameras = getDefaultCameras();
+      syncToFirebase();
+    }
+    renderAll();
+    loadBackgroundFromFirebase();
+  }).catch(() => {
+    buildings = getDefaultBuildings();
+    cameras = getDefaultCameras();
+    renderAll();
+  });
+}
+
+function listenFirebaseChanges() {
+  if(!firebaseReady || !db) return;
+  db.ref('cctvData').on('value', snapshot => {
+    const data = snapshot.val();
+    if(data && data.buildings && data.cameras) {
+      buildings = data.buildings;
+      cameras = data.cameras;
+      renderAll();
+      if(selCamId) updatePreviewDisplay();
+    }
+  });
+}
+
+// ==================== BACKGROUND UPLOAD ====================
+function uploadBackground(input) {
+  const file = input.files[0];
+  if(!file) return;
+  if(file.size > 5 * 1024 * 1024) { alert('ไฟล์ใหญ่เกินไป กรุณาเลือกไฟล์ขนาดไม่เกิน 5MB'); return; }
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const bgContainer = document.getElementById('mapBackground');
+    bgContainer.innerHTML = '';
+    if(file.type === 'image/svg+xml') {
+      const parser = new DOMParser();
+      const svgDoc = parser.parseFromString(e.target.result, 'image/svg+xml');
+      const svg = svgDoc.documentElement;
+      svg.setAttribute('width', '100%');
+      svg.setAttribute('height', '100%');
+      svg.style.pointerEvents = 'none';
+      bgContainer.appendChild(svg);
+    } else {
+      const img = document.createElement('img');
+      img.src = e.target.result;
+      img.style.width = '100%';
+      img.style.height = '100%';
+      img.style.objectFit = 'contain';
+      bgContainer.appendChild(img);
+    }
+    if(firebaseReady && db && currentRole === 'admin') {
+      db.ref('background').set({ type: file.type, data: e.target.result, timestamp: Date.now() });
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+function loadBackgroundFromFirebase() {
+  if(!firebaseReady || !db) return;
+  db.ref('background').once('value').then(snapshot => {
+    const bg = snapshot.val();
+    if(bg && bg.data) {
+      const bgContainer = document.getElementById('mapBackground');
+      bgContainer.innerHTML = '';
+      if(bg.type === 'image/svg+xml') {
+        const parser = new DOMParser();
+        const svgDoc = parser.parseFromString(bg.data, 'image/svg+xml');
+        const svg = svgDoc.documentElement;
+        svg.setAttribute('width', '100%');
+        svg.setAttribute('height', '100%');
+        svg.style.pointerEvents = 'none';
+        bgContainer.appendChild(svg);
+      } else {
+        const img = document.createElement('img');
+        img.src = bg.data;
+        img.style.width = '100%';
+        img.style.height = '100%';
+        img.style.objectFit = 'contain';
+        bgContainer.appendChild(img);
+      }
+    }
+  });
+}
+
+function resetBackground() {
+  document.getElementById('mapBackground').innerHTML = '';
+  if(firebaseReady && db && currentRole === 'admin') db.ref('background').remove();
+}
+
+// ==================== CHECK CAMERA STATUS (HIKVISION) ====================
+async function checkSingleCamera(channel) {
+  const url = `http://${NVR_CONFIG.username}:${NVR_CONFIG.password}@${NVR_CONFIG.ip}:${NVR_CONFIG.port}/ISAPI/Streaming/channels/${100 + channel}/picture`;
+  
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
+    
+    const response = await fetch(url, { method: 'HEAD', signal: controller.signal, mode: 'no-cors' });
+    clearTimeout(timeoutId);
+    return true;
+  } catch(error) {
+    return false;
+  }
+}
+
+async function checkAllCamerasStatus() {
+  const btn = document.getElementById('btnCheckStatus');
+  const originalText = btn.innerHTML;
+  btn.innerHTML = '🔄 กำลังตรวจสอบ...';
+  btn.disabled = true;
+  
+  let onlineCount = 0;
+  let offlineCount = 0;
+  
+  for(let cam of cameras) {
+    const channel = CAMERA_CHANNEL[cam.id];
+    if(channel) {
+      const isOnline = await checkSingleCamera(channel);
+      cam.st = isOnline ? 'online' : 'maint';
+      if(isOnline) onlineCount++; else offlineCount++;
+      console.log(`${cam.id} (ช่อง ${channel}): ${isOnline ? '✅ ONLINE' : '❌ OFFLINE'}`);
+    }
+  }
+  
+  renderAll();
+  
+  btn.innerHTML = originalText;
+  btn.disabled = false;
+  
+  alert(`✅ ตรวจสอบเสร็จสิ้น\n\n🟢 ออนไลน์: ${onlineCount} ตัว\n🔴 ออฟไลน์: ${offlineCount} ตัว`);
+}
+
+function startAutoStatusCheck() {
+  if(autoCheckInterval) clearInterval(autoCheckInterval);
+  autoCheckInterval = setInterval(() => {
+    if(currentRole === 'admin') {
+      checkAllCamerasStatus();
+    }
+  }, 60000);
+}
+
+function stopAutoStatusCheck() {
+  if(autoCheckInterval) {
+    clearInterval(autoCheckInterval);
+    autoCheckInterval = null;
+  }
+}
+
+// ==================== CAMERA IMAGE FUNCTIONS ====================
+function openImageUploadModal() {
+  if(currentRole !== 'admin') { alert('เฉพาะ Admin เท่านั้นที่อัพโหลดรูปภาพได้'); return; }
+  document.getElementById('cameraImageFile').value = '';
+  document.getElementById('cameraImageUrl').value = '';
+  document.getElementById('imageUploadModal').classList.add('show');
+}
+
+function closeImageUploadModal() {
+  document.getElementById('imageUploadModal').classList.remove('show');
+}
+
+function saveCameraImage() {
+  const cam = cameras.find(c => c.id === selCamId);
+  if(!cam) return;
+  
+  const file = document.getElementById('cameraImageFile').files[0];
+  const url = document.getElementById('cameraImageUrl').value.trim();
+  
+  if(file) {
+    if(file.size > 2 * 1024 * 1024) { alert('ไฟล์ใหญ่เกินไป กรุณาเลือกขนาดไม่เกิน 2MB'); return; }
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      cam.imageUrl = e.target.result;
+      updatePreviewDisplay();
+      debounceSync();
+      closeImageUploadModal();
+    };
+    reader.readAsDataURL(file);
+  } else if(url) {
+    cam.imageUrl = url;
+    updatePreviewDisplay();
+    debounceSync();
+    closeImageUploadModal();
+  } else {
+    alert('กรุณาเลือกรูปภาพหรือใส่ URL');
+  }
+}
+
+function removeCameraImage() {
+  const cam = cameras.find(c => c.id === selCamId);
+  if(cam && confirm('ต้องการลบภาพตัวอย่างนี้ใช่หรือไม่?')) {
+    cam.imageUrl = null;
+    updatePreviewDisplay();
+    debounceSync();
+  }
+}
+
+function updatePreviewDisplay() {
+  const cam = cameras.find(c => c.id === selCamId);
+  const previewArea = document.getElementById('previewArea');
+  const previewPlaceholder = document.getElementById('previewPlaceholder');
+  const previewImage = document.getElementById('previewImage');
+  const removeBtn = document.getElementById('removeImageBtn');
+  
+  if(!cam) return;
+  
+  previewArea.style.display = 'block';
+  
+  if(cam.imageUrl) {
+    previewPlaceholder.style.display = 'none';
+    previewImage.style.display = 'block';
+    previewImage.src = cam.imageUrl;
+    removeBtn.style.display = currentRole === 'admin' ? 'inline-block' : 'none';
+  } else {
+    previewPlaceholder.style.display = 'block';
+    previewImage.style.display = 'none';
+    removeBtn.style.display = 'none';
+  }
+}
+
+function openImageFullscreen() {
+  const cam = cameras.find(c => c.id === selCamId);
+  if(cam && cam.imageUrl) window.open(cam.imageUrl, '_blank');
+}
+
+// ==================== SVG HELPERS ====================
+const NS = 'http://www.w3.org/2000/svg';
+function el(tag, attrs) {
+  const e = document.createElementNS(NS, tag);
+  if(attrs) Object.entries(attrs).forEach(([k,v]) => e.setAttribute(k, v));
+  return e;
+}
+
+function svgPoint(e) {
+  const svg = document.getElementById('mapSvg');
+  const pt = svg.createSVGPoint();
+  pt.x = e.clientX;
+  pt.y = e.clientY;
+  return pt.matrixTransform(svg.getScreenCTM().inverse());
+}
+
+// ==================== RENDER BUILDINGS ====================
+function renderBuildings() {
+  const g = document.getElementById('bldLayer');
+  g.innerHTML = '';
+  
+  buildings.forEach(b => {
+    const isBound = b.type === 'boundary';
+    const isSel = bldEditMode && b.id === selBldId;
+    const fillCol = isBound ? 'none' : (isSel ? 'rgba(26,95,168,0.15)' : 'rgba(26,80,140,0.05)');
+    
+    const rect = el('rect', {
+      x: b.x, y: b.y, width: b.w, height: b.h, rx: 4,
+      fill: fillCol, stroke: 'none', 'stroke-width': '0'
+    });
+    
+    if(b.type === 'dashed') rect.setAttribute('stroke-dasharray', '7,4');
+    if(b.type === 'dotted') rect.setAttribute('stroke-dasharray', '3,5');
+    if(bldEditMode && !isBound) rect.style.cursor = 'move';
+    g.appendChild(rect);
+    
+    const fontSize = b.w < 80 ? '7' : (b.w < 140 ? '8' : '9');
+    const text = el('text', {
+      x: b.x + b.w/2, y: b.y + b.h/2 + 4,
+      'text-anchor': 'middle', 'font-size': fontSize,
+      fill: isBound ? '#4a7aaa' : '#2c5a7a',
+      'font-family': "'Sarabun', sans-serif",
+      'font-weight': '600'
+    });
+    text.textContent = b.label;
+    g.appendChild(text);
+    
+    if(isSel && bldEditMode && !isBound) {
+      const handle = el('rect', {
+        x: b.x + b.w - 12, y: b.y + b.h - 12,
+        width: 14, height: 14, rx: 3,
+        fill: '#2e7dd1', stroke: '#fff', 'stroke-width': '1.5',
+        cursor: 'se-resize', 'data-role': 'resize', 'data-bid': b.id
+      });
+      g.appendChild(handle);
+    }
+    
+    if(bldEditMode && !isBound) {
+      rect.addEventListener('dblclick', e => { e.stopPropagation(); openRenameModal(b); });
+      rect.addEventListener('contextmenu', e => {
+        e.preventDefault();
+        if(confirm(`ลบอาคาร "${b.label}"?`)) {
+          buildings = buildings.filter(bd => bd.id !== b.id);
+          if(selBldId === b.id) selBldId = null;
+          renderAll();
+          debounceSync();
+        }
+      });
+      
+      let dragStart = null, originalPos = null;
+      rect.addEventListener('mousedown', e => {
+        if(e.button !== 0) return;
+        e.stopPropagation();
+        selBldId = b.id;
+        dragStart = svgPoint(e);
+        originalPos = { x: b.x, y: b.y };
+        renderBuildings();
+        
+        const onMouseMove = (me) => {
+          if(!dragStart) return;
+          const current = svgPoint(me);
+          const dx = current.x - dragStart.x;
+          const dy = current.y - dragStart.y;
+          b.x = Math.max(10, Math.min(890 - b.w, originalPos.x + dx));
+          b.y = Math.max(10, Math.min(590 - b.h, originalPos.y + dy));
+          renderBuildings();
+        };
+        
+        const onMouseUp = () => {
+          if(dragStart) debounceSync();
+          dragStart = null;
+          document.removeEventListener('mousemove', onMouseMove);
+          document.removeEventListener('mouseup', onMouseUp);
+        };
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+      });
+    }
+  });
+}
+
+// ==================== RESIZE HANDLER ====================
+document.addEventListener('mousedown', e => {
+  if(!bldEditMode) return;
+  const handle = e.target.closest('[data-role="resize"]');
+  if(!handle) return;
+  e.preventDefault();
+  e.stopPropagation();
+  const bid = handle.getAttribute('data-bid');
+  const building = buildings.find(b => b.id === bid);
+  if(!building) return;
+  const startX = e.clientX, startY = e.clientY;
+  const startW = building.w, startH = building.h;
+  let hasResized = false;
+  const onMouseMove = (me) => {
+    const dx = me.clientX - startX, dy = me.clientY - startY;
+    const newW = Math.max(50, Math.min(880, startW + dx));
+    const newH = Math.max(40, Math.min(580, startH + dy));
+    if(newW !== building.w || newH !== building.h) {
+      hasResized = true;
+      building.w = newW;
+      building.h = newH;
+      renderBuildings();
+    }
+  };
+  const onMouseUp = () => {
+    if(hasResized) debounceSync();
+    document.removeEventListener('mousemove', onMouseMove);
+    document.removeEventListener('mouseup', onMouseUp);
+  };
+  document.addEventListener('mousemove', onMouseMove);
+  document.addEventListener('mouseup', onMouseUp);
+});
+
+// ==================== RENDER CAMERAS ====================
+function renderCams() {
+  const layer = document.getElementById('camLayer');
+  layer.innerHTML = '';
+  const mapCont = document.getElementById('mapWrap');
+  
+  cameras.forEach(cam => {
+    const dot = document.createElement('div');
+    dot.className = `cdot ${cam.st}`;
+    dot.style.left = cam.x + '%';
+    dot.style.top = cam.y + '%';
+    dot.dataset.id = cam.id;
+    
+    const isOk = cam.st === 'online';
+    const col = isOk ? '#1a7a46' : '#b86c00';
+    const fov = isOk ? 'rgba(26,122,70,0.15)' : 'rgba(184,108,0,0.12)';
+    const hasImage = cam.imageUrl ? '📷' : '';
+    
+    dot.innerHTML = `
+      <div class="icon-wrap" style="transform:rotate(${cam.ang || 0}deg)">
+        <svg width="19" height="19" viewBox="0 0 24 24">
+          <path d="M16 12 L22 7 L22 17 Z" fill="${fov}" stroke="${col}" stroke-width=".7"/>
+          <rect x="2" y="8" width="14" height="8" rx="2" fill="${col}" fill-opacity=".15" stroke="${col}"/>
+          <circle cx="9" cy="12" r="2.5" stroke="${col}" fill="${col}" fill-opacity=".2"/>
+          <circle cx="9" cy="12" r="1" fill="${col}"/>
+        </svg>
+        ${hasImage ? '<div class="cam-badge">📷</div>' : ''}
+      </div>
+      <div class="pip"></div>
+      <div class="tip">
+        <div class="tip-id">${cam.id}</div>
+        <div class="tip-name">${cam.name}</div>
+        <div class="tip-ang">🔄 ${cam.ang || 0}°</div>
+        <div class="tip-st ${cam.st}">${isOk ? '● ปกติ' : '● ซ่อมแซม'}</div>
+        ${cam.imageUrl ? '<div style="font-size:9px;color:#1a5fa8;">📸 มีภาพตัวอย่าง</div>' : ''}
+      </div>
+    `;
+    
+    if(camEditMode && currentRole === 'admin') {
+      dot.addEventListener('mousedown', e => {
+        if(e.button !== 0) return;
+        e.stopPropagation();
+        dot.classList.add('dragging');
+        const rect = mapCont.getBoundingClientRect();
+        const onMouseMove = (me) => {
+          const x = Math.min(99, Math.max(1, (me.clientX - rect.left) / rect.width * 100));
+          const y = Math.min(99, Math.max(1, (me.clientY - rect.top) / rect.height * 100));
+          dot.style.left = x + '%';
+          dot.style.top = y + '%';
+        };
+        const onMouseUp = (me) => {
+          dot.classList.remove('dragging');
+          const x = Math.min(99, Math.max(1, (me.clientX - rect.left) / rect.width * 100));
+          const y = Math.min(99, Math.max(1, (me.clientY - rect.top) / rect.height * 100));
+          cam.x = +x.toFixed(2);
+          cam.y = +y.toFixed(2);
+          renderCams();
+          debounceSync();
+          document.removeEventListener('mousemove', onMouseMove);
+          document.removeEventListener('mouseup', onMouseUp);
+        };
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+      });
+      
+      dot.addEventListener('wheel', e => {
+        e.preventDefault();
+        cam.ang = ((cam.ang || 0) + (e.deltaY > 0 ? 15 : -15) + 360) % 360;
+        dot.querySelector('.icon-wrap').style.transform = `rotate(${cam.ang}deg)`;
+        if(selCamId === cam.id) document.getElementById('dAng').textContent = cam.ang + '°';
+        debounceSync();
+      }, { passive: false });
+      
+      dot.addEventListener('contextmenu', e => {
+        e.preventDefault();
+        cam.ang = ((cam.ang || 0) + 45) % 360;
+        dot.querySelector('.icon-wrap').style.transform = `rotate(${cam.ang}deg)`;
+        if(selCamId === cam.id) document.getElementById('dAng').textContent = cam.ang + '°';
+        debounceSync();
+      });
+      
+      mapCont.onclick = e => {
+        if(e.target.closest('.cdot')) return;
+        const rect = mapCont.getBoundingClientRect();
+        pendingPos = {
+          x: +((e.clientX - rect.left) / rect.width * 100).toFixed(2),
+          y: +((e.clientY - rect.top) / rect.height * 100).toFixed(2)
+        };
+        openAddCam();
+      };
+    } else {
+      dot.addEventListener('click', () => selectCam(cam.id));
+    }
+    layer.appendChild(dot);
+  });
+}
+
+// ==================== CAMERA FUNCTIONS ====================
+function selectCam(id) {
+  selCamId = id;
+  const cam = cameras.find(c => c.id === id);
+  if(!cam) return;
+  
+  document.getElementById('detEmpty').style.display = 'none';
+  document.getElementById('detBody').classList.add('show');
+  document.getElementById('dId').textContent = cam.id;
+  document.getElementById('dName').textContent = cam.name;
+  document.getElementById('dSt').innerHTML = `<span class="badge ${cam.st}">${cam.st === 'online' ? '🟢 ออนไลน์' : '🔴 ออฟไลน์'}</span>`;
+  document.getElementById('dZone').textContent = cam.zone;
+  document.getElementById('dRes').textContent = cam.res;
+  document.getElementById('dAng').textContent = (cam.ang || 0) + '°';
+  
+  updatePreviewDisplay();
+  renderList();
+  renderCams();
+}
+
+function renderList() {
+  const list = document.getElementById('camList');
+  list.innerHTML = '';
+  const filtered = cameras.filter(c => filterMode === 'all' || c.st === filterMode);
+  const zones = {};
+  filtered.forEach(c => { if(!zones[c.zone]) zones[c.zone] = []; zones[c.zone].push(c); });
+  
+  Object.entries(zones).forEach(([zone, cams]) => {
+    const zh = document.createElement('div');
+    zh.className = 'zone-hd';
+    zh.textContent = zone;
+    list.appendChild(zh);
+    
+    cams.forEach(cam => {
+      const item = document.createElement('div');
+      item.className = 'citem' + (cam.id === selCamId ? ' sel' : '');
+      item.innerHTML = `
+        <div>${cam.st === 'online' ? '🟢' : '🔴'}</div>
+        <div class="ci-info">
+          <div class="ci-id">${cam.id}</div>
+          <div class="ci-name">${cam.name}</div>
+        </div>
+        <div class="ci-st ${cam.st}">${cam.st === 'online' ? 'ออนไลน์' : 'ออฟไลน์'}</div>
+        ${cam.imageUrl ? '<div style="font-size:10px;">📸</div>' : ''}
+      `;
+      item.addEventListener('click', () => selectCam(cam.id));
+      list.appendChild(item);
+    });
+  });
+}
+
+function updateStats() {
+  const ok = cameras.filter(c => c.st === 'online').length;
+  const maint = cameras.filter(c => c.st === 'maint').length;
+  const total = cameras.length;
+  document.getElementById('chipOk').textContent = `● ออนไลน์: ${ok}`;
+  document.getElementById('chipMaint').textContent = `● ออฟไลน์: ${maint}`;
+  document.getElementById('sTotal').textContent = total;
+  document.getElementById('sOk').textContent = ok;
+  document.getElementById('sMaint').textContent = maint;
+  document.getElementById('sPct').textContent = Math.round(ok / total * 100) + '%';
+}
+
+function renderAll() {
+  renderBuildings();
+  renderCams();
+  renderList();
+  updateStats();
+}
+
+// ==================== EDIT MODES ====================
+function toggleCamMode() {
+  if(currentRole !== 'admin') return;
+  if(bldEditMode) toggleBldMode();
+  camEditMode = !camEditMode;
+  const btn = document.getElementById('btnCamEdit');
+  const hint = document.getElementById('hintCam');
+  if(camEditMode) {
+    btn.classList.add('active-cam');
+    btn.textContent = '✔ เสร็จสิ้น';
+    hint.classList.add('show');
+  } else {
+    btn.classList.remove('active-cam');
+    btn.textContent = '✏ แก้ไขกล้อง';
+    hint.classList.remove('show');
+  }
+  renderCams();
+}
+
+function toggleBldMode() {
+  if(currentRole !== 'admin') return;
+  if(camEditMode) toggleCamMode();
+  bldEditMode = !bldEditMode;
+  const btn = document.getElementById('btnBldEdit');
+  const hint = document.getElementById('hintBld');
+  const svg = document.getElementById('mapSvg');
+  if(bldEditMode) {
+    btn.classList.add('active-bld');
+    btn.textContent = '✔ เสร็จสิ้น';
+    hint.classList.add('show');
+    svg.style.cursor = 'crosshair';
+    svg.addEventListener('click', onMapClick);
+  } else {
+    btn.classList.remove('active-bld');
+    btn.textContent = '🏢 แก้ไขอาคาร';
+    hint.classList.remove('show');
+    svg.style.cursor = '';
+    svg.removeEventListener('click', onMapClick);
+    selBldId = null;
+  }
+  renderBuildings();
+}
+
+function onMapClick(e) {
+  if(!bldEditMode) return;
+  if(e.target.tagName === 'rect' || e.target.tagName === 'text') return;
+  const p = svgPoint(e);
+  const name = prompt('ชื่ออาคารใหม่:', 'อาคารใหม่');
+  if(!name) return;
+  const newId = 'b' + Date.now();
+  buildings.push({ id: newId, label: name.trim(), x: Math.round(p.x - 60), y: Math.round(p.y - 40), w: 120, h: 80, type: 'solid' });
+  selBldId = newId;
+  renderBuildings();
+  debounceSync();
+}
+
+// ==================== MODAL FUNCTIONS ====================
+let renamingBld = null;
+
+function openRenameModal(b) {
+  renamingBld = b;
+  document.getElementById('renameInput').value = b.label;
+  document.getElementById('renameModalBg').classList.add('show');
+}
+
+function closeRenameModal() {
+  document.getElementById('renameModalBg').classList.remove('show');
+  renamingBld = null;
+}
+
+function confirmRename() {
+  const val = document.getElementById('renameInput').value.trim();
+  if(val && renamingBld) {
+    renamingBld.label = val;
+    renderBuildings();
+    debounceSync();
+  }
+  closeRenameModal();
+}
+
+function openAddCam() {
+  if(currentRole !== 'admin') return;
+  const maxId = Math.max(...cameras.map(c => parseInt(c.id.split('-')[1]) || 0), 0);
+  document.getElementById('mId').value = 'CAM-' + (maxId + 1);
+  document.getElementById('mName').value = '';
+  document.getElementById('mZone').value = '';
+  document.getElementById('modalBg').classList.add('show');
+}
+
+function closeModal() {
+  document.getElementById('modalBg').classList.remove('show');
+  pendingPos = null;
+}
+
+function confirmAdd() {
+  if(currentRole !== 'admin') return;
+  const id = document.getElementById('mId').value.trim();
+  const name = document.getElementById('mName').value.trim() || 'กล้องใหม่';
+  const zone = document.getElementById('mZone').value.trim() || 'ทั่วไป';
+  const res = document.getElementById('mRes').value;
+  const st = document.getElementById('mSt').value;
+  if(!id) { alert('กรุณาระบุรหัสกล้อง'); return; }
+  if(cameras.find(c => c.id === id)) { alert('รหัสซ้ำ'); return; }
+  cameras.push({ id, name, zone, res, st, ang: 0, x: pendingPos ? pendingPos.x : 50, y: pendingPos ? pendingPos.y : 50, imageUrl: null });
+  closeModal();
+  renderAll();
+  selectCam(id);
+  debounceSync();
+}
+
+function toggleStatus() {
+  if(currentRole !== 'admin') return;
+  const cam = cameras.find(c => c.id === selCamId);
+  if(!cam) return;
+  cam.st = cam.st === 'online' ? 'maint' : 'online';
+  selectCam(cam.id);
+  renderCams();
+  debounceSync();
+}
+
+function rotateSel(deg) {
+  if(currentRole !== 'admin') return;
+  const cam = cameras.find(c => c.id === selCamId);
+  if(!cam) return;
+  cam.ang = ((cam.ang || 0) + deg + 360) % 360;
+  document.getElementById('dAng').textContent = cam.ang + '°';
+  const dot = document.querySelector(`.cdot[data-id="${cam.id}"]`);
+  if(dot) dot.querySelector('.icon-wrap').style.transform = `rotate(${cam.ang}deg)`;
+  debounceSync();
+}
+
+function delSelected() {
+  if(currentRole !== 'admin') return;
+  if(!selCamId) { alert('กรุณาเลือกกล้องก่อน'); return; }
+  const cam = cameras.find(c => c.id === selCamId);
+  if(!cam || !confirm(`ลบกล้อง ${cam.id} (${cam.name})?`)) return;
+  cameras = cameras.filter(c => c.id !== selCamId);
+  selCamId = null;
+  document.getElementById('detEmpty').style.display = '';
+  document.getElementById('detBody').classList.remove('show');
+  renderAll();
+  debounceSync();
+}
+
+function setFilter(mode, btn) {
+  filterMode = mode;
+  document.querySelectorAll('.ftab').forEach(t => t.className = 'ftab');
+  btn.classList.add(mode === 'all' ? 'a-all' : (mode === 'online' ? 'a-ok' : 'a-maint'));
+  renderList();
+}
+
+// ==================== AUTH ====================
+const USERS = {
+  'admin': { hash: '5f092699896b0109a5bbbfdc49171e5ad6c343fa4b3daa2925c6abdcab3c62ec', role: 'admin', label: '👑 Admin' },
+  'viewer': { hash: '646bba67d66eba7c05816d8b7a5e9e3c68d59cf56d0196e0d9979c82ef1cc9e7', role: 'viewer', label: '👁 Viewer' },
+};
+
+async function sha256(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function doLogin() {
+  const user = document.getElementById('loginUser').value.trim().toLowerCase();
+  const pass = document.getElementById('loginPass').value;
+  const errEl = document.getElementById('loginErr');
+  errEl.classList.remove('show');
+  if(!user || !pass) { errEl.classList.add('show'); return; }
+  const record = USERS[user];
+  if(!record) { errEl.classList.add('show'); return; }
+  const hash = await sha256(pass);
+  if(hash !== record.hash) { errEl.classList.add('show'); return; }
+  currentRole = record.role;
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('roleBadge').textContent = record.label;
+  applyRole();
+  if(firebaseReady) {
+    loadFromFirebase();
+    listenFirebaseChanges();
+  } else {
+    buildings = getDefaultBuildings();
+    cameras = getDefaultCameras();
+    renderAll();
+  }
+  if(currentRole === 'admin') {
+    startAutoStatusCheck();
+  }
+}
+
+function doLogout() {
+  currentRole = null;
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('loginUser').value = '';
+  document.getElementById('loginPass').value = '';
+  document.getElementById('roleBadge').textContent = '👤 —';
+  camEditMode = false;
+  bldEditMode = false;
+  stopAutoStatusCheck();
+  applyRole();
+}
+
+function applyRole() {
+  const isAdmin = currentRole === 'admin';
+  ['btnCamEdit', 'btnBldEdit'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.style.display = isAdmin ? '' : 'none';
+  });
+  document.querySelectorAll('.abtn').forEach(b => b.style.display = isAdmin ? '' : 'none');
+  document.querySelectorAll('.rot-row, .act-row').forEach(r => r.style.display = isAdmin ? '' : 'none');
+  const uploadBtn = document.getElementById('uploadImageBtn');
+  if(uploadBtn) uploadBtn.style.display = isAdmin ? 'inline-block' : 'none';
+  const checkBtn = document.getElementById('btnCheckStatus');
+  if(checkBtn) checkBtn.style.display = isAdmin ? '' : 'none';
+}
+
+// ==================== INIT ====================
+function tick() {
+  const n = new Date();
+  document.getElementById('clock').textContent = [n.getHours(), n.getMinutes(), n.getSeconds()].map(v => String(v).padStart(2, '0')).join(':');
+}
+
+function init() {
+  initFirebase();
+  setInterval(tick, 1000);
+  tick();
+}
+
+init();
+</script>
+</body>
+</html>

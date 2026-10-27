@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mouldmate IT</title>
+<style>
+  :root {
+    --bg: #f3f5f7;
+    --surface: #ffffff;
+    --text: #1b2733;
+    --muted: #5d6b79;
+    --line: #d5dce3;
+    --accent: #0b6b78;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12181e;
+      --surface: #1b242c;
+      --text: #e8edf1;
+      --muted: #9aa8b5;
+      --line: #2e3a45;
+      --accent: #4cc3d1;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Sarabun", "Noto Sans Thai", system-ui, sans-serif;
+    line-height: 1.6;
+  }
+  main { max-width: 640px; margin: 0 auto; padding: 40px 20px 64px; }
+  h1 { font-size: 1.75rem; margin: 0 0 4px; }
+  .sub { color: var(--muted); margin: 0 0 32px; }
+  h2 {
+    font-size: 1rem; margin: 28px 0 8px; padding-bottom: 6px;
+    border-bottom: 2px solid var(--accent);
+  }
+  ul { list-style: none; margin: 0; padding: 0; }
+  li a {
+    display: block; padding: 12px 14px; margin-bottom: 6px;
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 6px; color: var(--text); text-decoration: none;
+  }
+  li a:hover { border-color: var(--accent); }
+  li a:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  li small { display: block; color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Mouldmate IT</h1>
+  <p class="sub">เลือกระบบที่ต้องการใช้งาน</p>
+
+  <h2>Asset</h2>
+  <ul>
+    <li><a href="/Asset/asset-register.html">ทะเบียนทรัพย์สิน<small>asset-register</small></a></li>
+  </ul>
+
+  <h2>CCTV</h2>
+  <ul>
+    <li><a href="/CCTV/ChecklistCCTV.html">Checklist CCTV</a></li>
+  </ul>
+
+  <h2>Form</h2>
+  <ul>
+    <li><a href="/Form/002/form.html">Form 002</a></li>
+    <li><a href="/Form/004/">Form 004</a></li>
+    <li><a href="/Form/008/">Form 008</a></li>
+    <li><a href="/Form/009/">Form 009</a></li>
+    <li><a href="/Form/012/">Form 012</a></li>
+    <li><a href="/Form/017/">Form 017</a></li>
+  </ul>
+
+  <h2>Helpdesk</h2>
+  <ul>
+    <li><a href="/Helpdesk/">Helpdesk</a></li>
+  </ul>
+</main>
+</body>
+</html>

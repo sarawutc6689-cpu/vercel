@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IT Management Portal</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-blue: #2c8cff;
+            --light-blue: #e6f2ff;
+            --medium-blue: #4da6ff;
+            --dark-blue: #0066cc;
+            --accent-blue: #80ccff;
+            --text-dark: #333333;
+            --text-light: #666666;
+            --background: #f8fbff;
+            --card-bg: #ffffff;
+            --shadow: rgba(44, 140, 255, 0.15);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Noto Sans Thai', 'Poppins', sans-serif;
+            background-color: var(--background);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            padding: 40px 0 20px;
+            background: linear-gradient(135deg, var(--primary-blue), var(--dark-blue));
+            color: white;
+            border-radius: 0 0 20px 20px;
+            box-shadow: 0 4px 20px var(--shadow);
+            margin-bottom: 40px;
+        }
+        
+        .logo {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        .logo i {
+            color: var(--light-blue);
+            background-color: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 50%;
+        }
+        
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        
+        .cards-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 25px var(--shadow);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(44, 140, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 35px rgba(44, 140, 255, 0.2);
+        }
+        
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--light-blue);
+        }
+        
+        .card-icon {
+            width: 60px;
+            height: 60px;
+            background-color: var(--light-blue);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            color: var(--primary-blue);
+            font-size: 1.8rem;
+        }
+        
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--dark-blue);
+        }
+        
+        .card-description {
+            color: var(--text-light);
+            margin-bottom: 25px;
+            flex-grow: 1;
+        }
+        
+        .card-link {
+            display: inline-block;
+            background-color: var(--primary-blue);
+            color: white;
+            text-decoration: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-align: center;
+            margin-top: auto;
+        }
+        
+        .card-link:hover {
+            background-color: var(--dark-blue);
+            transform: scale(1.05);
+        }
+        
+        .card-link i {
+            margin-left: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .status-container {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 25px var(--shadow);
+            margin-top: 20px;
+            border-left: 6px solid var(--primary-blue);
+        }
+        
+        .status-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: var(--dark-blue);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .status-title i {
+            color: var(--primary-blue);
+        }
+        
+        .status-content {
+            color: var(--text-light);
+            line-height: 1.8;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 60px;
+            padding: 25px;
+            color: var(--text-light);
+            font-size: 0.9rem;
+            border-top: 1px solid rgba(44, 140, 255, 0.1);
+        }
+        
+        .update-time {
+            margin-top: 10px;
+            font-size: 0.85rem;
+            color: var(--medium-blue);
+            background-color: rgba(44, 140, 255, 0.1);
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .cards-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                padding: 15px;
+            }
+            
+            header {
+                padding: 30px 20px 20px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .logo {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <i class="fas fa-laptop-code"></i>
+                <div>IT Management Portal</div>
+            </div>
+            <h1>ศูนย์กลางระบบไอที</h1>
+            <p class="subtitle">เข้าถึงระบบงานไอทีทั้งหมดผ่านจุดเดียว พร้อมคู่มือและข้อมูลครบครัน</p>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="cards-container">
+            
+            
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="fas fa-book-open"></i>
+                    </div>
+                    <h2 class="card-title">คู่มือการติดตั้ง</h2>
+                </div>
+                <p class="card-description">
+                    คู่มือและขั้นตอนการติดตั้งโปรแกรมต่างๆ 
+                    สำหรับผู้ใช้งานทั่วไปและผู้ดูแลระบบ พร้อมภาพประกอบขั้นตอนอย่างละเอียด
+                </p>
+                <a href="https://drive.google.com/file/d/11sDHjgRhGgQD56ikyCcVTsmHurf5Csv4/view?usp=sharing" target="_blank" class="card-link">
+                    เปิดคู่มือ <i class="fas fa-external-link-alt"></i>
+                </a>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="fas fa-server"></i>
+                    </div>
+                    <h2 class="card-title">ทรัพย์สินไอที</h2>
+                </div>
+                <p class="card-description">
+                    ระบบจัดการทรัพย์สินทางไอที (IT Asset Management) 
+                    ตรวจสอบข้อมูลครุภัณฑ์ อุปกรณ์ และซอฟต์แวร์ทั้งหมดในองค์กร
+                </p>
+                <a href="https://sarawutc6689-cpu.github.io/Mouldmate-IT/Asset/asset-register.html" target="_blank" class="card-link">
+                    เปิดระบบทรัพย์สิน <i class="fas fa-external-link-alt"></i>
+                </a>
+            </div>
+
+            
+
+             <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="fas fa-video"></i>
+                    </div>
+                    <h2 class="card-title">กล้องวงจรปิด</h2>
+                </div>
+                <p class="card-description">
+                   บันทึกตรวจสอบการทำงานกล้องวงจรปิดประจำวัน
+                    ตรวจสอบการทำงานกล้องวงจรปิด การบันทึกไฟล์ การทำงานผิดปกติ
+                </p>
+                <a href="https://sarawutc6689-cpu.github.io/Mouldmate-IT/CCTV/ChecklistCCTV.html" target="_blank" class="card-link">
+                    เข้าดู <i class="fas fa-external-link-alt"></i>
+                </a>
+            </div>
+
+             <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <h2 class="card-title">ค้นหารหัสแผนก</h2>
+                </div>
+                <p class="card-description">
+                   ใช้ดูรหัสแผนกและหน่วยงานต่างๆ
+                   
+                </p>
+                <a href="https://script.google.com/macros/s/AKfycbypxxFjzEJpdtnR8YFjbxVqw0yKwyNTCMTUZyTsVQ882PTecjQk9i3X_BqOQWKRmgc/exec" target="_blank" class="card-link">
+                    เข้าดู <i class="fas fa-external-link-alt"></i>
+                </a>
+            </div>
+            
+
+        </div>
+    </div>
+    
+    <footer>
+        <div class="container">
+            <p>IT Management Portal &copy; 2026 - ศูนย์กลางข้อมูลระบบไอที</p>
+            <p>ออกแบบเพื่อให้ใช้งานง่ายและเข้าถึงข้อมูลได้รวดเร็ว || พัฒนาระบบโดย Sarawut.C</p>
+            
+            <div class="update-time">
+                อัพเดทล่าสุด: 26 มกราคม 2569
+            </div>
+        </div>
+    </footer>
+    
+    <script>
+        // เพิ่มฟังก์ชันเพื่อแสดงเวลาและวันที่ปัจจุบัน
+        function updateDateTime() {
+            const now = new Date();
+            const options = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            };
+            
+            // สำหรับภาษาไทย
+            const thaiDateTime = now.toLocaleDateString('th-TH', options);
+            
+            // อัพเดทวันที่และเวลาใน footer
+            const updateElement = document.querySelector('.update-time');
+            if (updateElement) {
+                updateElement.textContent = `อัพเดทล่าสุด: ${thaiDateTime}`;
+            }
+        }
+        
+        // เพิ่มเอฟเฟกต์เมื่อโหลดหน้าเว็บ
+        document.addEventListener('DOMContentLoaded', function() {
+            // อัพเดทวันที่และเวลา
+            updateDateTime();
+            
+            // เพิ่มเอฟเฟกต์เมื่อโหลดการ์ด
+            const cards = document.querySelectorAll('.card');
+            cards.forEach((card, index) => {
+                // เพิ่มดีเลย์สำหรับแสดงการ์ดทีละอัน
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                
+                setTimeout(() => {
+                    card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, 100 * (index + 1));
+            });
+            
+            // เพิ่มการแจ้งเตือนเมื่อคลิกลิงก์
+            const links = document.querySelectorAll('.card-link');
+            links.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    // แสดงข้อความแจ้งเตือนเมื่อเปิดลิงก์ใหม่
+                    console.log(`กำลังเปิด: ${this.textContent.trim()}`);
+                });
+            });
+        });
+        
+        // อัพเดทเวลาทุก 60 วินาที
+        setInterval(updateDateTime, 60000);
+    </script>
+</body>
+</html>

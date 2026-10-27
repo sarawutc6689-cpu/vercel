@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - ระบบจัดการแบบฟอร์มสารสนเทศ</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Sarabun', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f0f4f8;
+            min-height: 100vh;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Styles - โทนฟ้าสุภาพ */
+        .sidebar {
+            width: 320px;
+            background: linear-gradient(180deg, #1a4b7a 0%, #0d3b5e 100%);
+            color: white;
+            padding: 25px 0;
+            box-shadow: 4px 0 15px rgba(0, 40, 80, 0.15);
+            overflow-y: auto;
+        }
+
+        .sidebar-header {
+            padding: 0 25px 25px 25px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+            margin-bottom: 20px;
+        }
+
+        .sidebar-header h3 {
+            font-size: 1.5rem;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            color: #ffffff;
+            margin-bottom: 5px;
+        }
+
+        .sidebar-header p {
+            font-size: 0.9rem;
+            color: #b8d1e6;
+            margin-top: 5px;
+            font-weight: 300;
+        }
+
+        .menu {
+            list-style: none;
+        }
+
+        .menu-item {
+            margin-bottom: 2px;
+        }
+
+        .menu-link {
+            display: flex;
+            align-items: center;
+            padding: 14px 25px;
+            color: #e6f0fa;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+            cursor: pointer;
+            font-size: 1rem;
+            background-color: transparent;
+        }
+
+        .menu-link:hover {
+            background-color: rgba(52, 152, 219, 0.25);
+            border-left-color: #5dade2;
+            color: #ffffff;
+        }
+
+        .menu-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            background-color: rgba(255, 255, 255, 0.15);
+            border-radius: 6px;
+            margin-right: 15px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #ffffff;
+            transition: all 0.3s ease;
+        }
+
+        .menu-link:hover .menu-number {
+            background-color: #5dade2;
+            color: #ffffff;
+        }
+
+        .menu-text {
+            flex: 1;
+            font-weight: 400;
+        }
+
+        /* Main Content Styles */
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            background-color: #f0f4f8;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #d0deeb;
+        }
+
+        .header h1 {
+            color: #1a4b7a;
+            font-size: 2rem;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .header h1:after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background-color: #5dade2;
+            border-radius: 2px;
+        }
+
+        .user-info {
+            background-color: white;
+            padding: 12px 25px;
+            border-radius: 50px;
+            box-shadow: 0 3px 10px rgba(26, 75, 122, 0.08);
+            color: #1a4b7a;
+            font-weight: 500;
+            border: 1px solid #e1ebf5;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-icon {
+            width: 35px;
+            height: 35px;
+            background-color: #e6f0fa;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #1a4b7a;
+            font-weight: 600;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            gap: 25px;
+            margin-top: 25px;
+        }
+
+        .form-card {
+            background-color: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(26, 75, 122, 0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid #e1ebf5;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .form-card:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #1a4b7a, #5dade2);
+        }
+
+        .form-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(26, 75, 122, 0.12);
+            border-color: #b8d1e6;
+        }
+
+        .form-card h3 {
+            color: #1a4b7a;
+            font-size: 1.2rem;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 600;
+        }
+
+        .form-number {
+            background-color: #e6f0fa;
+            color: #1a4b7a;
+            width: 32px;
+            height: 32px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border: 1px solid #b8d1e6;
+        }
+
+        .form-description {
+            color: #4a6f8c;
+            font-size: 0.95rem;
+            margin-bottom: 20px;
+            line-height: 1.6;
+            padding-left: 44px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-left: 44px;
+            flex-wrap: wrap;
+        }
+
+        .form-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 20px;
+            background-color: #e6f0fa;
+            color: #1a4b7a;
+            text-decoration: none;
+            border-radius: 50px;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            border: 1px solid #b8d1e6;
+            font-weight: 500;
+            cursor: pointer;
+            min-width: 110px;
+        }
+
+        .form-link:hover {
+            background-color: #1a4b7a;
+            color: white;
+            border-color: #1a4b7a;
+        }
+
+        .form-link.approve {
+            background-color: #d4edda;
+            color: #155724;
+            border-color: #c3e6cb;
+        }
+
+        .form-link.approve:hover {
+            background-color: #28a745;
+            color: white;
+            border-color: #28a745;
+        }
+
+        .form-link.pending {
+            background-color: #f8fafc;
+            color: #5dade2;
+            border-color: #d0deeb;
+        }
+
+        .badge-pending {
+            background-color: #f0f4f8;
+            color: #5dade2;
+            font-size: 0.7rem;
+            padding: 3px 8px;
+            border-radius: 50px;
+            margin-left: 8px;
+            border: 1px solid #d0deeb;
+            white-space: nowrap;
+        }
+
+        .approve-badge {
+            background-color: #d4edda;
+            color: #155724;
+            font-size: 0.7rem;
+            padding: 3px 8px;
+            border-radius: 50px;
+            margin-left: 8px;
+            border: 1px solid #c3e6cb;
+            white-space: nowrap;
+        }
+
+        .footer {
+            margin-top: 50px;
+            padding: 25px 0 10px 0;
+            border-top: 1px solid #d0deeb;
+            text-align: center;
+            color: #4a6f8c;
+            font-size: 0.95rem;
+        }
+
+        .footer p:first-child {
+            font-weight: 500;
+            color: #1a4b7a;
+            margin-bottom: 5px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+            }
+            
+            .header h1:after {
+                width: 40px;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            .form-link {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar - โทนฟ้าสุภาพ -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h3>ระบบจัดการแบบฟอร์ม</h3>
+                <p>ศูนย์เทคโนโลยีสารสนเทศ</p>
+            </div>
+            
+            <ul class="menu">
+                <li class="menu-item">
+                    <a href="#" class="menu-link">
+                        <span class="menu-number">1</span>
+                        <span class="menu-text">แบบฟอร์มขอรับ ชื่อผู้ใช้ และอีเมล</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="#" class="menu-link">
+                        <span class="menu-number">2</span>
+                        <span class="menu-text">แบบฟอร์มตรวจสอบบำรุงรักษาคอมพิวเตอร์</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="#" class="menu-link">
+                        <span class="menu-number">3</span>
+                        <span class="menu-text">แบบฟอร์มขอนำเครื่องมือ อุปกรณ์สารสนเทศออกนอกบริษัท</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="#" class="menu-link">
+                        <span class="menu-number">4</span>
+                        <span class="menu-text">แบบฟอร์มขอเพิ่มอุปกรณ์สารสนเทศในแผนก</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="#" class="menu-link">
+                        <span class="menu-number">5</span>
+                        <span class="menu-text">แบบฟอร์มขอนำเครื่องมือและอุปกรณ์สารสนเทศส่วนตัวเข้า-ออกบริษัท </span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="#" class="menu-link">
+                        <span class="menu-number">6</span>
+                        <span class="menu-text">แบบฟอร์มการรับมอบ-ส่งคืนทรัพย์สินอุปกรณ์สารสนเทศ</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="#" class="menu-link">
+                        <span class="menu-number">7</span>
+                        <span class="menu-text">แบบฟอร์มขอยืมอุปกรณ์</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="header">
+                <h1>หน้าหลัก</h1>
+            </div>
+
+            <!-- Dashboard Cards -->
+            <div class="content-grid">
+                <!-- Card 1 -->
+                <div class="form-card">
+                    <h3>
+                        <span class="form-number">1</span>
+                        ขอรับชื่อผู้ใช้และอีเมล
+                    </h3>
+                    <p class="form-description">แบบฟอร์มสำหรับขอรับบัญชีผู้ใช้และอีเมลในองค์กร พร้อมกำหนดสิทธิ์การใช้งานเบื้องต้น</p>
+                    <div class="button-group">
+                        <a href="https://sarawutc6689-cpu.github.io/Mouldmate-IT/Form/002/form.html" class="form-link pending" >
+                            เข้าระบบ
+                        </a>
+                        <a href="#">
+                          
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="form-card">
+                    <h3>
+                        <span class="form-number">2</span>
+                        ตรวจสอบบำรุงรักษาคอมพิวเตอร์
+                    </h3>
+                    <p class="form-description">แบบฟอร์มแจ้งซ่อมและบำรุงรักษาคอมพิวเตอร์ อุปกรณ์ต่อพ่วง และระบบเครือข่าย</p>
+                    <div class="button-group">
+                        <a href="https://sarawutc6689-cpu.github.io/Mouldmate-IT/Form/008/index.html" class="form-link pending">
+                            เข้าระบบ
+                        </a>
+                        <a href="#" >
+                           
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="form-card">
+                    <h3>
+                        <span class="form-number">3</span>
+                        นำอุปกรณ์ออกนอกบริษัท
+                    </h3>
+                    <p class="form-description">แบบฟอร์มขอนำเครื่องมือ/อุปกรณ์สารสนเทศออกนอกบริษัท พร้อมระบุวัตถุประสงค์</p>
+                    <div class="button-group">
+                        <a href="https://script.google.com/macros/s/AKfycbyDSFTGQ8YB0mS5WqiOzkexm_wBjb7E3xD6Avx1xVahtR3K7D7P6EGLQ3-n8TBZX1IA/exec" class="form-link pending">
+                            เข้าระบบ
+                        </a>
+                        <a href="#">
+                          
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Card 4 -->
+                <div class="form-card">
+                    <h3>
+                        <span class="form-number">4</span>
+                        ขอเพิ่มอุปกรณ์ในหน่วยงาน
+                    </h3>
+                    <p class="form-description">แบบฟอร์มขอเพิ่มอุปกรณ์สารสนเทศในหน่วยงาน พร้อมเหตุผลความจำเป็น</p>
+                    <div class="button-group">
+                        <a href="https://script.google.com/macros/s/AKfycbz5PYHX_8AoyCULJ-x2u4ZLHr3X-U6c2y8Cx2-idC9UjMJabPUSWh3KvyfqkWlNZkhf/exec" class="form-link pending">
+                            เข้าระบบ
+                        </a>
+                        <a href="#">
+                           
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Card 5 -->
+                <div class="form-card">
+                    <h3>
+                        <span class="form-number">5</span>
+                        นำอุปกรณ์ส่วนตัวเข้า-ออก
+                    </h3>
+                    <p class="form-description">แบบฟอร์มขอนำเครื่องมือ/อุปกรณ์สารสนเทศส่วนตัวเข้า-ออกบริษัท</p>
+                    <div class="button-group">
+                        <a href="https://sarawutc6689-cpu.github.io/Mouldmate-IT/Form/012/index.html" class="form-link pending" ">
+                            เข้าระบบ
+                        </a>
+                        <a href="#">
+                            
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Card 6 -->
+                <div class="form-card">
+                    <h3>
+                        <span class="form-number">6</span>
+                        รับมอบ-ส่งคืนทรัพย์สิน
+                    </h3>
+                    <p class="form-description">แบบฟอร์มการรับมอบ-ส่งคืนทรัพย์สินอุปกรณ์สารสนเทศ ครุภัณฑ์คอมพิวเตอร์</p>
+                    <div class="button-group">
+                        <a href="https://script.google.com/macros/s/AKfycbxXHMEl9DfINNY8kgwpllUgYVT2jzfXiR-Pom4bPIubYT0b_-WpdOwWGHWPhkl1A28/exec" class="form-link pending">
+                            เข้าระบบ
+                        </a>
+                        <a href="#" >
+                            
+                        </a>
+                    </div>
+                </div>
+
+                 <!-- Card 7 -->
+                <div class="form-card">
+                    <h3>
+                        <span class="form-number">7</span>
+                        แบบฟอร์มขอยืมอุปกรณ์
+                    </h3>
+                    <p class="form-description">แบบฟอร์มขอยืมอุปกรณ์สารสนเทศ</p>
+                    <div class="button-group">
+                        <a href="https://sarawutc6689-cpu.github.io/Mouldmate-IT/Form/004/index.html" class="form-link pending">
+                           เข้าระบบ
+                        </a>
+                        <a href="#">
+                    
+                        </a>
+                    </div>
+                </div>
+                
+            </div>
+            
+
+            <div class="footer">
+                <p>© 2026 ศูนย์เทคโนโลยีสารสนเทศ - ระบบจัดการแบบฟอร์มออนไลน์</p>
+                <p>พัฒนาระบบโดย Sarawut.C</p>
+                <p style="font-size: 0.8rem; margin-top: 8px; color: #7a9cba;">หมายเหตุ: ลิงก์แบบฟอร์มกำลังอยู่ระหว่างการดำเนินการ</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // JavaScript สำหรับการจัดการลิงก์ (พร้อมอัปเดตในภายหลัง)
+        document.addEventListener('DOMContentLoaded', function() {
+            const menuLinks = document.querySelectorAll('.menu-link');
+            menuLinks.forEach((link, index) => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    // console.log(`กำลังเปิดแบบฟอร์มที่ ${index + 1}`);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

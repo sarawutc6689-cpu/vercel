@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>เข้าสู่ระบบ</title>
+<style>
+  /* ================================================
+     CONFIG — แก้ SCRIPT_URL ให้ตรงกับ Deploy URL
+  ================================================ */
+  :root {
+    --bg: #f5f5f3;
+    --surface: #ffffff;
+    --border: #e4e4e0;
+    --text: #111110;
+    --muted: #7c7c78;
+    --accent: #18181b;
+    --accent-hover: #3f3f46;
+    --danger: #dc2626;
+    --success: #16a34a;
+    --radius: 10px;
+    --input-h: 44px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--bg);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    color: var(--text);
+  }
+
+  /* ---- CARD ---- */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 2rem;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.06);
+  }
+
+  .logo {
+    width: 40px; height: 40px;
+    background: var(--accent);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 1.25rem;
+  }
+  .logo svg { width: 20px; height: 20px; fill: #fff; }
+
+  h1 { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+  .subtitle { font-size: 14px; color: var(--muted); margin-bottom: 1.5rem; }
+
+  /* ---- FORM ---- */
+  label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 6px; }
+
+  input[type="email"],
+  input[type="text"] {
+    width: 100%;
+    height: var(--input-h);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0 12px;
+    font-size: 15px;
+    color: var(--text);
+    background: var(--surface);
+    outline: none;
+    transition: border-color .15s;
+  }
+  input:focus { border-color: var(--accent); }
+
+  /* OTP input big */
+  .otp-input {
+    letter-spacing: 10px;
+    font-size: 24px;
+    font-weight: 600;
+    text-align: center;
+  }
+
+  .btn {
+    display: block; width: 100%;
+    height: var(--input-h);
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-top: 1rem;
+    transition: background .15s, opacity .15s;
+  }
+  .btn:hover { background: var(--accent-hover); }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+
+  .btn-link {
+    background: none; border: none;
+    color: var(--muted); font-size: 13px;
+    cursor: pointer; padding: 0;
+    text-decoration: underline; margin-top: .75rem;
+    display: block; width: 100%; text-align: center;
+  }
+  .btn-link:hover { color: var(--text); }
+
+  /* ---- ALERT ---- */
+  .alert {
+    font-size: 13px; padding: 10px 12px;
+    border-radius: var(--radius); margin-top: .75rem;
+    display: none;
+  }
+  .alert.error  { background: #fef2f2; color: var(--danger); border: 1px solid #fecaca; }
+  .alert.success { background: #f0fdf4; color: var(--success); border: 1px solid #bbf7d0; }
+
+  /* ---- TIMER ---- */
+  .timer { font-size: 12px; color: var(--muted); text-align: center; margin-top: .5rem; }
+  .timer span { font-weight: 600; color: var(--text); }
+
+  /* ---- STEP DOTS ---- */
+  .steps { display: flex; gap: 6px; margin-bottom: 1.5rem; }
+  .step-dot {
+    height: 3px; flex: 1; border-radius: 99px;
+    background: var(--border); transition: background .3s;
+  }
+  .step-dot.done { background: var(--accent); }
+
+  /* ---- VIEWS ---- */
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* ---- DASHBOARD ---- */
+  #view-dashboard .card {
+    max-width: 560px;
+  }
+  .topbar {
+    display: flex; justify-content: space-between;
+    align-items: center; margin-bottom: 1.5rem;
+  }
+  .user-pill {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 99px; padding: 4px 12px 4px 6px;
+    font-size: 13px;
+  }
+  .avatar {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--accent); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 600;
+  }
+  .logout-btn {
+    font-size: 12px; color: var(--muted);
+    background: none; border: none;
+    cursor: pointer; padding: 4px 8px;
+    border-radius: 6px;
+  }
+  .logout-btn:hover { background: var(--bg); color: var(--text); }
+
+  .content-area {
+    background: var(--bg); border-radius: var(--radius);
+    padding: 1.5rem; text-align: center;
+    border: 1px dashed var(--border);
+  }
+  .content-area h2 { font-size: 18px; margin-bottom: .5rem; }
+  .content-area p { font-size: 14px; color: var(--muted); }
+
+  /* spinner */
+  .spinner {
+    display: inline-block; width: 16px; height: 16px;
+    border: 2px solid rgba(255,255,255,.4);
+    border-top-color: #fff; border-radius: 50%;
+    animation: spin .6s linear infinite; vertical-align: middle;
+    margin-right: 6px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<!-- ================================================
+     VIEW 1 : กรอก Email
+================================================ -->
+<div id="view-email" class="view active">
+  <div class="card">
+    <div class="logo">
+      <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+    </div>
+    <div class="steps">
+      <div class="step-dot done" id="dot1"></div>
+      <div class="step-dot" id="dot2"></div>
+    </div>
+    <h1>เข้าสู่ระบบ</h1>
+    <p class="subtitle">กรอก email เพื่อรับรหัส OTP</p>
+
+    <label for="email">อีเมล</label>
+    <input type="email" id="email" placeholder="you@example.com" autocomplete="email">
+
+    <div class="alert error" id="email-error"></div>
+
+    <button class="btn" id="send-btn" onclick="sendOTP()">ส่งรหัส OTP</button>
+  </div>
+</div>
+
+<!-- ================================================
+     VIEW 2 : กรอก OTP
+================================================ -->
+<div id="view-otp" class="view">
+  <div class="card">
+    <div class="logo">
+      <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+    </div>
+    <div class="steps">
+      <div class="step-dot done"></div>
+      <div class="step-dot done"></div>
+    </div>
+    <h1>ยืนยัน OTP</h1>
+    <p class="subtitle" id="otp-subtitle">ส่งรหัส 6 หลักไปที่ —</p>
+
+    <label for="otp">รหัส OTP</label>
+    <input type="text" id="otp" class="otp-input" maxlength="6"
+           placeholder="000000" inputmode="numeric" autocomplete="one-time-code">
+
+    <div class="alert error" id="otp-error"></div>
+    <div class="alert success" id="otp-success"></div>
+
+    <button class="btn" id="verify-btn" onclick="verifyOTP()">ยืนยัน</button>
+
+    <div class="timer" id="timer-display"></div>
+    <button class="btn-link" id="resend-btn" onclick="resendOTP()" style="display:none">ส่งรหัสใหม่</button>
+    <button class="btn-link" onclick="backToEmail()">← เปลี่ยน email</button>
+  </div>
+</div>
+
+<!-- ================================================
+     VIEW 3 : หน้าหลัง Login
+     แก้ไขเนื้อหาใน .content-area ได้ตามต้องการ
+================================================ -->
+<div id="view-dashboard" class="view">
+  <div class="card">
+    <div class="topbar">
+      <strong style="font-size:15px;">แดชบอร์ด</strong>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div class="user-pill">
+          <div class="avatar" id="user-avatar">—</div>
+          <span id="user-email-display">—</span>
+        </div>
+        <button class="logout-btn" onclick="logout()">ออก</button>
+      </div>
+    </div>
+
+    <!-- ✏️ แก้ไขเนื้อหาตรงนี้ได้เลย -->
+    <div class="content-area">
+      <h2>ยินดีต้อนรับ 👋</h2>
+      <p>คุณเข้าสู่ระบบสำเร็จแล้ว<br>วางเนื้อหาของคุณที่นี่</p>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ============================================================
+// ⚙️ แก้ SCRIPT_URL ให้ตรงกับ Google Apps Script Deploy URL
+// ============================================================
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxJ8IqCC-E3mTGOveNIRfRCtRccaUhnZ7hmN4lVG_oAm7kZiOOIzt8owFSYR-E9ntub/exec";
+
+let currentEmail = "";
+let timerInterval = null;
+
+// ---- ส่ง OTP ----
+async function sendOTP() {
+  const email = document.getElementById("email").value.trim();
+  hideAlert("email-error");
+
+  if (!email || !email.includes("@")) {
+    return showAlert("email-error", "กรุณากรอก email ให้ถูกต้อง");
+  }
+
+  setLoading("send-btn", true);
+
+  try {
+    const res = await fetch(SCRIPT_URL, {
+      method: "POST",
+      body: JSON.stringify({ action: "send", email })
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      currentEmail = email;
+      document.getElementById("otp-subtitle").textContent = "ส่งรหัส 6 หลักไปที่ " + email;
+      showView("view-otp");
+      startTimer(300);
+    } else {
+      showAlert("email-error", data.msg || "เกิดข้อผิดพลาด");
+    }
+  } catch (e) {
+    showAlert("email-error", "ไม่สามารถเชื่อมต่อได้ กรุณาลองใหม่");
+  }
+
+  setLoading("send-btn", false);
+}
+
+// ---- ยืนยัน OTP ----
+async function verifyOTP() {
+  const otp = document.getElementById("otp").value.trim();
+  hideAlert("otp-error");
+  hideAlert("otp-success");
+
+  if (otp.length !== 6) {
+    return showAlert("otp-error", "กรุณากรอกรหัส 6 หลัก");
+  }
+
+  setLoading("verify-btn", true);
+
+  try {
+    const res = await fetch(SCRIPT_URL, {
+      method: "POST",
+      body: JSON.stringify({ action: "verify", email: currentEmail, otp })
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      clearInterval(timerInterval);
+      showAlert("otp-success", "✓ " + data.msg);
+      setTimeout(() => {
+        // บันทึก session อย่างง่าย
+        sessionStorage.setItem("loggedIn", "true");
+        sessionStorage.setItem("userEmail", currentEmail);
+        showDashboard();
+      }, 800);
+    } else {
+      showAlert("otp-error", data.msg || "OTP ไม่ถูกต้อง");
+    }
+  } catch (e) {
+    showAlert("otp-error", "ไม่สามารถเชื่อมต่อได้ กรุณาลองใหม่");
+  }
+
+  setLoading("verify-btn", false);
+}
+
+// ---- ส่งใหม่ ----
+async function resendOTP() {
+  document.getElementById("otp").value = "";
+  hideAlert("otp-error");
+  document.getElementById("resend-btn").style.display = "none";
+  await sendOTPSilent();
+  startTimer(300);
+}
+
+async function sendOTPSilent() {
+  await fetch(SCRIPT_URL, {
+    method: "POST",
+    body: JSON.stringify({ action: "send", email: currentEmail })
+  });
+}
+
+// ---- Dashboard ----
+function showDashboard() {
+  window.location.href = "https://sarawutc6689-cpu.github.io/Mouldmate-IT/Privacy-Password.html";
+}
+
+function logout() {
+  sessionStorage.clear();
+  currentEmail = "";
+  document.getElementById("email").value = "";
+  document.getElementById("otp").value = "";
+  hideAlert("email-error");
+  hideAlert("otp-error");
+  hideAlert("otp-success");
+  showView("view-email");
+}
+
+function backToEmail() {
+  clearInterval(timerInterval);
+  hideAlert("otp-error");
+  showView("view-email");
+}
+
+// ---- Timer ----
+function startTimer(seconds) {
+  clearInterval(timerInterval);
+  let remaining = seconds;
+  const display = document.getElementById("timer-display");
+  const resendBtn = document.getElementById("resend-btn");
+  resendBtn.style.display = "none";
+
+  function tick() {
+    const m = Math.floor(remaining / 60);
+    const s = remaining % 60;
+    display.innerHTML = `OTP หมดอายุใน <span>${m}:${s.toString().padStart(2,"0")}</span>`;
+    if (remaining <= 0) {
+      clearInterval(timerInterval);
+      display.innerHTML = `<span style="color:#dc2626">OTP หมดอายุแล้ว</span>`;
+      resendBtn.style.display = "block";
+    }
+    remaining--;
+  }
+  tick();
+  timerInterval = setInterval(tick, 1000);
+}
+
+// ---- Helpers ----
+function showView(id) {
+  document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+}
+
+function showAlert(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.style.display = "block";
+}
+
+function hideAlert(id) {
+  document.getElementById(id).style.display = "none";
+}
+
+function setLoading(btnId, loading) {
+  const btn = document.getElementById(btnId);
+  btn.disabled = loading;
+  btn.innerHTML = loading
+    ? `<span class="spinner"></span>กำลังดำเนินการ...`
+    : (btnId === "send-btn" ? "ส่งรหัส OTP" : "ยืนยัน");
+}
+
+// ---- Auto-check session ----
+window.onload = () => {
+  if (sessionStorage.getItem("loggedIn") === "true") {
+    currentEmail = sessionStorage.getItem("userEmail");
+    showDashboard();
+  }
+  // Enter key submit
+  document.getElementById("email").addEventListener("keydown", e => {
+    if (e.key === "Enter") sendOTP();
+  });
+  document.getElementById("otp").addEventListener("keydown", e => {
+    if (e.key === "Enter") verifyOTP();
+  });
+  // กรอก OTP อัตโนมัติตัวเลขเท่านั้น
+  document.getElementById("otp").addEventListener("input", e => {
+    e.target.value = e.target.value.replace(/\D/g, "");
+  });
+};
+</script>
+</body>
+</html>
