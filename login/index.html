@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ระบบล็อกอินพนักงาน | TOKAI</title>
+
+<!-- เปิดการเชื่อมต่อ (DNS + TLS) ล่วงหน้ากับโดเมนที่จะยิง request จริง
+     เพื่อตัดเวลา handshake ออกจาก request แรกตอนกดล็อกอิน -->
+<link rel="preconnect" href="https://dhgjbpvbbixipxksqqzu.supabase.co" crossorigin>
+<link rel="dns-prefetch" href="https://dhgjbpvbbixipxksqqzu.supabase.co">
+
+<style>
+  /* ไม่พึ่ง external font / icon library (ตัด Font Awesome ทิ้ง) —
+     ใช้ system font stack และไอคอน SVG ฝังในหน้าแทน จึงไม่มี request
+     ที่สองก่อนหน้านี้ที่บล็อกการ render (ก่อนหน้าเคยโหลด CDN CSS ~70KB) */
+  :root{
+    --red:#F50602;
+    --red-dark:#c50501;
+    --bg:#0b0b0c;
+    --card:#161616;
+    --field:#0f0f10;
+    --border:#2a2a2a;
+    --text:#f2f2f2;
+    --muted:#8a8a8a;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+  }
+  /* พื้นหลังแบบ static gradient แทน blob เคลื่อนไหวหลายชั้น
+     เพื่อตัด reflow/repaint ต่อเนื่องที่กินซีพียู/แบตระหว่างใช้งาน */
+  body{
+    background-image:
+      radial-gradient(circle at 15% 20%, rgba(245,6,2,.12), transparent 45%),
+      radial-gradient(circle at 85% 80%, rgba(245,6,2,.08), transparent 45%);
+  }
+  .card{
+    width:100%;
+    max-width:420px;
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:16px;
+    overflow:hidden;
+  }
+  .head{
+    padding:28px 24px 22px;
+    text-align:center;
+    border-bottom:2px solid var(--red);
+  }
+  .head img{
+    width:140px;
+    height:auto;
+    display:block;
+    margin:0 auto 14px;
+  }
+  .head h1{font-size:22px;font-weight:700;letter-spacing:.2px}
+  .head p{font-size:13.5px;color:var(--muted);margin-top:6px}
+
+  .body{padding:26px 24px 24px}
+  .field{margin-bottom:18px}
+  .field label{
+    display:flex;align-items:center;gap:6px;
+    font-size:13.5px;font-weight:600;color:#cfcfcf;margin-bottom:8px;
+  }
+  .field label svg{width:15px;height:15px;stroke:var(--red);flex-shrink:0}
+  .input-wrap{position:relative}
+  .input-wrap svg{
+    position:absolute;left:14px;top:50%;transform:translateY(-50%);
+    width:17px;height:17px;stroke:var(--muted);pointer-events:none;
+  }
+  input{
+    width:100%;
+    padding:13px 14px 13px 42px;
+    background:var(--field);
+    border:1.5px solid var(--border);
+    border-radius:10px;
+    color:var(--text);
+    font-size:15.5px;
+    transition:border-color .15s;
+  }
+  input::placeholder{color:#555}
+  input:focus{outline:none;border-color:var(--red)}
+  input.shake{animation:shake .3s}
+  @keyframes shake{
+    25%{transform:translateX(-4px)}
+    75%{transform:translateX(4px)}
+  }
+
+  button{
+    width:100%;
+    margin-top:6px;
+    padding:15px;
+    background:var(--red);
+    color:#fff;
+    border:none;
+    border-radius:10px;
+    font-size:15.5px;
+    font-weight:700;
+    letter-spacing:.4px;
+    cursor:pointer;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    transition:background .15s;
+  }
+  button:hover:not(:disabled){background:var(--red-dark)}
+  button:disabled{opacity:.75;cursor:default}
+  button svg{width:18px;height:18px}
+
+  .spin{animation:spin .6s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  .msg{
+    display:none;
+    margin-bottom:16px;
+    padding:11px 13px;
+    border-radius:8px;
+    font-size:13.5px;
+    font-weight:600;
+    border-left:3px solid transparent;
+    align-items:center;gap:8px;
+  }
+  .msg svg{width:15px;height:15px;flex-shrink:0}
+  .msg.show{display:flex}
+  .msg.error{background:rgba(245,6,2,.1);color:#ff8580;border-left-color:var(--red)}
+  .msg.ok{background:rgba(0,200,0,.1);color:#7ee87e;border-left-color:#1ea31e}
+  .msg.wait{background:rgba(0,110,255,.1);color:#7fb1ff;border-left-color:#1c6fff}
+
+  .help{text-align:center;margin-top:18px}
+  .help a{color:var(--muted);text-decoration:none;font-size:13.5px}
+  .help a:hover{color:var(--red)}
+
+  .foot{
+    padding:16px;text-align:center;color:#666;font-size:12.5px;
+    border-top:1px solid #1f1f1f;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .spin{animation:none}
+    input.shake{animation:none}
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="head">
+    <!-- fetchpriority=high + ขนาดคงที่ กันภาพเบียด layout ระหว่างโหลด (ลด CLS) -->
+    <img src="https://sarawutc6689-cpu.github.io/Mouldmate-Login/logotokai.png"
+         alt="TOKAI" width="140" height="46" fetchpriority="high">
+    <h1>ระบบล็อกอินพนักงาน</h1>
+    <p>เฉพาะพนักงาน TOKAISOLIDTIRE ที่ลงทะเบียนเท่านั้น</p>
+  </div>
+
+  <div class="body">
+    <form id="f" autocomplete="on">
+      <div class="field">
+        <label>
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg>
+          รหัสพนักงาน
+        </label>
+        <div class="input-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <input type="text" id="uname" name="uname" placeholder="กรุณากรอกรหัสพนักงาน" autocomplete="username" inputmode="text">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+          วันที่เริ่มงาน
+        </label>
+        <div class="input-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <input type="password" id="pass" name="pass" placeholder="กรุณากรอกวันที่เริ่มงาน (DDMMYYYY)" autocomplete="current-password" inputmode="numeric">
+        </div>
+      </div>
+
+      <div id="msg" class="msg"></div>
+
+      <button type="submit" id="btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg>
+        <span>เข้าสู่ระบบ</span>
+      </button>
+
+      <div class="help"><a href="#" id="help-link">ต้องการความช่วยเหลือ?</a></div>
+    </form>
+  </div>
+
+  <div class="foot">ระบบรักษาความปลอดภัย © 2026 · พัฒนาโดย Sarawut.C</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+(function(){
+  "use strict";
+
+  const SUPABASE_URL  = "https://dhgjbpvbbixipxksqqzu.supabase.co";
+  const SUPABASE_KEY  = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRoZ2picHZiYml4aXB4a3NxcXp1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5OTIxMjgsImV4cCI6MjEwMTU2ODEyOH0.kZBAN01vbe8kENacfofZewHvxQBCCd2OaTFKbcFYlpM";
+  const DASHBOARD_URL = "https://sarawutc6689-cpu.github.io/Mouldmate-Home/Home.html";
+  const TIMEOUT_MS    = 8000; // ตัดรอถ้าเกิน 8 วิ กันหน้าจอค้าง
+
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  const form   = document.getElementById('f');
+  const unameEl = document.getElementById('uname');
+  const passEl  = document.getElementById('pass');
+  const msgEl  = document.getElementById('msg');
+  const btn    = document.getElementById('btn');
+  const btnLabel = btn.querySelector('span');
+  const btnIcon  = btn.querySelector('svg');
+  const origIcon = btnIcon.outerHTML;
+
+  const ICONS = {
+    spinner: '<svg class="spin" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>',
+    check:   '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>',
+    alert:   '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>',
+    clock:   '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>',
+    ban:     '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M4.9 4.9l14.2 14.2"/></svg>'
+  };
+
+  function showMsg(type, icon, text){
+    msgEl.className = 'msg show ' + type;
+    msgEl.innerHTML = ICONS[icon] + '<span>' + text + '</span>';
+  }
+  function hideMsg(){
+    msgEl.className = 'msg';
+    msgEl.innerHTML = '';
+  }
+  function shake(el){
+    el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake');
+  }
+  function setLoading(on){
+    btn.disabled = on;
+    btnLabel.textContent = on ? 'กำลังตรวจสอบ...' : 'เข้าสู่ระบบ';
+    btnIcon.outerHTML = on ? ICONS.spinner : origIcon;
+  }
+
+  document.getElementById('help-link').addEventListener('click', function(e){
+    e.preventDefault();
+    showMsg('wait', 'alert', 'รหัสพนักงาน: รหัสที่ได้รับจากบริษัท · วันที่เริ่มงาน: DDMMYYYY · ลืมรหัสติดต่อ HR');
+    setTimeout(hideMsg, 6000);
+  });
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    login();
+  });
+
+  function login(){
+    const user = unameEl.value.trim();
+    const pass = passEl.value.trim();
+    hideMsg();
+
+    if (!user || !pass){
+      showMsg('error', 'alert', 'กรุณากรอกข้อมูลให้ครบทุกช่อง');
+      if (!user) shake(unameEl);
+      if (!pass) shake(passEl);
+      return;
+    }
+
+    setLoading(true);
+    showMsg('wait', 'spinner', 'กำลังตรวจสอบข้อมูล...');
+
+    // ทำ timeout เอง เพราะ supabase-js ไม่มี option timeout ตรงๆ
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject({ name: 'AbortError' }), TIMEOUT_MS)
+    );
+
+    Promise.race([
+      supabase.rpc('login_employee', { p_code: user, p_pass: pass }),
+      timeoutPromise
+    ])
+      .then(({ data, error }) => {
+        if (error){
+          showMsg('error', 'alert', 'เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่');
+          setLoading(false);
+          return;
+        }
+
+        if (data.status === 'success'){
+          showMsg('ok', 'check', 'สำเร็จ! กำลังเข้าสู่ระบบ...');
+          btnLabel.textContent = 'สำเร็จ';
+          btnIcon.outerHTML = ICONS.check;
+          btn.style.background = '#1ea31e';
+
+          // เก็บ session แล้วเปลี่ยนหน้าทันที ไม่หน่วงด้วย setTimeout ยาวๆ
+          localStorage.setItem('username', user);
+          localStorage.setItem('authToken', user);
+          localStorage.setItem('expireTime', Date.now() + 1000*60*30);
+          localStorage.setItem('userName', (data.name || '').toString().trim() || user);
+
+          requestAnimationFrame(() => {
+            window.open(DASHBOARD_URL, '_self');
+          });
+
+        } else if (data.status === 'denied'){
+          showMsg('error', 'ban', data.message || 'บัญชีนี้ถูกระงับการใช้งาน');
+          setLoading(false);
+        } else {
+          showMsg('error', 'alert', data.message || 'รหัสพนักงาน หรือวันที่เริ่มงานไม่ถูกต้อง');
+          setLoading(false);
+          shake(unameEl); shake(passEl);
+        }
+      })
+      .catch(err => {
+        if (err.name === 'AbortError'){
+          showMsg('error', 'clock', 'เซิร์ฟเวอร์ตอบสนองช้าเกินไป (เกิน ' + (TIMEOUT_MS/1000) + ' วินาที) กรุณาลองใหม่');
+        } else {
+          showMsg('error', 'alert', 'เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่');
+        }
+        setLoading(false);
+      });
+  }
+})();
+</script>
+</body>
+</html>
