@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ระบบอนุมัติคำขอ IT</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+    *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI','Sarabun',Tahoma,Geneva,Verdana,sans-serif;}
+    :root{--primary:#2F7FB8;--primary-light:#E7F2FB;--primary-bg:#F7FBFE;--white:#ffffff;--gray-50:#f8fafc;--gray-100:#f1f5f9;--gray-200:#e2e8f0;--gray-600:#475569;--gray-700:#334155;--gray-800:#1e293b;--success:#10b981;--warning:#f59e0b;--danger:#ef4444;}
+    body{background:var(--primary-bg);min-height:100vh;font-size:14px;display:flex;}
+
+    /* ---------- sidebar ---------- */
+    .sidebar{width:260px;background:var(--white);height:100vh;position:fixed;left:0;top:0;box-shadow:4px 0 20px rgba(0,45,90,0.05);overflow-y:auto;z-index:1000;border-right:1px solid var(--gray-200);display:flex;flex-direction:column;}
+    .sidebar-header{padding:26px 22px 20px;border-bottom:1px solid var(--gray-200);text-align:center;}
+    .sidebar-header i{font-size:40px;color:var(--primary);margin-bottom:10px;background:var(--primary-light);padding:14px;border-radius:16px;}
+    .sidebar-header h2{font-size:17px;font-weight:700;color:var(--gray-800);margin-bottom:4px;}
+    .sidebar-header p{font-size:12px;color:var(--gray-600);}
+    .sidebar-menu{padding:16px 14px;flex:1;}
+    .menu-item{display:flex;align-items:center;padding:11px 16px;color:var(--gray-600);transition:all 0.2s;cursor:pointer;text-decoration:none;border-radius:12px;margin-bottom:4px;font-weight:500;font-size:13.5px;}
+    .menu-item:hover{background:var(--primary-light);color:var(--primary);}
+    .menu-item.active{background:var(--primary-light);color:var(--primary);font-weight:700;}
+    .menu-item i{width:22px;font-size:16px;margin-right:10px;}
+    .menu-badge{margin-left:auto;font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;background:var(--danger);color:#fff;}
+    .menu-badge.zero{background:var(--gray-100);color:var(--gray-600);}
+    .sidebar-footer{padding:18px 20px;border-top:1px solid var(--gray-200);}
+    .user-info{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+    .user-avatar{width:38px;height:38px;background:var(--primary-light);color:var(--primary);border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;}
+    .user-name{font-weight:600;color:var(--gray-800);font-size:13px;}
+    .user-section{font-size:11px;color:var(--gray-600);}
+    .btn-logout-full{width:100%;background:var(--gray-50);border:1px solid var(--gray-200);color:var(--gray-600);padding:9px;border-radius:10px;cursor:pointer;font-size:12.5px;display:flex;align-items:center;justify-content:center;gap:6px;}
+    .btn-logout-full:hover{background:#fee2e2;color:var(--danger);border-color:#fecaca;}
+
+    .main-content{flex:1;margin-left:260px;}
+    .page-topbar{background:var(--white);border-bottom:1px solid var(--gray-200);padding:16px 24px;}
+    .page-topbar h1{font-size:17px;color:var(--gray-800);display:flex;align-items:center;gap:10px;}
+    .page-topbar h1 i{color:var(--primary);}
+
+    @media(max-width:900px){.sidebar{width:0;display:none;}.main-content{margin-left:0;}}
+
+    .content{padding:24px;max-width:1100px;margin:0 auto;}
+    .stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px;}
+    .stat-card{background:var(--white);border-radius:16px;padding:18px;border:1px solid var(--gray-200);text-align:center;}
+    .stat-value{font-size:26px;font-weight:800;color:var(--gray-800);}
+    .stat-label{font-size:12.5px;color:var(--gray-600);margin-top:4px;}
+    .stat-card.pending .stat-value{color:var(--warning);}
+    .stat-card.approved .stat-value{color:var(--success);}
+    .stat-card.rejected .stat-value{color:var(--danger);}
+
+    .filter-bar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
+    .filter-bar select{padding:9px 14px;border:1px solid var(--gray-200);border-radius:10px;font-size:13px;background:#fff;}
+
+    .req-card{background:var(--white);border-radius:16px;border:1px solid var(--gray-200);padding:18px 20px;margin-bottom:14px;}
+    .req-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;flex-wrap:wrap;gap:8px;}
+    .req-ticket{font-weight:700;color:var(--primary);font-size:13.5px;}
+    .req-date{font-size:11.5px;color:var(--gray-600);}
+    .req-badge{font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;}
+    .badge-pending{background:#fef3c7;color:#92400e;}
+    .badge-approved{background:#d1fae5;color:#065f46;}
+    .badge-rejected{background:#fee2e2;color:#991b1b;}
+    .req-body{display:grid;grid-template-columns:1fr 1fr;gap:6px 20px;margin-bottom:12px;font-size:13px;}
+    .req-body .label{color:var(--gray-600);}
+    .req-body .value{color:var(--gray-800);font-weight:600;}
+    .req-objective{background:var(--gray-50);border-radius:10px;padding:10px 12px;font-size:13px;color:var(--gray-700);margin-bottom:12px;}
+    .req-actions{display:flex;gap:10px;}
+    .btn-approve, .btn-reject{flex:1;padding:10px;border:none;border-radius:10px;font-size:13.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;}
+    .btn-approve{background:var(--success);color:#fff;}.btn-approve:hover{background:#0da271;}
+    .btn-reject{background:var(--white);color:var(--danger);border:1.5px solid #fecaca;}.btn-reject:hover{background:#fee2e2;}
+    .empty-state{text-align:center;padding:60px 20px;color:var(--gray-600);}
+    .empty-state i{font-size:40px;color:var(--gray-200);margin-bottom:14px;}
+
+    .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2000;align-items:center;justify-content:center;padding:20px;}
+    .modal-overlay.active{display:flex;}
+    .modal-box{background:var(--white);border-radius:18px;padding:24px;max-width:400px;width:100%;}
+    .modal-box h3{color:var(--gray-800);font-size:16px;margin-bottom:14px;}
+    .modal-box textarea{width:100%;padding:11px 13px;border:1.5px solid var(--gray-200);border-radius:10px;font-size:13.5px;font-family:inherit;margin-bottom:16px;}
+    .modal-actions{display:flex;gap:10px;}
+    .modal-actions button{flex:1;padding:11px;border-radius:10px;border:none;font-size:13.5px;font-weight:700;cursor:pointer;}
+    .btn-cancel{background:var(--gray-100);color:var(--gray-700);}
+    .btn-confirm-reject{background:var(--danger);color:#fff;}
+
+    .toast-container{position:fixed;top:20px;right:20px;z-index:9999;}
+    .toast{background:var(--white);border-radius:12px;padding:14px 20px;margin-bottom:10px;box-shadow:0 10px 30px rgba(0,0,0,0.12);display:flex;align-items:center;gap:10px;min-width:280px;border:1px solid var(--gray-200);font-size:13.5px;}
+    .toast.success{border-left:4px solid var(--success);}.toast.success i{color:var(--success);}
+    .toast.error{border-left:4px solid var(--danger);}.toast.error i{color:var(--danger);}
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="sidebar-header">
+        <i class="fas fa-key"></i>
+        <h2>IT Account Request</h2>
+        <p>ระบบขอ Username/Password</p>
+    </div>
+    <nav class="sidebar-menu">
+        <a href="dashboard.html" class="menu-item"><i class="fas fa-chart-pie"></i><span>Dashboard</span></a>
+        <a href="form.html" class="menu-item"><i class="fas fa-plus-circle"></i><span>แจ้งคำขอ</span></a>
+        <a href="approve.html" class="menu-item active"><i class="fas fa-clipboard-check"></i><span>อนุมัติคำขอ</span><span class="menu-badge zero" id="pending-count">0</span></a>
+        <a href="history.html" class="menu-item"><i class="fas fa-history"></i><span>ประวัติคำขอ</span></a>
+        <a href="report.html" class="menu-item" id="reportLink" style="display:none;"><i class="fas fa-chart-bar"></i><span>รายงาน</span></a>
+        <a href="manage-approvers.html" class="menu-item" id="approversLink" style="display:none;"><i class="fas fa-user-shield"></i><span>จัดการผู้อนุมัติ</span></a>
+    </nav>
+    <div class="sidebar-footer">
+        <div class="user-info">
+            <div class="user-avatar" id="userAvatar">-</div>
+            <div>
+                <div class="user-name" id="userNameLabel">-</div>
+                <div class="user-section" id="userSectionLabel">-</div>
+            </div>
+        </div>
+        <button class="btn-logout-full" onclick="logout()"><i class="fas fa-sign-out-alt"></i> ออกจากระบบ</button>
+    </div>
+</div>
+
+<div class="main-content">
+<div class="page-topbar">
+    <h1><i class="fas fa-clipboard-check"></i> ระบบอนุมัติคำขอ IT</h1>
+</div>
+
+<div class="content">
+    <div class="stat-row">
+        <div class="stat-card pending"><div class="stat-value" id="statPending">-</div><div class="stat-label">รออนุมัติ</div></div>
+        <div class="stat-card approved"><div class="stat-value" id="statApproved">-</div><div class="stat-label">อนุมัติแล้ว</div></div>
+        <div class="stat-card rejected"><div class="stat-value" id="statRejected">-</div><div class="stat-label">ปฏิเสธ</div></div>
+    </div>
+
+    <div class="filter-bar">
+        <select id="statusFilter" onchange="renderRequests()">
+            <option value="all">ทุกสถานะ</option>
+            <option value="รออนุมัติ">รออนุมัติ</option>
+            <option value="อนุมัติแล้ว">อนุมัติแล้ว</option>
+            <option value="ปฏิเสธ">ปฏิเสธ</option>
+        </select>
+    </div>
+
+    <div id="requestsList">
+        <div class="empty-state"><i class="fas fa-spinner fa-spin"></i><br>กำลังโหลดข้อมูล...</div>
+    </div>
+</div>
+</div>
+
+<div class="modal-overlay" id="rejectModal">
+    <div class="modal-box">
+        <h3><i class="fas fa-times-circle" style="color:var(--danger);"></i> เหตุผลการปฏิเสธ</h3>
+        <textarea id="rejectReason" rows="3" placeholder="ระบุเหตุผลที่ปฏิเสธคำขอนี้..."></textarea>
+        <div class="modal-actions">
+            <button class="btn-cancel" onclick="closeRejectModal()">ยกเลิก</button>
+            <button class="btn-confirm-reject" onclick="confirmReject()">ยืนยันปฏิเสธ</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+    const SUPABASE_URL      = 'https://fnbkcgkuykdabbensvif.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZuYmtjZ2t1eWtkYWJiZW5zdmlmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkzMDE0MTQsImV4cCI6MjEwNDg3NzQxNH0.L6x3nqAy2rqcxdtzyTs4MHLPubtBqD3Tnk9e97EfEJE';
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const ALLOWED_ROLES = ['approver', 'admin'];
+    let currentProfile = null;
+    let allRequests = [];
+    let requesterNameMap = {};
+    let pendingRejectId = null;
+
+    function showAccessDenied(message) {
+        document.body.innerHTML = `
+            <div style="min-height:100vh;width:100%;display:flex;align-items:center;justify-content:center;background:var(--primary-bg,#F7FBFE);padding:20px;">
+                <div style="background:#fff;border-radius:24px;padding:44px 36px;max-width:380px;width:100%;text-align:center;box-shadow:0 20px 40px rgba(0,0,0,0.08);border:1px solid #e2e8f0;">
+                    <div style="width:64px;height:64px;background:#fee2e2;color:#dc2626;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 20px;">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    <h2 style="color:#1e293b;font-size:19px;margin-bottom:10px;font-weight:600;">ไม่มีสิทธิ์เข้าถึงหน้านี้</h2>
+                    <p style="color:#475569;font-size:14px;margin-bottom:26px;line-height:1.6;">${message}</p>
+                    <button onclick="window.location.href='login.html'" style="background:#2F7FB8;color:#fff;border:none;padding:12px 30px;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;">
+                        <i class="fas fa-arrow-left"></i> กลับไปหน้าเข้าสู่ระบบ
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
+    async function requireAuth() {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (!session || !session.user) { window.location.href = 'login.html'; return null; }
+
+        const { data: profile } = await supabaseClient
+            .from('profiles').select('name, role, section, position').eq('id', session.user.id).maybeSingle();
+
+        if (!profile || !ALLOWED_ROLES.includes(profile.role)) {
+            await supabaseClient.auth.signOut();
+            showAccessDenied('หน้านี้เปิดให้เฉพาะผู้อนุมัติ (approver) หรือผู้ดูแลระบบ (admin) เท่านั้น');
+            return null;
+        }
+        return profile;
+    }
+
+    async function logout() {
+        await supabaseClient.auth.signOut();
+        window.location.href = 'login.html';
+    }
+
+    window.onload = async function() {
+        currentProfile = await requireAuth();
+        if (!currentProfile) return;
+
+        document.getElementById('userNameLabel').textContent = currentProfile.name;
+        document.getElementById('userSectionLabel').textContent =
+            currentProfile.role === 'admin' ? 'ผู้ดูแลระบบ (ทุกฝ่าย)' : 'ฝ่าย: ' + (currentProfile.section || '-');
+        document.getElementById('userAvatar').textContent = (currentProfile.name || '?').charAt(0);
+        if (currentProfile.role === 'admin') document.getElementById('reportLink').style.display = 'inline-flex';
+        if (currentProfile.role === 'admin') document.getElementById('approversLink').style.display = 'inline-flex';
+
+        await loadEmployeeNameMap();
+        await loadRequests();
+    };
+
+    // ทำ map employees_code -> name_thai ไว้โชว์ชื่อ "ผู้ยื่นคำขอ" (requests ไม่ได้เก็บชื่อผู้ยื่นตรงๆ)
+    async function loadEmployeeNameMap() {
+        const { data } = await supabaseClient.from('employees').select('employees_code, name_thai');
+        (data || []).forEach(e => { requesterNameMap[e.employees_code] = e.name_thai; });
+    }
+
+    function showToast(message, type = 'success') {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i><span>${message}</span>`;
+        container.appendChild(toast);
+        setTimeout(() => toast.remove(), 3500);
+    }
+
+    async function loadRequests() {
+        let query = supabaseClient.from('requests').select('*').order('created_at', { ascending: false });
+        if (currentProfile.role === 'approver') {
+            query = query.eq('section', currentProfile.section);
+        }
+        const { data, error } = await query;
+        if (error) { showToast('โหลดข้อมูลไม่สำเร็จ: ' + error.message, 'error'); return; }
+        allRequests = data || [];
+        renderStats();
+        renderRequests();
+    }
+
+    function renderStats() {
+        const pendingCount = allRequests.filter(r => r.status === 'รออนุมัติ').length;
+
+        document.getElementById('statPending').textContent = pendingCount;
+        document.getElementById('statApproved').textContent = allRequests.filter(r => r.status === 'อนุมัติแล้ว').length;
+        document.getElementById('statRejected').textContent = allRequests.filter(r => r.status === 'ปฏิเสธ').length;
+
+        // อัปเดตตัวเลขค้างอนุมัติที่เมนู sidebar
+        const badge = document.getElementById('pending-count');
+        badge.textContent = pendingCount;
+        badge.classList.toggle('zero', pendingCount === 0);
+    }
+
+    const STATUS_BADGE = { 'รออนุมัติ': 'badge-pending', 'อนุมัติแล้ว': 'badge-approved', 'ปฏิเสธ': 'badge-rejected' };
+
+    function emailTypeLabel(type) {
+        return { open_account: 'เปิดใช้งานใหม่', cancel: 'ยกเลิก', edit: 'แก้ไขข้อมูล' }[type] || type;
+    }
+
+    function renderRequests() {
+        const filter = document.getElementById('statusFilter').value;
+        const filtered = filter === 'all' ? allRequests : allRequests.filter(r => r.status === filter);
+
+        const list = document.getElementById('requestsList');
+        if (!filtered.length) {
+            list.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><br>ไม่มีคำขอในรายการนี้</div>';
+            return;
+        }
+        list.innerHTML = filtered.map(r => `
+            <div class="req-card">
+                <div class="req-top">
+                    <div>
+                        <div class="req-ticket">${r.ticket_id}</div>
+                        <div class="req-date">${new Date(r.created_at).toLocaleString('th-TH')}${currentProfile.role === 'admin' ? ' · ฝ่าย ' + (r.section || '-') : ''}</div>
+                    </div>
+                    <span class="req-badge ${STATUS_BADGE[r.status]}">${r.status}</span>
+                </div>
+                <div class="req-body">
+                    <div><span class="label">พนักงานที่ขอ:</span> <span class="value">${r.name_thai || '-'} (${r.employees_code})</span></div>
+                    <div><span class="label">ผู้ยื่นคำขอ:</span> <span class="value">${requesterNameMap[r.requester_code] || r.requester_code}</span></div>
+                    <div><span class="label">แผนก:</span> <span class="value">${r.department || '-'}</span></div>
+                    <div><span class="label">ตำแหน่ง:</span> <span class="value">${r.position || '-'}</span></div>
+                    <div><span class="label">เบอร์โทร:</span> <span class="value">${r.telephone || '-'}</span></div>
+                    <div><span class="label">ประเภท:</span> <span class="value">${r.email_type ? 'ขอใช้อีเมล (' + emailTypeLabel(r.email_type) + ')' : 'Username/Password'}</span></div>
+                </div>
+                <div class="req-objective">
+                    <strong>วัตถุประสงค์:</strong> ${r.email_type ? (r.email_reason || '-') : (r.objective || '-')}
+                    ${r.comment ? `<br><strong>หมายเหตุ:</strong> ${r.comment}` : ''}
+                    ${r.status === 'ปฏิเสธ' && r.reject_reason ? `<br><strong style="color:var(--danger);">เหตุผลปฏิเสธ:</strong> ${r.reject_reason}` : ''}
+                </div>
+                ${r.status === 'รออนุมัติ' ? `
+                <div class="req-actions">
+                    <button class="btn-approve" onclick="approveRequest('${r.id}')"><i class="fas fa-check"></i> อนุมัติ</button>
+                    <button class="btn-reject" onclick="openRejectModal('${r.id}')"><i class="fas fa-times"></i> ปฏิเสธ</button>
+                </div>` : ''}
+            </div>
+        `).join('');
+    }
+
+    async function approveRequest(id) {
+        if (!confirm('ยืนยันอนุมัติคำขอนี้?')) return;
+        const { error } = await supabaseClient
+            .from('requests')
+            .update({ status: 'อนุมัติแล้ว', approval_date: new Date().toISOString(), approval_manager: currentProfile.name })
+            .eq('id', id);
+        if (error) { showToast('อนุมัติไม่สำเร็จ: ' + error.message, 'error'); return; }
+        showToast('อนุมัติสำเร็จ');
+        loadRequests();
+    }
+
+    function openRejectModal(id) {
+        pendingRejectId = id;
+        document.getElementById('rejectReason').value = '';
+        document.getElementById('rejectModal').classList.add('active');
+    }
+    function closeRejectModal() {
+        document.getElementById('rejectModal').classList.remove('active');
+        pendingRejectId = null;
+    }
+
+    async function confirmReject() {
+        const reason = document.getElementById('rejectReason').value.trim();
+        if (!reason) { showToast('กรุณาระบุเหตุผล', 'error'); return; }
+        const { error } = await supabaseClient
+            .from('requests')
+            .update({ status: 'ปฏิเสธ', approval_date: new Date().toISOString(), reject_reason: reason, approval_manager: currentProfile.name })
+            .eq('id', pendingRejectId);
+        if (error) { showToast('ปฏิเสธไม่สำเร็จ: ' + error.message, 'error'); closeRejectModal(); return; }
+        showToast('ปฏิเสธคำขอเรียบร้อย');
+        closeRejectModal();
+        loadRequests();
+    }
+</script>
+</body>
+</html>

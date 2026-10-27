@@ -1,1 +1,522 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ขอรับ Username/Password IT</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+    *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI','Sarabun',Tahoma,Geneva,Verdana,sans-serif;}
+    :root{--primary:#2F7FB8;--primary-light:#E7F2FB;--primary-soft:#DCE9F5;--primary-bg:#F7FBFE;--white:#ffffff;--gray-50:#f8fafc;--gray-100:#f1f5f9;--gray-200:#e2e8f0;--gray-300:#cbd5e1;--gray-600:#475569;--gray-700:#334155;--gray-800:#1e293b;--success:#10b981;--warning:#f59e0b;--danger:#ef4444;--green:#059669;--green-light:#d1fae5;}
+    body{background:var(--primary-bg);min-height:100vh;}
 
+    /* ---------------- layout: sidebar + main content ---------------- */
+    .app-layout{display:flex;min-height:100vh;}
+    .sidebar{
+        width:250px;flex-shrink:0;background:var(--white);border-right:1px solid var(--gray-200);
+        display:flex;flex-direction:column;position:sticky;top:0;height:100vh;
+    }
+    .sidebar-header{padding:24px 20px;border-bottom:1px solid var(--gray-100);}
+    .sidebar-header i{width:44px;height:44px;background:var(--primary-light);color:var(--primary);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:19px;margin-bottom:10px;}
+    .sidebar-header h2{font-size:15px;font-weight:700;color:var(--gray-800);margin-bottom:3px;}
+    .sidebar-header p{font-size:12px;color:var(--gray-600);}
+
+    .sidebar-menu{flex:1;padding:14px 12px;display:flex;flex-direction:column;gap:4px;overflow-y:auto;}
+    .menu-item{
+        display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;
+        color:var(--gray-700);text-decoration:none;font-size:13.5px;font-weight:600;transition:background .12s,color .12s;
+    }
+    .menu-item i{width:18px;text-align:center;font-size:15px;}
+    .menu-item:hover{background:var(--gray-50);}
+    .menu-item.active{background:var(--primary-light);color:var(--primary);}
+
+    .sidebar-footer{padding:16px 14px;border-top:1px solid var(--gray-100);}
+    .user-info{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+    .user-avatar{width:38px;height:38px;flex-shrink:0;background:var(--primary);color:#fff;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;}
+    .user-name{font-size:13px;font-weight:700;color:var(--gray-800);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px;}
+    .user-section{font-size:11.5px;color:var(--gray-600);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px;}
+    .btn-logout-full{
+        width:100%;padding:9px;background:var(--gray-50);color:var(--gray-700);border:1px solid var(--gray-200);
+        border-radius:10px;font-size:12.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;
+    }
+    .btn-logout-full:hover{background:var(--gray-100);}
+
+    .main-content{flex:1;min-width:0;padding:32px 16px;}
+
+    @media(max-width:768px){
+        .app-layout{flex-direction:column;}
+        .sidebar{width:100%;height:auto;position:relative;flex-direction:row;flex-wrap:wrap;}
+        .sidebar-header{width:100%;}
+        .sidebar-menu{flex-direction:row;flex-wrap:wrap;}
+        .sidebar-footer{width:100%;}
+    }
+    /* ------------------------------------------------------------------ */
+
+    .page{max-width:640px;margin:0 auto;}
+    .page-header{text-align:center;margin-bottom:24px;}
+    .page-header i{width:64px;height:64px;background:var(--primary-light);color:var(--primary);border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 14px;}
+    .page-header h1{color:var(--gray-800);font-size:21px;font-weight:700;margin-bottom:6px;}
+    .page-header p{color:var(--gray-600);font-size:13.5px;}
+
+    .section-card{background:var(--white);border-radius:18px;border:1px solid var(--gray-200);margin-bottom:18px;overflow:hidden;box-shadow:0 2px 12px rgba(0,45,90,0.03);}
+    .section-card-header{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--gray-100);}
+    .section-icon{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+    .section-icon.blue{background:#dbeafe;color:#2563eb;}
+    .section-icon.green{background:var(--green-light);color:var(--green);}
+    .section-icon.orange{background:#fef3c7;color:#d97706;}
+    .section-heading{font-size:14.5px;font-weight:700;color:var(--gray-800);}
+    .section-sub{font-size:12px;color:var(--gray-600);}
+    .section-badge{margin-left:auto;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;}
+    .badge-blue{background:#dbeafe;color:#1e40af;}
+    .badge-green{background:var(--green-light);color:var(--green);}
+    .section-card-body{padding:20px;}
+
+    .form-group{margin-bottom:16px;}
+    .form-group:last-child{margin-bottom:0;}
+    .form-group label{display:block;font-size:13px;font-weight:600;color:var(--gray-700);margin-bottom:6px;}
+    .form-group label.required::after{content:' *';color:var(--danger);}
+    .form-group input, .form-group textarea{
+        width:100%;padding:11px 13px;border:1.5px solid var(--gray-200);border-radius:10px;
+        font-size:14px;font-family:inherit;color:var(--gray-800);background:#fff;
+    }
+    .form-group input:focus, .form-group textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-light);}
+    .form-group input[readonly]{background:var(--gray-50);color:var(--gray-700);}
+    .hint{font-size:11.5px;color:var(--gray-600);margin-top:5px;display:flex;align-items:center;gap:5px;}
+    .error-message{font-size:12px;color:var(--danger);margin-top:5px;}
+
+    .found-box{display:none;align-items:center;gap:12px;background:var(--green-light);border-radius:12px;padding:12px 14px;margin-top:12px;}
+    .found-box.show{display:flex;}
+    .found-avatar{width:38px;height:38px;background:var(--green);color:#fff;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .found-name{font-weight:700;color:var(--gray-800);font-size:13.5px;}
+    .found-code{font-size:12px;color:var(--gray-600);}
+
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+    @media(max-width:520px){.grid-2{grid-template-columns:1fr;}}
+
+    .email-toggle-row{display:flex;align-items:center;gap:10px;padding:14px;background:var(--gray-50);border-radius:12px;cursor:pointer;margin-bottom:16px;}
+    .email-toggle-row input[type=checkbox]{width:18px;height:18px;accent-color:var(--primary);}
+    .email-toggle-row label{font-size:13.5px;font-weight:600;color:var(--gray-800);cursor:pointer;margin:0;}
+
+    .radio-group{display:flex;flex-direction:column;gap:8px;margin-bottom:14px;}
+    .radio-option{display:flex;align-items:center;gap:8px;padding:10px 12px;border:1.5px solid var(--gray-200);border-radius:10px;cursor:pointer;}
+    .radio-option:has(input:checked){border-color:var(--primary);background:var(--primary-light);}
+    .radio-option input{accent-color:var(--primary);}
+    .radio-option label{font-size:13.5px;color:var(--gray-800);cursor:pointer;margin:0;}
+
+    .email-panel{display:none;padding:14px;background:#fffbeb;border-radius:12px;border:1px solid #fde68a;}
+    .email-panel.show{display:block;}
+    .email-panel label{color:#92400e;}
+
+    .btn-submit{width:100%;padding:15px;background:var(--primary);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .15s;}
+    .btn-submit:hover:not(:disabled){background:#1e5bbf;}
+    .btn-submit:disabled{opacity:.7;cursor:default;}
+
+    .toast-container{position:fixed;top:20px;right:20px;left:20px;z-index:9999;display:flex;flex-direction:column;align-items:flex-end;gap:10px;}
+    .toast{background:var(--white);border-radius:12px;padding:14px 20px;box-shadow:0 10px 30px rgba(0,0,0,0.12);display:flex;align-items:center;gap:10px;max-width:380px;border:1px solid var(--gray-200);font-size:13.5px;}
+    .toast.success{border-left:4px solid var(--success);}.toast.success i{color:var(--success);}
+    .toast.error{border-left:4px solid var(--danger);}.toast.error i{color:var(--danger);}
+
+    .success-screen{display:none;text-align:center;background:var(--white);border-radius:20px;padding:48px 32px;border:1px solid var(--gray-200);}
+    .success-screen.show{display:block;}
+    .success-screen i{width:72px;height:72px;background:var(--green-light);color:var(--green);border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:32px;margin:0 auto 20px;}
+    .success-screen h2{color:var(--gray-800);font-size:19px;margin-bottom:10px;}
+    .success-screen .ticket{font-size:20px;font-weight:800;color:var(--primary);margin:16px 0;}
+    .success-screen p{color:var(--gray-600);font-size:13.5px;margin-bottom:20px;}
+    footer{text-align:center;padding:20px;color:var(--gray-600);font-size:12px;}
+</style>
+</head>
+<body>
+
+<div class="app-layout">
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <i class="fas fa-key"></i>
+            <h2>IT Account Request</h2>
+            <p>ระบบขอ Username/Password</p>
+        </div>
+        <div class="sidebar-menu">
+            <a href="dashboard.html" class="menu-item"><i class="fas fa-chart-pie"></i><span>Dashboard</span></a>
+            <a href="form.html" class="menu-item active"><i class="fas fa-plus-circle"></i><span>แจ้งคำขอ</span></a>
+            <a href="approve.html" class="menu-item"><i class="fas fa-clipboard-check"></i><span>อนุมัติคำขอ</span></a>
+            <a href="history.html" class="menu-item"><i class="fas fa-history"></i><span>ประวัติคำขอ</span></a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="page">
+            <div class="page-header">
+                <i class="fas fa-key"></i>
+                <h1>ขอรับ Username / Password IT</h1>
+                <p>สำหรับพนักงานที่ต้องการขอบัญชีผู้ใช้งานระบบ หรือขอใช้อีเมลบริษัท</p>
+            </div>
+
+            <form id="requestForm">
+                <div class="section-card">
+                    <div class="section-card-header">
+                        <div class="section-icon blue"><i class="fas fa-user-circle"></i></div>
+                        <div>
+                            <div class="section-heading">ข้อมูลผู้ยื่นคำขอ</div>
+                            <div class="section-sub">ผู้ที่ดำเนินการยื่นคำขอ</div>
+                        </div>
+                        <span class="section-badge badge-blue">ผู้ยื่น</span>
+                    </div>
+                    <div class="section-card-body">
+                        <div class="form-group">
+                            <label for="requester_code" class="required">รหัสพนักงานผู้ขอ</label>
+                            <input type="text" id="requester_code" placeholder="กรอกรหัสพนักงาน" autocomplete="off" required>
+                            <div class="error-message" id="requester-error" style="display:none;"></div>
+                            <div class="hint"><i class="fas fa-info-circle"></i> ระบบจะค้นหาข้อมูลอัตโนมัติ</div>
+                        </div>
+                        <div class="found-box" id="requesterFound">
+                            <div class="found-avatar"><i class="fas fa-user-check"></i></div>
+                            <div>
+                                <div class="found-name" id="requesterName">—</div>
+                                <div class="found-code" id="requesterCodeLabel">—</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-card">
+                    <div class="section-card-header">
+                        <div class="section-icon green"><i class="fas fa-user-plus"></i></div>
+                        <div>
+                            <div class="section-heading">ข้อมูลพนักงานที่ขอใช้งาน</div>
+                            <div class="section-sub">พนักงานที่จะได้รับบัญชีผู้ใช้</div>
+                        </div>
+                        <span class="section-badge badge-green">ผู้ใช้งาน</span>
+                    </div>
+                    <div class="section-card-body">
+                        <div class="form-group">
+                            <label for="employees_code" class="required">รหัสพนักงานผู้ใช้งาน</label>
+                            <input type="text" id="employees_code" placeholder="กรอกรหัสพนักงาน" autocomplete="off" required>
+                            <div class="error-message" id="target-error" style="display:none;"></div>
+                            <div class="hint"><i class="fas fa-info-circle"></i> ระบบจะค้นหาอัตโนมัติ</div>
+                        </div>
+                        <div class="found-box" id="targetFound">
+                            <div class="found-avatar"><i class="fas fa-user-check"></i></div>
+                            <div>
+                                <div class="found-name" id="targetName">—</div>
+                                <div class="found-code" id="targetSectionLabel">—</div>
+                            </div>
+                        </div>
+
+                        <div class="grid-2" style="margin-top:16px;">
+                            <div class="form-group">
+                                <label>ชื่อ-นามสกุล (ไทย)</label>
+                                <input type="text" id="name_thai" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label for="name_eng" class="required">ชื่อ-นามสกุล (อังกฤษ)</label>
+                                <input type="text" id="name_eng" placeholder="กรอกชื่อภาษาอังกฤษ" required>
+                            </div>
+                        </div>
+                        <div class="grid-2">
+                            <div class="form-group"><label>ฝ่าย</label><input type="text" id="section" readonly></div>
+                            <div class="form-group"><label>แผนก</label><input type="text" id="department" readonly></div>
+                        </div>
+                        <div class="grid-2">
+                            <div class="form-group"><label>ตำแหน่ง</label><input type="text" id="position" readonly></div>
+                            <div class="form-group">
+                                <label for="telephone" class="required">เบอร์โทรศัพท์</label>
+                                <input type="tel" id="telephone" placeholder="เบอร์ติดต่อ" required>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-card">
+                    <div class="section-card-header">
+                        <div class="section-icon orange"><i class="fas fa-clipboard-list"></i></div>
+                        <div>
+                            <div class="section-heading">รายละเอียดคำขอ</div>
+                            <div class="section-sub">ระบุวัตถุประสงค์การขอใช้งาน</div>
+                        </div>
+                    </div>
+                    <div class="section-card-body">
+                        <div class="email-toggle-row" onclick="document.getElementById('email_request').click()">
+                            <input type="checkbox" id="email_request" onclick="event.stopPropagation(); toggleEmailMode()" onchange="toggleEmailMode()">
+                            <label for="email_request" onclick="event.stopPropagation()">ขอใช้อีเมลของบริษัท (แทนการขอ username/password ทั่วไป)</label>
+                        </div>
+
+                        <div id="accountObjectivePanel">
+                            <div class="form-group">
+                                <label for="objective" class="required">วัตถุประสงค์การขอใช้</label>
+                                <textarea id="objective" rows="3" placeholder="ระบุเหตุผล/ระบบที่ต้องการขอใช้งาน..."></textarea>
+                                <div class="error-message" id="objective-error" style="display:none;"></div>
+                            </div>
+                        </div>
+
+                        <div id="emailModePanel" style="display:none;">
+                            <div class="radio-group">
+                                <div class="radio-option">
+                                    <input type="radio" name="email_type" value="open_account" id="email_open">
+                                    <label for="email_open">เปิดใช้งานบัญชีอีเมลใหม่</label>
+                                </div>
+                                <div class="radio-option">
+                                    <input type="radio" name="email_type" value="cancel" id="email_cancel">
+                                    <label for="email_cancel">ยกเลิกการใช้งานบัญชีอีเมล</label>
+                                </div>
+                                <div class="radio-option">
+                                    <input type="radio" name="email_type" value="edit" id="email_edit">
+                                    <label for="email_edit">แก้ไขข้อมูลบัญชีอีเมล</label>
+                                </div>
+                            </div>
+                            <div class="email-panel" id="emailReasonPanel">
+                                <div class="form-group">
+                                    <label for="email_reason" class="required">วัตถุประสงค์การขอใช้อีเมล</label>
+                                    <textarea id="email_reason" rows="3" placeholder="ระบุรายละเอียด..."></textarea>
+                                    <div class="error-message" id="email-reason-error" style="display:none;"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>หมายเหตุ</label>
+                            <textarea id="comment" rows="2" placeholder="หมายเหตุ (ถ้ามี)..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-submit" id="submitBtn">
+                    <i class="fas fa-paper-plane"></i> ส่งคำขอ
+                </button>
+            </form>
+
+            <div class="success-screen" id="successScreen">
+                <i class="fas fa-check-circle"></i>
+                <h2>ส่งคำขอเรียบร้อยแล้ว</h2>
+                <p>เลขที่คำขอของคุณคือ</p>
+                <div class="ticket" id="successTicketId">-</div>
+                <p>ระบบจะส่งให้ผู้อนุมัติของฝ่ายที่เกี่ยวข้องตรวจสอบต่อไป</p>
+                <button class="btn-submit" style="max-width:220px;margin:0 auto;" onclick="location.reload()">
+                    <i class="fas fa-plus"></i> ยื่นคำขอใหม่
+                </button>
+            </div>
+
+            <footer>ระบบขอรับ Username/Password IT · TokaiSolidTire | พัฒนาโดย Sarawut.C</footer>
+        </div>
+    </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+    const SUPABASE_URL      = 'https://fnbkcgkuykdabbensvif.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZuYmtjZ2t1eWtkYWJiZW5zdmlmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkzMDE0MTQsImV4cCI6MjEwNDg3NzQxNH0.L6x3nqAy2rqcxdtzyTs4MHLPubtBqD3Tnk9e97EfEJE';
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let targetEmployee = null;
+    let debounceRequester, debounceTarget;
+
+    // ---------------- sidebar: role-based menu (แสดง/ซ่อนเมนูตามสิทธิ์ผู้ใช้) ----------------
+    // สมมติว่ามีตาราง "profiles" (id = auth.users.id, role) — ถ้าระบบจริงต่างจากนี้ บอกได้เลย
+    async function initSidebarUser() {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (!session) return;
+
+        const { data: profile } = await supabaseClient
+            .from('profiles')
+            .select('role')
+            .eq('id', session.user.id)
+            .maybeSingle();
+
+        if (profile?.role === 'admin') {
+            document.getElementById('reportLink').style.display = 'flex';
+            document.getElementById('approversLink').style.display = 'flex';
+        }
+    }
+
+    initSidebarUser();
+    // ------------------------------------------------------------------------
+
+    function showToast(message, type = 'success') {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+        toast.innerHTML = `<i class="fas ${icon}"></i><span>${message}</span>`;
+        container.appendChild(toast);
+        setTimeout(() => toast.remove(), 3500);
+    }
+
+    // ---------------- ผู้อนุมัติ: หา approval_manager จากฝ่ายของ target ----------------
+    async function findApprover(sectionName) {
+        if (!sectionName) return null;
+        const { data } = await supabaseClient
+            .from('approvers').select('name').eq('section', sectionName).maybeSingle();
+        return data ? data.name : null;
+    }
+
+    // ---------------- requester lookup ----------------
+    document.getElementById('requester_code').addEventListener('input', function() {
+        clearTimeout(debounceRequester);
+        debounceRequester = setTimeout(lookupRequester, 400);
+    });
+
+    async function lookupRequester() {
+        const code = document.getElementById('requester_code').value.trim();
+        const box = document.getElementById('requesterFound');
+        const errEl = document.getElementById('requester-error');
+        errEl.style.display = 'none';
+        if (!code) { box.classList.remove('show'); return; }
+
+        const { data, error } = await supabaseClient
+            .from('employees').select('employees_code, name_thai').eq('employees_code', code).maybeSingle();
+
+        if (error || !data) {
+            box.classList.remove('show');
+            errEl.textContent = 'ไม่พบรหัสพนักงานนี้ในระบบ';
+            errEl.style.display = 'block';
+            return;
+        }
+        document.getElementById('requesterName').textContent = data.name_thai || '-';
+        document.getElementById('requesterCodeLabel').textContent = 'รหัส: ' + data.employees_code;
+        box.classList.add('show');
+    }
+
+    // ---------------- target employee lookup ----------------
+    document.getElementById('employees_code').addEventListener('input', function() {
+        clearTimeout(debounceTarget);
+        debounceTarget = setTimeout(lookupTarget, 400);
+    });
+
+    async function lookupTarget() {
+        const code = document.getElementById('employees_code').value.trim();
+        const box = document.getElementById('targetFound');
+        const errEl = document.getElementById('target-error');
+        errEl.style.display = 'none';
+        targetEmployee = null;
+
+        if (!code) {
+            box.classList.remove('show');
+            ['name_thai','section','department','position'].forEach(id => document.getElementById(id).value = '');
+            return;
+        }
+
+        const { data, error } = await supabaseClient
+            .from('employees').select('employees_code, name_thai, name_eng, telephone, section, department, position')
+            .eq('employees_code', code).maybeSingle();
+
+        if (error || !data) {
+            box.classList.remove('show');
+            ['name_thai','section','department','position'].forEach(id => document.getElementById(id).value = '');
+            errEl.textContent = 'ไม่พบรหัสพนักงานนี้ในระบบ';
+            errEl.style.display = 'block';
+            return;
+        }
+
+        targetEmployee = data;
+        document.getElementById('targetName').textContent = data.name_thai || '-';
+        document.getElementById('targetSectionLabel').textContent = (data.section || '') + (data.department ? ' · ' + data.department : '');
+        box.classList.add('show');
+
+        document.getElementById('name_thai').value = data.name_thai || '';
+        document.getElementById('section').value = data.section || '';
+        document.getElementById('department').value = data.department || '';
+        document.getElementById('position').value = data.position || '';
+        // เติมชื่ออังกฤษ/เบอร์โทรที่เคยกรอกไว้ก่อนหน้า (ถ้ามี) ให้อัตโนมัติ ยังแก้ไขได้
+        document.getElementById('name_eng').value = data.name_eng || '';
+        document.getElementById('telephone').value = data.telephone || '';
+    }
+
+    // ---------------- email mode toggle ----------------
+    function toggleEmailMode() {
+        const checked = document.getElementById('email_request').checked;
+        document.getElementById('accountObjectivePanel').style.display = checked ? 'none' : 'block';
+        document.getElementById('emailModePanel').style.display = checked ? 'block' : 'none';
+        document.getElementById('objective').required = !checked;
+        if (!checked) {
+            document.getElementsByName('email_type').forEach(r => r.checked = false);
+            document.getElementById('email_reason').value = '';
+            document.getElementById('emailReasonPanel').classList.remove('show');
+        }
+    }
+
+    document.getElementsByName('email_type').forEach(r => {
+        r.addEventListener('change', () => document.getElementById('emailReasonPanel').classList.add('show'));
+    });
+
+    // ---------------- submit ----------------
+    document.getElementById('requestForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const requesterCode = document.getElementById('requester_code').value.trim();
+        const targetCode = document.getElementById('employees_code').value.trim();
+        const nameEng = document.getElementById('name_eng').value.trim();
+        const telephone = document.getElementById('telephone').value.trim();
+        const comment = document.getElementById('comment').value.trim();
+        const emailChecked = document.getElementById('email_request').checked;
+
+        if (!requesterCode || !targetCode || !nameEng || !telephone) {
+            showToast('กรุณากรอกข้อมูลที่จำเป็นให้ครบ', 'error');
+            return;
+        }
+        if (!targetEmployee) {
+            showToast('กรุณากรอกรหัสพนักงานผู้ใช้งานที่ถูกต้อง', 'error');
+            return;
+        }
+
+        let objective = null, emailType = null, emailReason = null;
+        if (emailChecked) {
+            const typeInput = document.querySelector('input[name="email_type"]:checked');
+            if (!typeInput) { showToast('กรุณาเลือกประเภทการขอใช้อีเมล', 'error'); return; }
+            emailType = typeInput.value;
+            emailReason = document.getElementById('email_reason').value.trim();
+            if (!emailReason) { showToast('กรุณากรอกวัตถุประสงค์การขอใช้อีเมล', 'error'); return; }
+        } else {
+            objective = document.getElementById('objective').value.trim();
+            if (!objective) { showToast('กรุณากรอกวัตถุประสงค์การขอใช้', 'error'); return; }
+        }
+
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> กำลังส่งคำขอ...';
+
+        try {
+            // เก็บชื่ออังกฤษ/เบอร์โทรที่กรอกไว้ กลับเข้า employees ให้จำไว้ใช้ครั้งหน้า
+            // (เรียกผ่านฟังก์ชันแคบๆ เพราะ anon ไม่มีสิทธิ์ UPDATE ตาราง employees ตรงๆ)
+            await supabaseClient.rpc('update_employee_contact', {
+                p_employees_code: targetCode,
+                p_name_eng: nameEng,
+                p_telephone: telephone
+            });
+
+            const approvalManager = await findApprover(targetEmployee.section);
+
+            // ใช้ฟังก์ชัน submit_request() แทนการ insert().select() ตรงๆ เพราะ
+            // .select() หลัง insert ต้องผ่าน SELECT policy ด้วย (ไม่ใช่แค่ INSERT policy)
+            // ซึ่ง anon ไม่มีสิทธิ์ SELECT บนตาราง requests โดยตรง (ตั้งใจไว้แบบนั้น
+            // เพื่อไม่ให้ใครก็อ่านคำขอของคนอื่นได้) ฟังก์ชันนี้คืนแค่ ticket_id
+            // ออกมาเฉยๆ เลยไม่ติด policy นี้
+            const { data: newTicketId, error } = await supabaseClient.rpc('submit_request', {
+                p_requester_code: requesterCode,
+                p_employees_code: targetCode,
+                p_name_thai: targetEmployee.name_thai,
+                p_name_eng: nameEng,
+                p_telephone: telephone,
+                p_section: targetEmployee.section,
+                p_department: targetEmployee.department,
+                p_position: targetEmployee.position,
+                p_objective: objective,
+                p_email_type: emailType,
+                p_email_reason: emailReason,
+                p_comment: comment,
+                p_approval_manager: approvalManager
+            });
+
+            if (error) throw error;
+
+            document.getElementById('requestForm').style.display = 'none';
+            document.getElementById('successTicketId').textContent = newTicketId;
+            document.getElementById('successScreen').classList.add('show');
+        } catch (err) {
+            showToast('ส่งคำขอไม่สำเร็จ: ' + err.message, 'error');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> ส่งคำขอ';
+        }
+    });
+</script>
+</body>
+</html>

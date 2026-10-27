@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>เข้าสู่ระบบ · IT Account Request</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+    *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI','Sarabun',Tahoma,Geneva,Verdana,sans-serif;}
+    :root{--primary:#2F7FB8;--primary-light:#E7F2FB;--primary-bg:#F7FBFE;--gray-600:#475569;--gray-800:#1e293b;--gray-200:#e2e8f0;--danger:#ef4444;}
+    body{background:var(--primary-bg);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+    .card{background:#fff;border-radius:22px;padding:40px 34px;max-width:380px;width:100%;text-align:center;border:1px solid var(--gray-200);box-shadow:0 20px 40px rgba(0,0,0,0.06);}
+    .icon-wrap{width:64px;height:64px;background:var(--primary-light);color:var(--primary);border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 18px;}
+    h1{color:var(--gray-800);font-size:19px;margin-bottom:6px;}
+    p{color:var(--gray-600);font-size:13px;margin-bottom:24px;}
+    .field{text-align:left;margin-bottom:16px;}
+    .field label{display:block;font-size:13px;font-weight:600;color:#334155;margin-bottom:6px;}
+    .field input{width:100%;padding:12px 14px;border:1.5px solid var(--gray-200);border-radius:10px;font-size:14px;}
+    .field input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-light);}
+    .btn-login{width:100%;padding:13px;background:var(--primary);color:#fff;border:none;border-radius:12px;font-size:14.5px;font-weight:700;cursor:pointer;margin-top:6px;display:flex;align-items:center;justify-content:center;gap:8px;}
+    .btn-login:hover:not(:disabled){background:#1e5bbf;}
+    .btn-login:disabled{opacity:.7;}
+    .alert{background:#fee2e2;color:#991b1b;padding:10px 14px;border-radius:10px;font-size:12.5px;margin-bottom:16px;display:none;}
+</style>
+</head>
+<body>
+<div class="card">
+    <div class="icon-wrap"><i class="fas fa-key"></i></div>
+    <h1>ระบบขอ Username/Password IT</h1>
+    <p>สำหรับผู้อนุมัติและผู้ดูแลระบบ</p>
+
+    <div class="alert" id="alertBox"></div>
+
+    <form id="loginForm">
+        <div class="field">
+            <label>ชื่อผู้ใช้ (Username)</label>
+            <input type="text" id="username" placeholder="เช่น รหัสพนักงาน" autocomplete="username" required>
+        </div>
+        <div class="field">
+            <label>รหัสผ่าน</label>
+            <input type="password" id="password" autocomplete="current-password" required>
+        </div>
+        <button type="submit" class="btn-login" id="loginBtn">
+            <i class="fas fa-sign-in-alt"></i> เข้าสู่ระบบ
+        </button>
+    </form>
+</div>
+
+<script>
+    const SUPABASE_URL      = 'https://fnbkcgkuykdabbensvif.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZuYmtjZ2t1eWtkYWJiZW5zdmlmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkzMDE0MTQsImV4cCI6MjEwNDg3NzQxNH0.L6x3nqAy2rqcxdtzyTs4MHLPubtBqD3Tnk9e97EfEJE';
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // หน้าที่จะไปตามสิทธิ์ (role มาจากตาราง profiles หลัง login สำเร็จ)
+    const PAGE_REDIRECT = {
+        admin: 'approve.html',
+        approver: 'approve.html',
+        employee: 'form.html'
+    };
+
+    function showAlert(msg) {
+        const box = document.getElementById('alertBox');
+        box.textContent = msg;
+        box.style.display = 'block';
+    }
+
+    // ถ้ามี session ค้างอยู่แล้ว เด้งไปหน้าที่ถูกต้องเลย
+    (async function checkExistingSession() {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (!session) return;
+        const { data: profile } = await supabaseClient
+            .from('profiles').select('role').eq('id', session.user.id).maybeSingle();
+        if (profile) window.location.href = PAGE_REDIRECT[profile.role] || 'form.html';
+    })();
+
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const usernameOrEmail = document.getElementById('username').value.trim().toLowerCase();
+        const password = document.getElementById('password').value;
+        const btn = document.getElementById('loginBtn');
+        document.getElementById('alertBox').style.display = 'none';
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> กำลังตรวจสอบ...';
+
+        // แปลง username -> email แบบไดนามิกผ่านฟังก์ชัน get_login_email()
+        let email = usernameOrEmail;
+        const { data: matchedEmail } = await supabaseClient.rpc('get_login_email', { p_username: usernameOrEmail });
+        if (matchedEmail) email = matchedEmail;
+
+        const { data: authData, error: authError } = await supabaseClient.auth.signInWithPassword({ email, password });
+
+        if (authError || !authData.user) {
+            showAlert('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> เข้าสู่ระบบ';
+            return;
+        }
+
+        const { data: profile } = await supabaseClient
+            .from('profiles').select('role').eq('id', authData.user.id).maybeSingle();
+
+        if (!profile) {
+            showAlert('ไม่พบข้อมูลผู้ใช้งานนี้ในระบบ กรุณาติดต่อผู้ดูแลระบบ');
+            await supabaseClient.auth.signOut();
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> เข้าสู่ระบบ';
+            return;
+        }
+
+        window.location.href = PAGE_REDIRECT[profile.role] || 'form.html';
+    });
+</script>
+</body>
+</html>

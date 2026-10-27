@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ประวัติคำขอ - IT Account Request</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+    *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI','Sarabun',Tahoma,Geneva,Verdana,sans-serif;}
+    :root{--primary:#2F7FB8;--primary-light:#E7F2FB;--gray-50:#f8fafc;--gray-100:#f1f5f9;--gray-200:#e2e8f0;--gray-600:#475569;--gray-700:#334155;--gray-800:#1e293b;--danger:#ef4444;--green:#059669;--green-light:#d1fae5;--warning:#f59e0b;}
+    body{background:#F7FBFE;min-height:100vh;}
+    .layout-wrapper{display:flex;min-height:100vh;}
+
+    .sidebar{width:250px;flex-shrink:0;background:#fff;border-right:1px solid var(--gray-200);position:sticky;top:0;height:100vh;overflow-y:auto;}
+    .sidebar-brand{text-align:center;padding:28px 20px 22px;border-bottom:1px solid var(--gray-200);}
+    .sidebar-brand i{width:56px;height:56px;background:var(--primary-light);color:var(--primary);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 12px;}
+    .sidebar-brand h1{font-size:16px;font-weight:800;color:var(--gray-800);margin-bottom:3px;}
+    .sidebar-brand p{font-size:11.5px;color:var(--gray-600);}
+    .sidebar-menu{display:flex;flex-direction:column;gap:4px;padding:16px 12px;}
+    .sidebar-menu a{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;text-decoration:none;color:var(--gray-700);font-size:14px;font-weight:600;transition:.15s;}
+    .sidebar-menu a:hover{background:var(--gray-50);}
+    .sidebar-menu a.active{background:var(--primary-light);color:var(--primary);}
+    .menu-icon{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;background:var(--gray-100);color:var(--gray-600);}
+    .sidebar-menu a.active .menu-icon{background:var(--primary);color:#fff;}
+    .menu-badge{margin-left:auto;background:#e11d48;color:#fff;font-size:11px;font-weight:800;padding:2px 9px;border-radius:20px;}
+    .menu-badge.zero{display:none;}
+
+    .main-content{flex-grow:1;min-width:0;padding:32px 24px;}
+    .page{max-width:900px;margin:0 auto;}
+    @media(max-width:820px){.layout-wrapper{flex-direction:column;}.sidebar{width:100%;height:auto;position:relative;}.sidebar-menu{flex-direction:row;overflow-x:auto;}}
+
+    .page-title{font-size:21px;font-weight:800;color:var(--gray-800);margin-bottom:4px;}
+    .page-sub{font-size:13.5px;color:var(--gray-600);margin-bottom:20px;}
+
+    .search-box{display:flex;gap:10px;margin-bottom:20px;}
+    .search-box input{flex-grow:1;padding:12px 14px;border:1.5px solid var(--gray-200);border-radius:10px;font-size:14px;}
+    .search-box button{padding:0 20px;background:var(--primary);color:#fff;border:none;border-radius:10px;font-weight:700;cursor:pointer;}
+
+    .table-card{background:#fff;border:1px solid var(--gray-200);border-radius:16px;overflow:hidden;}
+    table{width:100%;border-collapse:collapse;font-size:13px;}
+    th{text-align:left;padding:12px 14px;background:var(--gray-50);color:var(--gray-600);font-weight:700;font-size:12px;}
+    td{padding:12px 14px;border-top:1px solid var(--gray-100);color:var(--gray-700);}
+    .status-badge{padding:3px 10px;border-radius:20px;font-size:11.5px;font-weight:700;}
+    .status-pending{background:#fef3c7;color:#d97706;}
+    .status-approved{background:var(--green-light);color:var(--green);}
+    .status-rejected{background:#fee2e2;color:var(--danger);}
+    .empty-state{text-align:center;padding:40px 20px;color:#94a3b8;font-size:13.5px;}
+</style>
+</head>
+<body>
+<div class="layout-wrapper">
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <i class="fas fa-key"></i>
+            <h1>IT Account Request</h1>
+            <p>ระบบขอ Username/Password</p>
+        </div>
+        <nav class="sidebar-menu">
+            <a href="dashboard.html"><span class="menu-icon"><i class="fas fa-chart-pie"></i></span>Dashboard</a>
+            <a href="form.html"><span class="menu-icon"><i class="fas fa-plus-circle"></i></span>แจ้งคำขอ</a>
+            <a href="approve.html"><span class="menu-icon"><i class="fas fa-clipboard-check"></i></span>อนุมัติคำขอ<span class="menu-badge zero" id="pending-count">0</span></a>
+            <a href="history.html" class="active"><span class="menu-icon"><i class="fas fa-history"></i></span>ประวัติคำขอ</a>
+            <a href="report.html" id="reportLink" style="display:none;"><span class="menu-icon"><i class="fas fa-chart-bar"></i></span>รายงาน</a>
+            <a href="manage-approvers.html" id="approversLink" style="display:none;"><span class="menu-icon"><i class="fas fa-user-shield"></i></span>จัดการผู้อนุมัติ</a>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <div class="page">
+            <div class="page-title">ประวัติคำขอของฉัน</div>
+            <div class="page-sub">กรอกรหัสพนักงานของผู้ยื่นคำขอ เพื่อดูรายการคำขอที่เคยส่งไป</div>
+
+            <div class="search-box">
+                <input type="text" id="requesterInput" placeholder="กรอกรหัสพนักงานผู้ยื่นคำขอ">
+                <button onclick="loadHistory()"><i class="fas fa-search"></i> ค้นหา</button>
+            </div>
+
+            <div class="table-card">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>เลขที่คำขอ</th><th>ผู้ใช้งาน</th><th>ฝ่าย/แผนก</th>
+                            <th>รายละเอียด</th><th>สถานะ</th><th>วันที่ยื่น</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyBody">
+                        <tr><td colspan="6" class="empty-state">กรุณากรอกรหัสพนักงานเพื่อค้นหาประวัติ</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+    const SUPABASE_URL = 'https://fnbkcgkuykdabbensvif.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZuYmtjZ2t1eWtkYWJiZW5zdmlmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkzMDE0MTQsImV4cCI6MjEwNDg3NzQxNH0.L6x3nqAy2rqcxdtzyTs4MHLPubtBqD3Tnk9e97EfEJE';
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // โชว์เมนู "รายงาน" / "จัดการผู้อนุมัติ" เฉพาะ role admin (เหมือนหน้า dashboard.html)
+    async function checkAdminMenu() {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (!session) return;
+        const { data: profile } = await supabaseClient
+            .from('profiles').select('role').eq('id', session.user.id).maybeSingle();
+        if (profile?.role === 'admin') {
+            document.getElementById('reportLink').style.display = 'flex';
+            document.getElementById('approversLink').style.display = 'flex';
+        }
+    }
+    checkAdminMenu();
+
+    function statusBadge(status) {
+        const map = {
+            pending:  ['status-pending','รออนุมัติ'],
+            approved: ['status-approved','อนุมัติแล้ว'],
+            rejected: ['status-rejected','ปฏิเสธ']
+        };
+        const [cls, label] = map[status] || ['status-pending', status || '-'];
+        return `<span class="status-badge ${cls}">${label}</span>`;
+    }
+
+    async function loadHistory() {
+        const code = document.getElementById('requesterInput').value.trim();
+        const tbody = document.getElementById('historyBody');
+        if (!code) { tbody.innerHTML = '<tr><td colspan="6" class="empty-state">กรุณากรอกรหัสพนักงาน</td></tr>'; return; }
+
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-state"><i class="fas fa-spinner fa-spin"></i> กำลังโหลด...</td></tr>';
+
+        const { data, error } = await supabaseClient.rpc('get_my_requests', { p_requester_code: code });
+
+        if (error || !data || data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="empty-state">ไม่พบประวัติคำขอ</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = data.map(r => `
+            <tr>
+                <td><b>${r.ticket_id}</b></td>
+                <td>${r.name_thai || '-'}</td>
+                <td>${r.section || '-'} ${r.department ? '/ ' + r.department : ''}</td>
+                <td>${r.objective || '-'}</td>
+                <td>${statusBadge(r.status)}</td>
+                <td>${new Date(r.created_at).toLocaleDateString('th-TH')}</td>
+            </tr>
+        `).join('');
+    }
+
+    document.getElementById('requesterInput').addEventListener('keypress', e => {
+        if (e.key === 'Enter') loadHistory();
+    });
+</script>
+</body>
+</html>
