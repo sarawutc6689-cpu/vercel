@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin Dashboard — ระบบลงเวลา</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f0f2f5;--wh:#fff;--bd:#e2e8f0;--tx:#1a202c;--mu:#718096;--ac:#2563eb;--gr:#16a34a;--rd:#dc2626;--yw:#d97706;--s-gr:#dcfce7;--s-rd:#fee2e2;--s-bl:#dbeafe;--s-yw:#fef3c7;--font:'Sarabun',sans-serif;--mono:'IBM Plex Mono',monospace;--r:12px;--sh:0 1px 3px rgba(0,0,0,.08)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--bg);color:var(--tx);min-height:100vh}
+/* layout */
+.layout{display:flex;min-height:100vh}
+.sidebar{width:220px;flex-shrink:0;background:var(--wh);border-right:1px solid var(--bd);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100}
+.sb-logo{padding:20px 18px 16px;border-bottom:1px solid var(--bd)}
+.sb-logo .icon{font-size:26px}.sb-logo .title{font-size:14px;font-weight:700;margin-top:4px}.sb-logo .sub{font-size:10px;color:var(--mu);letter-spacing:1px}
+.sb-nav{padding:10px;flex:1}
+.nav-item{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;color:var(--mu);transition:background .15s,color .15s;margin-bottom:2px;border:none;background:none;width:100%;text-align:left}
+.nav-item:hover{background:var(--bg);color:var(--tx)}.nav-item.active{background:var(--s-bl);color:var(--ac)}
+.sb-foot{padding:14px 18px;border-top:1px solid var(--bd);font-size:11px;color:var(--mu)}
+.main{margin-left:220px;flex:1}
+/* topbar */
+.topbar{background:var(--wh);border-bottom:1px solid var(--bd);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;flex-wrap:wrap;gap:8px}
+.tb-title{font-size:16px;font-weight:700}
+.tb-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.date-filter{display:flex;align-items:center;gap:6px;background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:7px 10px;font-size:12px}
+.date-filter input[type=date]{border:none;background:none;font-family:var(--mono);font-size:12px;color:var(--tx);outline:none;cursor:pointer}
+.tb-btn{padding:7px 12px;border-radius:8px;font-size:12px;font-family:var(--font);font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;transition:opacity .15s;border:1px solid var(--bd);background:var(--wh);color:var(--tx)}
+.tb-btn:hover{background:var(--bg)}
+.tb-btn.primary{background:var(--ac);color:#fff;border-color:var(--ac)}.tb-btn.primary:hover{opacity:.88}
+.tb-btn:disabled{opacity:.5;cursor:not-allowed}
+.content{padding:20px 24px}
+/* stats */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+.stat{background:var(--wh);border:1px solid var(--bd);border-radius:var(--r);padding:18px;box-shadow:var(--sh);display:flex;align-items:flex-start;justify-content:space-between}
+.stat .lbl{font-size:11px;font-weight:600;color:var(--mu);letter-spacing:.5px;margin-bottom:6px}
+.stat .val{font-size:26px;font-weight:700;font-family:var(--mono);line-height:1}
+.stat .sub{font-size:11px;color:var(--mu);margin-top:3px}
+.stat-icon{width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.ic-bl{background:var(--s-bl)}.ic-gr{background:var(--s-gr)}.ic-rd{background:var(--s-rd)}.ic-yw{background:var(--s-yw)}
+/* table card */
+.tcard{background:var(--wh);border:1px solid var(--bd);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden;margin-bottom:20px}
+.thead{padding:14px 18px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.thead h3{font-size:14px;font-weight:700}
+.search{display:flex;align-items:center;gap:6px;background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:6px 10px}
+.search input{border:none;background:none;outline:none;font-family:var(--font);font-size:12px;color:var(--tx);width:160px}
+.search input::placeholder{color:var(--mu)}
+.twrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead{background:var(--bg)}
+th{padding:10px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--mu);letter-spacing:.5px;text-transform:uppercase;border-bottom:1px solid var(--bd);white-space:nowrap}
+td{padding:11px 14px;border-bottom:1px solid var(--bd);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#fafbfc}
+.badge{display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;font-family:var(--mono)}
+.badge-in{background:var(--s-gr);color:var(--gr)}.badge-out{background:var(--s-rd);color:var(--rd)}
+.emp-cell{display:flex;align-items:center;gap:8px}
+.ava{width:30px;height:30px;border-radius:50%;background:var(--s-bl);color:var(--ac);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.enm{font-weight:600;font-size:12px}.eid{font-size:10px;color:var(--mu);font-family:var(--mono)}
+.tc{font-family:var(--mono);font-size:12px}.dc{font-size:11px;color:var(--mu);margin-top:1px}
+.photo-thumb{width:34px;height:34px;border-radius:6px;object-fit:cover;cursor:pointer;border:1px solid var(--bd);transition:transform .15s,box-shadow .15s}
+.photo-thumb:hover{transform:scale(1.1);box-shadow:0 4px 12px rgba(0,0,0,.15)}
+.no-photo{color:var(--mu);font-size:11px}
+.t-empty{padding:40px;text-align:center;color:var(--mu)}
+.t-empty .ei{font-size:36px;margin-bottom:8px}.t-empty p{font-size:13px}
+/* pagination */
+.pag{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-top:1px solid var(--bd);font-size:12px;color:var(--mu)}
+.pag-btns{display:flex;gap:4px}
+.pb{padding:5px 10px;border-radius:6px;border:1px solid var(--bd);background:var(--wh);font-size:12px;font-family:var(--font);cursor:pointer;color:var(--tx)}
+.pb:hover{background:var(--bg)}.pb.active{background:var(--ac);color:#fff;border-color:var(--ac)}.pb:disabled{opacity:.4;cursor:not-allowed}
+/* modal */
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:999;align-items:center;justify-content:center}
+.modal.open{display:flex;animation:fi .2s}
+.mbox{background:var(--wh);border-radius:14px;padding:18px;max-width:400px;width:90%;position:relative}
+.mbox img{width:100%;border-radius:10px;display:block}
+.minfo{margin-top:10px;font-size:12px;color:var(--mu)}
+.mclose{position:absolute;top:10px;right:10px;background:var(--bg);border:1px solid var(--bd);border-radius:50%;width:28px;height:28px;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+@keyframes fi{from{opacity:0}to{opacity:1}}
+/* responsive */
+@media(max-width:900px){.sidebar{display:none}.main{margin-left:0}.stats-row{grid-template-columns:1fr 1fr}.content{padding:14px}}
+@media(max-width:500px){.stats-row{grid-template-columns:1fr 1fr;gap:8px}.topbar{padding:10px 14px}}
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sb-logo">
+      <div class="icon">🏢</div>
+      <div class="title">Attendance Admin</div>
+      <div class="sub">DASHBOARD</div>
+    </div>
+    <nav class="sb-nav">
+      <button class="nav-item active" onclick="showPage('overview')">📊 ภาพรวม</button>
+      <button class="nav-item" onclick="showPage('log')">📋 บันทึกลงเวลา</button>
+      <button class="nav-item" onclick="showPage('summary')">👥 สรุปรายคน</button>
+    </nav>
+    <div class="sb-foot">อัปเดตล่าสุด:<br><span id="last-upd" style="font-family:var(--mono);font-size:10px">--</span></div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="tb-title" id="pg-title">📊 ภาพรวม</div>
+      <div class="tb-right">
+        <div class="date-filter">
+          📅 <input type="date" id="d-from"> – <input type="date" id="d-to">
+        </div>
+        <button class="tb-btn" onclick="exportCSV()">⬇️ Export CSV</button>
+        <button class="tb-btn primary" id="load-btn" onclick="load()">🔄 โหลดข้อมูล</button>
+      </div>
+    </div>
+
+    <div class="content">
+      <!-- Overview -->
+      <div id="pg-overview">
+        <div class="stats-row">
+          <div class="stat"><div><div class="lbl">เข้างานวันนี้</div><div class="val" id="s-in">--</div><div class="sub">คน</div></div><div class="stat-icon ic-gr">✅</div></div>
+          <div class="stat"><div><div class="lbl">ออกงานวันนี้</div><div class="val" id="s-out">--</div><div class="sub">คน</div></div><div class="stat-icon ic-rd">🚪</div></div>
+          <div class="stat"><div><div class="lbl">รายการในช่วงเวลา</div><div class="val" id="s-total">--</div><div class="sub">รายการ</div></div><div class="stat-icon ic-bl">📋</div></div>
+          <div class="stat"><div><div class="lbl">พนักงานทั้งหมด</div><div class="val" id="s-emp">--</div><div class="sub">คน</div></div><div class="stat-icon ic-yw">👥</div></div>
+        </div>
+        <div class="tcard">
+          <div class="thead"><h3>🕐 รายการล่าสุด 20 รายการ</h3></div>
+          <div class="twrap" id="recent-wrap"><div class="t-empty"><div class="ei">⏳</div><p>กด "โหลดข้อมูล"</p></div></div>
+        </div>
+      </div>
+
+      <!-- Log -->
+      <div id="pg-log" style="display:none">
+        <div class="tcard">
+          <div class="thead">
+            <h3>📋 บันทึกลงเวลาทั้งหมด</h3>
+            <div class="search">🔍 <input type="text" id="search" placeholder="ค้นหาชื่อ / รหัส..." oninput="renderLog()"></div>
+          </div>
+          <div class="twrap" id="log-wrap"><div class="t-empty"><div class="ei">⏳</div><p>กด "โหลดข้อมูล"</p></div></div>
+          <div class="pag" id="pag" style="display:none">
+            <span id="pag-info"></span>
+            <div class="pag-btns" id="pag-btns"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Summary -->
+      <div id="pg-summary" style="display:none">
+        <div class="tcard">
+          <div class="thead"><h3>👥 สรุปการเข้างานรายคน</h3></div>
+          <div class="twrap" id="sum-wrap"><div class="t-empty"><div class="ei">⏳</div><p>กด "โหลดข้อมูล"</p></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal" id="modal" onclick="closeModal()">
+  <div class="mbox" onclick="event.stopPropagation()">
+    <button class="mclose" onclick="closeModal()">✕</button>
+    <img id="m-img" src="" alt="">
+    <div class="minfo" id="m-info"></div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════
+// ⭐ ใส่ GAS URL ตรงนี้ (URL เดียวกับ index.html)
+const API = "https://script.google.com/macros/s/AKfycbw0gZjV1IwUKtdag7N1JYOyyKqTNOQvEl59sezE4YWdflpaiLONEuej1RgNSVCsPQ-a-w/exec";
+// ════════════════════════════════════
+const PER = 30;
+let rows=[], filtered=[], curPage=1, curPg='overview';
+
+window.addEventListener('DOMContentLoaded',()=>{
+  const today=dateStr(new Date()), past=dateStr(new Date(Date.now()-29*86400000));
+  document.getElementById('d-from').value=past;
+  document.getElementById('d-to').value=today;
+  load();
+});
+
+function showPage(p){
+  curPg=p;
+  ['overview','log','summary'].forEach(x=>document.getElementById('pg-'+x).style.display=x===p?'':'none');
+  document.querySelectorAll('.nav-item').forEach((el,i)=>el.classList.toggle('active',['overview','log','summary'][i]===p));
+  const titles={overview:'📊 ภาพรวม',log:'📋 บันทึกลงเวลา',summary:'👥 สรุปรายคน'};
+  document.getElementById('pg-title').textContent=titles[p];
+  if(rows.length) renderAll();
+}
+
+async function load(){
+  const btn=document.getElementById('load-btn');
+  btn.disabled=true; btn.textContent='⏳ กำลังโหลด...';
+  try{
+    const from=document.getElementById('d-from').value, to=document.getElementById('d-to').value;
+    const r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'getAttendance',dateFrom:from,dateTo:to})});
+    const data=await r.json();
+    if(data.result==='success'){
+      rows=data.rows;
+      document.getElementById('last-upd').textContent=new Date().toLocaleTimeString('th-TH',{hour12:false});
+      renderAll();
+    } else alert('โหลดไม่ได้: '+data.message);
+  }catch(e){alert('เชื่อมต่อ GAS ไม่ได้ กรุณาตรวจสอบ API URL');}
+  btn.disabled=false; btn.textContent='🔄 โหลดข้อมูล';
+}
+
+function renderAll(){
+  renderStats();
+  if(curPg==='overview') renderRecent();
+  if(curPg==='log')      renderLog();
+  if(curPg==='summary')  renderSummary();
+}
+
+function renderStats(){
+  const today=dateStr(new Date());
+  const td=rows.filter(r=>dateStr(new Date(r.datetime))===today);
+  document.getElementById('s-in').textContent=td.filter(r=>r.status==='IN').length;
+  document.getElementById('s-out').textContent=td.filter(r=>r.status==='OUT').length;
+  document.getElementById('s-total').textContent=rows.length;
+  document.getElementById('s-emp').textContent=new Set(rows.map(r=>r.employee_id)).size;
+}
+
+function renderRecent(){
+  const r=[...rows].reverse().slice(0,20);
+  document.getElementById('recent-wrap').innerHTML=r.length?buildTable(r):empty('ไม่มีข้อมูล');
+}
+
+function renderLog(){
+  const q=(document.getElementById('search')?.value||'').toLowerCase();
+  filtered=[...rows].filter(r=>r.name.toLowerCase().includes(q)||String(r.employee_id).includes(q)).reverse();
+  const total=filtered.length, pages=Math.ceil(total/PER)||1;
+  curPage=Math.min(curPage,pages);
+  const sl=filtered.slice((curPage-1)*PER,curPage*PER);
+  document.getElementById('log-wrap').innerHTML=sl.length?buildTable(sl):empty('ไม่พบข้อมูล');
+  const pag=document.getElementById('pag');
+  if(total>PER){
+    pag.style.display='';
+    document.getElementById('pag-info').textContent='แสดง '+((curPage-1)*PER+1)+'–'+Math.min(curPage*PER,total)+' จาก '+total;
+    let h=`<button class="pb" onclick="goPage(${curPage-1})" ${curPage===1?'disabled':''}>‹</button>`;
+    for(let p=Math.max(1,curPage-2);p<=Math.min(pages,curPage+2);p++)
+      h+=`<button class="pb ${p===curPage?'active':''}" onclick="goPage(${p})">${p}</button>`;
+    h+=`<button class="pb" onclick="goPage(${curPage+1})" ${curPage===pages?'disabled':''}>›</button>`;
+    document.getElementById('pag-btns').innerHTML=h;
+  } else pag.style.display='none';
+}
+function goPage(p){curPage=p;renderLog();}
+
+function renderSummary(){
+  const m={};
+  rows.forEach(r=>{
+    if(!m[r.employee_id]) m[r.employee_id]={name:r.name,in:0,out:0,last:''};
+    if(r.status==='IN')  m[r.employee_id].in++;
+    if(r.status==='OUT') m[r.employee_id].out++;
+    m[r.employee_id].last=r.datetime;
+  });
+  const list=Object.entries(m);
+  if(!list.length){document.getElementById('sum-wrap').innerHTML=empty('ไม่มีข้อมูล');return;}
+  let h=`<table><thead><tr><th>พนักงาน</th><th>เข้างาน</th><th>ออกงาน</th><th>วันทำงาน</th><th>ลงเวลาล่าสุด</th></tr></thead><tbody>`;
+  list.forEach(([id,v])=>{
+    const dt=v.last?fmtDT(new Date(v.last)):'--';
+    h+=`<tr><td><div class="emp-cell"><div class="ava">${v.name.charAt(0)}</div><div><div class="enm">${v.name}</div><div class="eid">${id}</div></div></div></td><td><span class="badge badge-in">✅ ${v.in}</span></td><td><span class="badge badge-out">🚪 ${v.out}</span></td><td><b>${v.in}</b> วัน</td><td><div class="tc">${dt}</div></td></tr>`;
+  });
+  h+='</tbody></table>';
+  document.getElementById('sum-wrap').innerHTML=h;
+}
+
+function buildTable(data){
+  let h=`<table><thead><tr><th>พนักงาน</th><th>วัน/เวลา</th><th>สถานะ</th><th>รูป</th><th>พิกัด</th></tr></thead><tbody>`;
+  data.forEach(r=>{
+    const dt=r.datetime?new Date(r.datetime):null;
+    const time=dt?dt.toLocaleTimeString('th-TH',{hour12:false}):'--';
+    const date=dt?dt.toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'}):'--';
+    const badge=r.status==='IN'?'<span class="badge badge-in">🟢 IN</span>':'<span class="badge badge-out">🔴 OUT</span>';
+    const photo=r.image_url
+      ?`<img class="photo-thumb" src="${r.image_url}" alt="" onclick="openModal('${r.image_url}','${r.name} · ${date} · ${time}')" onerror="this.style.display='none'">`
+      :'<span class="no-photo">—</span>';
+    const coord=(r.latitude&&r.longitude)
+      ?`<a href="https://maps.google.com/?q=${r.latitude},${r.longitude}" target="_blank" style="color:var(--ac);font-size:11px;font-family:var(--mono)">${(+r.latitude).toFixed(5)},${(+r.longitude).toFixed(5)}</a>`
+      :'—';
+    h+=`<tr><td><div class="emp-cell"><div class="ava">${r.name?r.name.charAt(0):'?'}</div><div><div class="enm">${r.name}</div><div class="eid">${r.employee_id}</div></div></div></td><td><div class="tc">${time}</div><div class="dc">${date}</div></td><td>${badge}</td><td>${photo}</td><td>${coord}</td></tr>`;
+  });
+  return h+'</tbody></table>';
+}
+
+function openModal(url,info){
+  document.getElementById('m-img').src=url;
+  document.getElementById('m-info').textContent=info;
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal(){document.getElementById('modal').classList.remove('open');document.getElementById('m-img').src='';}
+
+function exportCSV(){
+  if(!rows.length){alert('ยังไม่มีข้อมูล');return;}
+  const hdr='รหัสพนักงาน,ชื่อ,วันเวลา,สถานะ,Latitude,Longitude,รูป';
+  const lines=rows.map(r=>[r.employee_id,r.name,r.datetime,r.status,r.latitude,r.longitude,r.image_url].map(v=>'"'+String(v||'').replace(/"/g,'""')+'"').join(','));
+  const blob=new Blob(['\uFEFF'+hdr+'\n'+lines.join('\n')],{type:'text/csv;charset=utf-8'});
+  const a=Object.assign(document.createElement('a'),{href:URL.createObjectURL(blob),download:'attendance_'+dateStr(new Date())+'.csv'});
+  a.click();
+}
+
+function dateStr(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function fmtDT(d){return d.toLocaleDateString('th-TH',{day:'numeric',month:'short'})+' '+d.toLocaleTimeString('th-TH',{hour12:false});}
+function empty(msg){return `<div class="t-empty"><div class="ei">📭</div><p>${msg}</p></div>`;}
+</script>
+</body>
+</html>

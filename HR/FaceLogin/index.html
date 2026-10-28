@@ -1,1 +1,574 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>ระบบลงเวลา</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap');
 
+:root{
+  --bg:#f0f5fb;
+  --s1:#ffffff;
+  --s2:#e8f0fb;
+  --bd:#c5d6ee;
+  --ac:#1a5fa8;
+  --ac2:#2176d2;
+  --gr:#1a7a4a;
+  --rd:#c0392b;
+  --yw:#d4860a;
+  --tx:#1a2a3a;
+  --mu:#6b85a0;
+  --hdr:#1a3d6b;
+  --sidebar-w:250px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{
+  font-family:'Angsana New','Angsana','Sarabun',serif;
+  background:var(--bg);color:var(--tx);
+  min-height:100vh;display:flex;flex-direction:column;
+  font-size:16px;
+}
+
+/* ─── OVERLAY ─── */
+#overlay{position:fixed;inset:0;background:rgba(10,30,60,.45);backdrop-filter:blur(2px);z-index:90;opacity:0;pointer-events:none;transition:opacity .3s}
+#overlay.open{opacity:1;pointer-events:all}
+
+/* ─── SIDEBAR ─── */
+#sidebar{
+  position:fixed;top:0;left:0;height:100%;width:var(--sidebar-w);
+  background:var(--s1);border-right:2px solid var(--bd);
+  z-index:100;transform:translateX(-100%);
+  transition:transform .32s cubic-bezier(.4,0,.2,1);
+  display:flex;flex-direction:column;
+  box-shadow:4px 0 24px rgba(26,63,107,.12);
+}
+#sidebar.open{transform:translateX(0)}
+.sb-head{
+  padding:28px 20px 18px;
+  border-bottom:2px solid var(--bd);
+  background:linear-gradient(160deg,var(--hdr),var(--ac2));
+  color:#fff;
+}
+.sb-logo{font-size:32px;margin-bottom:4px}
+.sb-title{font-size:18px;font-weight:700;letter-spacing:.5px;font-family:'Angsana New','Angsana','Sarabun',serif}
+.sb-sub{font-size:11px;opacity:.75;letter-spacing:1.5px;text-transform:uppercase;margin-top:2px;font-family:'Sarabun',sans-serif}
+.sb-nav{padding:16px 10px;flex:1}
+.sb-nav-lbl{font-size:11px;font-weight:700;color:var(--mu);letter-spacing:2px;text-transform:uppercase;padding:6px 10px 8px;font-family:'Sarabun',sans-serif}
+.nav-item{
+  display:flex;align-items:center;gap:12px;
+  padding:13px 16px;border-radius:8px;
+  font-size:17px;font-weight:600;cursor:pointer;
+  color:var(--tx);text-decoration:none;
+  transition:background .15s,color .15s;
+  margin-bottom:4px;border:1px solid transparent;
+}
+.nav-item:hover{background:var(--s2);border-color:var(--bd)}
+.nav-item.active{background:rgba(26,95,168,.08);color:var(--ac);border-color:rgba(26,95,168,.25)}
+.nav-item .ni{font-size:20px;flex-shrink:0}
+
+.sb-close{
+  position:absolute;top:12px;right:12px;
+  width:30px;height:30px;border-radius:50%;
+  background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);
+  color:#fff;font-size:14px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+}
+.sb-foot{
+  padding:14px 16px;border-top:1px solid var(--bd);
+  font-size:13px;color:var(--mu);text-align:center;line-height:1.7;
+}
+
+/* ─── HEADER ─── */
+.hdr{
+  background:linear-gradient(135deg,var(--hdr) 0%,var(--ac2) 100%);
+  border-bottom:2px solid rgba(255,255,255,.15);
+  padding:16px 20px 14px;
+  text-align:center;position:relative;flex-shrink:0;
+  box-shadow:0 3px 12px rgba(26,63,107,.25);
+  color:#fff;
+}
+.hdr-menu{
+  position:absolute;left:14px;top:50%;transform:translateY(-50%);
+  width:42px;height:42px;border-radius:8px;
+  background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);
+  color:#fff;font-size:20px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:background .15s;
+}
+.hdr-menu:hover{background:rgba(255,255,255,.25)}
+.hdr-icon{font-size:30px;margin-bottom:2px}
+.hdr-title{font-size:20px;font-weight:700;letter-spacing:.5px;font-family:'Angsana New','Angsana','Sarabun',serif}
+.hdr-sub{font-size:10px;opacity:.8;letter-spacing:2px;text-transform:uppercase;font-family:'Sarabun',sans-serif}
+#clock{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:28px;font-weight:600;
+  color:#fff;letter-spacing:3px;margin:8px 0 2px;
+  text-shadow:0 0 20px rgba(255,255,255,.3);
+}
+#date-lbl{font-size:13px;opacity:.8;margin-bottom:2px}
+
+/* ─── PAGES ─── */
+.page{display:none;flex:1;flex-direction:column;}
+.page.active{display:flex;}
+
+/* ─── CARDS ─── */
+.wrap{padding:0 14px;flex:1;}
+.card{
+  background:var(--s1);border:1px solid var(--bd);
+  border-radius:12px;padding:16px;margin-top:12px;
+  box-shadow:0 2px 8px rgba(26,63,107,.07);
+}
+.lbl{
+  font-size:13px;font-weight:700;color:var(--ac);
+  letter-spacing:1px;text-transform:uppercase;
+  margin-bottom:10px;display:flex;align-items:center;gap:6px;
+  font-family:'Sarabun',sans-serif;
+}
+.lbl::after{content:'';flex:1;height:1px;background:var(--bd);margin-left:6px}
+
+/* employee */
+.emp-in{
+  width:100%;background:var(--s2);border:1.5px solid var(--bd);
+  border-radius:8px;padding:12px 14px;font-size:20px;
+  font-family:'IBM Plex Mono',monospace;color:var(--tx);
+  outline:none;-webkit-appearance:none;transition:border-color .2s,box-shadow .2s;
+}
+.emp-in:focus{border-color:var(--ac);box-shadow:0 0 0 3px rgba(26,95,168,.12)}
+.emp-in::placeholder{color:var(--mu);font-size:14px;font-family:'Angsana New','Angsana','Sarabun',serif}
+.emp-badge{display:none;margin-top:10px;padding:10px 14px;background:var(--s2);border-radius:8px;border-left:4px solid var(--gr);align-items:center;gap:10px}
+.emp-badge.show{display:flex}.emp-badge.err{border-left-color:var(--rd)}
+.emp-badge .ico{font-size:20px;flex-shrink:0}
+.emp-badge .nm{font-weight:700;font-size:16px}
+.emp-badge .sid{font-size:12px;color:var(--mu);font-family:'IBM Plex Mono',monospace}
+
+/* gps */
+#map{height:175px;border-radius:8px;border:1px solid var(--bd);overflow:hidden}
+.gps-row{display:flex;align-items:flex-start;gap:8px;margin-top:8px;font-size:13px;color:var(--mu);line-height:1.5}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--yw);flex-shrink:0;margin-top:4px}
+.dot.ok{background:var(--gr)}.dot.err{background:var(--rd)}.dot.pulse{animation:blink 1.2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+
+/* camera */
+.cam-box{position:relative;border-radius:8px;overflow:hidden;background:#0a0a0a;aspect-ratio:4/3;border:1px solid var(--bd)}
+#video{width:100%;height:100%;object-fit:cover;display:block;transform:scaleX(-1)}
+#preview{width:100%;height:100%;object-fit:cover;display:none}
+.cam-msg{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,.72);color:#bbb;font-size:13px;text-align:center;padding:16px;gap:6px;font-family:'Sarabun',sans-serif}
+.cam-msg .mi{font-size:34px}.cam-msg.hidden{display:none}
+.sh-row{display:flex;align-items:center;justify-content:center;gap:24px;margin-top:12px}
+.shutter{width:62px;height:62px;border-radius:50%;background:var(--ac);border:3px solid var(--ac2);color:#fff;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .1s,box-shadow .15s;flex-shrink:0;box-shadow:0 4px 14px rgba(26,95,168,.3)}
+.shutter:active{transform:scale(.9)}.shutter:disabled{opacity:.3}
+.flip-btn{width:42px;height:42px;border-radius:50%;background:var(--s2);border:1px solid var(--bd);color:var(--ac);font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.photo-ok{display:none;margin-top:8px;padding:8px 12px;border-radius:8px;background:rgba(26,122,74,.08);border:1px solid var(--gr);color:var(--gr);font-size:14px;font-weight:700;text-align:center}
+.photo-ok.show{display:block}
+.retake-btn{display:none;width:100%;margin-top:8px;padding:11px;border:1.5px solid var(--bd);border-radius:8px;background:var(--s2);color:var(--mu);font-size:15px;font-family:'Angsana New','Angsana','Sarabun',serif;font-weight:700;cursor:pointer}
+.retake-btn.show{display:block}
+
+/* submit buttons */
+.sub-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;margin-bottom:14px}
+.sub-btn{
+  padding:15px 8px;border:none;border-radius:10px;
+  font-size:18px;font-family:'Angsana New','Angsana','Sarabun',serif;font-weight:700;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;
+  transition:transform .1s,opacity .15s,box-shadow .15s;
+}
+.sub-btn:active{transform:scale(.96)}
+.sub-btn:disabled{opacity:.3;cursor:not-allowed;transform:none}
+.btn-in{background:var(--gr);color:#fff;box-shadow:0 4px 14px rgba(26,122,74,.25)}
+.btn-out{background:var(--rd);color:#fff;box-shadow:0 4px 14px rgba(192,57,43,.25)}
+
+/* toast */
+#toast{display:none;margin:12px 0 0;padding:14px 16px;border-radius:10px;border:1px solid;text-align:center}
+#toast.show{display:block;animation:fi .25s}
+#toast.success{background:rgba(26,122,74,.07);border-color:var(--gr)}
+#toast.error{background:rgba(192,57,43,.07);border-color:var(--rd)}
+#toast.loading{background:rgba(26,95,168,.07);border-color:var(--ac)}
+.t-icon{font-size:24px;margin-bottom:4px}.t-text{font-size:16px;font-weight:700}
+@keyframes fi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
+
+/* ─── FOOTER ─── */
+footer{
+  background:var(--hdr);border-top:2px solid rgba(255,255,255,.1);
+  padding:12px 16px;text-align:center;flex-shrink:0;
+  box-shadow:0 -2px 8px rgba(26,63,107,.15);
+}
+.ft-main{font-size:15px;font-weight:700;color:#fff;letter-spacing:.3px;margin-bottom:3px}
+.ft-row{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap}
+.ft-dev{font-size:12px;color:rgba(255,255,255,.7)}
+.ft-dev span{color:#7ec8ff;font-weight:700}
+.ft-sep{width:3px;height:3px;border-radius:50%;background:rgba(255,255,255,.3)}
+.ft-note{font-size:12px;color:rgba(255,255,255,.7)}
+.ft-note span{color:#ffd77a}
+
+/* ─── LOGIN MODAL ─── */
+#login-modal{
+  display:none;position:fixed;inset:0;z-index:1000;
+  align-items:center;justify-content:center;
+  background:rgba(10,30,60,.6);backdrop-filter:blur(4px);
+  padding:24px;
+}
+#login-modal.open{display:flex;animation:fi .2s}
+.modal-box{
+  background:var(--s1);border:1.5px solid var(--bd);
+  border-radius:16px;padding:28px 24px;width:100%;max-width:340px;
+  box-shadow:0 16px 48px rgba(26,63,107,.25);
+  text-align:center;
+}
+.modal-icon{font-size:40px;margin-bottom:8px}
+.modal-title{font-size:20px;font-weight:700;color:var(--tx);margin-bottom:4px}
+.modal-sub{font-size:13px;color:var(--mu);margin-bottom:20px;font-family:'Sarabun',sans-serif}
+.modal-input{
+  width:100%;background:var(--s2);border:1.5px solid var(--bd);
+  border-radius:8px;padding:13px 16px;font-size:18px;
+  font-family:'IBM Plex Mono',monospace;color:var(--tx);
+  outline:none;text-align:center;letter-spacing:4px;
+  transition:border-color .2s,box-shadow .2s;margin-bottom:6px;
+}
+.modal-input:focus{border-color:var(--ac);box-shadow:0 0 0 3px rgba(26,95,168,.12)}
+.modal-err{
+  font-size:13px;color:var(--rd);font-weight:700;
+  min-height:20px;margin-bottom:12px;font-family:'Sarabun',sans-serif;
+}
+.modal-row{display:flex;gap:10px}
+.modal-btn{
+  flex:1;padding:13px;border:none;border-radius:8px;
+  font-size:16px;font-family:'Angsana New','Angsana','Sarabun',serif;
+  font-weight:700;cursor:pointer;transition:opacity .15s,transform .1s;
+}
+.modal-btn:active{transform:scale(.96)}
+.modal-confirm{background:var(--ac);color:#fff;box-shadow:0 4px 12px rgba(26,95,168,.25)}
+.modal-cancel{background:var(--s2);color:var(--mu);border:1px solid var(--bd)}
+</style>
+</head>
+<body>
+
+<!-- Overlay -->
+<div id="overlay" onclick="closeSidebar()"></div>
+
+<!-- Sidebar -->
+<div id="sidebar">
+  <button class="sb-close" onclick="closeSidebar()">✕</button>
+  <div class="sb-head">
+    <div class="sb-logo">🏢</div>
+    <div class="sb-title">ระบบลงเวลา</div>
+    <div class="sb-sub">Attendance System</div>
+  </div>
+  <div class="sb-nav">
+    <div class="sb-nav-lbl">เมนูหลัก</div>
+    <a class="nav-item active" id="nav-att"
+       href="https://sarawutc6689-cpu.github.io/FaceLogin/index.html">
+      <span class="ni">🕐</span>
+      <span>ลงเวลาทำงาน</span>
+    </a>
+    <a class="nav-item" id="nav-rpt" href="#" onclick="askLogin(event)">
+      <span class="ni">📊</span>
+      <span>รายงาน</span>
+      <span style="font-size:12px;opacity:.5">🔒</span>
+    </a>
+  </div>
+  <div class="sb-foot">
+    v1.0 · ระบบลงเวลาทำงานนอกสถานที่<br>
+    <span style="color:var(--ac2);font-weight:700">พัฒนาโดย Sarawut.C</span>
+  </div>
+</div>
+
+<!-- Header -->
+<div class="hdr">
+  <button class="hdr-menu" onclick="openSidebar()">☰</button>
+  <div class="hdr-icon">🏢</div>
+  <div class="hdr-title">ระบบลงเวลาทำงาน</div>
+  <div class="hdr-sub">Attendance System</div>
+  <div id="clock">--:--:--</div>
+  <div id="date-lbl">--</div>
+</div>
+
+<!-- Page: Attendance -->
+<div class="page active" id="page-attendance">
+  <div class="wrap">
+    <div id="toast"><div class="t-icon" id="t-icon"></div><div class="t-text" id="t-text"></div></div>
+
+    <div class="card">
+      <div class="lbl">👤 รหัสพนักงาน</div>
+      <input class="emp-in" id="emp-id" type="text" placeholder="กรอกรหัสพนักงาน"
+        inputmode="numeric" autocomplete="off" spellcheck="false" oninput="onEmp()">
+      <div class="emp-badge" id="emp-badge">
+        <div class="ico" id="emp-ico">👤</div>
+        <div><div class="nm" id="emp-nm"></div><div class="sid" id="emp-sid"></div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="lbl">📍 ตำแหน่ง GPS</div>
+      <div id="map"></div>
+      <div class="gps-row"><div class="dot pulse" id="gps-dot"></div><span id="gps-txt">กำลังหาตำแหน่ง...</span></div>
+    </div>
+
+    <div class="card">
+      <div class="lbl">📷 ถ่ายภาพยืนยัน</div>
+      <div class="cam-box">
+        <video id="video" autoplay playsinline muted></video>
+        <img id="preview" alt="">
+        <div class="cam-msg" id="cam-msg"><div class="mi">⏳</div><span>กำลังเปิดกล้อง...</span></div>
+      </div>
+      <div class="sh-row" id="sh-row">
+        <button class="flip-btn" onclick="flipCam()">🔄</button>
+        <button class="shutter" id="shutter" onclick="snap()" disabled>📸</button>
+        <div style="width:42px"></div>
+      </div>
+      <div class="photo-ok" id="photo-ok">✅ บันทึกภาพแล้ว — กดเข้า/ออกงานได้เลย</div>
+      <button class="retake-btn" id="retake-btn" onclick="retake()">🔄 ถ่ายใหม่</button>
+    </div>
+
+    <div class="sub-row">
+      <button class="sub-btn btn-in"  id="btn-in"  onclick="go('IN')"  disabled>🟢 เข้างาน</button>
+      <button class="sub-btn btn-out" id="btn-out" onclick="go('OUT')" disabled>🔴 ออกงาน</button>
+    </div>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer>
+  <div class="ft-main">🗂️ ระบบลงเวลาทำงานนอกสถานที่</div>
+  <div class="ft-row">
+    <span class="ft-dev">พัฒนาโดย <span>Sarawut.C</span></span>
+    <span class="ft-sep"></span>
+    <span class="ft-note"><span>⚠️</span> ใช้ภายในบริษัทเท่านั้น</span>
+  </div>
+</footer>
+
+<!-- Login Modal -->
+<div id="login-modal">
+  <div class="modal-box">
+    <div class="modal-icon">🔐</div>
+    <div class="modal-title">เข้าสู่ระบบรายงาน</div>
+    <div class="modal-sub">กรุณาใส่รหัสผ่านเพื่อเข้าถึงข้อมูล</div>
+    <input class="modal-input" id="modal-pw" type="password"
+      placeholder="••••••••" maxlength="20"
+      oninput="clearModalErr()"
+      onkeydown="if(event.key==='Enter')confirmLogin()">
+    <div class="modal-err" id="modal-err"></div>
+    <div class="modal-row">
+      <button class="modal-btn modal-cancel" onclick="closeLogin()">ยกเลิก</button>
+      <button class="modal-btn modal-confirm" onclick="confirmLogin()">✅ เข้าสู่ระบบ</button>
+    </div>
+  </div>
+</div>
+
+
+<script>
+const API = "https://script.google.com/macros/s/AKfycbw0gZjV1IwUKtdag7N1JYOyyKqTNOQvEl59sezE4YWdflpaiLONEuej1RgNSVCsPQ-a-w/exec";
+const O_LAT=14.57736759075333, O_LNG=100.79379214129247, RADIUS=100;
+let emp=null, gps=null, photo=null, facing='user', stream=null, empT=null, mapObj, pin;
+
+function askLogin(e){
+  e.preventDefault();
+  document.getElementById('modal-pw').value='';
+  document.getElementById('modal-err').textContent='';
+  document.getElementById('login-modal').classList.add('open');
+  setTimeout(()=>document.getElementById('modal-pw').focus(),200);
+}
+function closeLogin(){
+  document.getElementById('login-modal').classList.remove('open');
+}
+function clearModalErr(){
+  document.getElementById('modal-err').textContent='';
+}
+function confirmLogin(){
+  const pw=document.getElementById('modal-pw').value;
+  if(pw==='mm169169'){
+    closeLogin();
+    window.location.href='https://sarawutc6689-cpu.github.io/FaceLogin/admin.html';
+  }else{
+    const err=document.getElementById('modal-err');
+    err.textContent='❌ รหัสผ่านไม่ถูกต้อง';
+    document.getElementById('modal-pw').value='';
+    document.getElementById('modal-pw').focus();
+    // shake animation
+    const box=document.querySelector('.modal-box');
+    box.style.animation='none';
+    box.offsetHeight; // reflow
+    box.style.animation='shake .35s ease';
+  }
+}
+
+function openSidebar(){
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('overlay').classList.add('open');
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('open');
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  clk(); setInterval(clk,1000);
+  initMap(); initGPS(); initCam();
+});
+
+function clk(){
+  const n=new Date();
+  document.getElementById('clock').textContent=n.toLocaleTimeString('th-TH',{hour12:false});
+  document.getElementById('date-lbl').textContent=n.toLocaleDateString('th-TH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+}
+
+function initMap(){
+  mapObj=L.map('map',{zoomControl:false,attributionControl:false}).setView([O_LAT,O_LNG],17);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapObj);
+  L.circle([O_LAT,O_LNG],{radius:RADIUS,color:'#1a5fa8',fillColor:'#1a5fa8',fillOpacity:.1,weight:2}).addTo(mapObj);
+  L.marker([O_LAT,O_LNG],{icon:L.divIcon({html:'🏢',className:'',iconSize:[24,24],iconAnchor:[12,12]})}).addTo(mapObj);
+}
+function setPin(lat,lng){
+  if(pin) mapObj.removeLayer(pin);
+  pin=L.marker([lat,lng],{icon:L.divIcon({html:'📍',className:'',iconSize:[24,24],iconAnchor:[12,24]})}).addTo(mapObj);
+  mapObj.setView([lat,lng],17);
+}
+
+function initGPS(){
+  if(!navigator.geolocation){setGPS('err','❌ Browser ไม่รองรับ GPS');return;}
+  setGPS('pulse','กำลังหาตำแหน่ง...');
+  navigator.geolocation.watchPosition(pos=>{
+    const{latitude:lat,longitude:lng,accuracy,speed}=pos.coords;
+    gps={lat,lng,accuracy,speed:speed||0};
+    setPin(lat,lng);
+    const d=dist(lat,lng,O_LAT,O_LNG),ok=d<=RADIUS;
+    setGPS(ok?'ok':'err',(ok?'✅ อยู่ในพื้นที่':'❌ นอกพื้นที่')+' · ±'+Math.round(accuracy)+'m · '+Math.round(d)+'m จากบริษัท');
+    chk();
+  },err=>{
+    const m={1:'❌ กรุณาอนุญาต GPS',2:'❌ หาตำแหน่งไม่ได้',3:'❌ GPS หมดเวลา'};
+    setGPS('err',m[err.code]||'❌ GPS error');
+  },{enableHighAccuracy:true,timeout:15000,maximumAge:5000});
+}
+function setGPS(s,t){
+  document.getElementById('gps-dot').className='dot'+(s==='pulse'?' pulse':s==='ok'?' ok':' err');
+  document.getElementById('gps-txt').textContent=t;
+}
+
+async function initCam(){await startCam('user');}
+async function startCam(f){
+  if(stream) stream.getTracks().forEach(t=>t.stop());
+  const msg=document.getElementById('cam-msg');
+  msg.className='cam-msg'; msg.innerHTML='<div class="mi">⏳</div><span>กำลังเปิดกล้อง...</span>';
+  document.getElementById('shutter').disabled=true;
+  try{
+    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:f},width:{ideal:640},height:{ideal:480}},audio:false});
+    const v=document.getElementById('video');
+    v.srcObject=stream; await v.play();
+    v.style.transform=f==='user'?'scaleX(-1)':'scaleX(1)';
+    msg.classList.add('hidden');
+    document.getElementById('shutter').disabled=false;
+  }catch(e){
+    let t='❌ เปิดกล้องไม่ได้';
+    if(e.name==='NotAllowedError') t='❌ กรุณาอนุญาตกล้อง<br>กดไอคอนกล้องใน address bar แล้ว Allow';
+    if(e.name==='NotFoundError')   t='❌ ไม่พบกล้อง';
+    if(e.name==='NotReadableError')t='❌ กล้องถูกใช้อยู่ ปิดแอปอื่นก่อน';
+    msg.innerHTML='<div class="mi">📷</div><span>'+t+'</span>';
+  }
+}
+function flipCam(){facing=facing==='user'?'environment':'user';retake();startCam(facing);}
+
+function snap(){
+  const v=document.getElementById('video'),c=document.getElementById('canvas');
+  c.width=480; c.height=360;
+  const ctx=c.getContext('2d');
+  if(facing==='user'){ctx.translate(480,0);ctx.scale(-1,1);}
+  ctx.drawImage(v,0,0,480,360);
+  photo=c.toDataURL('image/jpeg',0.7).split(',')[1];
+  const p=document.getElementById('preview');
+  p.src='data:image/jpeg;base64,'+photo; p.style.display='block';
+  document.getElementById('video').style.display='none';
+  document.getElementById('sh-row').style.display='none';
+  document.getElementById('cam-msg').classList.add('hidden');
+  document.getElementById('photo-ok').classList.add('show');
+  document.getElementById('retake-btn').classList.add('show');
+  chk();
+}
+function retake(){
+  photo=null;
+  document.getElementById('preview').style.display='none';
+  document.getElementById('preview').src='';
+  document.getElementById('video').style.display='block';
+  document.getElementById('sh-row').style.display='';
+  document.getElementById('photo-ok').classList.remove('show');
+  document.getElementById('retake-btn').classList.remove('show');
+  chk();
+}
+
+function onEmp(){
+  emp=null; document.getElementById('emp-badge').className='emp-badge';
+  clearTimeout(empT); chk();
+  const v=document.getElementById('emp-id').value.trim();
+  if(!v) return;
+  empT=setTimeout(async()=>{
+    try{
+      const r=await call('getEmployee',{employee_id:v});
+      const b=document.getElementById('emp-badge');
+      if(r.result==='success'){
+        emp={id:v,name:r.name}; b.className='emp-badge show';
+        document.getElementById('emp-ico').textContent='✅';
+        document.getElementById('emp-nm').textContent=r.name;
+        document.getElementById('emp-sid').textContent='รหัส: '+v;
+      }else{
+        b.className='emp-badge show err';
+        document.getElementById('emp-ico').textContent='❌';
+        document.getElementById('emp-nm').textContent=r.message;
+        document.getElementById('emp-sid').textContent='';
+      }
+    }catch{toast('error','❌','เชื่อมต่อ server ไม่ได้');}
+    chk();
+  },600);
+}
+
+function chk(){
+  const ok=!!emp&&!!gps&&!!photo;
+  document.getElementById('btn-in').disabled=!ok;
+  document.getElementById('btn-out').disabled=!ok;
+}
+
+async function go(type){
+  if(!emp||!gps||!photo) return;
+  toast('loading','⏳',type==='IN'?'กำลังลงเวลาเข้างาน...':'กำลังลงเวลาออกงาน...');
+  setBtns(true);
+  try{
+    const r=await call('saveAttendance',{
+      employee_id:emp.id, name:emp.name, status:type,
+      latitude:gps.lat, longitude:gps.lng,
+      accuracy:gps.accuracy, speed:gps.speed,
+      image:photo
+    });
+    toast(r.result==='success'?'success':'error',r.result==='success'?'✅':'❌',r.message);
+    if(r.result==='success'){
+      setTimeout(()=>location.reload(), 2000);
+    } else {
+      setBtns(false);
+    }
+  }catch{toast('error','❌','เชื่อมต่อ server ไม่ได้');setBtns(false);}
+}
+function setBtns(d){document.getElementById('btn-in').disabled=d;document.getElementById('btn-out').disabled=d;}
+
+async function call(action,payload){
+  const r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action,...payload})});
+  if(!r.ok) throw new Error('HTTP '+r.status);
+  return r.json();
+}
+
+function toast(type,icon,text){
+  const t=document.getElementById('toast');
+  if(!type){t.className='';return;}
+  t.className='show '+type;
+  document.getElementById('t-icon').textContent=icon;
+  document.getElementById('t-text').textContent=text;
+  t.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function dist(a,b,c,d){
+  const R=6371e3,p1=a*Math.PI/180,p2=c*Math.PI/180;
+  const x=Math.sin((c-a)*Math.PI/360)**2+Math.cos(p1)*Math.cos(p2)*Math.sin((d-b)*Math.PI/360)**2;
+  return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
+}
+</script>
+</body>
+</html>
