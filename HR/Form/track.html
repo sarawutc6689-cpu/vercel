@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>ติดตามสถานะคำขอเอกสาร</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<style>
+:root{--bg:#f4f5f7;--card:#fff;--tx:#1d2330;--mut:#667085;--bd:#d0d5dd;--pri:#1f5fbf;--ok:#067647;--err:#b42318;--warn:#b54708}
+@media (prefers-color-scheme:dark){:root{--bg:#14171c;--card:#1d2128;--tx:#e8eaee;--mut:#9aa3b2;--bd:#3a414d;--pri:#6ea2f5;--ok:#47cd89;--err:#f97066;--warn:#fdb022}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:"Sarabun","Noto Sans Thai",system-ui,sans-serif;line-height:1.55}
+.wrap{max-width:960px;margin:0 auto;padding:16px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:16px;margin-bottom:12px}
+input,select{width:100%;padding:9px 10px;border:1px solid var(--bd);border-radius:8px;background:var(--card);color:var(--tx);font:inherit}
+button{font:inherit;padding:7px 14px;border-radius:8px;border:1px solid var(--pri);background:var(--pri);color:#fff;cursor:pointer}
+button.sec{background:transparent;color:var(--pri)}
+button.no{background:var(--err);border-color:var(--err)}
+button.go{background:var(--ok);border-color:var(--ok)}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.bar input{flex:1;min-width:180px;width:auto}
+.chip.on{background:var(--pri);color:#fff}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.tag{display:inline-block;padding:1px 10px;border-radius:99px;font-size:.85rem;border:1px solid currentColor}
+.pending{color:var(--warn)}.approved{color:var(--pri)}.rejected{color:var(--err)}.done{color:var(--ok)}
+.mut{color:var(--mut);font-size:.9rem}
+.act{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.hide{display:none}
+label{display:block;font-size:.9rem;color:var(--mut);margin:8px 0 2px}
+#err{color:var(--err);min-height:1.4em}
+</style>
+<style id="theme">
+/* ===== ธีมฟ้า-ขาว (ใช้ร่วมทุกหน้า) ===== */
+:root{--bg:#eef4ff;--glow:#cfe3ff;--card:#fff;--tx:#0f1f3d;--mut:#5b6b86;--bd:#d6e3fa;--pri:#1d6fe8;--pri2:#0ea5e9;--prisoft:#eaf2ff;--ok:#0a7d4f;--err:#c0392b;--warn:#b45309;--shadow:0 6px 24px rgba(29,111,232,.10)}
+@media (prefers-color-scheme:dark){:root{--bg:#0a1428;--glow:rgba(56,189,248,.14);--card:#111f3b;--tx:#e8f0ff;--mut:#9db0d0;--bd:#25375e;--pri:#5aa2ff;--pri2:#38bdf8;--prisoft:#16284a;--ok:#4ade80;--err:#ff8a80;--warn:#fbbf24;--shadow:0 6px 24px rgba(0,0,0,.35)}}
+html{background:var(--bg)}
+body{background:radial-gradient(1100px 460px at 50% -140px,var(--glow) 0%,transparent 70%),var(--bg);min-height:100vh;display:flex;flex-direction:column}
+.wrap{flex:1;width:100%;padding:20px 16px}
+.wrap>h1,.wrap>h2{background:linear-gradient(135deg,#1d4ed8 0%,#2563eb 45%,#0ea5e9 100%);color:#fff;padding:18px 22px;border-radius:18px;box-shadow:0 10px 28px rgba(37,99,235,.28);margin:0 0 18px;font-size:1.4rem;font-weight:700}
+.wrap>h1{text-align:center}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:16px;box-shadow:var(--shadow)}
+.card h2{color:var(--pri);border-left:4px solid var(--pri2);padding-left:10px}
+input[type=text],input[type=date],input[type=month],input[type=password],input[type=number],select,textarea{border:1.5px solid var(--bd);border-radius:10px;background:var(--card);color:var(--tx);transition:border-color .15s,box-shadow .15s}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--pri);box-shadow:0 0 0 3px rgba(29,111,232,.18)}
+input[readonly]{background:var(--prisoft)}
+input[type=checkbox],input[type=radio]{accent-color:var(--pri)}
+button{background:linear-gradient(135deg,var(--pri),var(--pri2));border:none;color:#fff;border-radius:10px;font-weight:600;box-shadow:0 4px 12px rgba(29,111,232,.25);transition:transform .12s,box-shadow .12s}
+button:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 6px 16px rgba(29,111,232,.32)}
+button.sec{background:var(--card);color:var(--pri);border:1.5px solid var(--pri);box-shadow:none}
+button.sec:hover:not(:disabled){background:var(--prisoft)}
+button.go{background:linear-gradient(135deg,#059669,#10b981);color:#fff;border:none}
+button.no{background:linear-gradient(135deg,#dc2626,#ef4444);color:#fff;border:none}
+.chip{border-radius:999px;padding:6px 16px}
+.chip.on{background:linear-gradient(135deg,var(--pri),var(--pri2));color:#fff;border-color:transparent}
+.tag{font-weight:600;background:var(--card)}
+.opt{padding:8px 12px;border:1px solid var(--bd);border-radius:10px;background:var(--card);cursor:pointer;transition:background .12s,border-color .12s}
+.opt:hover{background:var(--prisoft)}
+.opt:has(input:checked){border-color:var(--pri);background:var(--prisoft)}
+.opt:has(input:disabled){opacity:.5;cursor:not-allowed}
+a{color:var(--pri)}
+dialog{border-radius:16px!important;box-shadow:0 20px 50px rgba(15,31,61,.35)}
+dialog::backdrop{background:rgba(10,20,40,.45)}
+.site-footer{margin-top:24px;padding:18px 16px;text-align:center;font-size:.85rem;color:var(--mut);border-top:1px solid var(--bd);background:linear-gradient(180deg,transparent,var(--prisoft))}
+.site-footer b{color:var(--pri)}
+.site-footer .sep{opacity:.5;margin:0 6px}
+.site-footer .cp{margin-top:4px;font-size:.8rem}
+/* กล่องเข้าสู่ระบบ: จัดกึ่งกลางหน้า */
+#login{margin:7vh auto 0;max-width:380px;width:100%;padding:26px 24px}
+#login p{margin:0 0 12px}
+#login button{width:100%;padding:11px}
+#login #err{text-align:center}
+/* กล่องโต้ตอบตามธีม (แทน confirm/prompt/alert ของเบราว์เซอร์) */
+dialog.ui-modal{border:none;border-radius:20px;padding:0;max-width:min(420px,92vw);width:100%;background:var(--card);color:var(--tx);box-shadow:0 24px 60px rgba(15,31,61,.35);animation:uiPop .16s ease-out}
+dialog.ui-modal::backdrop{background:rgba(10,20,40,.5);backdrop-filter:blur(3px)}
+.ui-box{padding:26px 24px 20px;text-align:center}
+.ui-icon{width:54px;height:54px;margin:0 auto 12px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.6rem;font-weight:700;color:#fff;background:linear-gradient(135deg,var(--pri),var(--pri2));box-shadow:0 6px 16px rgba(29,111,232,.3)}
+.ui-icon.danger{background:linear-gradient(135deg,#dc2626,#f87171);box-shadow:0 6px 16px rgba(220,38,38,.3)}
+.ui-title{font-weight:700;font-size:1.1rem;margin-bottom:6px}
+.ui-msg{color:var(--mut);margin-bottom:12px;white-space:pre-line}
+.ui-in{width:100%;font:inherit;padding:9px 10px;border:1.5px solid var(--bd);border-radius:10px;background:var(--card);color:var(--tx);resize:vertical;text-align:left}
+.ui-err{color:var(--err);min-height:1.2em;font-size:.9rem}
+.ui-act{display:flex;gap:10px;margin-top:6px}
+.ui-act button{flex:1;padding:10px}
+@keyframes uiPop{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:none}}
+/* แถบเมนูด้านบน (navbar) */
+.navbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:10px 12px;box-shadow:var(--shadow);margin-bottom:6px}
+.nb-user{display:flex;align-items:center;gap:10px;min-width:0;flex:1 1 220px;color:var(--mut);font-size:.9rem}
+.nb-user::before{content:"👤";flex:0 0 36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--prisoft);border:1px solid var(--bd);font-size:1.05rem}
+.nb-user #who{flex:1;min-width:0;word-break:break-word}
+.nb-links{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+a.nb-link{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;text-decoration:none;font-weight:600;font-size:.92rem;color:var(--pri);background:var(--prisoft);border:1px solid transparent;transition:border-color .12s,transform .12s}
+a.nb-link:hover{border-color:var(--pri);transform:translateY(-1px)}
+a.nb-link.home{background:linear-gradient(135deg,var(--pri),var(--pri2));color:#fff}
+button.nb-out{flex:0 0 auto;white-space:nowrap;padding:8px 16px;border-radius:999px;background:var(--card);color:var(--err);border:1.5px solid var(--err);box-shadow:none;font-weight:600}
+button.nb-out:hover:not(:disabled){background:rgba(192,57,43,.1)}
+@media(max-width:640px){.nb-links{order:3;width:100%}.navbar .nb-out{margin-left:auto}}
+</style>
+<style>
+.sbox{display:flex;gap:10px;flex-wrap:wrap}.sbox input{flex:1 1 260px;font-size:1.05rem;padding:12px 14px}.sbox button{padding:12px 26px}
+.hint{color:var(--mut);font-size:.88rem;margin-top:8px}
+#msg{min-height:1.4em;margin:10px 4px;color:var(--mut)}.bad{color:var(--err)}
+.req{margin-bottom:16px}
+.rh{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.rid{font-size:1.2rem;font-weight:700;color:var(--pri)}
+.pill{display:inline-block;padding:3px 14px;border-radius:999px;font-weight:600;font-size:.88rem;border:1.5px solid currentColor}
+.pill.cur{color:var(--pri)}.pill.ok{color:var(--ok)}.pill.no{color:var(--err)}
+.meta{display:flex;gap:6px 18px;flex-wrap:wrap;color:var(--mut);font-size:.9rem;margin:6px 0 4px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.chips span{background:var(--prisoft);border:1px solid var(--bd);color:var(--pri);border-radius:999px;padding:2px 12px;font-size:.85rem;font-weight:600}
+.tl{list-style:none;margin:14px 0 4px;padding:0}
+.tl li{position:relative;display:flex;gap:14px;padding-bottom:18px}
+.tl li:last-child{padding-bottom:0}
+.tl li::before{content:"";position:absolute;left:15px;top:32px;bottom:0;width:2px;background:var(--bd)}
+.tl li:last-child::before{display:none}
+.tl li.done::before{background:var(--ok)}
+.dot{flex:0 0 32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.9rem;border:2px solid var(--bd);color:var(--mut);background:var(--card);z-index:1}
+.done .dot{background:var(--ok);border-color:var(--ok);color:#fff}
+.current .dot{background:linear-gradient(135deg,var(--pri),var(--pri2));border-color:transparent;color:#fff;animation:pulse 1.6s infinite}
+.rejected .dot{background:var(--err);border-color:var(--err);color:#fff}
+.skip .dot{background:var(--prisoft)}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(29,111,232,.45)}70%{box-shadow:0 0 0 10px rgba(29,111,232,0)}100%{box-shadow:0 0 0 0 rgba(29,111,232,0)}}
+.tl .tt{font-weight:600}.tl .ts{color:var(--mut);font-size:.88rem}
+.wait .tt{color:var(--mut);font-weight:500}
+.docs{margin-top:12px;padding:10px 14px;background:var(--prisoft);border-radius:12px;font-size:.9rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h2 style="text-align:center">🔎 ติดตามสถานะคำขอเอกสาร</h2>
+  <div class="card">
+    <div class="sbox"><input id="q" type="text" placeholder="รหัสพนักงาน หรือ เลขที่คำขอ " autocomplete="off"><button id="go">ค้นหา</button></div>
+
+  </div>
+  <div id="msg"></div>
+  <div id="out"></div>
+</div>
+<footer class="site-footer">
+  <div>แบบฟอร์มคำร้องขอเอกสาร<span class="sep">|</span>ใช้สำหรับภายในบริษัทเท่านั้น<span class="sep">|</span>พัฒนาโดย Sarawut.C</div>
+  <div class="cp">© <span id="cpYear">2026</span> สงวนลิขสิทธิ์ · All rights reserved.</div>
+</footer>
+<script>document.getElementById("cpYear").textContent=new Date().getFullYear();</script>
+
+<script>
+const SUPABASE_URL = "https://ppzdyvomrfiitahxwrwz.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBwemR5dm9tcmZpaXRhaHh3cnd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwMjQ0MjIsImV4cCI6MjEwNDYwMDQyMn0.iArUz6swMfwhFT_1qEvCwK1B3aiCxdWt46_FBjT6_Y0";
+
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const $ = id => document.getElementById(id);
+const esc = s => String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const CERT={work:"หนังสือรับรองการทำงาน",salary:"หนังสือรับรองเงินเดือน",pass:"หนังสือผ่านงาน",slip:"สลิปเงินเดือน"};
+const MFULL=["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+function dt(v,time){ if(!v) return ""; const x=new Date(typeof v==="string"&&v.length===10?v+"T00:00:00":v); if(isNaN(x)) return "";
+  let s=`${x.getDate()} ${MFULL[x.getMonth()]} ${x.getFullYear()+543}`;
+  if(time) s+=` ${String(x.getHours()).padStart(2,"0")}:${String(x.getMinutes()).padStart(2,"0")} น.`; return s; }
+const SUMMARY={
+  mgr_pending:["cur","อยู่ระหว่างรอผู้จัดการฝ่ายพิจารณา"],
+  mgr_rejected:["no","ผู้จัดการฝ่ายไม่อนุมัติ (จบการดำเนินการ)"],
+  pending:["cur","อยู่ระหว่างรอผู้จัดการบุคคลพิจารณา"],
+  rejected:["no","ผู้จัดการบุคคลไม่อนุมัติ (จบการดำเนินการ)"],
+  approved:["ok","อนุมัติครบแล้ว รอฝ่ายบุคคลออกเอกสาร"],
+  done:["ok","ออกเอกสารแล้ว"]
+};
+
+/* สร้างรายการขั้นตอนจากสถานะ (ขั้นผู้จัดการฝ่ายอาจถูกข้ามถ้าฝ่ายไม่มีผู้จัดการ) */
+function steps(r){
+  const s=r.status, skipped=!r.mgr_decided_at && s!=="mgr_pending" && s!=="mgr_rejected", blocked=(s==="mgr_pending"||s==="mgr_rejected");
+  const a=[{t:"ส่งคำขอ",c:"done",n:"ส่งคำขอเรียบร้อย",d:r.created_at}];
+  a.push(s==="mgr_pending"?{t:"ผู้จัดการฝ่ายอนุมัติ",c:"current",n:"กำลังรอพิจารณา"}
+      :s==="mgr_rejected"?{t:"ผู้จัดการฝ่ายอนุมัติ",c:"rejected",n:"ไม่อนุมัติ",d:r.mgr_decided_at}
+      :skipped?{t:"ผู้จัดการฝ่ายอนุมัติ",c:"skip",n:"ข้ามขั้นตอนนี้ (ไม่ต้องผ่านผู้จัดการฝ่าย)"}
+      :{t:"ผู้จัดการฝ่ายอนุมัติ",c:"done",n:"อนุมัติแล้ว",d:r.mgr_decided_at});
+  a.push(blocked?{t:"ผู้จัดการบุคคลอนุมัติ",c:"wait"}
+      :s==="pending"?{t:"ผู้จัดการบุคคลอนุมัติ",c:"current",n:"กำลังรอพิจารณา"}
+      :s==="rejected"?{t:"ผู้จัดการบุคคลอนุมัติ",c:"rejected",n:"ไม่อนุมัติ",d:r.decided_at}
+      :{t:"ผู้จัดการบุคคลอนุมัติ",c:"done",n:"อนุมัติแล้ว",d:r.decided_at});
+    const pr=r.printed||{}, need=(r.cert_types||[]).filter(t=>["work","salary","pass"].includes(t));
+  const got=need.filter(t=>pr[t]).length, all=(s==="approved"||s==="done")&&need.length>0&&got===need.length;
+  const last=need.map(t=>pr[t]).filter(Boolean).sort().pop();
+  a.push(s==="done"||all?{t:"ฝ่ายบุคคลออกเอกสาร",c:"done",n:"ออกเอกสารเรียบร้อย",d:last||null}
+      :s==="approved"&&got>0?{t:"ฝ่ายบุคคลออกเอกสาร",c:"current",n:`ออกเอกสารแล้ว ${got}/${need.length} ฉบับ`}
+      :s==="approved"?{t:"ฝ่ายบุคคลออกเอกสาร",c:"current",n:"อนุมัติครบแล้ว ฝ่ายบุคคลกำลังดำเนินการออกเอกสาร"}
+      :{t:"ฝ่ายบุคคลออกเอกสาร",c:"wait"});
+  return a;
+}
+const ICON={done:"✓",current:"●",rejected:"✕",skip:"–",wait:""};
+function card(r,mode){
+  const [k,txt]=SUMMARY[r.status]||["cur",r.status];
+    const pr=r.printed||{};
+  const docs=(r.cert_types||[]).filter(t=>t!=="slip"&&(pr[t]||(r.doc_numbers&&r.doc_numbers[t]))).map(t=>
+    `${esc(CERT[t]||t)}${r.doc_numbers&&r.doc_numbers[t]?`: <b>${esc(r.doc_numbers[t])}</b>`:""}${pr[t]?` · <span style="color:var(--ok)">✓ ออกเอกสารแล้ว ${dt(pr[t],true)}</span>`:""}`).join("<br>");
+  return `<div class="card req"><div class="rh"><span class="rid">คำขอ #${r.id}</span><span class="pill ${k}">${esc(txt)}</span></div>
+   <div class="chips">${(r.cert_types||[]).map(t=>`<span>${esc(CERT[t]||t)}</span>`).join("")}</div>
+   <div class="meta"><span>ขอเมื่อ ${dt(r.request_date)}</span>${r.use_date?`<span>วันที่ต้องการใช้ ${dt(r.use_date)}</span>`:""}${mode!=="emp"?`<span>ผู้ขอ ${esc(r.name_masked)}</span>`:""}</div>
+   <ul class="tl">${steps(r).map(s=>`<li class="${s.c}"><div class="dot">${ICON[s.c]}</div><div><div class="tt">${s.t}</div>${s.n?`<div class="ts">${esc(s.n)}${s.d?" · "+dt(s.d,true):""}</div>`:""}</div></li>`).join("")}</ul>
+   ${docs?`<div class="docs"><b>เลขที่เอกสาร</b><br>${docs}</div>`:""}</div>`;
+}
+
+async function search(){
+  const q=$("q").value.trim(); if(!q) return;
+  history.replaceState(null,"","?q="+encodeURIComponent(q));
+  $("out").innerHTML=""; $("msg").className=""; $("msg").textContent="กำลังค้นหา...";
+  const {data,error}=await db.rpc("track_requests",{p_q:q});
+  if(error){ $("msg").className="bad"; $("msg").textContent="ค้นหาไม่สำเร็จ: "+error.message; return; }
+  if(!data||!data.length){ $("msg").className="bad"; $("msg").textContent="ไม่พบคำขอ ตรวจสอบรหัสพนักงานหรือเลขที่คำขอ (เลขที่คำขอให้ใส่ # นำหน้า เช่น #25) อีกครั้ง"; return; }
+    try{
+    const {data:pr}=await db.rpc("track_printed",{p_ids:data.map(r=>r.id)});
+    const m={}; (pr||[]).forEach(x=>m[x.id]=x.printed||{});
+    data.forEach(r=>r.printed=m[r.id]||{});
+  }catch(e){}
+  const mode=data[0].found_by;
+  $("msg").textContent = mode==="emp" ? `พบ ${data.length} คำขอของรหัสพนักงาน ${q} (เรียงจากล่าสุด)` : `พบ ${data.length} คำขอ`;
+  $("out").innerHTML=data.map(r=>card(r,mode)).join("");
+}
+$("go").onclick=search;
+$("q").addEventListener("keydown",e=>{ if(e.key==="Enter") search(); });
+const qs=new URLSearchParams(location.search).get("q"); if(qs){ $("q").value=qs; search(); }
+</script>
+</body>
+</html>

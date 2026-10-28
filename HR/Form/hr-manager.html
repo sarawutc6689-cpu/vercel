@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>ผู้จัดการบุคคล – อนุมัติคำขอหนังสือรับรอง</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<style>
+:root{--bg:#f4f5f7;--card:#fff;--tx:#1d2330;--mut:#667085;--bd:#d0d5dd;--pri:#1f5fbf;--ok:#067647;--err:#b42318;--warn:#b54708}
+@media (prefers-color-scheme:dark){:root{--bg:#14171c;--card:#1d2128;--tx:#e8eaee;--mut:#9aa3b2;--bd:#3a414d;--pri:#6ea2f5;--ok:#47cd89;--err:#f97066;--warn:#fdb022}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:"Sarabun","Noto Sans Thai",system-ui,sans-serif;line-height:1.55}
+.wrap{max-width:960px;margin:0 auto;padding:16px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:16px;margin-bottom:12px}
+input,select{width:100%;padding:9px 10px;border:1px solid var(--bd);border-radius:8px;background:var(--card);color:var(--tx);font:inherit}
+button{font:inherit;padding:7px 14px;border-radius:8px;border:1px solid var(--pri);background:var(--pri);color:#fff;cursor:pointer}
+button.sec{background:transparent;color:var(--pri)}
+button.no{background:var(--err);border-color:var(--err)}
+button.go{background:var(--ok);border-color:var(--ok)}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.bar input{flex:1;min-width:180px;width:auto}
+.chip.on{background:var(--pri);color:#fff}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.tag{display:inline-block;padding:1px 10px;border-radius:99px;font-size:.85rem;border:1px solid currentColor}
+.pending{color:var(--warn)}.approved{color:var(--pri)}.rejected{color:var(--err)}.done{color:var(--ok)}
+.mut{color:var(--mut);font-size:.9rem}
+.act{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.hide{display:none}
+label{display:block;font-size:.9rem;color:var(--mut);margin:8px 0 2px}
+#err{color:var(--err);min-height:1.4em}
+</style>
+<meta name="theme-color" content="#2563eb">
+<style id="theme">
+/* ===== ธีมฟ้า-ขาว (ใช้ร่วมทุกหน้า) ===== */
+:root{--bg:#eef4ff;--glow:#cfe3ff;--card:#fff;--tx:#0f1f3d;--mut:#5b6b86;--bd:#d6e3fa;--pri:#1d6fe8;--pri2:#0ea5e9;--prisoft:#eaf2ff;--ok:#0a7d4f;--err:#c0392b;--warn:#b45309;--shadow:0 6px 24px rgba(29,111,232,.10)}
+@media (prefers-color-scheme:dark){:root{--bg:#0a1428;--glow:rgba(56,189,248,.14);--card:#111f3b;--tx:#e8f0ff;--mut:#9db0d0;--bd:#25375e;--pri:#5aa2ff;--pri2:#38bdf8;--prisoft:#16284a;--ok:#4ade80;--err:#ff8a80;--warn:#fbbf24;--shadow:0 6px 24px rgba(0,0,0,.35)}}
+html{background:var(--bg)}
+body{background:radial-gradient(1100px 460px at 50% -140px,var(--glow) 0%,transparent 70%),var(--bg);min-height:100vh;display:flex;flex-direction:column}
+.wrap{flex:1;width:100%;padding:20px 16px}
+.wrap>h1,.wrap>h2{background:linear-gradient(135deg,#1d4ed8 0%,#2563eb 45%,#0ea5e9 100%);color:#fff;padding:18px 22px;border-radius:18px;box-shadow:0 10px 28px rgba(37,99,235,.28);margin:0 0 18px;font-size:1.4rem;font-weight:700}
+.wrap>h1{text-align:center}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:16px;box-shadow:var(--shadow)}
+.card h2{color:var(--pri);border-left:4px solid var(--pri2);padding-left:10px}
+input[type=text],input[type=date],input[type=month],input[type=password],input[type=number],select,textarea{border:1.5px solid var(--bd);border-radius:10px;background:var(--card);color:var(--tx);transition:border-color .15s,box-shadow .15s}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--pri);box-shadow:0 0 0 3px rgba(29,111,232,.18)}
+input[readonly]{background:var(--prisoft)}
+input[type=checkbox],input[type=radio]{accent-color:var(--pri)}
+button{background:linear-gradient(135deg,var(--pri),var(--pri2));border:none;color:#fff;border-radius:10px;font-weight:600;box-shadow:0 4px 12px rgba(29,111,232,.25);transition:transform .12s,box-shadow .12s}
+button:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 6px 16px rgba(29,111,232,.32)}
+button.sec{background:var(--card);color:var(--pri);border:1.5px solid var(--pri);box-shadow:none}
+button.sec:hover:not(:disabled){background:var(--prisoft)}
+button.go{background:linear-gradient(135deg,#059669,#10b981);color:#fff;border:none}
+button.no{background:linear-gradient(135deg,#dc2626,#ef4444);color:#fff;border:none}
+.chip{border-radius:999px;padding:6px 16px}
+.chip.on{background:linear-gradient(135deg,var(--pri),var(--pri2));color:#fff;border-color:transparent}
+.tag{font-weight:600;background:var(--card)}
+.opt{padding:8px 12px;border:1px solid var(--bd);border-radius:10px;background:var(--card);cursor:pointer;transition:background .12s,border-color .12s}
+.opt:hover{background:var(--prisoft)}
+.opt:has(input:checked){border-color:var(--pri);background:var(--prisoft)}
+.opt:has(input:disabled){opacity:.5;cursor:not-allowed}
+a{color:var(--pri)}
+dialog{border-radius:16px!important;box-shadow:0 20px 50px rgba(15,31,61,.35)}
+dialog::backdrop{background:rgba(10,20,40,.45)}
+.site-footer{margin-top:24px;padding:18px 16px;text-align:center;font-size:.85rem;color:var(--mut);border-top:1px solid var(--bd);background:linear-gradient(180deg,transparent,var(--prisoft))}
+.site-footer b{color:var(--pri)}
+.site-footer .sep{opacity:.5;margin:0 6px}
+.site-footer .cp{margin-top:4px;font-size:.8rem}
+/* กล่องเข้าสู่ระบบ: จัดกึ่งกลางหน้า */
+#login{margin:7vh auto 0;max-width:380px;width:100%;padding:26px 24px}
+#login p{margin:0 0 12px}
+#login button{width:100%;padding:11px}
+#login #err{text-align:center}
+/* กล่องโต้ตอบตามธีม (แทน confirm/prompt/alert ของเบราว์เซอร์) */
+dialog.ui-modal{border:none;border-radius:20px;padding:0;max-width:min(420px,92vw);width:100%;background:var(--card);color:var(--tx);box-shadow:0 24px 60px rgba(15,31,61,.35);animation:uiPop .16s ease-out}
+dialog.ui-modal::backdrop{background:rgba(10,20,40,.5);backdrop-filter:blur(3px)}
+.ui-box{padding:26px 24px 20px;text-align:center}
+.ui-icon{width:54px;height:54px;margin:0 auto 12px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.6rem;font-weight:700;color:#fff;background:linear-gradient(135deg,var(--pri),var(--pri2));box-shadow:0 6px 16px rgba(29,111,232,.3)}
+.ui-icon.danger{background:linear-gradient(135deg,#dc2626,#f87171);box-shadow:0 6px 16px rgba(220,38,38,.3)}
+.ui-title{font-weight:700;font-size:1.1rem;margin-bottom:6px}
+.ui-msg{color:var(--mut);margin-bottom:12px;white-space:pre-line}
+.ui-in{width:100%;font:inherit;padding:9px 10px;border:1.5px solid var(--bd);border-radius:10px;background:var(--card);color:var(--tx);resize:vertical;text-align:left}
+.ui-err{color:var(--err);min-height:1.2em;font-size:.9rem}
+.ui-act{display:flex;gap:10px;margin-top:6px}
+.ui-act button{flex:1;padding:10px}
+@keyframes uiPop{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:none}}
+/* แถบเมนูด้านบน (navbar) */
+.navbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:10px 12px;box-shadow:var(--shadow);margin-bottom:6px}
+.nb-user{display:flex;align-items:center;gap:10px;min-width:0;flex:1 1 220px;color:var(--mut);font-size:.9rem}
+.nb-user::before{content:"👤";flex:0 0 36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--prisoft);border:1px solid var(--bd);font-size:1.05rem}
+.nb-user #who{flex:1;min-width:0;word-break:break-word}
+.nb-links{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+a.nb-link{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;text-decoration:none;font-weight:600;font-size:.92rem;color:var(--pri);background:var(--prisoft);border:1px solid transparent;transition:border-color .12s,transform .12s}
+a.nb-link:hover{border-color:var(--pri);transform:translateY(-1px)}
+a.nb-link.home{background:linear-gradient(135deg,var(--pri),var(--pri2));color:#fff}
+button.nb-out{flex:0 0 auto;white-space:nowrap;padding:8px 16px;border-radius:999px;background:var(--card);color:var(--err);border:1.5px solid var(--err);box-shadow:none;font-weight:600}
+button.nb-out:hover:not(:disabled){background:rgba(192,57,43,.1)}
+@media(max-width:640px){.nb-links{order:3;width:100%}.navbar .nb-out{margin-left:auto}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h2>ผู้จัดการบุคคล – อนุมัติคำขอหนังสือรับรอง</h2>
+
+  <div id="login" class="card" style="max-width:380px">
+    <p><input id="em" type="text" placeholder="อีเมล" autocomplete="username"></p>
+    <p><input id="pw" type="password" placeholder="รหัสผ่าน" autocomplete="current-password"></p>
+    <button id="loginBtn">เข้าสู่ระบบ</button>
+    <div id="err"></div>
+  </div>
+
+  <div id="app" class="hide">
+    <div class="navbar">
+      <div class="nb-user"><span id="who"></span></div>
+      <nav class="nb-links">
+        <a class="nb-link home" href="hr-portal.html">🏠 เมนูหลัก</a>
+        <a class="nb-link" href="managers-admin.html">👥 ผู้จัดการฝ่าย</a>
+        <a class="nb-link" href="hr-users-admin.html">🔑 ผู้ใช้ฝ่ายบุคคล</a>
+        <a class="nb-link" href="dashboard.html">📊 Dashboard</a>
+        <a class="nb-link" href="holidays.html">📅 วันหยุด</a>
+      </nav>
+      <button class="nb-out" id="out">🚪 ออกจากระบบ</button>
+    </div>
+    <div class="bar" style="margin-top:10px">
+      <button class="sec chip" data-s="">ทั้งหมด</button>
+      <button class="sec chip on" data-s="pending">รออนุมัติ</button>
+      <button class="sec chip" data-s="approved">อนุมัติแล้ว</button>
+      <button class="sec chip" data-s="rejected">ไม่อนุมัติ</button>
+      <input id="q" type="text" placeholder="ค้นหารหัส / ชื่อ / เลขที่เอกสาร">
+      <button class="sec" id="reload">รีเฟรช</button>
+    </div>
+    <div id="list"></div>
+  </div>
+</div>
+
+
+
+<footer class="site-footer">
+  <div>แบบฟอร์มคำร้องขอเอกสาร<span class="sep">|</span>ใช้สำหรับภายในบริษัทเท่านั้น<span class="sep">|</span>พัฒนาโดย Sarawut.C</div>
+  <div class="cp">© <span id="cpYear">2026</span> สงวนลิขสิทธิ์ · All rights reserved.</div>
+</footer>
+<script>document.getElementById("cpYear").textContent=new Date().getFullYear();</script>
+
+<script>
+const SUPABASE_URL = "https://ppzdyvomrfiitahxwrwz.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBwemR5dm9tcmZpaXRhaHh3cnd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwMjQ0MjIsImV4cCI6MjEwNDYwMDQyMn0.iArUz6swMfwhFT_1qEvCwK1B3aiCxdWt46_FBjT6_Y0";
+
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+/* ตรวจสิทธิ์หลังเข้าสู่ระบบ: บัญชีที่ไม่มีสิทธิ์ในหน้านี้จะถูกออกจากระบบทันที (ต้องรัน setup10.sql ก่อน) */
+const NEED_ROLE="hr_manager", DENY_MSG="บัญชีนี้ไม่มีสิทธิ์เข้าหน้านี้ (สำหรับผู้จัดการบุคคลเท่านั้น)";
+let ROLE_ERR="";
+async function roleOk(){
+  try{
+    const {data,error}=await db.rpc("my_roles");
+    if(error){ ROLE_ERR="ตรวจสอบสิทธิ์ไม่สำเร็จ: "+error.message; return false; }
+    return !!(data && data[NEED_ROLE]);
+  }catch(e){ ROLE_ERR="ตรวจสอบสิทธิ์ไม่สำเร็จ"; return false; }
+}
+const $ = id => document.getElementById(id);
+/* ===== กล่องโต้ตอบตามธีม: uiConfirm / uiPrompt / uiAlert (คืนค่า Promise) ===== */
+function uiModal(o){
+  o=Object.assign({title:"",message:"",input:false,placeholder:"",okText:"ตกลง",cancelText:"ยกเลิก",danger:false,showCancel:true},o||{});
+  return new Promise(resolve=>{
+    const dlg=document.createElement("dialog"); dlg.className="ui-modal";
+    dlg.innerHTML=`<div class="ui-box"><div class="ui-icon${o.danger?" danger":""}">${o.danger?"!":"?"}</div>
+      <div class="ui-title">${esc(o.title)}</div><div class="ui-msg">${esc(o.message)}</div>
+      ${o.input?`<textarea class="ui-in" rows="3" placeholder="${esc(o.placeholder)}"></textarea>`:""}
+      <div class="ui-err"></div>
+      <div class="ui-act">${o.showCancel?`<button type="button" class="sec" data-r="cancel">${esc(o.cancelText)}</button>`:""}<button type="button" class="${o.danger?"no":""}" data-r="ok">${esc(o.okText)}</button></div></div>`;
+    let done=false;
+    const finish=v=>{ if(done) return; done=true; dlg.close(); dlg.remove(); resolve(v); };
+    const none=o.input?null:false;
+    dlg.addEventListener("cancel",e=>{ e.preventDefault(); finish(none); });
+    dlg.addEventListener("click",e=>{
+      if(e.target===dlg) return finish(none);                     // คลิกพื้นหลัง = ยกเลิก
+      const b=e.target.closest("button[data-r]"); if(!b) return;
+      if(b.dataset.r==="cancel") return finish(none);
+      finish(o.input?dlg.querySelector(".ui-in").value.trim():true);
+    });
+    document.body.appendChild(dlg); dlg.showModal();
+    const f=dlg.querySelector(".ui-in")||dlg.querySelector('[data-r="ok"]'); f.focus();
+  });
+}
+const uiConfirm=(message,o)=>uiModal(Object.assign({title:"ยืนยันการดำเนินการ",message},o||{}));
+const uiPrompt=(message,o)=>uiModal(Object.assign({title:"กรอกข้อมูล",message,input:true},o||{}));
+const uiAlert=(message,o)=>uiModal(Object.assign({title:"แจ้งเตือน",message,showCancel:false,danger:true},o||{}));
+
+const ST = {mgr_pending:"รอผู้จัดการฝ่าย",mgr_rejected:"ผู้จัดการไม่อนุมัติ",pending:"รออนุมัติ",approved:"อนุมัติแล้ว",rejected:"ไม่อนุมัติ",done:"ออกเอกสารแล้ว"};
+const CT = {work:"หนังสือรับรองการทำงาน",salary:"หนังสือรับรองเงินเดือน",pass:"หนังสือผ่านงาน",slip:"สลิปเงินเดือน"};
+const MONTHS = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+const esc = s => String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const d = s => { if(!s) return "-"; const x=new Date(s); return isNaN(x)?s:`${x.getDate()} ${MONTHS[x.getMonth()]} ${x.getFullYear()+543}`; };
+let rows=[], filt="pending", me="";
+
+async function show(session){
+  let denied=false;
+  if(session && !(await roleOk())){ await db.auth.signOut(); session=null; denied=true; }
+  $("login").classList.toggle("hide",!!session);
+  $("app").classList.toggle("hide",!session);
+  if(denied){ $("err").textContent=ROLE_ERR||DENY_MSG; ROLE_ERR=""; }
+  if(!session) return;
+  me = session.user.email; $("who").textContent = "เข้าสู่ระบบ: "+me;
+  load();
+}
+async function load(){
+  const {data,error} = await db.from("certificate_requests").select("*").order("created_at",{ascending:false}).limit(500);
+  if(error){ $("list").innerHTML=`<p class="mut">โหลดไม่สำเร็จ: ${esc(error.message)}</p>`; return; }
+  rows=data; render();
+  if(!rows.length) $("list").innerHTML='<p class="mut">ยังไม่มีคำขอ (หรือบัญชีนี้ไม่มีสิทธิ์ HR)</p>';
+}
+function render(){
+  const q=$("q").value.trim().toLowerCase();
+  const rs=rows.filter(r=>(!filt||r.status===filt)&&(!q||(r.emp_code+" "+r.full_name+" "+JSON.stringify(r.doc_numbers||{})).toLowerCase().includes(q)));
+  $("list").innerHTML = rs.map(r=>`
+    <div class="card">
+      <div class="top"><b>#${r.id} ${esc(r.emp_code)} ${esc(r.full_name)}</b><span class="tag ${r.status}">${ST[r.status]||r.status}</span></div>
+      <div class="mut">${esc(r.position)} · ${esc(r.department)} · ${esc(r.division)} · เริ่มงาน ${d(r.start_date)}${r.emp_status?` · สถานะพนักงาน: ${esc(r.emp_status)}`:""}</div>
+      <div>ประเภท: ${(r.cert_types||[]).map(c=>CT[c]||c).join(", ")}${r.slip_from?` (${esc(r.slip_from)} – ${esc(r.slip_to)})`:""}</div>
+      ${r.doc_numbers?`<div>เลขที่เอกสาร: ${Object.entries(r.doc_numbers).map(([k,v])=>`${CT[k]||k} <b>${esc(v)}</b>`).join(" · ")}</div>`:""}
+      <div>ระบุเงินเดือน: ${r.show_salary?"ใช่":"ไม่"} · ใช้เพื่อ: ${esc(r.purpose)} · วันที่ใช้: ${d(r.use_date)}</div>
+      <div class="mut">ขอเมื่อ ${d(r.request_date)}${r.prev_requested?` · เคยขอ ${d(r.prev_date)} (${esc(r.prev_purpose)})`:" · ไม่เคยขอ"}</div>
+      ${r.mgr_decided_by?`<div class="mut">ผู้จัดการฝ่ายอนุมัติ: ${esc(r.mgr_decided_by)} · ${d(r.mgr_decided_at)}</div>`:""}
+      ${r.decided_by?`<div class="mut">ผู้จัดการบุคคล: ${esc(r.decided_by)} · ${d(r.decided_at)}${r.reject_reason?` · เหตุผล: ${esc(r.reject_reason)}`:""}</div>`:""}
+      <div class="act">
+        ${r.status==="pending"?`<button class="go" data-a="approved" data-id="${r.id}">อนุมัติ</button><button class="no" data-a="rejected" data-id="${r.id}">ไม่อนุมัติ</button>`:""}
+        ${r.status==="approved"||r.status==="rejected"?`<button class="sec" data-a="pending" data-id="${r.id}">ย้อนกลับเป็นรออนุมัติ</button>`:""}
+      </div>
+    </div>`).join("") || '<p class="mut">ไม่พบรายการ</p>';
+}
+$("list").addEventListener("click", async e=>{
+  const b=e.target.closest("button[data-a]"); if(!b) return;
+  const st=b.dataset.a; let reason=null;
+  if(st==="rejected"){
+    const v=await uiPrompt("ระบุเหตุผลที่ไม่อนุมัติคำขอนี้",{title:"ไม่อนุมัติคำขอ",placeholder:"ระบุเหตุผล (ถ้ามี)",okText:"ยืนยันไม่อนุมัติ",danger:true});
+    if(v===null) return; reason=v||null;
+  }
+  b.disabled=true;
+  const {error}=await db.from("certificate_requests").update({status:st,decided_by:me,decided_at:new Date().toISOString(),reject_reason:reason}).eq("id",b.dataset.id);
+  if(error){ await uiAlert(error.message,{title:"บันทึกไม่สำเร็จ"}); b.disabled=false; return; }
+  load();
+});
+document.querySelectorAll(".chip").forEach(c=>c.onclick=()=>{
+  document.querySelectorAll(".chip").forEach(x=>x.classList.remove("on")); c.classList.add("on"); filt=c.dataset.s; render(); });
+$("q").oninput=render; $("reload").onclick=load;
+$("out").onclick=async()=>{ await db.auth.signOut(); show(null); };
+$("loginBtn").onclick=async()=>{
+  $("err").textContent="";
+  const {data,error}=await db.auth.signInWithPassword({email:$("em").value.trim(),password:$("pw").value});
+  if(error) return $("err").textContent="เข้าสู่ระบบไม่สำเร็จ: "+error.message;
+  show(data.session);
+};
+$("pw").addEventListener("keydown",e=>{ if(e.key==="Enter") $("loginBtn").click(); });
+
+db.auth.getSession().then(({data})=>show(data.session));
+</script>
+</body>
+</html>

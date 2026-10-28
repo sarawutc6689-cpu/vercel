@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mouldmate HR · หนังสือรับรอง</title>
+  <!-- Google Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(145deg, #f0f7ff 0%, #ffffff 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* soft blue blobs background */
+    .bg-blob {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(100px);
+      opacity: 0.3;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .blob-1 {
+      width: 500px;
+      height: 500px;
+      background: #a0c4ff;
+      top: -150px;
+      left: -150px;
+      animation: float 12s infinite alternate ease-in-out;
+    }
+
+    .blob-2 {
+      width: 400px;
+      height: 400px;
+      background: #b8e0ff;
+      bottom: -100px;
+      right: -100px;
+      animation: float 14s infinite alternate-reverse ease-in-out;
+    }
+
+    .blob-3 {
+      width: 300px;
+      height: 300px;
+      background: #cfe8ff;
+      top: 50%;
+      left: 40%;
+      animation: float 18s infinite alternate ease-in-out;
+      opacity: 0.2;
+    }
+
+    @keyframes float {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(30px, 20px) scale(1.05); }
+    }
+
+    /* main container */
+    .container {
+      position: relative;
+      z-index: 10;
+      max-width: 1200px;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.65);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border-radius: 3.5rem;
+      padding: 3rem 2.5rem;
+      box-shadow: 0 30px 50px -20px rgba(0, 80, 150, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.8) inset;
+      transition: all 0.2s ease;
+    }
+
+    /* header */
+    .header {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    .badge {
+      display: inline-block;
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(4px);
+      padding: 0.5rem 1.2rem;
+      border-radius: 40px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      color: #1e6fb4;
+      border: 1px solid rgba(90, 156, 214, 0.25);
+      box-shadow: 0 4px 10px rgba(0, 100, 200, 0.05);
+      margin-bottom: 1rem;
+    }
+
+    .header h1 {
+      font-size: 3rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      color: #0a2a44;
+      line-height: 1.2;
+      text-shadow: 0 2px 5px rgba(255, 255, 255, 0.8);
+    }
+
+    .header h1 i {
+      color: #2d8cff;
+      margin-right: 8px;
+      font-size: 2.8rem;
+    }
+
+    .header .sub {
+      font-size: 1.1rem;
+      color: #3e5e7e;
+      margin-top: 0.8rem;
+      font-weight: 400;
+      background: rgba(255, 255, 255, 0.5);
+      display: inline-block;
+      padding: 0.4rem 1.2rem;
+      border-radius: 40px;
+      backdrop-filter: blur(4px);
+    }
+
+    /* grid */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.8rem;
+      margin-top: 2rem;
+    }
+
+    /* card */
+    .card {
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border-radius: 2rem;
+      padding: 2rem 1.5rem 1.8rem;
+      box-shadow: 0 15px 30px -10px rgba(0, 80, 150, 0.1), 0 0 0 1px rgba(255, 255, 255, 0.7) inset;
+      transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      border: 1px solid rgba(150, 200, 255, 0.3);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 6px;
+      background: linear-gradient(90deg, #6ab0ff, #b3d9ff, #6ab0ff);
+      opacity: 0.6;
+      transition: opacity 0.3s;
+    }
+
+    .card:hover {
+      transform: translateY(-8px);
+      background: rgba(255, 255, 255, 0.9);
+      box-shadow: 0 30px 40px -18px rgba(0, 110, 230, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.9) inset;
+      border-color: rgba(100, 170, 255, 0.6);
+    }
+
+    .card:hover::before {
+      opacity: 1;
+    }
+
+    .card-icon {
+      font-size: 2.4rem;
+      color: #2d8cff;
+      margin-bottom: 1.4rem;
+      background: rgba(220, 240, 255, 0.6);
+      width: 60px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 20px;
+      box-shadow: 0 8px 14px -6px rgba(45, 140, 255, 0.2);
+      transition: transform 0.3s;
+    }
+
+    .card:hover .card-icon {
+      transform: scale(1.03) rotate(-2deg);
+      background: rgba(200, 230, 255, 0.8);
+    }
+
+    .card h3 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #0b2b4a;
+      margin-bottom: 0.4rem;
+      letter-spacing: -0.02em;
+    }
+
+    .card p {
+      font-size: 0.95rem;
+      color: #436684;
+      line-height: 1.5;
+      margin-bottom: 1.5rem;
+      flex: 1;
+    }
+
+    .card-link {
+      display: inline-flex;
+      align-items: center;
+      font-weight: 500;
+      color: #1e7ad6;
+      font-size: 0.95rem;
+      margin-top: 0.5rem;
+      transition: gap 0.2s;
+    }
+
+    .card-link i {
+      margin-left: 0.5rem;
+      font-size: 0.85rem;
+      transition: transform 0.2s;
+    }
+
+    .card:hover .card-link i {
+      transform: translateX(4px);
+    }
+
+    /* footer note */
+    .footer-note {
+      margin-top: 3.5rem;
+      padding: 1rem 1.5rem;
+      background: rgba(255, 255, 255, 0.6);
+      backdrop-filter: blur(8px);
+      border-radius: 2rem;
+      font-size: 0.85rem;
+      color: #2c4f70;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      border: 1px solid rgba(150, 200, 255, 0.4);
+      line-height: 1.6;
+      box-shadow: 0 4px 12px rgba(0, 80, 150, 0.05);
+    }
+
+    .footer-note i {
+      color: #2d8cff;
+      font-size: 1.2rem;
+    }
+
+    .footer-note span {
+      font-weight: 600;
+      color: #0f3b66;
+    }
+
+    /* responsive */
+    @media (max-width: 700px) {
+      .container {
+        padding: 2rem 1.2rem;
+        border-radius: 2.5rem;
+      }
+
+      .header h1 {
+        font-size: 2rem;
+      }
+
+      .header h1 i {
+        font-size: 2rem;
+      }
+
+      .header .sub {
+        font-size: 0.95rem;
+      }
+
+      .grid {
+        gap: 1.2rem;
+      }
+
+      .card {
+        padding: 1.6rem 1.2rem;
+      }
+
+      .card h3 {
+        font-size: 1.3rem;
+      }
+
+      .footer-note {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Decorative blobs -->
+  <div class="bg-blob blob-1"></div>
+  <div class="bg-blob blob-2"></div>
+  <div class="bg-blob blob-3"></div>
+
+  <main class="container">
+    <div class="header">
+      <div class="badge">
+        <i class="fas fa-file-signature" style="margin-right: 6px;"></i> Mouldmate HR
+      </div>
+      <h1>
+        <i class="fas fa-certificate"></i> หนังสือรับรอง
+      </h1>
+      <div class="sub">เลือกแบบฟอร์มที่ต้องการ · ระบบออนไลน์</div>
+    </div>
+
+    <div class="grid">
+      <!-- Card 1: แบบขอหนังสือรับรอง (index) -->
+      <a href="https://sarawutc6689-cpu.github.io/Mouldmate-HR/Form/index.html" class="card" target="_blank" rel="noopener noreferrer">
+        <div class="card-icon">
+          <i class="fas fa-file-alt"></i>
+        </div>
+        <h3>แบบขอหนังสือรับรอง</h3>
+        <p>ยื่นคำขอรับหนังสือรับรอง</p>
+        <div class="card-link">
+          เปิดแบบฟอร์ม <i class="fas fa-arrow-right"></i>
+        </div>
+      </a>
+
+      <!-- Card 2: ผู้จัดการฝ่าย -->
+      <a href="https://sarawutc6689-cpu.github.io/Mouldmate-HR/Form/manager.html" class="card" target="_blank" rel="noopener noreferrer">
+        <div class="card-icon">
+          <i class="fas fa-user-tie"></i>
+        </div>
+        <h3>ผู้จัดการฝ่าย</h3>
+        <p>สำหรับผู้จัดการอนุมัติ / ตรวจสอบคำขอหนังสือรับรอง</p>
+        <div class="card-link">
+          เข้าสู่ระบบ <i class="fas fa-arrow-right"></i>
+        </div>
+      </a>
+
+      <!-- Card 3: ผู้จัดการบุคคล -->
+      <a href="https://sarawutc6689-cpu.github.io/Mouldmate-HR/Form/hr-manager.html" class="card" target="_blank" rel="noopener noreferrer">
+        <div class="card-icon">
+          <i class="fas fa-user-cog"></i>
+        </div>
+        <h3>ผู้จัดการบุคคล</h3>
+        <p>จัดการคำขอและอนุมัติ</p>
+        <div class="card-link">
+          เข้าสู่ระบบ <i class="fas fa-arrow-right"></i>
+        </div>
+      </a>
+
+      <!-- Card 4: เจ้าหน้าที่บุคคล -->
+      <a href="https://sarawutc6689-cpu.github.io/Mouldmate-HR/Form/hr-portal.html" class="card" target="_blank" rel="noopener noreferrer">
+        <div class="card-icon">
+          <i class="fas fa-user-edit"></i>
+        </div>
+        <h3>เจ้าหน้าที่บุคคล</h3>
+        <p>ออกหนังสือรับรอง ตรวจสอบข้อมูล และจัดการเอกสาร</p>
+        <div class="card-link">
+          เข้าสู่ระบบ <i class="fas fa-arrow-right"></i>
+        </div>
+      </a>
+    </div>
+
+    <!-- หมายเหตุจากฟอร์มต้นฉบับ -->
+    <div class="footer-note">
+      <i class="fas fa-info-circle"></i>
+      <div>
+        <span>หมายเหตุ:</span> บริษัทไม่ออกหนังสือรับรองที่มีข้อความอันเป็นเท็จ และควรขอล่วงหน้าอย่างน้อย 3 วัน / สลิปเงินเดือนฉบับละ 5 บาท เรียกเก็บในงวดเงินเดือนที่ขอ
+      </div>
+    </div>
+  </main>
+</body>
+</html>

@@ -1,1 +1,380 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>แบบขอหนังสือรับรอง</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<style>
+:root{--bg:#f4f5f7;--card:#fff;--tx:#1d2330;--mut:#667085;--bd:#d0d5dd;--pri:#1f5fbf;--ok:#067647;--err:#b42318}
+@media (prefers-color-scheme:dark){:root{--bg:#14171c;--card:#1d2128;--tx:#e8eaee;--mut:#9aa3b2;--bd:#3a414d;--pri:#6ea2f5;--ok:#47cd89;--err:#f97066}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:"Sarabun","Noto Sans Thai",system-ui,sans-serif;line-height:1.6}
+.wrap{max-width:820px;margin:0 auto;padding:16px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:20px;margin-bottom:16px}
+h1{text-align:center;font-size:1.5rem;margin:8px 0 16px}
+h2{font-size:1.05rem;margin:0 0 12px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.full{grid-column:1/-1}
+@media(max-width:600px){.grid{grid-template-columns:1fr}}
+label{display:block;font-size:.9rem;color:var(--mut);margin-bottom:2px}
+input[type=text],input[type=date],input[type=month],select{width:100%;padding:9px 10px;border:1px solid var(--bd);border-radius:8px;background:var(--card);color:var(--tx);font:inherit}
+input[readonly]{background:var(--bg)}
+.opt{display:flex;gap:8px;align-items:flex-start;margin:6px 0;color:var(--tx);font-size:1rem}
+.opt input{margin-top:6px}
+.row{display:flex;gap:8px;align-items:end}
+button{font:inherit;padding:10px 18px;border-radius:8px;border:1px solid var(--pri);background:var(--pri);color:#fff;cursor:pointer}
+button.sec{background:transparent;color:var(--pri)}
+button:disabled{opacity:.5}
+#msg{margin:8px 0;min-height:1.4em}
+.ok{color:var(--ok)}.err{color:var(--err)}
+.note{font-size:.85rem;color:var(--mut)}
+.hide{display:none}
+</style>
+<meta name="theme-color" content="#2563eb">
+<style id="theme">
+/* ===== ธีมฟ้า-ขาว (ใช้ร่วมทุกหน้า) ===== */
+:root{--bg:#eef4ff;--glow:#cfe3ff;--card:#fff;--tx:#0f1f3d;--mut:#5b6b86;--bd:#d6e3fa;--pri:#1d6fe8;--pri2:#0ea5e9;--prisoft:#eaf2ff;--ok:#0a7d4f;--err:#c0392b;--warn:#b45309;--shadow:0 6px 24px rgba(29,111,232,.10)}
+@media (prefers-color-scheme:dark){:root{--bg:#0a1428;--glow:rgba(56,189,248,.14);--card:#111f3b;--tx:#e8f0ff;--mut:#9db0d0;--bd:#25375e;--pri:#5aa2ff;--pri2:#38bdf8;--prisoft:#16284a;--ok:#4ade80;--err:#ff8a80;--warn:#fbbf24;--shadow:0 6px 24px rgba(0,0,0,.35)}}}
+html{background:var(--bg)}
+body{background:radial-gradient(1100px 460px at 50% -140px,var(--glow) 0%,transparent 70%),var(--bg);min-height:100vh;display:flex;flex-direction:column}
+.wrap{flex:1;width:100%;padding:20px 16px}
+.wrap>h1,.wrap>h2{background:linear-gradient(135deg,#1d4ed8 0%,#2563eb 45%,#0ea5e9 100%);color:#fff;padding:18px 22px;border-radius:18px;box-shadow:0 10px 28px rgba(37,99,235,.28);margin:0 0 18px;font-size:1.4rem;font-weight:700}
+.wrap>h1{text-align:center}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:16px;box-shadow:var(--shadow)}
+.card h2{color:var(--pri);border-left:4px solid var(--pri2);padding-left:10px}
+input[type=text],input[type=date],input[type=month],input[type=password],input[type=number],select,textarea{border:1.5px solid var(--bd);border-radius:10px;background:var(--card);color:var(--tx);transition:border-color .15s,box-shadow .15s}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--pri);box-shadow:0 0 0 3px rgba(29,111,232,.18)}
+input[readonly]{background:var(--prisoft)}
+input[type=checkbox],input[type=radio]{accent-color:var(--pri)}
+button{background:linear-gradient(135deg,var(--pri),var(--pri2));border:none;color:#fff;border-radius:10px;font-weight:600;box-shadow:0 4px 12px rgba(29,111,232,.25);transition:transform .12s,box-shadow .12s}
+button:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 6px 16px rgba(29,111,232,.32)}
+button.sec{background:var(--card);color:var(--pri);border:1.5px solid var(--pri);box-shadow:none}
+button.sec:hover:not(:disabled){background:var(--prisoft)}
+button.go{background:linear-gradient(135deg,#059669,#10b981);color:#fff;border:none}
+button.no{background:linear-gradient(135deg,#dc2626,#ef4444);color:#fff;border:none}
+.chip{border-radius:999px;padding:6px 16px}
+.chip.on{background:linear-gradient(135deg,var(--pri),var(--pri2));color:#fff;border-color:transparent}
+.tag{font-weight:600;background:var(--card)}
+.opt{padding:8px 12px;border:1px solid var(--bd);border-radius:10px;background:var(--card);cursor:pointer;transition:background .12s,border-color .12s}
+.opt:hover{background:var(--prisoft)}
+.opt:has(input:checked){border-color:var(--pri);background:var(--prisoft)}
+.opt:has(input:disabled){opacity:.5;cursor:not-allowed}
+a{color:var(--pri)}
+dialog{border-radius:16px!important;box-shadow:0 20px 50px rgba(15,31,61,.35)}
+dialog::backdrop{background:rgba(10,20,40,.45)}
+.site-footer{margin-top:24px;padding:18px 16px;text-align:center;font-size:.85rem;color:var(--mut);border-top:1px solid var(--bd);background:linear-gradient(180deg,transparent,var(--prisoft))}
+.site-footer b{color:var(--pri)}
+.site-footer .sep{opacity:.5;margin:0 6px}
+.site-footer .cp{margin-top:4px;font-size:.8rem}
+</style>
+<!-- สไตล์เพิ่มเติมสำหรับ modal แจ้งเตือนสำเร็จ -->
+<style>
+  .success-modal {
+    border: none;
+    border-radius: 20px;
+    padding: 32px 28px 28px;
+    max-width: 380px;
+    width: calc(100% - 32px);
+    text-align: center;
+    background: var(--card);
+    color: var(--tx);
+    box-shadow: 0 30px 60px rgba(0,0,0,.3);
+    margin: auto;
+  }
+  .success-modal::backdrop {
+    background: rgba(10,20,40,.55);
+    backdrop-filter: blur(3px);
+  }
+  .success-icon {
+    width: 72px;
+    height: 72px;
+    margin: 0 auto 16px;
+    background: linear-gradient(135deg, #10b981, #34d399);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 10px 22px rgba(16,185,129,.35);
+    animation: pop .35s cubic-bezier(.2,1.4,.6,1);
+  }
+  .success-icon svg {
+    width: 40px;
+    height: 40px;
+    stroke: #fff;
+    stroke-width: 3;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  @keyframes pop {
+    0% { transform: scale(.4); opacity: 0; }
+    70% { transform: scale(1.06); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .success-modal h3 {
+    margin: 0 0 8px;
+    font-size: 1.35rem;
+    color: var(--ok);
+    font-weight: 700;
+  }
+  .success-modal p {
+    margin: 0 0 20px;
+    font-size: .95rem;
+    color: var(--mut);
+    line-height: 1.55;
+  }
+  .success-modal .btn-ok {
+    display: inline-block;
+    width: 100%;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #10b981, #34d399);
+    color: #fff;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    box-shadow: 0 6px 16px rgba(16,185,129,.35);
+    transition: transform .12s, box-shadow .12s;
+  }
+  .success-modal .btn-ok:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 22px rgba(16,185,129,.45);
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>แบบขอหนังสือรับรอง</h1>
 
+  <form id="f" class="card" autocomplete="off">
+    <h2>ข้อมูลพนักงาน</h2>
+    <div class="grid">
+      <div><label for="emp_code">รหัสพนักงาน</label>
+        <div class="row"><input type="text" id="emp_code" required><button type="button" class="sec" id="lookup">ค้นหา</button></div></div>
+      <div><label for="request_date">วันที่ขอ</label><input type="date" id="request_date" required></div>
+      <div class="full"><label for="full_name">ชื่อ - นามสกุล</label><input type="text" id="full_name" readonly></div>
+      <div><label for="start_date">วันเริ่มงาน</label><input type="text" id="start_date" readonly></div>
+      <div><label for="position">ตำแหน่ง</label><input type="text" id="position" readonly></div>
+      <div><label for="department">แผนก</label><input type="text" id="department" readonly></div>
+      <div><label for="division">ฝ่าย</label><input type="text" id="division" readonly></div>
+    </div>
+    <div id="msg"></div>
+
+    <h2 style="margin-top:16px">ประเภทหนังสือรับรอง (เลือกได้มากกว่า 1)</h2>
+    <label class="opt"><input type="checkbox" name="cert" value="work"> หนังสือรับรองการทำงาน (ยังมีสภาพเป็นพนักงาน ไม่ระบุเงินเดือน)</label>
+    <label class="opt"><input type="checkbox" name="cert" value="salary"> หนังสือรับรองเงินเดือน (ยังมีสภาพเป็นพนักงาน ระบุเงินเดือน)</label>
+    <label class="opt"><input type="checkbox" name="cert" value="pass"> หนังสือผ่านงาน (พ้นสภาพพนักงานแล้ว)</label>
+    <label class="opt"><input type="checkbox" name="cert" value="slip" id="slipChk"> สลิปเงินเดือน</label>
+    <div class="grid hide" id="slipBox">
+      <div><label for="slip_from">ตั้งแต่เดือน</label><input type="month" id="slip_from"></div>
+      <div><label for="slip_to">ถึงเดือน</label><input type="month" id="slip_to"></div>
+    </div>
+
+    <h2 style="margin-top:16px">ประวัติการขอออกหนังสือรับรอง</h2>
+    <div id="history" class="note">กรอกรหัสพนักงานแล้วกด "ค้นหา" จากนั้นเลือกประเภทหนังสือรับรองเพื่อดูประวัติการขอ</div>
+
+    <div id="incomeBox" class="hide">
+      <h2 style="margin-top:16px">รายละเอียดเกี่ยวกับรายได้</h2>
+      <label class="opt"><input type="radio" name="salary" value="show" checked> ให้ระบุเงินเดือนในหนังสือรับรอง</label>
+    </div>
+
+    <h2 style="margin-top:16px">การนำไปใช้</h2>
+    <div class="grid">
+      <div><label for="purpose">ต้องการนำไปใช้สำหรับ</label><input type="text" id="purpose" required></div>
+      <div><label for="use_date">เพื่อใช้ในวันที่</label><input type="date" id="use_date" required></div>
+    </div>
+    <p class="note">หมายเหตุ: บริษัทไม่ออกหนังสือรับรองที่มีข้อความอันเป็นเท็จ และควรขอล่วงหน้าอย่างน้อย 3 วัน / สลิปเงินเดือนฉบับละ 5 บาท เรียกเก็บในงวดเงินเดือนที่ขอ</p>
+
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+      <button type="submit" id="submitBtn">ส่งคำขอ</button>
+    </div>
+  </form>
+</div>
+
+<!-- ===== Modal แจ้งเตือนสำเร็จ ===== -->
+<dialog id="successModal" class="success-modal">
+  <div class="success-icon">
+    <svg viewBox="0 0 24 24"><polyline points="4 12 10 18 20 6"/></svg>
+  </div>
+  <h3>ส่งคำขอสำเร็จ</h3>
+  <p>ระบบได้รับคำขอออกหนังสือรับรองของท่านแล้ว<br>กรุณารอการอนุมัติจากผู้จัดการฝ่ายและฝ่ายบุคคล</p>
+  <button type="button" class="btn-ok" id="successOk">ตกลง</button>
+</dialog>
+
+<footer class="site-footer">
+  <div>แบบฟอร์มคำร้องขอเอกสาร<span class="sep">|</span>ใช้สำหรับภายในบริษัทเท่านั้น<span class="sep">|</span>พัฒนาโดย Sarawut.C</div>
+  <div class="cp">© <span id="cpYear">2026</span> สงวนลิขสิทธิ์ · All rights reserved.</div>
+</footer>
+<script>document.getElementById("cpYear").textContent=new Date().getFullYear();</script>
+
+<script>
+/* ===== ตั้งค่า: ใส่ anon (public) key ของโปรเจกต์ Supabase ===== */
+const SUPABASE_URL = "https://ppzdyvomrfiitahxwrwz.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBwemR5dm9tcmZpaXRhaHh3cnd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwMjQ0MjIsImV4cCI6MjEwNDYwMDQyMn0.iArUz6swMfwhFT_1qEvCwK1B3aiCxdWt46_FBjT6_Y0";
+/* ================================================================ */
+
+/* สถานะที่ถือว่า "พ้นสภาพพนักงานแล้ว" (ให้ตรงกับค่าจริงในคอลัมน์ status ของ employees_directory) */
+const RESIGNED_STATUS = ["resigned","terminated","inactive","ลาออก","พ้นสภาพ","ออกแล้ว"];
+let empStatus = null;
+let history = [];
+
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const $ = id => document.getElementById(id);
+const MONTHS = ["มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน","กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"];
+const CERT = {work:"หนังสือรับรองการทำงาน",salary:"หนังสือรับรองเงินเดือน",pass:"หนังสือผ่านงาน",slip:"สลิปเงินเดือน"};
+
+const thDate = s => { if(!s) return ""; const d=new Date(s); return isNaN(d)?s:`${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()+543}`; };
+const thMonth = s => { if(!s) return ""; const [y,m]=s.split("-"); return `${MONTHS[+m-1]} ${+y+543}`; };
+const esc = s => String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const msg = (t,c) => { $("msg").className=c||""; $("msg").textContent=t; };
+
+const iso = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+let HOLIDAYS = {};   // { "YYYY-MM-DD": "ชื่อวันหยุด" } โหลดจากตาราง holidays
+const isOff = s => new Date(s+"T00:00:00").getDay()===0 || s in HOLIDAYS;
+/* วันที่เร็วที่สุดที่ใช้ได้ = วันถัดจาก "3 วันทำการ" นับจากวันนี้ (เว้นวันอาทิตย์และวันหยุดในตาราง holidays) */
+function earliestUseDate(){
+  const d=new Date(); let n=0;
+  while(n<3){ d.setDate(d.getDate()+1); if(!isOff(iso(d))) n++; }
+  do { d.setDate(d.getDate()+1); } while(isOff(iso(d)));
+  return iso(d);
+}
+let MIN_USE = earliestUseDate();
+$("request_date").value = iso(new Date());
+function refreshMin(){
+  MIN_USE = earliestUseDate();
+  $("use_date").min = MIN_USE;
+  const v=$("use_date").value; if(v && (v<MIN_USE || isOff(v))) $("use_date").value="";
+}
+refreshMin();
+db.from("holidays").select("holiday_date,name").gte("holiday_date",iso(new Date())).then(({data,error})=>{
+  if(error||!data) return;   // อ่านวันหยุดไม่ได้ → ใช้เฉพาะกฎวันอาทิตย์
+  HOLIDAYS = Object.fromEntries(data.map(h=>[h.holiday_date,h.name]));
+  refreshMin();
+});
+$("use_date").addEventListener("change",()=>{
+  const v=$("use_date").value;
+  if(v && (v<MIN_USE || isOff(v))){ msg(v<MIN_USE?`วันที่ใช้ต้องเป็นวันที่ ${thDate(MIN_USE)} เป็นต้นไป`:(v in HOLIDAYS?`${thDate(v)} เป็นวันหยุด (${HOLIDAYS[v]})`:"ไม่สามารถเลือกวันอาทิตย์ได้"),"err"); $("use_date").value=""; }
+});
+$("slipChk").onchange = e => $("slipBox").classList.toggle("hide",!e.target.checked);
+document.querySelectorAll("[name=cert]").forEach(c=>c.addEventListener("change",()=>{ toggleIncome(); renderHistory(); }));
+
+function applyStatus(status){
+  empStatus = status||null;
+  const gone = !!status && RESIGNED_STATUS.includes(String(status).trim().toLowerCase());
+  document.querySelectorAll("[name=cert]").forEach(c=>{
+    const allowed = !status ? true : gone ? c.value==="pass" : c.value!=="pass";
+    c.disabled = !allowed;
+    if(!allowed) c.checked=false;
+    if(gone && c.value==="pass") c.checked=true;
+  });
+  $("slipBox").classList.toggle("hide", !$("slipChk").checked);
+  toggleIncome();
+  return gone;
+}
+const SLBL = {mgr_pending:"รอผู้จัดการฝ่ายอนุมัติ",mgr_rejected:"ผู้จัดการไม่อนุมัติ",pending:"รอผู้จัดการบุคคลอนุมัติ",approved:"อนุมัติแล้ว",rejected:"ผู้จัดการบุคคลไม่อนุมัติ",done:"ออกเอกสารแล้ว"};
+function toggleIncome(){
+  const on = document.querySelector('[name=cert][value=salary]').checked;
+  $("incomeBox").classList.toggle("hide", !on);
+}
+let histReady = false;
+function renderHistory(msgText){
+  const box = $("history");
+  const note = t => { box.className="note"; box.textContent=t; };
+  if(msgText) return note(msgText);
+  if(!histReady) return note('กรอกรหัสพนักงานแล้วกด "ค้นหา" จากนั้นเลือกประเภทหนังสือรับรองเพื่อดูประวัติการขอ');
+  const sel=[...document.querySelectorAll("[name=cert]:checked")].map(c=>c.value);
+  if(!sel.length) return note("เลือกประเภทหนังสือรับรองด้านบน เพื่อดูประวัติการขอของประเภทนั้น");
+  const rows=[];
+  history.forEach(h=>sel.forEach(t=>{ if((h.cert_types||[]).includes(t)) rows.push({d:h.request_date,t,s:h.status}); }));
+  if(!rows.length) return note("ไม่เคยขอ"+sel.map(t=>CERT[t]).join(" / "));
+  box.className="";
+  box.innerHTML = `<div class="note" style="display:flex;gap:8px;padding-bottom:4px"><span style="flex:0 0 130px">วันที่ขอ</span><span style="flex:1">ประเภทเอกสาร</span><span style="flex:0 0 100px">สถานะ</span></div>`+
+    rows.map(r=>`<div style="display:flex;gap:8px;border-top:1px solid var(--bd);padding:6px 0">
+      <span style="flex:0 0 130px">${esc(thDate(r.d))}</span><span style="flex:1">${esc(CERT[r.t]||r.t)}</span><span style="flex:0 0 100px">${esc(SLBL[r.s]||r.s)}</span></div>`).join("");
+}
+function clearEmployee(){
+  ["full_name","start_date","position","department","division"].forEach(k=>$(k).value="");
+  history=[]; histReady=false; applyStatus(null);
+  renderHistory();
+}
+async function lookup(){
+  const code = $("emp_code").value.trim();
+  if(!code) return msg("กรุณากรอกรหัสพนักงาน","err");
+  msg("กำลังค้นหา...");
+  const {data,error} = await db.rpc("get_employee",{p_code:code});
+  if(error) return msg("เกิดข้อผิดพลาด: "+error.message,"err");
+  const e = Array.isArray(data)?data[0]:data;
+  if(!e){ clearEmployee(); return msg("ไม่พบรหัสพนักงานนี้","err"); }
+  $("full_name").value = e.full_name||"";
+  $("start_date").value = e.start_date||"";
+  $("position").value = e.position||"";
+  $("department").value = e.department||"";
+  $("division").value = e.division||"";
+  const gone = applyStatus(e.status);
+  const hr = await db.rpc("get_request_history",{p_code:code});
+  if(hr.error){ history=[]; histReady=false; renderHistory("โหลดประวัติไม่สำเร็จ"); } else { history=hr.data||[]; histReady=true; renderHistory(); }
+  msg(gone ? "พบข้อมูลพนักงาน (พ้นสภาพแล้ว – ขอได้เฉพาะหนังสือผ่านงาน)" : "พบข้อมูลพนักงาน (ปัจจุบัน – ขอหนังสือรับรองการทำงาน/เงินเดือน/สลิปได้)","ok");
+}
+$("lookup").onclick = lookup;
+$("emp_code").addEventListener("input",clearEmployee);
+$("emp_code").addEventListener("keydown",e=>{ if(e.key==="Enter"){e.preventDefault();lookup();} });
+
+function collect(){
+  const certs=[...document.querySelectorAll("[name=cert]:checked")].map(c=>c.value);
+  const last = history.find(h=>(h.status==="approved"||h.status==="done") && (h.cert_types||[]).some(c=>certs.includes(c)));
+  const ever = !!last;
+  return {
+    request_date:$("request_date").value, emp_code:$("emp_code").value.trim(),
+    full_name:$("full_name").value, start_date:$("start_date").value||null,
+    position:$("position").value, department:$("department").value, division:$("division").value,
+    emp_status:empStatus, cert_types:certs,
+    slip_from:certs.includes("slip")?($("slip_from").value||null):null,
+    slip_to:certs.includes("slip")?($("slip_to").value||null):null,
+    prev_requested:ever, prev_date:ever?last.request_date:null,
+    prev_purpose:ever?last.purpose:null,
+    show_salary:certs.includes("salary"),
+    purpose:$("purpose").value, use_date:$("use_date").value||null
+  };
+}
+
+/* ===== Modal สำเร็จ ===== */
+const successModal = $("successModal");
+function showSuccessModal() {
+  if (typeof successModal.showModal === "function") {
+    successModal.showModal();
+  } else {
+    // fallback สำหรับเบราว์เซอร์เก่ามาก
+    alert("ส่งคำขอเรียบร้อยแล้ว");
+    location.reload();
+  }
+}
+$("successOk").addEventListener("click", () => {
+  successModal.close();
+  location.reload();
+});
+// ปิด modal เมื่อคลิก backdrop
+successModal.addEventListener("click", (e) => {
+  if (e.target === successModal) {
+    successModal.close();
+    location.reload();
+  }
+});
+
+$("f").addEventListener("submit", async e=>{
+  e.preventDefault();
+  if(!$("full_name").value) return msg("กรุณาค้นหารหัสพนักงานก่อนส่ง","err");
+  const r = collect();
+  if(!r.use_date || r.use_date<MIN_USE || isOff(r.use_date)) return msg(`กรุณาเลือกวันที่ใช้ตั้งแต่ ${thDate(MIN_USE)} เป็นต้นไป (ไม่ใช่วันอาทิตย์/วันหยุด)`,"err");
+  if(!r.cert_types.length) return msg("กรุณาเลือกประเภทหนังสือรับรองอย่างน้อย 1 รายการ","err");
+  $("submitBtn").disabled=true; msg("กำลังบันทึก...");
+  const {error} = await db.from("certificate_requests").insert(r);
+  if(error){ $("submitBtn").disabled=false; return msg("บันทึกไม่สำเร็จ: "+error.message,"err"); }
+  msg("ส่งคำขอเรียบร้อยแล้ว","ok");
+  showSuccessModal();
+});
+
+</script>
+</body>
+</html>

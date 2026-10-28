@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>ศูนย์จัดการฝ่ายบุคคล</title>
+<style>
+:root{--bg:#f4f5f7;--card:#fff;--tx:#1d2330;--mut:#667085;--bd:#d0d5dd;--pri:#1f5fbf;--ok:#067647;--err:#b42318;--warn:#b54708}
+@media (prefers-color-scheme:dark){:root{--bg:#14171c;--card:#1d2128;--tx:#e8eaee;--mut:#9aa3b2;--bd:#3a414d;--pri:#6ea2f5;--ok:#47cd89;--err:#f97066;--warn:#fdb022}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:"Sarabun","Noto Sans Thai",system-ui,sans-serif;line-height:1.55}
+.wrap{max-width:960px;margin:0 auto;padding:16px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:16px;margin-bottom:12px}
+input,select{width:100%;padding:9px 10px;border:1px solid var(--bd);border-radius:8px;background:var(--card);color:var(--tx);font:inherit}
+button{font:inherit;padding:7px 14px;border-radius:8px;border:1px solid var(--pri);background:var(--pri);color:#fff;cursor:pointer}
+button.sec{background:transparent;color:var(--pri)}
+button.no{background:var(--err);border-color:var(--err)}
+button.go{background:var(--ok);border-color:var(--ok)}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.bar input{flex:1;min-width:180px;width:auto}
+.chip.on{background:var(--pri);color:#fff}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.tag{display:inline-block;padding:1px 10px;border-radius:99px;font-size:.85rem;border:1px solid currentColor}
+.pending{color:var(--warn)}.approved{color:var(--pri)}.rejected{color:var(--err)}.done{color:var(--ok)}
+.mut{color:var(--mut);font-size:.9rem}
+.act{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.hide{display:none}
+label{display:block;font-size:.9rem;color:var(--mut);margin:8px 0 2px}
+#err{color:var(--err);min-height:1.4em}
+</style>
+<style id="theme">
+/* ===== ธีมฟ้า-ขาว (ใช้ร่วมทุกหน้า) ===== */
+:root{--bg:#eef4ff;--glow:#cfe3ff;--card:#fff;--tx:#0f1f3d;--mut:#5b6b86;--bd:#d6e3fa;--pri:#1d6fe8;--pri2:#0ea5e9;--prisoft:#eaf2ff;--ok:#0a7d4f;--err:#c0392b;--warn:#b45309;--shadow:0 6px 24px rgba(29,111,232,.10)}
+@media (prefers-color-scheme:dark){:root{--bg:#0a1428;--glow:rgba(56,189,248,.14);--card:#111f3b;--tx:#e8f0ff;--mut:#9db0d0;--bd:#25375e;--pri:#5aa2ff;--pri2:#38bdf8;--prisoft:#16284a;--ok:#4ade80;--err:#ff8a80;--warn:#fbbf24;--shadow:0 6px 24px rgba(0,0,0,.35)}}
+html{background:var(--bg)}
+body{background:radial-gradient(1100px 460px at 50% -140px,var(--glow) 0%,transparent 70%),var(--bg);min-height:100vh;display:flex;flex-direction:column}
+.wrap{flex:1;width:100%;padding:20px 16px}
+.wrap>h1,.wrap>h2{background:linear-gradient(135deg,#1d4ed8 0%,#2563eb 45%,#0ea5e9 100%);color:#fff;padding:18px 22px;border-radius:18px;box-shadow:0 10px 28px rgba(37,99,235,.28);margin:0 0 18px;font-size:1.4rem;font-weight:700}
+.wrap>h1{text-align:center}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:16px;box-shadow:var(--shadow)}
+.card h2{color:var(--pri);border-left:4px solid var(--pri2);padding-left:10px}
+input[type=text],input[type=date],input[type=month],input[type=password],input[type=number],select,textarea{border:1.5px solid var(--bd);border-radius:10px;background:var(--card);color:var(--tx);transition:border-color .15s,box-shadow .15s}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--pri);box-shadow:0 0 0 3px rgba(29,111,232,.18)}
+input[readonly]{background:var(--prisoft)}
+input[type=checkbox],input[type=radio]{accent-color:var(--pri)}
+button{background:linear-gradient(135deg,var(--pri),var(--pri2));border:none;color:#fff;border-radius:10px;font-weight:600;box-shadow:0 4px 12px rgba(29,111,232,.25);transition:transform .12s,box-shadow .12s}
+button:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 6px 16px rgba(29,111,232,.32)}
+button.sec{background:var(--card);color:var(--pri);border:1.5px solid var(--pri);box-shadow:none}
+button.sec:hover:not(:disabled){background:var(--prisoft)}
+button.go{background:linear-gradient(135deg,#059669,#10b981);color:#fff;border:none}
+button.no{background:linear-gradient(135deg,#dc2626,#ef4444);color:#fff;border:none}
+.chip{border-radius:999px;padding:6px 16px}
+.chip.on{background:linear-gradient(135deg,var(--pri),var(--pri2));color:#fff;border-color:transparent}
+.tag{font-weight:600;background:var(--card)}
+.opt{padding:8px 12px;border:1px solid var(--bd);border-radius:10px;background:var(--card);cursor:pointer;transition:background .12s,border-color .12s}
+.opt:hover{background:var(--prisoft)}
+.opt:has(input:checked){border-color:var(--pri);background:var(--prisoft)}
+.opt:has(input:disabled){opacity:.5;cursor:not-allowed}
+a{color:var(--pri)}
+dialog{border-radius:16px!important;box-shadow:0 20px 50px rgba(15,31,61,.35)}
+dialog::backdrop{background:rgba(10,20,40,.45)}
+.site-footer{margin-top:24px;padding:18px 16px;text-align:center;font-size:.85rem;color:var(--mut);border-top:1px solid var(--bd);background:linear-gradient(180deg,transparent,var(--prisoft))}
+.site-footer b{color:var(--pri)}
+.site-footer .sep{opacity:.5;margin:0 6px}
+.site-footer .cp{margin-top:4px;font-size:.8rem}
+/* กล่องเข้าสู่ระบบ: จัดกึ่งกลางหน้า */
+#login{margin:7vh auto 0;max-width:380px;width:100%;padding:26px 24px}
+#login p{margin:0 0 12px}
+#login button{width:100%;padding:11px}
+#login #err{text-align:center}
+/* กล่องโต้ตอบตามธีม (แทน confirm/prompt/alert ของเบราว์เซอร์) */
+dialog.ui-modal{border:none;border-radius:20px;padding:0;max-width:min(420px,92vw);width:100%;background:var(--card);color:var(--tx);box-shadow:0 24px 60px rgba(15,31,61,.35);animation:uiPop .16s ease-out}
+dialog.ui-modal::backdrop{background:rgba(10,20,40,.5);backdrop-filter:blur(3px)}
+.ui-box{padding:26px 24px 20px;text-align:center}
+.ui-icon{width:54px;height:54px;margin:0 auto 12px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.6rem;font-weight:700;color:#fff;background:linear-gradient(135deg,var(--pri),var(--pri2));box-shadow:0 6px 16px rgba(29,111,232,.3)}
+.ui-icon.danger{background:linear-gradient(135deg,#dc2626,#f87171);box-shadow:0 6px 16px rgba(220,38,38,.3)}
+.ui-title{font-weight:700;font-size:1.1rem;margin-bottom:6px}
+.ui-msg{color:var(--mut);margin-bottom:12px;white-space:pre-line}
+.ui-in{width:100%;font:inherit;padding:9px 10px;border:1.5px solid var(--bd);border-radius:10px;background:var(--card);color:var(--tx);resize:vertical;text-align:left}
+.ui-err{color:var(--err);min-height:1.2em;font-size:.9rem}
+.ui-act{display:flex;gap:10px;margin-top:6px}
+.ui-act button{flex:1;padding:10px}
+@keyframes uiPop{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:none}}
+</style>
+<style>
+.sub{margin:-6px 4px 18px;color:var(--mut);text-align:center}
+.hub{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+a.tool{display:flex;flex-direction:column;gap:8px;color:var(--tx);text-decoration:none;padding:22px 20px;background:var(--card);border:1px solid var(--bd);border-radius:18px;box-shadow:var(--shadow);transition:transform .15s,box-shadow .15s,border-color .15s}
+a.tool:hover{transform:translateY(-3px);border-color:var(--pri);box-shadow:0 14px 32px rgba(29,111,232,.22)}
+.tool .ic{width:56px;height:56px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:1.7rem;background:linear-gradient(135deg,var(--pri),var(--pri2));box-shadow:0 8px 18px rgba(29,111,232,.28)}
+.tool h3{margin:6px 0 0;font-size:1.12rem;color:var(--tx)}
+.tool p{margin:0;color:var(--mut);font-size:.92rem;flex:1}
+.tool .role{font-size:.8rem;color:var(--pri);background:var(--prisoft);border:1px solid var(--bd);border-radius:999px;padding:2px 10px;align-self:flex-start}
+.tool .go{margin-top:6px;font-weight:600;color:var(--pri)}
+.note2{margin-top:18px;text-align:center;font-size:.88rem;color:var(--mut)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h2 style="text-align:center">ศูนย์จัดการสำหรับฝ่ายบุคคล</h2>
+  <p class="sub">เลือกเมนูที่ต้องการใช้งาน (แต่ละหน้าต้องเข้าสู่ระบบด้วยบัญชีที่ได้รับสิทธิ์)</p>
+  <div class="hub">
+    <a class="tool" href="admin.html">
+      <div class="ic">🖨️</div>
+      <h3>พิมพ์หนังสือรับรอง</h3>
+      <p>พิมพ์หนังสือรับรองการทำงาน / เงินเดือน / ผ่านงาน ที่ผู้จัดการบุคคลอนุมัติแล้ว พร้อมเลขที่เอกสารและลายเซ็น</p>
+      <span class="role">เจ้าหน้าที่บุคคล · ผู้จัดการบุคคล</span>
+      <span class="go">เปิดหน้านี้ →</span>
+    </a>
+    <a class="tool" href="holidays.html">
+      <div class="ic">📅</div>
+      <h3>จัดการวันหยุด</h3>
+      <p>เพิ่ม/ลบวันหยุดบริษัท ใช้คำนวณวันที่เลือกได้ในแบบฟอร์ม (ล่วงหน้า 3 วันทำการ ไม่นับวันอาทิตย์และวันหยุด)</p>
+      <span class="role">เจ้าหน้าที่บุคคล · ผู้จัดการบุคคล</span>
+      <span class="go">เปิดหน้านี้ →</span>
+    </a>
+    <a class="tool" href="managers-admin.html">
+      <div class="ic">👥</div>
+      <h3>จัดการข้อมูลผู้จัดการ</h3>
+      <p>กำหนดผู้จัดการฝ่ายและฝ่ายที่ดูแล (หนึ่งคนดูแลได้หลายฝ่าย) สำหรับขั้นตอนอนุมัติ</p>
+      <span class="role">ผู้จัดการบุคคลเท่านั้น</span>
+      <span class="go">เปิดหน้านี้ →</span>
+    </a>
+    <a class="tool" href="hr-users-admin.html">
+      <div class="ic">🔑</div>
+      <h3>จัดการผู้ใช้ฝ่ายบุคคล</h3>
+      <p>เพิ่ม/แก้บทบาทเจ้าหน้าที่บุคคลและผู้จัดการบุคคล พร้อมดูว่าใครมีบัญชีล็อกอินแล้ว</p>
+      <span class="role">ผู้จัดการบุคคลเท่านั้น</span>
+      <span class="go">เปิดหน้านี้ →</span>
+    </a>
+    <a class="tool" href="dashboard.html">
+      <div class="ic">📊</div>
+      <h3>Dashboard สรุป</h3>
+      <p>สรุปจำนวนการขอเอกสารแต่ละประเภท แนวโน้มรายเดือน และผู้ขอมากที่สุดในแต่ละประเภท</p>
+      <span class="role">ผู้จัดการบุคคลเท่านั้น</span>
+      <span class="go">เปิดหน้านี้ →</span>
+    </a>
+    <a class="tool" href="guide-approver.html">
+      <div class="ic">📖</div>
+      <h3>คู่มือการใช้งาน</h3>
+      <p>ขั้นตอนการอนุมัติ การพิมพ์เอกสาร และการตั้งค่าระบบ สำหรับผู้จัดการฝ่าย ผู้จัดการบุคคล และเจ้าหน้าที่บุคคล</p>
+      <span class="role">ทุกบทบาท (ไม่ต้องล็อกอิน)</span>
+      <span class="go">เปิดคู่มือ →</span>
+    </a>
+  </div>
+  <p class="note2">หากเข้าเมนูใดไม่ได้หรือไม่เห็นข้อมูล แสดงว่าบัญชีที่ล็อกอินยังไม่มีสิทธิ์ในเมนูนั้น</p>
+</div>
+<footer class="site-footer">
+  <div>แบบฟอร์มคำร้องขอเอกสาร<span class="sep">|</span>ใช้สำหรับภายในบริษัทเท่านั้น<span class="sep">|</span>พัฒนาโดย <b>Sarawut.C</b></div>
+  <div class="cp">© <span id="cpYear">2026</span> Sarawut.C. สงวนลิขสิทธิ์ · All rights reserved.</div>
+</footer>
+<script>document.getElementById("cpYear").textContent=new Date().getFullYear();</script>
+</body>
+</html>

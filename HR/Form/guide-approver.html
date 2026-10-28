@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>คู่มือการใช้งาน – ผู้อนุมัติ</title>
+<style>
+:root{--bg:#f4f5f7;--card:#fff;--tx:#1d2330;--mut:#667085;--bd:#d0d5dd;--pri:#1f5fbf;--ok:#067647;--err:#b42318;--warn:#b54708}
+@media (prefers-color-scheme:dark){:root{--bg:#14171c;--card:#1d2128;--tx:#e8eaee;--mut:#9aa3b2;--bd:#3a414d;--pri:#6ea2f5;--ok:#47cd89;--err:#f97066;--warn:#fdb022}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:"Sarabun","Noto Sans Thai",system-ui,sans-serif;line-height:1.55}
+.wrap{max-width:960px;margin:0 auto;padding:16px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:16px;margin-bottom:12px}
+input,select{width:100%;padding:9px 10px;border:1px solid var(--bd);border-radius:8px;background:var(--card);color:var(--tx);font:inherit}
+button{font:inherit;padding:7px 14px;border-radius:8px;border:1px solid var(--pri);background:var(--pri);color:#fff;cursor:pointer}
+button.sec{background:transparent;color:var(--pri)}
+button.no{background:var(--err);border-color:var(--err)}
+button.go{background:var(--ok);border-color:var(--ok)}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.bar input{flex:1;min-width:180px;width:auto}
+.chip.on{background:var(--pri);color:#fff}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.tag{display:inline-block;padding:1px 10px;border-radius:99px;font-size:.85rem;border:1px solid currentColor}
+.pending{color:var(--warn)}.approved{color:var(--pri)}.rejected{color:var(--err)}.done{color:var(--ok)}
+.mut{color:var(--mut);font-size:.9rem}
+.act{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.hide{display:none}
+label{display:block;font-size:.9rem;color:var(--mut);margin:8px 0 2px}
+#err{color:var(--err);min-height:1.4em}
+</style>
+<style id="theme">
+/* ===== ธีมฟ้า-ขาว (ใช้ร่วมทุกหน้า) ===== */
+:root{--bg:#eef4ff;--glow:#cfe3ff;--card:#fff;--tx:#0f1f3d;--mut:#5b6b86;--bd:#d6e3fa;--pri:#1d6fe8;--pri2:#0ea5e9;--prisoft:#eaf2ff;--ok:#0a7d4f;--err:#c0392b;--warn:#b45309;--shadow:0 6px 24px rgba(29,111,232,.10)}
+@media (prefers-color-scheme:dark){:root{--bg:#0a1428;--glow:rgba(56,189,248,.14);--card:#111f3b;--tx:#e8f0ff;--mut:#9db0d0;--bd:#25375e;--pri:#5aa2ff;--pri2:#38bdf8;--prisoft:#16284a;--ok:#4ade80;--err:#ff8a80;--warn:#fbbf24;--shadow:0 6px 24px rgba(0,0,0,.35)}}
+html{background:var(--bg)}
+body{background:radial-gradient(1100px 460px at 50% -140px,var(--glow) 0%,transparent 70%),var(--bg);min-height:100vh;display:flex;flex-direction:column}
+.wrap{flex:1;width:100%;padding:20px 16px}
+.wrap>h1,.wrap>h2{background:linear-gradient(135deg,#1d4ed8 0%,#2563eb 45%,#0ea5e9 100%);color:#fff;padding:18px 22px;border-radius:18px;box-shadow:0 10px 28px rgba(37,99,235,.28);margin:0 0 18px;font-size:1.4rem;font-weight:700}
+.wrap>h1{text-align:center}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:16px;box-shadow:var(--shadow)}
+.card h2{color:var(--pri);border-left:4px solid var(--pri2);padding-left:10px}
+input[type=text],input[type=date],input[type=month],input[type=password],input[type=number],select,textarea{border:1.5px solid var(--bd);border-radius:10px;background:var(--card);color:var(--tx);transition:border-color .15s,box-shadow .15s}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--pri);box-shadow:0 0 0 3px rgba(29,111,232,.18)}
+input[readonly]{background:var(--prisoft)}
+input[type=checkbox],input[type=radio]{accent-color:var(--pri)}
+button{background:linear-gradient(135deg,var(--pri),var(--pri2));border:none;color:#fff;border-radius:10px;font-weight:600;box-shadow:0 4px 12px rgba(29,111,232,.25);transition:transform .12s,box-shadow .12s}
+button:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 6px 16px rgba(29,111,232,.32)}
+button.sec{background:var(--card);color:var(--pri);border:1.5px solid var(--pri);box-shadow:none}
+button.sec:hover:not(:disabled){background:var(--prisoft)}
+button.go{background:linear-gradient(135deg,#059669,#10b981);color:#fff;border:none}
+button.no{background:linear-gradient(135deg,#dc2626,#ef4444);color:#fff;border:none}
+.chip{border-radius:999px;padding:6px 16px}
+.chip.on{background:linear-gradient(135deg,var(--pri),var(--pri2));color:#fff;border-color:transparent}
+.tag{font-weight:600;background:var(--card)}
+.opt{padding:8px 12px;border:1px solid var(--bd);border-radius:10px;background:var(--card);cursor:pointer;transition:background .12s,border-color .12s}
+.opt:hover{background:var(--prisoft)}
+.opt:has(input:checked){border-color:var(--pri);background:var(--prisoft)}
+.opt:has(input:disabled){opacity:.5;cursor:not-allowed}
+a{color:var(--pri)}
+dialog{border-radius:16px!important;box-shadow:0 20px 50px rgba(15,31,61,.35)}
+dialog::backdrop{background:rgba(10,20,40,.45)}
+.site-footer{margin-top:24px;padding:18px 16px;text-align:center;font-size:.85rem;color:var(--mut);border-top:1px solid var(--bd);background:linear-gradient(180deg,transparent,var(--prisoft))}
+.site-footer b{color:var(--pri)}
+.site-footer .sep{opacity:.5;margin:0 6px}
+.site-footer .cp{margin-top:4px;font-size:.8rem}
+/* กล่องเข้าสู่ระบบ: จัดกึ่งกลางหน้า */
+#login{margin:7vh auto 0;max-width:380px;width:100%;padding:26px 24px}
+#login p{margin:0 0 12px}
+#login button{width:100%;padding:11px}
+#login #err{text-align:center}
+/* กล่องโต้ตอบตามธีม (แทน confirm/prompt/alert ของเบราว์เซอร์) */
+dialog.ui-modal{border:none;border-radius:20px;padding:0;max-width:min(420px,92vw);width:100%;background:var(--card);color:var(--tx);box-shadow:0 24px 60px rgba(15,31,61,.35);animation:uiPop .16s ease-out}
+dialog.ui-modal::backdrop{background:rgba(10,20,40,.5);backdrop-filter:blur(3px)}
+.ui-box{padding:26px 24px 20px;text-align:center}
+.ui-icon{width:54px;height:54px;margin:0 auto 12px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.6rem;font-weight:700;color:#fff;background:linear-gradient(135deg,var(--pri),var(--pri2));box-shadow:0 6px 16px rgba(29,111,232,.3)}
+.ui-icon.danger{background:linear-gradient(135deg,#dc2626,#f87171);box-shadow:0 6px 16px rgba(220,38,38,.3)}
+.ui-title{font-weight:700;font-size:1.1rem;margin-bottom:6px}
+.ui-msg{color:var(--mut);margin-bottom:12px;white-space:pre-line}
+.ui-in{width:100%;font:inherit;padding:9px 10px;border:1.5px solid var(--bd);border-radius:10px;background:var(--card);color:var(--tx);resize:vertical;text-align:left}
+.ui-err{color:var(--err);min-height:1.2em;font-size:.9rem}
+.ui-act{display:flex;gap:10px;margin-top:6px}
+.ui-act button{flex:1;padding:10px}
+@keyframes uiPop{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:none}}
+/* แถบเมนูด้านบน (navbar) */
+.navbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:10px 12px;box-shadow:var(--shadow);margin-bottom:6px}
+.nb-user{display:flex;align-items:center;gap:10px;min-width:0;flex:1 1 220px;color:var(--mut);font-size:.9rem}
+.nb-user::before{content:"👤";flex:0 0 36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--prisoft);border:1px solid var(--bd);font-size:1.05rem}
+.nb-user #who{flex:1;min-width:0;word-break:break-word}
+.nb-links{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+a.nb-link{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;text-decoration:none;font-weight:600;font-size:.92rem;color:var(--pri);background:var(--prisoft);border:1px solid transparent;transition:border-color .12s,transform .12s}
+a.nb-link:hover{border-color:var(--pri);transform:translateY(-1px)}
+a.nb-link.home{background:linear-gradient(135deg,var(--pri),var(--pri2));color:#fff}
+button.nb-out{flex:0 0 auto;white-space:nowrap;padding:8px 16px;border-radius:999px;background:var(--card);color:var(--err);border:1.5px solid var(--err);box-shadow:none;font-weight:600}
+button.nb-out:hover:not(:disabled){background:rgba(192,57,43,.1)}
+@media(max-width:640px){.nb-links{order:3;width:100%}.navbar .nb-out{margin-left:auto}}
+</style>
+<style>
+.guide{display:grid;grid-template-columns:230px 1fr;gap:18px;align-items:start}
+.toc{position:sticky;top:12px;background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:10px;box-shadow:var(--shadow)}
+.toc b{display:block;padding:6px 12px;color:var(--pri)}
+.toc a{display:block;padding:7px 12px;border-radius:10px;text-decoration:none;color:var(--tx);font-size:.92rem}
+.toc a:hover{background:var(--prisoft);color:var(--pri)}
+@media(max-width:860px){.guide{grid-template-columns:1fr}.toc{position:static;display:flex;flex-wrap:wrap;gap:4px}.toc b{width:100%}}
+.sec{scroll-margin-top:14px}
+.sec>h3{margin:0 0 4px;font-size:1.25rem;color:var(--pri)}
+.sec h4{margin:16px 0 4px;font-size:1.02rem}
+.lead{color:var(--mut);margin:0 0 10px}
+.steps{counter-reset:s;list-style:none;padding:0;margin:8px 0}
+.steps li{counter-increment:s;position:relative;padding:12px 14px 12px 58px;margin:10px 0;border:1px solid var(--bd);border-radius:14px;background:var(--card)}
+.steps li::before{content:counter(s);position:absolute;left:14px;top:12px;width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--pri),var(--pri2));color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center}
+.steps li b:first-child{color:var(--pri)}
+.callout{border-left:4px solid var(--pri2);background:var(--prisoft);border-radius:10px;padding:10px 14px;margin:10px 0}
+.callout.warn{border-color:var(--warn)}.callout.bad{border-color:var(--err)}
+.flow{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:12px 0}
+.flow .st{padding:8px 14px;border-radius:12px;background:var(--card);border:1.5px solid var(--pri);color:var(--pri);font-weight:600;font-size:.9rem}
+.flow .ar{color:var(--mut)}
+.mb{display:inline-block;padding:2px 12px;border-radius:8px;color:#fff;font-weight:600;font-size:.85rem}
+.mb.pri{background:linear-gradient(135deg,var(--pri),var(--pri2))}.mb.go{background:#059669}.mb.no{background:#dc2626}
+.mb.sec{background:var(--card);color:var(--pri);border:1.5px solid var(--pri)}
+details{border:1px solid var(--bd);border-radius:12px;padding:10px 14px;margin:8px 0;background:var(--card)}
+details summary{cursor:pointer;font-weight:600;color:var(--pri)}
+details p{margin:8px 0 2px}
+table.t{width:100%;border-collapse:collapse;font-size:.92rem;margin:8px 0}
+.t th,.t td{border:1px solid var(--bd);padding:8px 10px;text-align:left;vertical-align:top}.t th{background:var(--prisoft)}
+.tools{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+@media print{.navbar,.toc,.tools,.site-footer{display:none!important}.guide{display:block}body{background:#fff}.card{box-shadow:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h2>📖 คู่มือการใช้งาน – ผู้อนุมัติ</h2>
+  <p class="lead" style="text-align:center;margin:-6px 0 12px">สำหรับผู้จัดการฝ่าย ผู้จัดการบุคคล และเจ้าหน้าที่บุคคล</p>
+  <div class="tools"><a class="nb-link home" href="hr-portal.html">🏠 เมนูหลัก</a><a class="nb-link" href="guide-user.html">📖 คู่มือผู้ขอเอกสาร</a><a class="nb-link" href="#" onclick="window.print();return false">🖨️ พิมพ์คู่มือ</a></div>
+  <div class="guide">
+    <nav class="toc"><b>สารบัญ</b><a href="#flow">1. ภาพรวมการอนุมัติ</a><a href="#manager">2. ผู้จัดการฝ่าย</a><a href="#hrmanager">3. ผู้จัดการบุคคล</a><a href="#officer">4. เจ้าหน้าที่บุคคล (พิมพ์)</a><a href="#setup">5. การตั้งค่าระบบ</a><a href="#faq">6. ปัญหาที่พบบ่อย</a></nav>
+    <main>
+<section class="card sec" id="flow"><h3>1. ภาพรวมการอนุมัติ</h3>
+<div class="flow"><span class="st">พนักงานส่งคำขอ</span><span class="ar">→</span><span class="st">ผู้จัดการฝ่าย อนุมัติ</span><span class="ar">→</span><span class="st">ผู้จัดการบุคคล อนุมัติ</span><span class="ar">→</span><span class="st">เจ้าหน้าที่บุคคล พิมพ์</span></div>
+<table class="t"><tr><th>บทบาท</th><th>หน้าที่ใช้</th><th>ทำอะไรได้</th></tr>
+<tr><td>ผู้จัดการฝ่าย</td><td>manager.html</td><td>อนุมัติ/ไม่อนุมัติคำขอของฝ่ายตัวเอง</td></tr>
+<tr><td>ผู้จัดการบุคคล</td><td>hr-manager.html</td><td>อนุมัติ/ไม่อนุมัติขั้นสุดท้าย ออกเลขที่เอกสาร และจัดการระบบ</td></tr>
+<tr><td>เจ้าหน้าที่บุคคล</td><td>admin.html</td><td>พิมพ์เอกสารที่อนุมัติแล้ว (ไม่มีสิทธิ์อนุมัติ)</td></tr></table>
+<div class="callout">ฝ่ายที่ไม่มีผู้จัดการในระบบ หรือผู้ขอเป็นผู้จัดการของฝ่ายนั้นเอง จะข้ามขั้นผู้จัดการฝ่ายไปที่ผู้จัดการบุคคลโดยอัตโนมัติ ทุกการเปลี่ยนสถานะมีการแจ้งเตือนทาง Telegram</div>
+<div class="callout warn">แต่ละหน้าเข้าได้เฉพาะบัญชีที่มีบทบาทตรงกัน หากเข้าแล้วขึ้นว่า "บัญชีนี้ไม่มีสิทธิ์เข้าหน้านี้" ให้แจ้งผู้จัดการบุคคลเพื่อตั้งสิทธิ์</div></section>
+
+<section class="card sec" id="manager"><h3>2. ผู้จัดการฝ่าย</h3>
+<p class="lead">หน้า manager.html – เห็นเฉพาะคำขอของฝ่ายที่คุณดูแล</p>
+<ol class="steps">
+<li><b>เข้าสู่ระบบ</b> ด้วยอีเมลและรหัสผ่านที่ฝ่ายบุคคลสร้างให้ ส่วนหัวหน้าแสดงอีเมลและจำนวนฝ่ายที่ดูแล กด "ดูรายชื่อฝ่าย" เพื่อดูรายชื่อ</li>
+<li><b>แท็บ "รอพิจารณา (จำนวน)"</b> แสดงคำขอที่รอคุณ ส่วน "ทั้งหมดของฝ่าย" แสดงประวัติทั้งหมด กด <span class="mb sec">รีเฟรช</span> เพื่ออัปเดต</li>
+<li><b>ตรวจข้อมูลในการ์ดคำขอ</b> ชื่อ ตำแหน่ง แผนก/ฝ่าย ประเภทเอกสาร วัตถุประสงค์ วันที่ใช้ และประวัติการขอ</li>
+<li><b>กด <span class="mb go">อนุมัติ (ส่งต่อผู้จัดการบุคคล)</span></b> แล้วยืนยัน คำขอจะส่งต่อให้ผู้จัดการบุคคลทันที</li>
+<li><b>หรือกด <span class="mb no">ไม่อนุมัติ</span></b> พิมพ์เหตุผล (ไม่บังคับแต่ควรระบุ) แล้วยืนยัน คำขอจะจบที่นี่ พนักงานต้องส่งคำขอใหม่</li>
+</ol>
+<div class="callout bad"><b>ตัดสินแล้วย้อนกลับเองไม่ได้</b> หากกดผิด ให้แจ้งผู้จัดการบุคคล</div></section>
+
+<section class="card sec" id="hrmanager"><h3>3. ผู้จัดการบุคคล</h3>
+<p class="lead">หน้า hr-manager.html – เห็นคำขอที่ผ่านผู้จัดการฝ่ายแล้ว</p>
+<ol class="steps">
+<li><b>เข้าสู่ระบบ</b> แท็บเริ่มต้นคือ "รออนุมัติ" สลับดู "ทั้งหมด / อนุมัติแล้ว / ไม่อนุมัติ" ได้ และค้นหาด้วยรหัส ชื่อ หรือเลขที่เอกสาร</li>
+<li><b>ตรวจการ์ดคำขอ</b> ดูข้อมูลพนักงาน ประเภทเอกสาร และบรรทัด "ผู้จัดการฝ่ายอนุมัติ: ชื่อ · วันที่"</li>
+<li><b>กด <span class="mb go">อนุมัติ</span></b> ระบบออก <b>เลขที่เอกสาร</b> ให้อัตโนมัติและแจ้ง Telegram เอกสารพร้อมให้เจ้าหน้าที่บุคคลพิมพ์</li>
+<li><b>หรือกด <span class="mb no">ไม่อนุมัติ</span></b> ใส่เหตุผล คำขอจบที่สถานะ "ไม่อนุมัติ"</li>
+<li><b>อนุมัติผิด?</b> กด <span class="mb sec">ย้อนกลับเป็นรออนุมัติ</span> ได้ (เลขที่เอกสารที่ออกแล้วจะคงอยู่ ไม่ออกใหม่เมื่ออนุมัติซ้ำ)</li>
+</ol>
+<h4>รูปแบบเลขที่เอกสาร</h4>
+<table class="t"><tr><th>ประเภท</th><th>ตัวอย่าง</th></tr>
+<tr><td>หนังสือรับรองการทำงาน</td><td>HR-CE-261017-0001</td></tr><tr><td>หนังสือรับรองเงินเดือน</td><td>HR-SC-261017-0001</td></tr>
+<tr><td>หนังสือผ่านงาน</td><td>HR-WC-261017-0001</td></tr><tr><td>สลิปเงินเดือน</td><td>HR-SL-261017-0001</td></tr></table>
+<p class="lead">รูปแบบ: HR-รหัสประเภท-ปีเดือนวัน (ค.ศ. 2 หลัก)-ลำดับ 4 หลัก ลำดับเริ่มใหม่ทุกวัน แยกตามประเภท และ <b>วันที่ "ออกให้ ณ วันที่" ในหนังสือคือวันที่คุณกดอนุมัติ</b></p>
+<div class="callout warn">คุณอนุมัติคำขอของตัวเองไม่ได้ ระบบกันไว้ ต้องให้ผู้จัดการบุคคลอีกคนอนุมัติ</div></section>
+
+<section class="card sec" id="officer"><h3>4. เจ้าหน้าที่บุคคล (พิมพ์เอกสาร)</h3>
+<p class="lead">หน้า admin.html – เห็นเฉพาะคำขอที่อนุมัติแล้ว ปุ่มพิมพ์ขึ้นตามประเภทที่พนักงานขอ</p>
+<ol class="steps">
+<li><b>ค้นหาคำขอ</b> ด้วยรหัส ชื่อ หรือเลขที่เอกสาร แล้วกดปุ่ม <span class="mb sec">พิมพ์หนังสือรับรอง…</span> ของประเภทที่ต้องการ</li>
+<li><b>หนังสือรับรองเงินเดือน</b> กรอก "อัตราค่าจ้าง" และหน่วย (เดือน/วัน) ระบบเขียนเป็นตัวอักษรไทยให้เอง <b>หนังสือผ่านงาน</b> เลือก "สิ้นสุดการทำงาน วันที่"</li>
+<li><b>ตั้งค่าพิมพ์</b> ในแถบด้านบน เลือก "แนบลายเซ็นตอนพิมพ์" (ติ๊กไว้เป็นค่าเริ่มต้น) และ "ขนาดตัวอักษรเอกสาร" (ค่าเริ่มต้น 13 pt) ป้ายข้าง ๆ บอกฟอนต์ที่ใช้</li>
+<li><b>ในหน้าต่างพิมพ์ของเบราว์เซอร์</b> ตั้ง Scale 100% และปิด Headers and footers (เอกสารขนาด Letter ตามเทมเพลตบริษัท)</li>
+</ol>
+<div class="callout">สลิปเงินเดือนไม่มีปุ่มพิมพ์ในระบบนี้ ใช้เลขที่เอกสารเป็นข้อมูลอ้างอิงในการออกสลิปตามขั้นตอนของฝ่ายบุคคล</div></section>
+
+<section class="card sec" id="setup"><h3>5. การตั้งค่าระบบ (ผู้จัดการบุคคล)</h3>
+<p class="lead">เข้าจาก "เมนูหลัก" (hr-portal.html)</p>
+<table class="t"><tr><th>เมนู</th><th>ใช้ทำอะไร</th></tr>
+<tr><td>👥 จัดการผู้จัดการฝ่าย</td><td>กำหนดผู้จัดการแต่ละฝ่าย เลือกได้หลายฝ่ายต่อคน เพิ่ม/แก้ไข/ลบได้</td></tr>
+<tr><td>🔑 จัดการผู้ใช้ฝ่ายบุคคล</td><td>กำหนดบทบาทเจ้าหน้าที่/ผู้จัดการบุคคล และดูว่าใครมีบัญชีล็อกอินแล้ว</td></tr>
+<tr><td>📅 จัดการวันหยุด</td><td>เพิ่ม/ลบวันหยุดบริษัท ใช้คำนวณวันที่เลือกได้ในแบบฟอร์ม</td></tr>
+<tr><td>📊 Dashboard</td><td>สรุปจำนวนคำขอแต่ละประเภท แนวโน้มรายเดือน และผู้ขอมากที่สุด</td></tr></table>
+<h4>เพิ่มผู้ใช้ใหม่ (ผู้จัดการฝ่ายหรือฝ่ายบุคคล) ทำ 2 ส่วน</h4>
+<ol class="steps">
+<li><b>สร้างบัญชีล็อกอิน</b> ที่ Supabase &gt; Authentication &gt; Users ใส่อีเมลและรหัสผ่าน และติ๊ก <b>Auto Confirm User</b></li>
+<li><b>กำหนดบทบาท</b> ในหน้าจัดการที่เกี่ยวข้อง (ผู้จัดการฝ่ายที่ "จัดการผู้จัดการฝ่าย" เลือกฝ่าย / ฝ่ายบุคคลที่ "จัดการผู้ใช้ฝ่ายบุคคล") อีเมลต้องตรงกับบัญชีในข้อ 1</li>
+</ol></section>
+
+<section class="card sec" id="faq"><h3>6. ปัญหาที่พบบ่อย</h3>
+<details><summary>ล็อกอินได้แต่ขึ้น "บัญชีนี้ไม่มีสิทธิ์เข้าหน้านี้"</summary><p>บัญชียังไม่มีบทบาทที่หน้านั้นต้องการ ให้ผู้จัดการบุคคลตั้งสิทธิ์ในหน้าที่เกี่ยวข้อง และตรวจว่าอีเมลสะกดตรงกัน</p></details>
+<details><summary>ล็อกอินไม่ได้ (Invalid login credentials)</summary><p>รหัสผ่านผิด หรือบัญชียังไม่ยืนยันอีเมล ให้ผู้จัดการบุคคลตรวจที่ Authentication &gt; Users หน้า "จัดการผู้ใช้ฝ่ายบุคคล" จะบอกสถานะบัญชีของแต่ละคน</p></details>
+<details><summary>ผู้จัดการฝ่ายไม่เห็นคำขอของพนักงาน</summary><p>ตรวจว่าฝ่ายนั้นถูกผูกกับผู้จัดการแล้ว (หน้าจัดการผู้จัดการฝ่าย) คำขอที่ส่งก่อนผูกฝ่ายจะไปที่ผู้จัดการบุคคลโดยตรง</p></details>
+<details><summary>ปุ่มพิมพ์ไม่ขึ้นในหน้า admin</summary><p>ปุ่มจะขึ้นเมื่อคำขออยู่ในสถานะอนุมัติแล้วและประเภทนั้นเป็นเอกสารที่พิมพ์ได้ (การทำงาน เงินเดือน ผ่านงาน)</p></details>
+<details><summary>หน้าต่างพิมพ์ไม่เปิด</summary><p>เบราว์เซอร์บล็อก pop-up ให้กดอนุญาต pop-up สำหรับเว็บนี้แล้วลองใหม่</p></details>
+<details><summary>ตัวอักษรในเอกสารที่พิมพ์ใหญ่ไป</summary><p>ปรับช่อง "ขนาดตัวอักษรเอกสาร" ในหน้าพิมพ์ให้เล็กลง (เครื่องที่ไม่มีฟอนต์ Adobe Thai จะใช้ Sarabun ซึ่งตัวใหญ่กว่า ควรลดเล็กน้อย)</p></details>
+</section></main>
+  </div>
+</div>
+<footer class="site-footer">
+  <div>แบบฟอร์มคำร้องขอเอกสาร<span class="sep">|</span>ใช้สำหรับภายในบริษัทเท่านั้น<span class="sep">|</span>พัฒนาโดย Sarawut.C</div>
+  <div class="cp">© <span id="cpYear">2026</span> สงวนลิขสิทธิ์ · All rights reserved.</div>
+</footer>
+<script>document.getElementById("cpYear").textContent=new Date().getFullYear();</script>
+</body>
+</html>
