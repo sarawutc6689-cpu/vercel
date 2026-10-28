@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <base target="_top">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เข้าสู่ระบบ | ระบบค้นหารหัสเบิกของ</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&family=Noto+Sans+Thai:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans Thai', 'Kanit', sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            padding: 20px;
+        }
+
+        .container {
+            display: flex;
+            width: 100%;
+            max-width: 1100px;
+            height: 90vh;
+            background: white;
+            border-radius: 25px;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Left Panel - Illustration */
+        .left-panel {
+            flex: 1;
+            background: linear-gradient(135deg, rgba(30, 60, 114, 0.9) 0%, rgba(42, 82, 152, 0.9) 100%), 
+                        url('https://images.unsplash.com/photo-1553413077-190dd305871c?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80');
+            background-size: cover;
+            background-position: center;
+            padding: 50px 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .left-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 1;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 40px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .logo-icon {
+            background: rgba(255, 255, 255, 0.2);
+            width: 70px;
+            height: 70px;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .logo-icon i {
+            font-size: 32px;
+            color: white;
+        }
+
+        .logo-text h1 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .logo-text p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .welcome-text {
+            position: relative;
+            z-index: 2;
+        }
+
+        .welcome-text h2 {
+            font-size: 36px;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .welcome-text p {
+            font-size: 16px;
+            line-height: 1.7;
+            opacity: 0.9;
+            max-width: 90%;
+        }
+
+        .features {
+            margin-top: 50px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .feature-icon {
+            background: rgba(255, 255, 255, 0.2);
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            backdrop-filter: blur(5px);
+        }
+
+        .feature-text {
+            font-size: 14px;
+        }
+
+        /* Right Panel - Login Form */
+        .right-panel {
+            flex: 1;
+            padding: 60px 50px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            background: #ffffff;
+        }
+
+        .form-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .form-header h2 {
+            font-size: 32px;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .form-header p {
+            color: #7f8c8d;
+            font-size: 16px;
+        }
+
+        .form-container {
+            width: 100%;
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 30px;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #7f8c8d;
+            font-size: 18px;
+            z-index: 2;
+        }
+
+        .inputtext {
+            width: 100%;
+            padding: 18px 20px 18px 55px;
+            font-size: 16px;
+            border: 2px solid #e8e8e8;
+            border-radius: 15px;
+            background: #f9f9f9;
+            font-family: 'Noto Sans Thai', sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        .inputtext:focus {
+            outline: none;
+            border-color: #3498db;
+            background: white;
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.1);
+        }
+
+        .inputtext::placeholder {
+            color: #95a5a6;
+        }
+
+        .button {
+            width: 100%;
+            padding: 18px;
+            font-size: 18px;
+            font-weight: 600;
+            border: none;
+            border-radius: 15px;
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Noto Sans Thai', 'Kanit', sans-serif;
+            letter-spacing: 1px;
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+            margin-top: 10px;
+        }
+
+        .button:hover {
+            background: linear-gradient(135deg, #2980b9 0%, #1f639b 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(52, 152, 219, 0.4);
+        }
+
+        .button:active {
+            transform: translateY(0);
+        }
+
+        #msg {
+            color: #e74c3c;
+            font-size: 14px;
+            text-align: center;
+            margin-top: 15px;
+            min-height: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .form-footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+
+        .form-footer a {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .form-footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Animation for error message */
+        @keyframes shake {
+            0%, 100% {transform: translateX(0);}
+            10%, 30%, 50%, 70%, 90% {transform: translateX(-5px);}
+            20%, 40%, 60%, 80% {transform: translateX(5px);}
+        }
+
+        .shake {
+            animation: shake 0.5s ease-in-out;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 900px) {
+            .container {
+                flex-direction: column;
+                height: auto;
+                max-width: 500px;
+            }
+            
+            .left-panel {
+                padding: 30px;
+            }
+            
+            .right-panel {
+                padding: 40px 30px;
+            }
+            
+            .welcome-text h2 {
+                font-size: 28px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .left-panel {
+                display: none;
+            }
+            
+            .right-panel {
+                padding: 30px 20px;
+            }
+            
+            .form-header h2 {
+                font-size: 26px;
+            }
+        }
+
+        /* Decorative elements */
+        .decoration {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            z-index: 1;
+        }
+
+        .dec-1 {
+            width: 300px;
+            height: 300px;
+            top: -150px;
+            right: -150px;
+        }
+
+        .dec-2 {
+            width: 200px;
+            height: 200px;
+            bottom: -100px;
+            left: -100px;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #7f8c8d;
+            cursor: pointer;
+            font-size: 18px;
+            z-index: 2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Left Panel -->
+        <div class="left-panel">
+            <div class="decoration dec-1"></div>
+            <div class="decoration dec-2"></div>
+            
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-boxes"></i>
+                </div>
+                <div class="logo-text">
+                    <h1>ระบบคลังพัสดุ</h1>
+                    <p>Inventory Management System</p>
+                </div>
+            </div>
+            
+            <div class="welcome-text">
+                <h2>ยินดีต้อนรับ</h2>
+                <p>เข้าสู่ระบบจัดการคลังพัสดุอย่างมีประสิทธิภาพ เพิ่มความสะดวกและรวดเร็วในการบริหารจัดการสินค้าคงคลัง</p>
+            </div>
+            
+            <div class="features">
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div class="feature-text">ระบบรักษาความปลอดภัยระดับสูง</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <div class="feature-text">ทำงานได้รวดเร็วและมีประสิทธิภาพ</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="feature-text">ติดตามและวิเคราะห์ข้อมูลแบบเรียลไทม์</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right Panel - Login Form -->
+        <div class="right-panel">
+            <div class="form-header">
+                <h2>เข้าสู่ระบบ</h2>
+                <p>กรุณากรอกข้อมูลเพื่อเข้าสู่ระบบจัดการคลังพัสดุ</p>
+            </div>
+            
+            <div class="form-container">
+                <form name="myform" method="post" id="loginForm">
+                    <div class="input-group">
+                        <div class="input-icon">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <input type="text" name="uname" class="inputtext" autocomplete="off" placeholder="กรุณากรอกรหัสพนักงาน" required>
+                    </div>
+                    
+                    <div class="input-group">
+                        <div class="input-icon">
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                        <input type="password" name="pass" class="inputtext" autocomplete="off" placeholder="กรุณากรอกวันที่เริ่มงาน (DDMMYYYY)" required id="passwordField">
+                        <button type="button" class="password-toggle" id="togglePassword">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    
+                    <div id="msg"></div>
+                    
+                    <input type="button" class="button" name="log" id="logbutton" value="เข้าสู่ระบบ" onclick="myfunction()">
+                </form>
+                
+                <div class="form-footer">
+                    <p>สำหรับเจ้าหน้าที่คลังพัสดุเท่านั้น | © 2026 ระบบค้นหารหัสเบิกของ</p>
+                    <p>หากมีปัญหาในการเข้าสู่ระบบ โปรดติดต่อผู้ดูแลระบบ</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        function myfunction() {
+            var user = document.forms["myform"]["uname"].value;
+            var pass = document.forms["myform"]["pass"].value;
+            var msgElement = document.getElementById("msg");
+            
+            // Clear previous message
+            msgElement.innerHTML = "";
+            msgElement.classList.remove("shake");
+            
+            // Validate input
+            if (!user || !pass) {
+                msgElement.innerHTML = "กรุณากรอกข้อมูลให้ครบถ้วน";
+                msgElement.classList.add("shake");
+                return;
+            }
+            
+            // Check credentials
+            if ((user == "104643" && pass == "13022567") || (user == "104827" && pass == "17042568")) {
+                // Success - add loading effect
+                var button = document.getElementById("logbutton");
+                button.value = "กำลังเข้าสู่ระบบ...";
+                button.disabled = true;
+                
+                // Simulate loading before redirect
+                setTimeout(function() {
+                    window.open('https://docs.google.com/spreadsheets/d/1qMv5mmqbXeWLkVmF-B8WGmkH-9Iu6bozzXr3LLghLvw/edit?usp=sharing', '_blank');
+                    button.value = "เข้าสู่ระบบ";
+                    button.disabled = false;
+                }, 1000);
+            } else {
+                // Invalid credentials
+                msgElement.innerHTML = "ชื่อผู้ใช้ หรือรหัสผ่านไม่ถูกต้อง";
+                msgElement.classList.add("shake");
+                
+                // Shake animation for the form
+                document.getElementById("loginForm").classList.add("shake");
+                setTimeout(function() {
+                    document.getElementById("loginForm").classList.remove("shake");
+                }, 500);
+            }
+        }
+        
+        // Toggle password visibility
+        document.getElementById("togglePassword").addEventListener("click", function() {
+            var passwordField = document.getElementById("passwordField");
+            var icon = this.querySelector("i");
+            
+            if (passwordField.type === "password") {
+                passwordField.type = "text";
+                icon.classList.remove("fa-eye");
+                icon.classList.add("fa-eye-slash");
+            } else {
+                passwordField.type = "password";
+                icon.classList.remove("fa-eye-slash");
+                icon.classList.add("fa-eye");
+            }
+        });
+        
+        // Allow form submission with Enter key
+        document.addEventListener("keydown", function(event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                myfunction();
+            }
+        });
+        
+        // Add focus effects to inputs
+        var inputs = document.querySelectorAll(".inputtext");
+        inputs.forEach(function(input) {
+            input.addEventListener("focus", function() {
+                this.parentElement.style.transform = "translateY(-2px)";
+            });
+            
+            input.addEventListener("blur", function() {
+                this.parentElement.style.transform = "translateY(0)";
+            });
+        });
+        
+        // Pre-fill for testing (remove in production)
+        // document.forms["myform"]["uname"].value = "103010";
+        // document.forms["myform"]["pass"].value = "26032558";
+    </script>
+</body>
+</html>

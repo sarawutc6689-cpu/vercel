@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบค้นหารหัสเบิกของ | Code Item Inventory System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&family=Noto+Sans+Thai:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans Thai', 'Kanit', sans-serif;
+            background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+            color: #fff;
+            min-height: 100vh;
+            overflow-x: hidden;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header Styles */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            margin-bottom: 40px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .logo-icon {
+            background: linear-gradient(135deg, #00b4db 0%, #0083b0 100%);
+            width: 70px;
+            height: 70px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 20px rgba(0, 180, 219, 0.3);
+            animation: pulse 2s infinite alternate;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 8px 20px rgba(0, 180, 219, 0.3); }
+            100% { transform: scale(1.05); box-shadow: 0 12px 25px rgba(0, 180, 219, 0.5); }
+        }
+
+        .logo-icon i {
+            font-size: 32px;
+            color: white;
+        }
+
+        .logo-text h1 {
+            font-size: 32px;
+            font-weight: 600;
+            background: linear-gradient(135deg, #00b4db 0%, #0083b0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 5px;
+        }
+
+        .logo-text p {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 16px;
+            font-weight: 400;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 12px 20px;
+            border-radius: 50px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .user-icon {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, #00b4db 0%, #0083b0 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .user-details h3 {
+            font-size: 16px;
+            margin-bottom: 3px;
+        }
+
+        .user-details p {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        /* Main Content */
+        .dashboard-title {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .dashboard-title h2 {
+            font-size: 36px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, #00b4db 0%, #0083b0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .dashboard-title p {
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.8);
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        /* Button Grid */
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 40px;
+            margin-bottom: 60px;
+        }
+
+        .button-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 25px;
+            padding: 40px 30px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transition: all 0.4s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .button-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .button-card:hover {
+            transform: translateY(-15px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .button-card:hover::before {
+            opacity: 1;
+        }
+
+        .button-card.add {
+            border-top: 5px solid #2ecc71;
+        }
+
+        .button-card.edit {
+            border-top: 5px solid #3498db;
+        }
+
+        .button-card.delete {
+            border-top: 5px solid #e74c3c;
+        }
+
+        .icon-wrapper {
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 30px;
+            font-size: 48px;
+            color: white;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .button-card:hover .icon-wrapper {
+            transform: scale(1.1);
+        }
+
+        .add .icon-wrapper {
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+        }
+
+        .edit .icon-wrapper {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+        }
+
+        .delete .icon-wrapper {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        }
+
+        .button-card h3 {
+            font-size: 28px;
+            margin-bottom: 15px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .button-card p {
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 30px;
+            line-height: 1.6;
+            max-width: 300px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 16px 40px;
+            font-size: 18px;
+            font-weight: 500;
+            border-radius: 50px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+            font-family: 'Noto Sans Thai', 'Kanit', sans-serif;
+            min-width: 200px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-add {
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+            color: white;
+        }
+
+        .btn-add:hover {
+            background: linear-gradient(135deg, #27ae60 0%, #219653 100%);
+            transform: scale(1.05);
+            box-shadow: 0 10px 20px rgba(46, 204, 113, 0.4);
+        }
+
+        .btn-edit {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+        }
+
+        .btn-edit:hover {
+            background: linear-gradient(135deg, #2980b9 0%, #1f639b 100%);
+            transform: scale(1.05);
+            box-shadow: 0 10px 20px rgba(52, 152, 219, 0.4);
+        }
+
+        .btn-delete {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background: linear-gradient(135deg, #c0392b 0%, #a93226 100%);
+            transform: scale(1.05);
+            box-shadow: 0 10px 20px rgba(231, 76, 60, 0.4);
+        }
+
+        /* Stats Panel */
+        .stats-panel {
+            display: flex;
+            justify-content: space-around;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 25px;
+            padding: 30px;
+            margin-top: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 42px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #00b4db 0%, #0083b0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* Footer Styles */
+        footer {
+            margin-top: 60px;
+            padding: 30px 0;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 14px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Floating Elements */
+        .floating-element {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.03);
+            z-index: -1;
+        }
+
+        .float-1 {
+            width: 300px;
+            height: 300px;
+            top: 10%;
+            left: 5%;
+            animation: float 20s infinite linear;
+        }
+
+        .float-2 {
+            width: 200px;
+            height: 200px;
+            bottom: 10%;
+            right: 5%;
+            animation: float 15s infinite linear reverse;
+        }
+
+        .float-3 {
+            width: 150px;
+            height: 150px;
+            top: 40%;
+            right: 10%;
+            animation: float 25s infinite linear;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+            100% { transform: translateY(0) rotate(360deg); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1100px) {
+            .button-grid {
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+            }
+            
+            .button-grid {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+            
+            .dashboard-title h2 {
+                font-size: 28px;
+            }
+            
+            .stats-panel {
+                flex-direction: column;
+                gap: 30px;
+            }
+            
+            .logo-text h1 {
+                font-size: 28px;
+            }
+            
+            .float-1, .float-2, .float-3 {
+                display: none;
+            }
+        }
+
+        /* Confirmation Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 25px;
+            padding: 40px;
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(20px);
+            animation: modalFade 0.3s ease;
+        }
+
+        @keyframes modalFade {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .modal h3 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: white;
+        }
+
+        .modal p {
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .modal-btn {
+            padding: 12px 30px;
+            border-radius: 50px;
+            border: none;
+            font-family: 'Noto Sans Thai', 'Kanit', sans-serif;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 120px;
+        }
+
+        .modal-confirm {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+        }
+
+        .modal-cancel {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .modal-btn:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-element float-1"></div>
+    <div class="floating-element float-2"></div>
+    <div class="floating-element float-3"></div>
+    
+    <div class="container">
+        <header>
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-warehouse"></i>
+                </div>
+                <div class="logo-text">
+                    <h1>ระบบค้นหารหัสเบิกของ</h1>
+                    <p>Code Item Inventory System</p>
+                </div>
+            </div>
+            
+            <div class="user-info">
+                <div class="user-icon">
+                    <i class="fas fa-user-tie"></i>
+                </div>
+                <div class="user-details">
+                    <h3>เจ้าหน้าที่คลังพัสดุ</h3>
+                    <p>แผนกคลังพัสดุ</p>
+                </div>
+            </div>
+        </header>
+
+        <main>
+            <div class="dashboard-title">
+                <h2>เมนูจัดการข้อมูลพัสดุ</h2>
+                <p>เลือกการดำเนินการที่ต้องการจากเมนูด้านล่าง เพื่อจัดการข้อมูลรหัสในคลังพัสดุ</p>
+            </div>
+
+            <div class="button-grid">
+                <!-- ปุ่มเพิ่มข้อมูล -->
+                <div class="button-card add animate__animated animate__fadeInUp">
+                    <div class="icon-wrapper">
+                        <i class="fas fa-plus-circle"></i>
+                    </div>
+                    <h3>เพิ่มข้อมูลพัสดุ</h3>
+                    <p>เพิ่มรายการสินค้าใหม่เข้าสู่ระบบคลังพัสดุ พร้อมระบุรายละเอียด</p>
+                    <a href="https://script.google.com/macros/s/AKfycbySxXEr9nAH-vt-1zPm4u2ZZ5MtQOqfZBGWqZ6QMq88tfr5bYNrzK648TLgcEs9KkV6/exec?page=add" class="btn btn-add" id="addBtn">
+                        <i class="fas fa-plus"></i> เพิ่มข้อมูล
+                    </a>
+                </div>
+
+                <!-- ปุ่มแก้ไขข้อมูล -->
+                <div class="button-card edit animate__animated animate__fadeInUp animate__delay-1s">
+                    <div class="icon-wrapper">
+                        <i class="fas fa-edit"></i>
+                    </div>
+                    <h3>แก้ไขข้อมูลพัสดุ</h3>
+                    <p>ปรับปรุงข้อมูลรหัสที่มีอยู่ในระบบ อัพเดทรายละเอียด</p>
+                    <a href="https://script.google.com/macros/s/AKfycbySxXEr9nAH-vt-1zPm4u2ZZ5MtQOqfZBGWqZ6QMq88tfr5bYNrzK648TLgcEs9KkV6/exec?page=edit" class="btn btn-edit">
+                        <i class="fas fa-edit"></i> แก้ไขข้อมูล
+                    </a>
+                </div>
+
+                <!-- ปุ่มลบข้อมูล -->
+                <div class="button-card delete animate__animated animate__fadeInUp animate__delay-2s">
+                    <div class="icon-wrapper">
+                        <i class="fas fa-trash-alt"></i>
+                    </div>
+                    <h3>ลบข้อมูลพัสดุ</h3>
+                    <p>ลบรายการสินค้าออกจากระบบคลังพัสดุ</p>
+                    <button class="btn btn-delete" id="deleteBtn">
+                        <i class="fas fa-trash-alt"></i> ลบข้อมูล
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>ระบบค้นหารหัสเบิกของ | © 2026 แผนกคลังพัสดุ | พัฒนาโดย Sarawut.C</p>
+            <p>สำหรับใช้ภายในองค์กรเท่านั้น</p>
+        </footer>
+    </div>
+
+    <!-- Modal สำหรับยืนยันการลบ -->
+    <div class="modal" id="deleteModal">
+        <div class="modal-content">
+            <h3><i class="fas fa-exclamation-triangle"></i> ยืนยันการลบข้อมูล</h3>
+            <p>คุณแน่ใจว่าต้องการลบข้อมูลพัสดุหรือไม่? การดำเนินการนี้ไม่สามารถย้อนกลับได้ และข้อมูลที่ถูกลบจะหายไปจากระบบอย่างถาวร</p>
+            <div class="modal-buttons">
+                <button class="modal-btn modal-confirm" id="confirmDelete">ลบข้อมูล</button>
+                <button class="modal-btn modal-cancel" id="cancelDelete">ยกเลิก</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ฟังก์ชันสำหรับปุ่มลบข้อมูล (แสดง Modal ยืนยัน)
+        document.getElementById('deleteBtn').addEventListener('click', function() {
+            document.getElementById('deleteModal').style.display = 'flex';
+        });
+
+        // ยืนยันการลบ
+        document.getElementById('confirmDelete').addEventListener('click', function() {
+            window.open('https://script.google.com/macros/s/AKfycbySxXEr9nAH-vt-1zPm4u2ZZ5MtQOqfZBGWqZ6QMq88tfr5bYNrzK648TLgcEs9KkV6/exec?page=delete', '_blank');
+            document.getElementById('deleteModal').style.display = 'none';
+            
+            // แสดงข้อความยืนยัน
+            showNotification('กำลังเปิดหน้าการลบข้อมูล...', 'info');
+        });
+
+        // ยกเลิกการลบ
+        document.getElementById('cancelDelete').addEventListener('click', function() {
+            document.getElementById('deleteModal').style.display = 'none';
+        });
+
+        // ปิด Modal เมื่อคลิกนอกพื้นที่
+        window.addEventListener('click', function(event) {
+            const modal = document.getElementById('deleteModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+
+        // ฟังก์ชันแสดงการแจ้งเตือน
+        function showNotification(message, type) {
+            // สร้าง element สำหรับ notification
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+                <span>${message}</span>
+            `;
+            
+            // เพิ่มสไตล์ให้ notification
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${type === 'success' ? 'rgba(46, 204, 113, 0.9)' : type === 'error' ? 'rgba(231, 76, 60, 0.9)' : 'rgba(52, 152, 219, 0.9)'};
+                color: white;
+                padding: 15px 25px;
+                border-radius: 10px;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                z-index: 1001;
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                animation: slideIn 0.3s ease;
+            `;
+            
+            // เพิ่ม animation
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes slideIn {
+                    from { transform: translateX(100%); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+                @keyframes slideOut {
+                    from { transform: translateX(0); opacity: 1; }
+                    to { transform: translateX(100%); opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+            
+            document.body.appendChild(notification);
+            
+            // ลบ notification หลังจาก 3 วินาที
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 300);
+            }, 3000);
+        }
+
+        // สุ่มตัวเลขสถิติ (ในระบบจริงจะดึงจาก API)
+        function updateStats() {
+            // สุ่มตัวเลขสำหรับแสดงสถิติ
+            document.getElementById('totalItems').textContent = Math.floor(Math.random() * 5000 + 1000).toLocaleString();
+            document.getElementById('lowStock').textContent = Math.floor(Math.random() * 50 + 10);
+            document.getElementById('todayUpdates').textContent = Math.floor(Math.random() * 30 + 5);
+        }
+
+        // อัพเดทสถิติเมื่อโหลดหน้า
+        document.addEventListener('DOMContentLoaded', function() {
+            updateStats();
+            
+            // อัพเดทสถิติทุก 30 วินาที
+            setInterval(updateStats, 30000);
+            
+            // เพิ่มเอฟเฟกต์ hover ให้กับปุ่ม
+            const buttons = document.querySelectorAll('.btn');
+            buttons.forEach(button => {
+                button.addEventListener('mouseenter', function() {
+                    this.style.transform = 'scale(1.05)';
+                });
+                button.addEventListener('mouseleave', function() {
+                    this.style.transform = 'scale(1)';
+                });
+            });
+            
+            // เพิ่มคำแนะนำเมื่อโหลดหน้า
+            setTimeout(() => {
+                showNotification('ยินดีต้อนรับสู่ระบบจัดการคลังพัสดุ', 'info');
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
