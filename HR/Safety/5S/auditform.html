@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ฟอร์มตรวจ 5ส</title>
+<style>
+  :root {
+    --ink: #23281f;
+    --muted: #6b7263;
+    --line: #d9dccf;
+    --paper: #fbfaf5;
+    --card: #ffffff;
+    --accent: #3d6b3f;
+    --accent-dim: #e7efe4;
+    --warn: #b3541e;
+    --warn-dim: #f7e8dc;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, "Segoe UI", "Sarabun", sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    line-height: 1.6;
+    padding-bottom: 80px;
+  }
+  header {
+    padding: 20px 16px 14px;
+    border-bottom: 1px solid var(--line);
+    background: var(--card);
+    position: sticky; top: 0; z-index: 10;
+  }
+  header h1 { font-size: 18px; margin: 0 0 2px; font-weight: 600; }
+  header p { margin: 0; font-size: 13px; color: var(--muted); }
+  main { max-width: 640px; margin: 0 auto; padding: 16px; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 14px;
+  }
+  .card h2 { font-size: 15px; margin: 0 0 12px; font-weight: 600; }
+  label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 4px; margin-top: 12px; }
+  label:first-of-type { margin-top: 0; }
+  select, input[type="text"], input[type="date"], textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    font-size: 15px;
+    font-family: inherit;
+    background: var(--paper);
+    color: var(--ink);
+  }
+  textarea { min-height: 60px; resize: vertical; }
+  .item {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 14px;
+    margin-bottom: 10px;
+  }
+  .item-head { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+  .item-no { font-size: 12px; color: var(--muted); font-weight: 600; }
+  .item-text { font-size: 14px; margin: 2px 0 10px; }
+  .score-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+  .score-btn {
+    flex: 1; min-width: 42px;
+    padding: 8px 0;
+    text-align: center;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--paper);
+    cursor: pointer;
+    font-size: 14px;
+  }
+  .score-btn.selected { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .photo-input { margin-top: 8px; }
+  .photo-preview { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+  .photo-preview img { width: 56px; height: 56px; object-fit: cover; border-radius: 6px; border: 1px solid var(--line); }
+  .photo-thumb { text-align: center; }
+  .photo-img-wrap { position: relative; display: inline-block; }
+  .photo-remove {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--warn);
+    color: #fff;
+    border: 2px solid var(--card);
+    font-size: 13px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+  }
+  .photo-size { font-size: 10px; color: var(--muted); margin-top: 2px; max-width: 60px; }
+  .photo-status { font-size: 13px; color: var(--muted); }
+  .fix-tracking {
+    background: var(--warn-dim);
+    border-radius: 8px;
+    padding: 12px;
+    margin-top: 4px;
+  }
+  button.primary {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 10px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  button.primary:disabled { background: #a9b3a3; cursor: not-allowed; }
+  .status { margin-top: 10px; font-size: 13px; text-align: center; }
+  .status.error { color: var(--warn); }
+  .status.ok { color: var(--accent); }
+  .employee-result {
+    font-size: 13px;
+    margin-top: 4px;
+    min-height: 18px;
+  }
+  .employee-result.found { color: var(--accent); font-weight: 600; }
+  .employee-result.notfound { color: var(--warn); }
+  .chip-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--accent-dim);
+    color: var(--accent);
+    border-radius: 999px;
+    padding: 6px 10px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .chip button {
+    border: none;
+    background: none;
+    color: var(--accent);
+    font-size: 15px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0;
+  }
+  .config-warning {
+    background: var(--warn-dim);
+    color: var(--warn);
+    border: 1px solid var(--warn);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    font-size: 13px;
+    margin-bottom: 14px;
+  }
+  .hidden { display: none !important; }
+  .summary-box {
+    background: var(--accent-dim);
+    border-radius: var(--radius);
+    padding: 16px;
+    text-align: center;
+  }
+  .summary-box .pct { font-size: 32px; font-weight: 700; color: var(--accent); }
+  .summary-box .label { font-size: 13px; color: var(--muted); margin-top: 4px; }
+  footer {
+    max-width: 640px;
+    margin: 24px auto 0;
+    padding: 16px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--muted);
+    border-top: 1px solid var(--line);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>ฟอร์มตรวจ 5ส</h1>
+  <p id="header-sub">เลือกแผนกเพื่อเริ่มการตรวจ</p>
+</header>
+
+<main>
+
+  <div id="config-warning" class="config-warning hidden">
+    ยังไม่ได้ใส่ SUPABASE_URL และ SUPABASE_ANON_KEY — เปิดไฟล์นี้ด้วยโปรแกรมแก้ไขข้อความ
+    แล้วแก้ค่าสองตัวนี้ในสคริปต์ด้านล่างของไฟล์ก่อนใช้งานจริง
+  </div>
+
+  <!-- STEP 1: เลือกแผนกและข้อมูลทีมตรวจ -->
+  <div id="step-setup" class="card">
+    <h2>1. ข้อมูลการตรวจ</h2>
+
+    <label for="dept-select">แผนกที่ตรวจ</label>
+    <select id="dept-select"><option value="">— เลือกแผนก —</option></select>
+
+    <label for="zone-select">โซน/พื้นที่ย่อย</label>
+    <select id="zone-select" disabled><option value="">— เลือกแผนกก่อน —</option></select>
+
+    <label for="audit-date">วันที่ตรวจ</label>
+    <input type="date" id="audit-date">
+
+    <label for="leader-code">หัวหน้าทีมตรวจสอบ (กรอกรหัสพนักงาน)</label>
+    <input type="text" id="leader-code" placeholder="เช่น EMP001">
+    <div id="leader-name" class="employee-result"></div>
+
+    <label for="owner-code">เจ้าของพื้นที่ที่รับผิดชอบ (กรอกรหัสพนักงาน)</label>
+    <input type="text" id="owner-code" placeholder="เช่น EMP001">
+    <div id="owner-name" class="employee-result"></div>
+
+    <label for="inspector-code">กรรมการที่ร่วมตรวจ (กรอกรหัสพนักงานแล้วกด Enter เพื่อเพิ่ม)</label>
+    <input type="text" id="inspector-code" placeholder="เช่น EMP001 แล้วกด Enter">
+    <div id="inspector-chips" class="chip-list"></div>
+
+    <button class="primary" id="load-items-btn" style="margin-top:16px;">โหลดหัวข้อประเมิน</button>
+  </div>
+
+  <!-- STEP 2: หัวข้อประเมิน -->
+  <div id="step-items" class="hidden">
+    <div id="items-container"></div>
+
+    <div class="card">
+      <button class="primary" id="submit-btn">บันทึกผลการตรวจ</button>
+      <div id="submit-status" class="status"></div>
+    </div>
+  </div>
+
+  <!-- STEP 3: สรุปผล -->
+  <div id="step-summary" class="hidden card">
+    <h2>ผลการตรวจ</h2>
+    <div class="summary-box">
+      <div class="pct" id="summary-pct">–</div>
+      <div class="label" id="summary-label">คะแนนรวม</div>
+    </div>
+    <button class="primary" id="new-audit-btn" style="margin-top:16px;">ตรวจครั้งใหม่</button>
+  </div>
+
+</main>
+
+<footer>แบบประเมินโครงการ 5 ส. | ใช้ภายในบริษัทเท่านั้น | พัฒนาโดย Sarawut.C</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// ============================================================
+// ตั้งค่าการเชื่อมต่อ — แก้สองค่านี้ก่อนใช้งานจริง
+// หาได้จาก Supabase Dashboard > Project Settings > API
+// ============================================================
+const SUPABASE_URL = "https://zsdcjutavrodcvkoolge.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpzZGNqdXRhdnJvZGN2a29vbGdlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODczNTUxOTksImV4cCI6MjEwMjkzMTE5OX0.zdgDFGwXZmUbfx7kYawi1fhm-vdCg_bILO9yFLED-eY";
+
+// ============================================================
+// ตั้งค่าอัปโหลดรูปเข้า Google Drive (ผ่าน Apps Script)
+// นำ URL จากขั้นตอน Deploy Web App มาใส่ตรงนี้ (ลงท้ายด้วย /exec)
+// SECRET ต้องตรงกับค่าที่ตั้งไว้ในโค้ด Apps Script
+// ============================================================
+const DRIVE_UPLOAD_URL = "https://script.google.com/macros/s/AKfycbyiFHEr_ATuSDd9CAeQnj77jyw9TZp7pcocOU1cZOzF8QYxQ2_hj7D3tnGLIQXwJHUYJw/exec";
+const DRIVE_UPLOAD_SECRET = "mm169Moo4";
+
+const CONFIGURED = !SUPABASE_URL.startsWith("YOUR_") && !SUPABASE_ANON_KEY.startsWith("YOUR_");
+const DRIVE_CONFIGURED = !DRIVE_UPLOAD_URL.startsWith("YOUR_") && !DRIVE_UPLOAD_SECRET.startsWith("YOUR_");
+if (!CONFIGURED || !DRIVE_CONFIGURED) {
+  const warn = document.getElementById("config-warning");
+  warn.classList.remove("hidden");
+  if (!DRIVE_CONFIGURED) {
+    warn.innerHTML += "<br>ยังไม่ได้ตั้งค่า DRIVE_UPLOAD_URL / DRIVE_UPLOAD_SECRET — จะอัปโหลดรูปไม่ได้จนกว่าจะแก้ค่านี้";
+  }
+}
+
+const supabaseClient = CONFIGURED
+  ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+  : null;
+
+// สถานะแอปทั้งหมดเก็บไว้ในตัวแปรนี้ตัวเดียว
+const state = {
+  departments: [],
+  subAreas: [],       // โซนของแผนกที่กำลังเลือกอยู่
+  employees: [],
+  checklistItems: [],
+  scores: {},   // { checklist_item_id: { score, problem_detail, files: [File,...] } }
+  lastAuditId: null,
+  leaderId: null,
+  ownerId: null,
+  inspectorIds: [],
+};
+
+// ค้นหาพนักงานจากรหัส (case-insensitive) — ค้นในข้อมูลที่โหลดไว้แล้ว ไม่ต้องยิง query ซ้ำ
+function findEmployeeByCode(code) {
+  const c = (code || "").trim().toLowerCase();
+  if (!c) return null;
+  return state.employees.find(e => (e.employee_code || "").toLowerCase() === c) || null;
+}
+
+document.getElementById("audit-date").valueAsDate = new Date();
+
+// แปลงไฟล์รูปเป็น base64 (ตัด prefix "data:image/...;base64," ออกก่อนส่ง)
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(",")[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+// ============================================================
+// บีบอัดรูปให้ไม่เกิน MAX_PHOTO_BYTES (ค่าเริ่มต้น 2MB)
+// ลดคุณภาพ JPEG ก่อน ถ้ายังใหญ่เกินค่อยลดขนาดภาพเพิ่ม
+// ============================================================
+const MAX_PHOTO_BYTES = 2 * 1024 * 1024; // 2MB
+const MAX_PHOTO_DIMENSION = 1920; // px ด้านที่ยาวที่สุด
+
+function loadImageFromFile(file) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+function canvasToBlob(canvas, quality) {
+  return new Promise(resolve => canvas.toBlob(resolve, "image/jpeg", quality));
+}
+
+async function compressImageIfNeeded(file) {
+  if (!file.type.startsWith("image/") || file.size <= MAX_PHOTO_BYTES) return file;
+
+  const img = await loadImageFromFile(file);
+  let width = img.naturalWidth;
+  let height = img.naturalHeight;
+  if (Math.max(width, height) > MAX_PHOTO_DIMENSION) {
+    const scale = MAX_PHOTO_DIMENSION / Math.max(width, height);
+    width = Math.round(width * scale);
+    height = Math.round(height * scale);
+  }
+
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  canvas.getContext("2d").drawImage(img, 0, 0, width, height);
+
+  // ลดคุณภาพ JPEG ทีละขั้นจนกว่าจะไม่เกิน MAX_PHOTO_BYTES (หรือคุณภาพต่ำสุดที่ยอมรับได้)
+  let quality = 0.9;
+  let blob = await canvasToBlob(canvas, quality);
+  while (blob.size > MAX_PHOTO_BYTES && quality > 0.3) {
+    quality -= 0.1;
+    blob = await canvasToBlob(canvas, quality);
+  }
+
+  // ถ้าลดคุณภาพแล้วยังไม่พอ ให้ย่อขนาดภาพลงอีกรอบ
+  if (blob.size > MAX_PHOTO_BYTES) {
+    canvas.width = Math.round(width * 0.7);
+    canvas.height = Math.round(height * 0.7);
+    canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+    quality = 0.7;
+    blob = await canvasToBlob(canvas, quality);
+    while (blob.size > MAX_PHOTO_BYTES && quality > 0.3) {
+      quality -= 0.1;
+      blob = await canvasToBlob(canvas, quality);
+    }
+  }
+
+  const newName = file.name.replace(/\.[^.]+$/, "") + ".jpg";
+  return new File([blob], newName, { type: "image/jpeg" });
+}
+
+function formatFileSize(bytes) {
+  if (bytes < 1024 * 1024) return Math.round(bytes / 1024) + " KB";
+  return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+}
+
+// ------------------------------------------------------------
+// โหลดข้อมูลตั้งต้น: แผนก + พนักงาน
+// ------------------------------------------------------------
+async function loadInitialData() {
+  if (!supabaseClient) return;
+
+  const { data: depts, error: deptErr } = await supabaseClient
+    .from("departments")
+    .select("id, code, name")
+    .order("name");
+  if (deptErr) { console.error(deptErr); return; }
+  state.departments = depts;
+
+  const deptSelect = document.getElementById("dept-select");
+  depts.forEach(d => {
+    const opt = document.createElement("option");
+    opt.value = d.id;
+    opt.textContent = d.name;
+    deptSelect.appendChild(opt);
+  });
+
+  const { data: emps, error: empErr } = await supabaseClient
+    .from("employees")
+    .select("id, employee_code, full_name")
+    .eq("is_active", true)
+    .order("full_name");
+  if (empErr) { console.error(empErr); return; }
+  state.employees = emps;
+}
+
+// ------------------------------------------------------------
+// หัวหน้าทีม / เจ้าของพื้นที่ — พิมพ์รหัสแล้วค้นหาชื่ออัตโนมัติ
+// ------------------------------------------------------------
+function setupEmployeeCodeField(inputId, resultId, onResolved) {
+  const input = document.getElementById(inputId);
+  const result = document.getElementById(resultId);
+  input.addEventListener("input", () => {
+    const emp = findEmployeeByCode(input.value);
+    onResolved(emp ? emp.id : null);
+    if (!input.value.trim()) {
+      result.textContent = "";
+      result.className = "employee-result";
+    } else if (emp) {
+      result.textContent = emp.full_name;
+      result.className = "employee-result found";
+    } else {
+      result.textContent = "ไม่พบรหัสนี้";
+      result.className = "employee-result notfound";
+    }
+  });
+}
+setupEmployeeCodeField("leader-code", "leader-name", id => { state.leaderId = id; });
+setupEmployeeCodeField("owner-code", "owner-name", id => { state.ownerId = id; });
+
+// ------------------------------------------------------------
+// กรรมการที่ร่วมตรวจ — พิมพ์รหัสแล้วกด Enter เพื่อเพิ่มเป็น chip
+// ------------------------------------------------------------
+function renderInspectorChips() {
+  const container = document.getElementById("inspector-chips");
+  container.innerHTML = state.inspectorIds.map(id => {
+    const emp = state.employees.find(e => e.id === id);
+    return `<span class="chip">${emp ? emp.full_name : "?"}<button type="button" data-id="${id}">×</button></span>`;
+  }).join("");
+  container.querySelectorAll("button[data-id]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      state.inspectorIds = state.inspectorIds.filter(id => id !== btn.dataset.id);
+      renderInspectorChips();
+    });
+  });
+}
+
+document.getElementById("inspector-code").addEventListener("keydown", (e) => {
+  if (e.key !== "Enter") return;
+  e.preventDefault();
+  const input = e.target;
+  const emp = findEmployeeByCode(input.value);
+  if (!emp) { alert("ไม่พบรหัสพนักงานนี้"); return; }
+  if (state.inspectorIds.includes(emp.id)) { alert("เพิ่มคนนี้ไปแล้ว"); input.value = ""; return; }
+  state.inspectorIds.push(emp.id);
+  renderInspectorChips();
+  input.value = "";
+});
+loadInitialData();
+
+// ------------------------------------------------------------
+// พอเลือกแผนก → โหลดรายชื่อโซนของแผนกนั้น
+// ------------------------------------------------------------
+document.getElementById("dept-select").addEventListener("change", async () => {
+  const deptId = document.getElementById("dept-select").value;
+  const zoneSelect = document.getElementById("zone-select");
+  zoneSelect.innerHTML = "";
+  state.subAreas = [];
+
+  if (!deptId) {
+    zoneSelect.disabled = true;
+    zoneSelect.innerHTML = `<option value="">— เลือกแผนกก่อน —</option>`;
+    return;
+  }
+
+  zoneSelect.disabled = true;
+  zoneSelect.innerHTML = `<option value="">กำลังโหลด...</option>`;
+
+  const { data: zones, error } = await supabaseClient
+    .from("sub_areas")
+    .select("id, code, name, target_pct")
+    .eq("department_id", deptId)
+    .eq("is_active", true)
+    .order("code");
+
+  if (error) { alert("โหลดโซนไม่สำเร็จ: " + error.message); return; }
+
+  state.subAreas = zones;
+  zoneSelect.innerHTML = zones.length
+    ? `<option value="">— เลือกโซน —</option>`
+    : `<option value="">แผนกนี้ยังไม่มีโซน กรุณาเพิ่มใน sub_areas ก่อน</option>`;
+  zones.forEach(z => {
+    const opt = document.createElement("option");
+    opt.value = z.id;
+    opt.textContent = z.name;
+    zoneSelect.appendChild(opt);
+  });
+  zoneSelect.disabled = zones.length === 0;
+});
+
+// ------------------------------------------------------------
+// โหลดหัวข้อประเมินของโซนที่เลือก
+// ------------------------------------------------------------
+document.getElementById("load-items-btn").addEventListener("click", async () => {
+  const deptId = document.getElementById("dept-select").value;
+  const zoneId = document.getElementById("zone-select").value;
+  if (!deptId) { alert("กรุณาเลือกแผนกก่อน"); return; }
+  if (!zoneId) { alert("กรุณาเลือกโซน/พื้นที่ย่อยก่อน"); return; }
+  if (!state.leaderId) { alert("กรุณากรอกรหัสหัวหน้าทีมตรวจสอบให้ถูกต้อง"); return; }
+  if (!state.ownerId) { alert("กรุณากรอกรหัสเจ้าของพื้นที่ให้ถูกต้อง"); return; }
+
+  const { data: items, error } = await supabaseClient
+    .from("checklist_items")
+    .select("id, item_no, item_text, max_score")
+    .eq("sub_area_id", zoneId)
+    .eq("is_active", true)
+    .order("item_no");
+
+  if (error) { alert("โหลดหัวข้อไม่สำเร็จ: " + error.message); return; }
+  if (!items.length) { alert("โซนนี้ยังไม่มีหัวข้อประเมิน กรุณาเพิ่มใน checklist_items ก่อน"); return; }
+
+  state.checklistItems = items;
+  state.scores = {};
+  items.forEach(i => { state.scores[i.id] = { score: i.max_score, problem_detail: "", files: [], filesMeta: [], responsible_id: null, fix_due_date: null }; });
+
+  renderItems();
+  document.getElementById("step-items").classList.remove("hidden");
+  document.getElementById("step-items").scrollIntoView({ behavior: "smooth" });
+});
+
+function renderItems() {
+  const container = document.getElementById("items-container");
+  container.innerHTML = "";
+
+  state.checklistItems.forEach(item => {
+    const div = document.createElement("div");
+    div.className = "card item";
+
+    const scoreOptions = [];
+    for (let s = 0; s <= item.max_score; s++) scoreOptions.push(s);
+
+    div.innerHTML = `
+      <div class="item-head">
+        <span class="item-no">ข้อ ${item.item_no}</span>
+        <span class="item-no">เต็ม ${item.max_score} คะแนน</span>
+      </div>
+      <div class="item-text">${item.item_text}</div>
+      <div class="score-row" data-item="${item.id}">
+        ${scoreOptions.map(s => `<div class="score-btn ${s === item.max_score ? "selected" : ""}" data-score="${s}">${s}</div>`).join("")}
+      </div>
+      <label>รายละเอียดปัญหาที่พบ (ถ้ามี)</label>
+      <textarea class="problem-input" data-item="${item.id}" placeholder="เว้นว่างได้ถ้าไม่พบปัญหา"></textarea>
+
+      <div class="fix-tracking hidden" data-item="${item.id}">
+        <label>ผู้รับผิดชอบแก้ไข (กรอกรหัสพนักงาน)</label>
+        <input type="text" class="responsible-code" data-item="${item.id}" placeholder="เช่น EMP001">
+        <div class="employee-result" data-item="${item.id}"></div>
+
+        <label>วันที่ต้องแก้ไขให้เสร็จ</label>
+        <input type="date" class="fix-due-date" data-item="${item.id}">
+      </div>
+
+      <label>แนบรูปถ่าย</label>
+      <input type="file" accept="image/*" capture="environment" multiple class="photo-input" data-item="${item.id}">
+      <div class="photo-preview" data-item="${item.id}"></div>
+    `;
+    container.appendChild(div);
+  });
+
+  // คลิกเลือกคะแนน — ถ้าต่ำกว่าเต็ม โชว์ช่องมอบหมายผู้รับผิดชอบให้กรอก
+  container.querySelectorAll(".score-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const row = btn.parentElement;
+      const itemId = row.dataset.item;
+      row.querySelectorAll(".score-btn").forEach(b => b.classList.remove("selected"));
+      btn.classList.add("selected");
+      const score = Number(btn.dataset.score);
+      state.scores[itemId].score = score;
+
+      const item = state.checklistItems.find(i => i.id === itemId);
+      const trackingDiv = container.querySelector(`.fix-tracking[data-item="${itemId}"]`);
+      if (score < item.max_score) {
+        trackingDiv.classList.remove("hidden");
+      } else {
+        trackingDiv.classList.add("hidden");
+        state.scores[itemId].responsible_id = null;
+        state.scores[itemId].fix_due_date = null;
+      }
+    });
+  });
+
+  // กรอกรหัสผู้รับผิดชอบ → ค้นหาชื่ออัตโนมัติ (แบบเดียวกับหัวหน้าทีม/เจ้าของพื้นที่)
+  container.querySelectorAll(".responsible-code").forEach(input => {
+    input.addEventListener("input", () => {
+      const itemId = input.dataset.item;
+      const result = container.querySelector(`.employee-result[data-item="${itemId}"]`);
+      const emp = findEmployeeByCode(input.value);
+      state.scores[itemId].responsible_id = emp ? emp.id : null;
+      if (!input.value.trim()) {
+        result.textContent = "";
+        result.className = "employee-result";
+      } else if (emp) {
+        result.textContent = emp.full_name;
+        result.className = "employee-result found";
+      } else {
+        result.textContent = "ไม่พบรหัสนี้";
+        result.className = "employee-result notfound";
+      }
+    });
+  });
+
+  // เลือกวันครบกำหนดแก้ไข
+  container.querySelectorAll(".fix-due-date").forEach(input => {
+    input.addEventListener("change", () => {
+      state.scores[input.dataset.item].fix_due_date = input.value || null;
+    });
+  });
+
+  // พิมพ์รายละเอียดปัญหา
+  container.querySelectorAll(".problem-input").forEach(ta => {
+    ta.addEventListener("input", () => {
+      state.scores[ta.dataset.item].problem_detail = ta.value;
+    });
+  });
+
+  // แนบรูป
+  container.querySelectorAll(".photo-input").forEach(input => {
+    input.addEventListener("change", async () => {
+      const itemId = input.dataset.item;
+      const preview = container.querySelector(`.photo-preview[data-item="${itemId}"]`);
+      const rawFiles = Array.from(input.files);
+      if (!rawFiles.length) return;
+
+      preview.innerHTML = `<span class="photo-status">กำลังประมวลผลรูป...</span>`;
+
+      for (const file of rawFiles) {
+        const wasOversized = file.size > MAX_PHOTO_BYTES;
+        const finalFile = await compressImageIfNeeded(file);
+        state.scores[itemId].filesMeta.push({ file: finalFile, wasCompressed: wasOversized });
+      }
+      state.scores[itemId].files = state.scores[itemId].filesMeta.map(m => m.file);
+
+      // เคลียร์ input เพื่อให้เลือกไฟล์ชื่อเดิมซ้ำได้ (เช่น ถ่ายรูปใหม่ทับที่ลบไปแล้ว)
+      input.value = "";
+
+      renderPhotoPreview(container, itemId);
+    });
+  });
+}
+
+// วาดรูปตัวอย่างของหัวข้อหนึ่ง พร้อมปุ่ม × ลบทีละรูป
+function renderPhotoPreview(container, itemId) {
+  const preview = container.querySelector(`.photo-preview[data-item="${itemId}"]`);
+  const meta = state.scores[itemId].filesMeta;
+
+  preview.innerHTML = "";
+  meta.forEach(({ file, wasCompressed }, index) => {
+    const wrap = document.createElement("div");
+    wrap.className = "photo-thumb";
+
+    const imgWrap = document.createElement("div");
+    imgWrap.className = "photo-img-wrap";
+    const img = document.createElement("img");
+    img.src = URL.createObjectURL(file);
+    const removeBtn = document.createElement("button");
+    removeBtn.type = "button";
+    removeBtn.className = "photo-remove";
+    removeBtn.textContent = "×";
+    removeBtn.title = "ลบรูปนี้";
+    removeBtn.addEventListener("click", () => {
+      state.scores[itemId].filesMeta.splice(index, 1);
+      state.scores[itemId].files = state.scores[itemId].filesMeta.map(m => m.file);
+      renderPhotoPreview(container, itemId);
+    });
+    imgWrap.appendChild(img);
+    imgWrap.appendChild(removeBtn);
+
+    const label = document.createElement("div");
+    label.className = "photo-size";
+    label.textContent = formatFileSize(file.size) + (wasCompressed ? " (บีบอัดแล้ว)" : "");
+
+    wrap.appendChild(imgWrap);
+    wrap.appendChild(label);
+    preview.appendChild(wrap);
+  });
+}
+
+// ------------------------------------------------------------
+// บันทึกผลการตรวจทั้งหมด
+// ------------------------------------------------------------
+document.getElementById("submit-btn").addEventListener("click", async () => {
+  const statusEl = document.getElementById("submit-status");
+  const submitBtn = document.getElementById("submit-btn");
+  submitBtn.disabled = true;
+  statusEl.textContent = "กำลังบันทึก...";
+  statusEl.className = "status";
+
+  try {
+    const deptId = document.getElementById("dept-select").value;
+    const zoneId = document.getElementById("zone-select").value;
+    const dept = state.departments.find(d => d.id === deptId);
+    const zone = state.subAreas.find(z => z.id === zoneId);
+    const auditDate = document.getElementById("audit-date").value;
+    const leaderId = state.leaderId;
+    const ownerId = state.ownerId;
+    const inspectorIds = state.inspectorIds;
+
+    // คำนวณคะแนนรวม
+    let totalScore = 0, maxScore = 0;
+    state.checklistItems.forEach(item => {
+      totalScore += state.scores[item.id].score;
+      maxScore += item.max_score;
+    });
+    const percentage = maxScore > 0 ? Math.round((totalScore / maxScore) * 10000) / 100 : 0;
+
+    // 1. สร้างแถว audits
+    const { data: auditRow, error: auditErr } = await supabaseClient
+      .from("audits")
+      .insert({
+        sub_area_id: zoneId,
+        audit_date: auditDate,
+        team_leader_id: leaderId,
+        area_owner_id: ownerId,
+        total_score: totalScore,
+        max_score: maxScore,
+        percentage: percentage,
+      })
+      .select()
+      .single();
+    if (auditErr) throw auditErr;
+    const auditId = auditRow.id;
+    state.lastAuditId = auditId;
+
+    // 2. บันทึกกรรมการที่ร่วมตรวจ
+    if (inspectorIds.length) {
+      const { error: insErr } = await supabaseClient
+        .from("audit_inspectors")
+        .insert(inspectorIds.map(id => ({ audit_id: auditId, employee_id: id })));
+      if (insErr) throw insErr;
+    }
+
+    // 3. บันทึกคะแนนแต่ละข้อ + อัปโหลดรูป
+    for (const item of state.checklistItems) {
+      const s = state.scores[item.id];
+
+      const { error: scoreErr } = await supabaseClient
+        .from("audit_scores")
+        .insert({
+          audit_id: auditId,
+          checklist_item_id: item.id,
+          score: s.score,
+          problem_detail: s.problem_detail || null,
+          responsible_id: s.responsible_id || null,
+          fix_due_date: s.fix_due_date || null,
+        });
+      if (scoreErr) throw scoreErr;
+
+      // อัปโหลดรูปของข้อนี้ (ถ้ามี) — ส่งไปเก็บใน Google Drive ผ่าน Apps Script
+      for (let i = 0; i < s.files.length; i++) {
+        const file = s.files[i];
+        const ext = file.name.split(".").pop();
+        const filename = `item-${item.item_no}-${i + 1}.${ext}`;
+        const folderPath = `${dept.code}/${zone.code}/${auditDate}`;
+
+        const base64 = await fileToBase64(file);
+
+        const uploadRes = await fetch(DRIVE_UPLOAD_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" }, // กัน CORS preflight ของ Apps Script
+          body: JSON.stringify({
+            secret: DRIVE_UPLOAD_SECRET,
+            path: folderPath,
+            filename: filename,
+            mimeType: file.type || "image/jpeg",
+            base64: base64,
+          }),
+        });
+        const uploadJson = await uploadRes.json();
+        if (!uploadJson.success) throw new Error("อัปโหลดรูปไม่สำเร็จ: " + uploadJson.error);
+
+        const { error: photoRowErr } = await supabaseClient
+          .from("audit_photos")
+          .insert({
+            audit_id: auditId,
+            checklist_item_id: item.id,
+            storage_path: uploadJson.fileId,   // เก็บ Google Drive file ID ไว้
+            caption: uploadJson.directUrl,     // เก็บลิงก์แสดงรูปโดยตรงไว้ด้วย เรียกใช้งานง่าย
+          });
+        if (photoRowErr) throw photoRowErr;
+      }
+    }
+
+    // สำเร็จ — แสดงหน้าสรุป
+    document.getElementById("summary-pct").textContent = percentage + "%";
+    document.getElementById("summary-label").textContent =
+      `คะแนนรวม ${totalScore} / ${maxScore} — เป้าหมายโซนนี้ ${zone.target_pct}%`;
+    document.getElementById("step-setup").classList.add("hidden");
+    document.getElementById("step-items").classList.add("hidden");
+    document.getElementById("step-summary").classList.remove("hidden");
+
+  } catch (err) {
+    console.error(err);
+    statusEl.textContent = "บันทึกไม่สำเร็จ: " + (err.message || JSON.stringify(err));
+    statusEl.className = "status error";
+  } finally {
+    submitBtn.disabled = false;
+  }
+});
+
+// ------------------------------------------------------------
+// เริ่มตรวจครั้งใหม่
+// ------------------------------------------------------------
+document.getElementById("new-audit-btn").addEventListener("click", () => {
+  window.location.reload();
+});
+</script>
+</body>
+</html>
