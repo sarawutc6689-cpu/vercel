@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FM009 · บันทึกการคืนอุปกรณ์</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --primary:#1a56db; --primary-dark:#1e40af; --primary-light:#dbeafe;
+    --sidebar-bg1:#0f2050; --sidebar-bg2:#1a3a7a;
+    --bg:#f0f4f8; --white:#ffffff; --border:#e2e8f0;
+    --text:#1e293b; --text-muted:#64748b;
+    --success:#059669; --warning:#f59e0b; --danger:#ef4444;
+    --sidebar-w:240px; --topbar-h:60px; --radius:10px;
+    --shadow:0 2px 8px rgba(0,0,0,0.08);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Sarabun','TH Sarabun New','Noto Sans Thai',Tahoma,sans-serif;font-size:16px;background:var(--bg);color:var(--text);min-height:100vh;display:flex;}
+  
+  /* Sidebar */
+  .sidebar{width:var(--sidebar-w);min-height:100vh;background:linear-gradient(180deg,var(--sidebar-bg1) 0%,var(--sidebar-bg2) 100%);position:fixed;top:0;left:0;bottom:0;z-index:200;display:flex;flex-direction:column;box-shadow:3px 0 12px rgba(0,0,0,0.18);}
+  .sidebar-logo{padding:22px 20px 16px;border-bottom:1px solid rgba(255,255,255,.10);}
+  .sidebar-logo .logo-title{font-size:15px;font-weight:700;color:#fff;line-height:1.4;}
+  .sidebar-logo .logo-sub{font-size:12px;color:rgba(255,255,255,.45);margin-top:3px;}
+  .sidebar-nav{flex:1;padding:10px 0;overflow-y:auto;}
+  .nav-group-label{font-size:11px;font-weight:700;color:rgba(255,255,255,.35);letter-spacing:1.1px;text-transform:uppercase;padding:16px 20px 6px;}
+  .nav-item{display:flex;align-items:center;gap:12px;padding:12px 20px;color:rgba(255,255,255,.70);text-decoration:none;font-size:15px;font-weight:500;border:none;background:none;width:100%;text-align:left;cursor:pointer;position:relative;transition:all .18s;}
+  .nav-item:hover{background:rgba(255,255,255,.09);color:#fff;}
+  .nav-item.active{background:rgba(59,130,246,.20);color:#93c5fd;font-weight:700;}
+  .nav-item.active::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:#3b82f6;border-radius:0 4px 4px 0;}
+
+  /* Topbar */
+  .topbar{position:fixed;top:0;left:var(--sidebar-w);right:0;height:var(--topbar-h);background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 28px;z-index:100;box-shadow:0 1px 4px rgba(0,0,0,.06);}
+  .topbar-title{font-size:18px;font-weight:700;color:var(--text);}
+
+  /* Main Layout */
+  .main-wrapper{margin-left:var(--sidebar-w);padding-top:var(--topbar-h);flex:1;width:calc(100% - var(--sidebar-w));display:flex;flex-direction:column;min-height:100vh;}
+  .main-content{padding:28px;flex:1;}
+  
+  /* Components */
+  .card { background:var(--white); border-radius:var(--radius); border:1px solid var(--border); padding:20px; margin-bottom:16px; box-shadow:var(--shadow); }
+  .login-box { max-width:400px; margin:60px auto; }
+  input, button, select, textarea { padding:10px 14px; font-size:15px; border-radius:8px; border:1px solid var(--border); width:100%; box-sizing:border-box; margin-bottom:12px; font-family: inherit; outline:none; }
+  button { cursor:pointer; border:none; color:#fff; font-weight:600; transition:background .15s; }
+  .btn-primary { background:var(--primary); }
+  .btn-primary:hover { background:var(--primary-dark); }
+  .btn-save { background:var(--success); }
+  .btn-save:hover { background:#047857; }
+  
+  .status-pending { color:var(--warning); font-weight:700; }
+  .status-approved, .status-อนุมัติแล้ว { color:var(--success); font-weight:700; }
+  .status-rejected, .status-ไม่อนุมัติ { color:var(--danger); font-weight:700; }
+  .status-returned { color:var(--primary); font-weight:700; }
+  
+  table { width:100%; border-collapse: collapse; margin-top:8px; font-size:14px; }
+  th, td { text-align:left; padding:8px 10px; border:1px solid var(--border); }
+  th { background:#f1f5f9; color:var(--primary-dark); font-weight:700; }
+  
+  #app-view { display:none; }
+  .err { color:var(--danger); font-size:13px; margin-bottom:8px; display:block; }
+  .ok { color:var(--success); font-size:14px; font-weight:600; margin-bottom:8px; }
+  .muted { color:var(--text-muted); font-size:14px; }
+  .search-row { display:flex; gap:10px; margin-top:10px; }
+  .search-row input { flex:1; margin-bottom:0; }
+  .search-row button { width:auto; padding:10px 20px; margin-bottom:0; }
+
+  /* Footer */
+  .footer { text-align:center; padding:16px; font-size:13px; color:var(--text-muted); border-top:1px solid var(--border); background:var(--white); margin-top:auto; }
+</style>
+</head>
+<body>
+
+<div id="app-view" style="display:none; width:100%;">
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-title">ระบบนำอุปกรณ์<br>ออกนอกบริษัท</div>
+      <div class="logo-sub">IT Asset Management</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-group-label">เมนูหลัก</div>
+      <button class="nav-item" onclick="navigateTo('index')">ยื่นคำขอ</button>
+      <button class="nav-item" onclick="navigateTo('approve')">อนุมัติคำขอ</button>
+      <button class="nav-item" onclick="navigateTo('track')">ติดตามสถานะ</button>
+      <button class="nav-item active" onclick="navigateTo('return')">บันทึกการคืน</button>
+      <div class="nav-group-label">รายงาน</div>
+      <button class="nav-item" onclick="navigateTo('report')">รายงานสรุป</button>
+    </nav>
+  </div>
+
+  <div class="main-wrapper">
+    <div class="topbar">
+      <div class="topbar-title">FM009 · บันทึกการคืนอุปกรณ์</div>
+      <div style="display:flex; align-items:center; gap:12px;">
+        <span id="user-email" class="muted" style="font-size:14px;"></span>
+        <button onclick="handleLogout()" style="background:var(--danger); width:auto; padding:6px 12px; font-size:13px; margin-bottom:0;">ออกจากระบบ</button>
+      </div>
+    </div>
+
+    <div class="main-content">
+      <div class="card">
+        <p class="muted">ค้นหาคำขอด้วยเลข Ticket หรือรหัสพนักงาน</p>
+        <div class="search-row">
+          <input type="text" id="search-input" placeholder="เลข Ticket หรือ รหัสพนักงาน">
+          <button class="btn-primary" onclick="searchRequests()">ค้นหา</button>
+        </div>
+        <span class="err" id="search-error" style="margin-top:8px;"></span>
+      </div>
+
+      <div id="results"></div>
+    </div>
+
+    <footer class="footer">
+      พัฒนาโดย Sarawut.C &copy; 2026
+    </footer>
+  </div>
+</div>
+
+<script>
+  const SUPABASE_URL = 'https://fnbkcgkuykdabbensvif.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZuYmtjZ2t1eWtkYWJiZW5zdmlmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkzMDE0MTQsImV4cCI6MjEwNDg3NzQxNH0.L6x3nqAy2rqcxdtzyTs4MHLPubtBqD3Tnk9e97EfEJE';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  function navigateTo(page) { window.location.href = page + '.html'; }
+
+  function esc(s) {
+    if (s === null || s === undefined || s === '') return '-';
+    return s.toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+  }
+
+  document.addEventListener('DOMContentLoaded', checkUser);
+
+  document.getElementById('search-input').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') searchRequests();
+  });
+
+  async function checkUser() {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) {
+      // ยังไม่ login -> เด้งไปหน้า login กลางของระบบ
+      window.location.href = 'login.html';
+      return;
+    }
+
+    const role = session.user.app_metadata && session.user.app_metadata.role;
+    if (role !== 'admin') {
+      // login สำเร็จ แต่ไม่มีสิทธิ์แอดมิน -> sign out แล้วเด้งกลับไป login พร้อมแจ้งเหตุผล
+      await sb.auth.signOut();
+      alert('บัญชีนี้ไม่มีสิทธิ์แอดมิน (role != admin) ไม่สามารถบันทึกการคืนอุปกรณ์ได้');
+      window.location.href = 'login.html';
+      return;
+    }
+
+    document.getElementById('app-view').style.display = 'flex';
+    document.getElementById('user-email').textContent = session.user.email + ' (admin)';
+  }
+
+  async function handleLogout() {
+    await sb.auth.signOut();
+    window.location.href = 'login.html';
+  }
+
+  async function searchRequests() {
+    const keyword = document.getElementById('search-input').value.trim();
+    const errEl = document.getElementById('search-error');
+    const resultsEl = document.getElementById('results');
+    errEl.textContent = '';
+    resultsEl.innerHTML = '';
+
+    if (!keyword) {
+      errEl.textContent = 'กรุณากรอกเลข Ticket หรือรหัสพนักงาน';
+      return;
+    }
+
+    resultsEl.innerHTML = '<p class="muted">กำลังค้นหา...</p>';
+
+    const { data: requests, error } = await sb
+      .from('fm009_requests')
+      .select('*')
+      .or(`ticket_no.ilike.%${keyword}%,employee_code.eq.${keyword}`)
+      .order('request_date', { ascending: false });
+
+    if (error) {
+      resultsEl.innerHTML = '';
+      errEl.textContent = 'ค้นหาไม่สำเร็จ: ' + error.message;
+      return;
+    }
+
+    if (!requests || requests.length === 0) {
+      resultsEl.innerHTML = '<div class="card muted" style="text-align:center;">ไม่พบคำขอที่ตรงกับ "' + keyword + '"</div>';
+      return;
+    }
+
+    resultsEl.innerHTML = '';
+    for (const req of requests) {
+      renderRequestCard(req);
+    }
+  }
+
+  async function renderRequestCard(req) {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.id = 'req-card-' + req.id;
+
+    const statusRaw = req.status || 'รอการอนุมัติ';
+    let statusClass = 'status-pending';
+    if (statusRaw === 'อนุมัติแล้ว') statusClass = 'status-approved';
+    else if (statusRaw === 'ไม่อนุมัติ') statusClass = 'status-rejected';
+
+    card.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div><strong>${esc(req.ticket_no)}</strong></div>
+        <span class="${statusClass}">${esc(statusRaw)}</span>
+      </div>
+      <p class="muted" style="margin:8px 0;">
+        พนักงาน: ${esc(req.employee_name)} (${esc(req.employee_code)}) &nbsp;|&nbsp; แผนก: ${esc(req.department)}<br>
+        วันที่ยื่น: ${esc(new Date(req.request_date).toLocaleString('th-TH'))}
+      </p>
+      <div id="items-${req.id}" class="muted">กำลังโหลดรายการอุปกรณ์...</div>
+      <div id="return-area-${req.id}"></div>
+    `;
+    document.getElementById('results').appendChild(card);
+    loadItemsAndReturnStatus(req);
+  }
+
+  async function loadItemsAndReturnStatus(req) {
+    const { data: items, error: itemsErr } = await sb
+      .from('fm009_request_items')
+      .select('*')
+      .eq('request_id', req.id);
+
+    const itemsEl = document.getElementById('items-' + req.id);
+    if (itemsErr) {
+      itemsEl.innerHTML = '<span class="err">โหลดรายการอุปกรณ์ล้มเหลว</span>';
+    } else if (!items || items.length === 0) {
+      itemsEl.innerHTML = '<span class="muted">ไม่มีรายการอุปกรณ์</span>';
+    } else {
+      let table = '<table><tr><th>อุปกรณ์</th><th>ยี่ห้อ</th><th>รุ่น</th><th>S/N</th><th>จำนวน</th></tr>';
+      for (const it of items) {
+        table += `<tr><td>${esc(it.item_name)}</td><td>${esc(it.brand)}</td><td>${esc(it.model)}</td><td>${esc(it.serial_no)}</td><td>${it.quantity}</td></tr>`;
+      }
+      table += '</table>';
+      itemsEl.innerHTML = table;
+    }
+
+    const { data: existingReturns, error: retErr } = await sb
+      .from('fm009_returns')
+      .select('*')
+      .eq('request_id', req.id)
+      .order('return_date', { ascending: false });
+
+    const areaEl = document.getElementById('return-area-' + req.id);
+
+    if (retErr) {
+      areaEl.innerHTML = '<p class="err">โหลดประวัติการคืนล้มเหลว</p>';
+      return;
+    }
+
+    let historyHtml = '';
+    if (existingReturns && existingReturns.length > 0) {
+      historyHtml = '<p class="ok" style="margin-top:12px;">มีบันทึกการคืนแล้ว ' + existingReturns.length + ' ครั้ง:</p><table><tr><th>วันที่คืน</th><th>สภาพ</th><th>ผู้รับคืน</th><th>หมายเหตุ</th></tr>';
+      for (const r of existingReturns) {
+        historyHtml += `<tr><td>${esc(new Date(r.return_date).toLocaleString('th-TH'))}</td><td>${esc(r.condition)}</td><td>${esc(r.received_by)}</td><td>${esc(r.note)}</td></tr>`;
+      }
+      historyHtml += '</table>';
+    }
+
+    if (req.status !== 'อนุมัติแล้ว') {
+      areaEl.innerHTML = historyHtml + '<p class="muted" style="margin-top:10px;">บันทึกการคืนได้เฉพาะคำขอที่อนุมัติแล้วเท่านั้น</p>';
+      return;
+    }
+
+    areaEl.innerHTML = historyHtml + `
+      <hr style="margin:16px 0; border:none; border-top:1px solid var(--border);">
+      <p style="font-weight:600; margin-bottom:8px;">บันทึกการคืนอุปกรณ์ใหม่</p>
+      <label class="muted">วันที่คืน</label>
+      <input type="datetime-local" id="return-date-${req.id}" value="${new Date().toISOString().slice(0,16)}">
+      <label class="muted">สภาพอุปกรณ์ตอนคืน</label>
+      <select id="condition-${req.id}">
+        <option value="ปกติ">ปกติ</option>
+        <option value="ชำรุดเล็กน้อย">ชำรุดเล็กน้อย</option>
+        <option value="ชำรุดหนัก">ชำรุดหนัก</option>
+        <option value="สูญหาย">สูญหาย</option>
+      </select>
+      <label class="muted">ผู้รับคืน</label>
+      <input type="text" id="received-by-${req.id}" placeholder="ชื่อผู้รับคืนอุปกรณ์">
+      <label class="muted">หมายเหตุ</label>
+      <textarea id="note-${req.id}" rows="2" placeholder="หมายเหตุเพิ่มเติม (ถ้ามี)"></textarea>
+      <button class="btn-save" onclick="saveReturn('${req.id}')">บันทึกการคืน</button>
+      <span class="err" id="save-error-${req.id}"></span>
+    `;
+  }
+
+  async function saveReturn(requestId) {
+    const errEl = document.getElementById('save-error-' + requestId);
+    errEl.textContent = '';
+
+    const returnDateVal = document.getElementById('return-date-' + requestId).value;
+    const condition = document.getElementById('condition-' + requestId).value;
+    const receivedBy = document.getElementById('received-by-' + requestId).value.trim();
+    const note = document.getElementById('note-' + requestId).value.trim();
+
+    if (!returnDateVal) {
+      errEl.textContent = 'กรุณาระบุวันที่คืน';
+      return;
+    }
+    if (!receivedBy) {
+      errEl.textContent = 'กรุณาระบุผู้รับคืนอุปกรณ์';
+      return;
+    }
+
+    const { error } = await sb.from('fm009_returns').insert({
+      request_id: requestId,
+      return_date: new Date(returnDateVal).toISOString(),
+      condition: condition,
+      received_by: receivedBy,
+      note: note || null
+    });
+
+    if (error) {
+      errEl.textContent = 'บันทึกไม่สำเร็จ: ' + error.message;
+      return;
+    }
+
+    alert('บันทึกการคืนอุปกรณ์เรียบร้อยแล้ว');
+    const { data: req } = await sb.from('fm009_requests').select('*').eq('id', requestId).single();
+    if (req) {
+      document.getElementById('req-card-' + requestId).remove();
+      renderRequestCard(req);
+    }
+  }
+</script>
+
+</body>
+</html>

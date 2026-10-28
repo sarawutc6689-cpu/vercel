@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>รายงาน</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+</head>
+<body>
+<div class="header">
+  <div><i class="fas fa-box"></i> ระบบจัดการอุปกรณ์</div>
+  <div class="nav">
+    <a href="index.html">ยื่นคำร้อง</a>
+    <a href="approve.html">อนุมัติ</a>
+    <a href="report.html" class="active">รายงาน</a>
+  </div>
+</div>
+
+<div class="hero">
+  <h1><i class="fas fa-chart-bar"></i> รายงานสรุป</h1>
+  <p>ข้อมูลการขออนุมัติทั้งหมด</p>
+</div>
+
+<div class="container" style="max-width:1300px">
+  <div class="stats">
+    <div class="stat-card"><div class="stat-number" id="totalCount">-</div><div class="stat-label">รายการทั้งหมด</div></div>
+    <div class="stat-card"><div class="stat-number" id="importCount">-</div><div class="stat-label">นำเข้า</div></div>
+    <div class="stat-card"><div class="stat-number" id="exportCount">-</div><div class="stat-label">นำออก</div></div>
+    <div class="stat-card"><div class="stat-number" id="approvedCount">-</div><div class="stat-label">อนุมัติแล้ว</div></div>
+  </div>
+
+  <div class="card flush">
+    <div class="card-header">
+      <h2><i class="fas fa-table"></i> รายละเอียดคำร้อง</h2>
+      <button class="btn btn-pdf" onclick="exportToPDF()"><i class="fas fa-file-pdf"></i> Export PDF</button>
+    </div>
+    <div class="filter-bar">
+      <div class="filter-group"><label>แผนก</label><input type="text" id="filterSection" placeholder="ค้นหาแผนก"></div>
+      <div class="filter-group"><label>ชื่อ/รหัส</label><input type="text" id="filterName" placeholder="ค้นหาชื่อหรือรหัส"></div>
+      <div class="filter-group"><label>ประเภท</label><select id="filterType"><option value="">ทั้งหมด</option><option value="นำเข้า">นำเข้า</option><option value="นำออก">นำออก</option></select></div>
+      <div class="filter-group"><label>สถานะ</label><select id="filterStatus"><option value="">ทั้งหมด</option><option value="อนุมัติ">อนุมัติ</option><option value="ไม่อนุมัติ">ไม่อนุมัติ</option><option value="รออนุมัติ">รออนุมัติ</option></select></div>
+      <button class="btn btn-primary" onclick="applyFilter()"><i class="fas fa-search"></i> ค้นหา</button>
+      <button class="btn btn-light" onclick="resetFilter()"><i class="fas fa-undo"></i> ล้าง</button>
+    </div>
+    <div class="table-wrapper" id="tableWrapper"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i> กำลังโหลด...</div></div>
+    <div class="footer" id="footerInfo"></div>
+  </div>
+</div>
+
+<script>
+let allData = [], filteredData = [];
+
+function loadData() {
+  rpc('fom012_get_all_requests').then(data => {
+    allData = data || [];
+    $('totalCount').innerText = allData.length;
+    $('importCount').innerText = allData.filter(r => r.type === 'นำเข้า').length;
+    $('exportCount').innerText = allData.filter(r => r.type === 'นำออก').length;
+    $('approvedCount').innerText = allData.filter(r => r.status === 'อนุมัติ').length;
+    filteredData = [...allData];
+    renderTable();
+  }).catch(e => $('tableWrapper').innerHTML = `<div class="empty-state" style="color:red">เกิดข้อผิดพลาด: ${esc(e.message)}</div>`);
+}
+
+function applyFilter() {
+  const sec = $('filterSection').value.trim().toLowerCase();
+  const name = $('filterName').value.trim().toLowerCase();
+  const type = $('filterType').value, status = $('filterStatus').value;
+  filteredData = allData.filter(r =>
+    (!sec || (r.section || '').toLowerCase().includes(sec)) &&
+    (!name || r.name.toLowerCase().includes(name) || r.code.toLowerCase().includes(name)) &&
+    (!type || r.type === type) && (!status || r.status === status));
+  renderTable();
+}
+
+function resetFilter() {
+  ['filterSection', 'filterName', 'filterType', 'filterStatus'].forEach(id => $(id).value = '');
+  filteredData = [...allData];
+  renderTable();
+}
+
+function renderTable() {
+  if (!filteredData.length) {
+    $('tableWrapper').innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i> ไม่พบข้อมูล</div>';
+    $('footerInfo').innerHTML = 'แสดง 0 รายการ';
+    return;
+  }
+  const cls = { 'อนุมัติ': 'badge-approved', 'ไม่อนุมัติ': 'badge-rejected' };
+  let h = `<table><thead><tr><th>Ticket ID</th><th>วันที่</th><th>ประเภท</th><th>รหัส</th><th>ชื่อ</th><th>แผนก</th><th>อุปกรณ์</th><th>จำนวน</th><th>ผู้อนุมัติ</th><th>วันที่อนุมัติ</th><th>สถานะ</th></tr></thead><tbody>`;
+  for (const r of filteredData) {
+    h += `<tr>
+      <td><code>${esc(r.ticketId)}</code></td><td>${fmtDate(r.date)}</td>
+      <td><span class="badge ${r.type === 'นำเข้า' ? 'badge-approved' : 'badge-wait'}">${esc(r.type)}</span></td>
+      <td>${esc(r.code)}</td><td>${esc(r.name)}</td><td>${esc(r.section)}</td>
+      <td>${esc(r.device)}<br><small>${esc(r.brand)} ${esc(r.model)}</small></td>
+      <td style="text-align:center">${esc(r.qty)}</td><td>${esc(r.approver || '-')}</td>
+      <td>${fmtDate(r.approveDate)}</td>
+      <td><span class="badge ${cls[r.status] || 'badge-wait'}">${esc(r.status)}</span></td></tr>`;
+  }
+  $('tableWrapper').innerHTML = h + '</tbody></table>';
+  $('footerInfo').innerHTML = `แสดง ${filteredData.length} รายการ จากทั้งหมด ${allData.length} รายการ | อัปเดตล่าสุด: ${new Date().toLocaleString('th-TH')}`;
+}
+
+function exportToPDF() {
+  if (!filteredData.length) return alert('ไม่มีข้อมูลที่จะส่งออก');
+  const rows = filteredData.map(r => `<tr><td>${esc(r.ticketId)}</td><td>${fmtDate(r.date)}</td><td>${esc(r.type)}</td>
+    <td>${esc(r.code)}</td><td>${esc(r.name)}</td><td>${esc(r.section)}</td>
+    <td>${esc(r.device)} ${esc(r.brand)} ${esc(r.model)}</td><td>${esc(r.qty)}</td><td>${esc(r.status)}</td></tr>`).join('');
+  const win = window.open('', '_blank');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>รายงานการขออนุมัติ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun&display=swap" rel="stylesheet">
+    <style>body{font-family:'Sarabun',sans-serif;padding:30px}h2{color:#1e3a5f;text-align:center;margin-bottom:20px}
+    .date{text-align:right}table{width:100%;border-collapse:collapse;margin-top:20px}
+    th,td{border:1px solid #ccc;padding:8px;text-align:left}th{background:#1e3a5f;color:#fff}</style></head><body>
+    <h2>รายงานการขออนุมัตินำเข้า-ออกอุปกรณ์</h2><div class="date">วันที่พิมพ์: ${new Date().toLocaleString('th-TH')}</div>
+    <table><tr><th>Ticket ID</th><th>วันที่</th><th>ประเภท</th><th>รหัส</th><th>ชื่อ</th><th>แผนก</th><th>อุปกรณ์</th><th>จำนวน</th><th>สถานะ</th></tr>${rows}</table></body></html>`);
+  win.document.close();
+  setTimeout(() => win.print(), 800);
+}
+
+loadData();
+</script>
+</body>
+</html>

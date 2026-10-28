@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ยื่นคำขอนำอุปกรณ์ออกนอกบริษัท</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+    :root {
+      --ink:#0f172a; --ink-soft:#475569; --muted:#94a3b8;
+      --canvas:#eef1f8; --surface:#ffffff;
+      --brand-deep:#0f1c42; --brand-deep-2:#1a3a7a;
+      --brand:#2454d6; --brand-dark:#1a3fa8; --brand-tint:#eaf0ff;
+      --amber:#b45309; --amber-tint:#fef3e2; --amber-line:#fbd9a5;
+      --green:#047857; --green-tint:#e9fbf3; --green-line:#a7e8c9;
+      --red:#c0342a; --red-tint:#fdecea; --red-line:#f4b8b1;
+      --line:#e3e8f2; --line-soft:#eef1f8;
+      --radius-lg:16px; --radius-md:12px; --radius-sm:8px;
+      --sidebar-w:248px; --topbar-h:68px;
+      --shadow-card:0 1px 2px rgba(15,28,66,.04), 0 8px 24px -12px rgba(15,28,66,.10);
+      --shadow-pop:0 20px 60px -12px rgba(15,28,66,.35);
+    }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    html{-webkit-font-smoothing:antialiased;}
+    body{
+      font-family:'Sarabun','TH Sarabun New','Noto Sans Thai',Tahoma,sans-serif;
+      font-size:15.5px;line-height:1.6;background:var(--canvas);color:var(--ink);
+      min-height:100vh;display:flex;
+    }
+
+    /* ---------- Sidebar ---------- */
+    .sidebar{
+      width:var(--sidebar-w);min-height:100vh;
+      background:linear-gradient(160deg,var(--brand-deep) 0%,var(--brand-deep-2) 100%);
+      position:fixed;top:0;left:0;bottom:0;z-index:200;
+      display:flex;flex-direction:column;
+      box-shadow:4px 0 24px rgba(6,12,34,.22);
+      transition:transform .3s cubic-bezier(.4,0,.2,1);
+    }
+    .sidebar-logo{padding:26px 22px 18px;border-bottom:1px solid rgba(255,255,255,.09);}
+    .sidebar-logo .logo-title{font-size:15px;font-weight:700;color:#fff;line-height:1.45;letter-spacing:.2px;}
+    .sidebar-logo .logo-sub{font-size:11.5px;color:rgba(255,255,255,.42);margin-top:4px;}
+    .sidebar-nav{flex:1;padding:14px 12px;overflow-y:auto;}
+    .nav-group-label{font-size:11px;font-weight:700;color:rgba(255,255,255,.32);letter-spacing:.6px;padding:14px 10px 8px;}
+    .nav-item{
+      display:flex;align-items:center;gap:11px;padding:10px 12px;margin-bottom:2px;
+      color:rgba(255,255,255,.68);text-decoration:none;font-size:14.5px;font-weight:500;
+      border:none;background:none;width:100%;text-align:left;cursor:pointer;
+      border-radius:10px;position:relative;transition:background .16s,color .16s;
+    }
+    .nav-item svg{width:18px;height:18px;flex-shrink:0;opacity:.8;}
+    .nav-item:hover{background:rgba(255,255,255,.08);color:#fff;}
+    .nav-item:hover svg{opacity:1;}
+    .nav-item.active{background:rgba(255,255,255,.14);color:#fff;font-weight:600;}
+    .nav-item.active svg{opacity:1;}
+    .sidebar-footer{padding:16px 22px;border-top:1px solid rgba(255,255,255,.08);font-size:11.5px;color:rgba(255,255,255,.30);}
+    .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(8,12,28,.45);z-index:199;backdrop-filter:blur(1px);}
+
+    /* ---------- Topbar ---------- */
+    .topbar{
+      position:fixed;top:0;left:var(--sidebar-w);right:0;height:var(--topbar-h);
+      background:rgba(255,255,255,.92);backdrop-filter:blur(10px);
+      border-bottom:1px solid var(--line);
+      display:flex;align-items:center;padding:0 30px;gap:16px;z-index:100;
+    }
+    .topbar-menu-btn{display:none;background:none;border:none;font-size:22px;cursor:pointer;color:var(--ink-soft);}
+    .topbar-title{font-size:19px;font-weight:700;color:var(--ink);flex:1;letter-spacing:-.2px;}
+    .topbar-date{
+      font-size:13px;color:var(--ink-soft);background:var(--line-soft);
+      padding:7px 14px;border-radius:100px;font-weight:500;white-space:nowrap;
+    }
+
+    .main-wrapper{margin-left:var(--sidebar-w);padding-top:var(--topbar-h);flex:1;min-width:0;}
+    .main-content{padding:36px;max-width:840px;margin:0 auto;}
+
+    /* ---------- Step flow ---------- */
+    .flow{position:relative;}
+    .step{position:relative;padding-left:46px;padding-bottom:34px;}
+    .step:last-child{padding-bottom:0;}
+    .step::before{ /* connector line */
+      content:'';position:absolute;left:15px;top:36px;bottom:-2px;width:2px;
+      background:var(--line);
+    }
+    .step:last-child::before{display:none;}
+    .step-badge{
+      position:absolute;left:0;top:0;width:32px;height:32px;border-radius:50%;
+      background:var(--surface);border:2px solid var(--line);color:var(--ink-soft);
+      display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;
+      z-index:1;transition:all .2s;
+    }
+    .step.done .step-badge{background:var(--brand);border-color:var(--brand);color:#fff;}
+    .step-head{font-size:16.5px;font-weight:700;color:var(--ink);margin-bottom:14px;padding-top:4px;}
+    .step-head .step-hint{display:block;font-size:13px;font-weight:400;color:var(--muted);margin-top:2px;}
+
+    .card{
+      background:var(--surface);border-radius:var(--radius-lg);border:1px solid var(--line);
+      box-shadow:var(--shadow-card);padding:22px 24px;
+    }
+
+    /* ---------- Form basics ---------- */
+    label{font-size:13.5px;font-weight:600;color:var(--ink-soft);margin-bottom:7px;display:block;}
+    .req{color:var(--red);}
+    input,select,textarea{
+      padding:11px 14px;border:1.5px solid var(--line);border-radius:var(--radius-sm);
+      font-size:15.5px;font-family:inherit;background:var(--surface);color:var(--ink);
+      width:100%;transition:border-color .15s,box-shadow .15s;
+    }
+    input:focus,select:focus,textarea:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 4px var(--brand-tint);}
+    input[readonly]{background:var(--line-soft);color:var(--ink-soft);border-color:transparent;}
+    textarea{resize:vertical;min-height:78px;}
+
+    .field-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;}
+
+    /* ---------- Employee identity card ---------- */
+    .emp-card{
+      display:none;align-items:center;gap:14px;padding:14px 16px;margin-top:16px;
+      background:var(--brand-tint);border:1px solid #d3e0fb;border-radius:var(--radius-md);
+    }
+    .emp-card.show{display:flex;}
+    .emp-avatar{
+      width:44px;height:44px;border-radius:50%;background:var(--brand);color:#fff;
+      display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;
+      flex-shrink:0;
+    }
+    .emp-meta{min-width:0;flex:1;}
+    .emp-name{font-weight:700;color:var(--ink);font-size:15px;}
+    .emp-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:5px;}
+    .emp-tag{
+      font-size:12px;color:var(--brand-dark);background:#fff;border:1px solid #d3e0fb;
+      padding:3px 9px;border-radius:100px;font-weight:500;
+    }
+
+    /* ---------- Inline messages ---------- */
+    .msg-box{padding:11px 15px;border-radius:var(--radius-sm);font-size:14px;margin-top:12px;border-left:3px solid;}
+    .msg-info{background:var(--line-soft);border-color:var(--muted);color:var(--ink-soft);}
+    .msg-success{background:var(--green-tint);border-color:var(--green);color:var(--green);}
+    .msg-error{background:var(--red-tint);border-color:var(--red);color:var(--red);}
+
+    /* ---------- Items table ---------- */
+    .items-table-wrap{overflow-x:auto;margin-bottom:14px;}
+    table{width:100%;border-collapse:collapse;font-size:14.5px;}
+    thead th{
+      text-align:left;font-size:12.5px;font-weight:700;color:var(--ink-soft);
+      padding:0 10px 10px;border-bottom:2px solid var(--line);letter-spacing:.2px;
+    }
+    tbody td{padding:7px 10px;vertical-align:middle;}
+    tbody tr{border-bottom:1px solid var(--line-soft);}
+    tbody tr:last-child{border-bottom:none;}
+    tbody input{padding:9px 11px;font-size:14.5px;}
+    .row-num{
+      width:26px;height:26px;border-radius:50%;background:var(--line-soft);color:var(--ink-soft);
+      display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:700;
+    }
+    .btn-remove{
+      background:none;border:none;color:var(--muted);cursor:pointer;padding:6px;border-radius:8px;
+      display:flex;align-items:center;justify-content:center;transition:background .15s,color .15s;
+    }
+    .btn-remove:hover{background:var(--red-tint);color:var(--red);}
+    .btn-remove svg{width:16px;height:16px;}
+
+    .btn-add{
+      display:inline-flex;align-items:center;gap:7px;background:var(--brand-tint);color:var(--brand-dark);
+      border:1px dashed #b9caf7;padding:9px 16px;border-radius:var(--radius-sm);cursor:pointer;
+      font-size:14px;font-weight:600;font-family:inherit;transition:background .15s;
+    }
+    .btn-add:hover{background:#dde8ff;}
+    .btn-add svg{width:15px;height:15px;}
+
+    /* mobile card-style item rows */
+    @media(max-width:680px){
+      .items-table-wrap thead{display:none;}
+      .items-table-wrap table,.items-table-wrap tbody,.items-table-wrap tr,.items-table-wrap td{display:block;width:100%;}
+      .items-table-wrap tr{
+        border:1px solid var(--line);border-radius:var(--radius-md);padding:12px;margin-bottom:12px;
+        position:relative;
+      }
+      .items-table-wrap td{padding:6px 0;border:none;}
+      .items-table-wrap td[data-label]::before{
+        content:attr(data-label);display:block;font-size:11.5px;font-weight:700;
+        color:var(--muted);margin-bottom:4px;
+      }
+      .items-table-wrap td:first-child{position:absolute;top:12px;right:12px;padding:0;}
+      .items-table-wrap td:last-child{position:absolute;top:8px;right:40px;padding:0;}
+    }
+
+    /* ---------- Manager card ---------- */
+    .manager-card{
+      background:var(--amber-tint);border:1px solid var(--amber-line);border-radius:var(--radius-md);
+      padding:16px 18px;display:flex;align-items:center;gap:14px;
+    }
+    .manager-avatar{
+      width:42px;height:42px;border-radius:50%;background:#fff;color:var(--amber);
+      display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;
+      flex-shrink:0;border:1px solid var(--amber-line);
+    }
+    .manager-info-name{font-weight:700;color:#7c2d12;}
+    .manager-info-email{font-size:13.5px;color:#92400e;margin-top:2px;}
+    .manager-info-note{font-size:12.5px;color:#92400e;margin-top:6px;opacity:.85;}
+
+    /* ---------- Submit ---------- */
+    .submit-bar{margin-top:30px;padding-left:46px;}
+    .btn-submit{
+      background:linear-gradient(135deg,var(--brand),var(--brand-dark));color:#fff;border:none;
+      padding:15px;border-radius:var(--radius-md);cursor:pointer;font-size:16px;font-weight:700;
+      width:100%;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:9px;
+      box-shadow:0 8px 20px -6px rgba(36,84,214,.55);transition:transform .12s,box-shadow .12s;
+    }
+    .btn-submit:hover{transform:translateY(-1px);box-shadow:0 10px 24px -6px rgba(36,84,214,.6);}
+    .btn-submit:active{transform:translateY(0);}
+    .btn-submit:disabled{opacity:.55;cursor:not-allowed;transform:none;}
+    .btn-submit svg{width:19px;height:19px;}
+
+    /* ---------- Loading overlay ---------- */
+    .loading-overlay{display:none;position:fixed;inset:0;background:rgba(15,20,40,.5);z-index:999;align-items:center;justify-content:center;backdrop-filter:blur(2px);}
+    .loading-overlay.show{display:flex;}
+    .loading-box{background:var(--surface);padding:30px 46px;border-radius:16px;text-align:center;font-size:15.5px;font-weight:600;color:var(--ink);box-shadow:var(--shadow-pop);}
+    .spinner{width:34px;height:34px;border:3.5px solid var(--brand-tint);border-top-color:var(--brand);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 14px;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+
+    /* ---------- Toasts ---------- */
+    .toast-container{position:fixed;top:20px;right:20px;z-index:1100;display:flex;flex-direction:column;gap:10px;align-items:flex-end;}
+    .toast{
+      background:var(--ink);color:#fff;padding:12px 18px;border-radius:10px;font-size:14px;
+      box-shadow:0 12px 28px -8px rgba(0,0,0,.35);max-width:340px;
+      opacity:0;transform:translateY(-8px) translateX(6px);transition:opacity .22s,transform .22s;
+    }
+    .toast.show{opacity:1;transform:translateY(0) translateX(0);}
+    .toast-error{background:var(--red);}
+    .toast-success{background:var(--green);}
+
+    /* ---------- Success modal ---------- */
+    .modal-overlay{
+      display:none;position:fixed;inset:0;background:rgba(10,14,30,.55);z-index:1200;
+      align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(2px);
+    }
+    .modal-overlay.show{display:flex;}
+    .modal-card{
+      background:var(--surface);border-radius:20px;padding:34px 30px;max-width:380px;width:100%;
+      text-align:center;box-shadow:var(--shadow-pop);
+      animation:modalPop .25s cubic-bezier(.2,.8,.2,1);
+    }
+    @keyframes modalPop{from{opacity:0;transform:scale(.94) translateY(6px);}to{opacity:1;transform:scale(1) translateY(0);}}
+    .modal-check{
+      width:56px;height:56px;border-radius:50%;background:var(--green-tint);color:var(--green);
+      display:flex;align-items:center;justify-content:center;margin:0 auto 16px;
+    }
+    .modal-check svg{width:28px;height:28px;}
+    .modal-card h3{font-size:18px;color:var(--ink);margin-bottom:8px;}
+    .modal-ticket{font-size:20px;font-weight:700;color:var(--brand-dark);letter-spacing:.3px;margin-bottom:10px;}
+    .modal-sub{font-size:13.5px;color:var(--ink-soft);line-height:1.55;margin-bottom:22px;}
+    .modal-actions{display:flex;flex-direction:column;gap:10px;}
+    .btn-modal-primary{
+      background:var(--brand);color:#fff;border:none;padding:12px;border-radius:10px;
+      font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;
+    }
+    .btn-modal-secondary{
+      background:none;color:var(--ink-soft);border:none;padding:6px;font-size:13.5px;
+      font-family:inherit;cursor:pointer;text-decoration:underline;
+    }
+
+    /* ---------- one-time entrance ---------- */
+    @keyframes riseIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+    .entrance{animation:riseIn .45s ease both;}
+    @media (prefers-reduced-motion:reduce){
+      .entrance,.modal-card{animation:none;}
+      .btn-submit,.toast{transition:none;}
+    }
+
+    @media(max-width:900px){
+      .sidebar{transform:translateX(-100%);}
+      .sidebar.open{transform:translateX(0);}
+      .sidebar-overlay.open{display:block;}
+      .main-wrapper{margin-left:0;}
+      .topbar{left:0;}
+      .topbar-menu-btn{display:block;}
+      .main-content{padding:20px 16px;}
+      .topbar-date{display:none;}
+    }
+</style>
+</head>
+<body>
+
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-title">ระบบนำอุปกรณ์<br>ออกนอกบริษัท</div>
+    <div class="logo-sub">IT Asset Management</div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-group-label">เมนูหลัก</div>
+    <button class="nav-item active" id="nav-form">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+      ยื่นคำขอ
+    </button>
+    <button class="nav-item" id="nav-approve">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      อนุมัติคำขอ
+    </button>
+    <button class="nav-item" id="nav-track">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      ติดตามสถานะ
+    </button>
+    <button class="nav-item" id="nav-return">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+      บันทึกการคืน
+    </button>
+    <div class="nav-group-label">รายงาน</div>
+    <button class="nav-item" id="nav-report">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      รายงานสรุป
+    </button>
+  </nav>
+  <div class="sidebar-footer">ระบบนำอุปกรณ์ออกนอกบริษัท<br>พัฒนาโดย Sarawut.C</div>
+</div>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<div class="main-wrapper">
+  <div class="topbar">
+    <button class="topbar-menu-btn" id="menuBtn">&#9776;</button>
+    <div class="topbar-title">ยื่นคำขอนำเครื่องมือ/อุปกรณ์ออกนอกบริษัท</div>
+    <div class="topbar-date" id="requestDate"></div>
+  </div>
+
+  <div class="main-content">
+    <div class="flow">
+
+      <!-- Step 1 -->
+      <div class="step done entrance" style="animation-delay:.02s">
+        <div class="step-badge">1</div>
+        <div class="step-head">ข้อมูลผู้ยื่น<span class="step-hint">กรอกรหัสพนักงานเพื่อดึงข้อมูลอัตโนมัติ</span></div>
+        <div class="card">
+          <label>รหัสพนักงาน <span class="req">*</span></label>
+          <input type="text" id="empCode" placeholder="พิมพ์รหัสพนักงาน" autocomplete="off">
+          <div id="searchResult"></div>
+
+          <div class="emp-card" id="empCard">
+            <div class="emp-avatar" id="empAvatar">-</div>
+            <div class="emp-meta">
+              <div class="emp-name" id="empNameDisplay">-</div>
+              <div class="emp-tags">
+                <span class="emp-tag" id="empPositionTag">-</span>
+                <span class="emp-tag" id="empSectionTag">-</span>
+                <span class="emp-tag" id="empDeptTag">-</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ฟิลด์จริงที่ JS เขียนค่าลง (ซ่อนไว้ ใช้ emp-card แสดงผลแทน) -->
+          <div style="display:none;">
+            <input type="text" id="empName">
+            <input type="text" id="section">
+            <input type="text" id="department">
+            <input type="text" id="position">
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="step entrance" style="animation-delay:.06s">
+        <div class="step-badge">2</div>
+        <div class="step-head">รายการเครื่องมือ/อุปกรณ์<span class="step-hint">เพิ่มได้มากกว่า 1 รายการ</span></div>
+        <div class="card">
+          <div class="items-table-wrap">
+            <table id="itemsTable">
+              <thead>
+                <tr>
+                  <th style="width:5%"></th>
+                  <th style="width:26%">รายการอุปกรณ์</th>
+                  <th style="width:16%">ยี่ห้อ</th>
+                  <th style="width:16%">รุ่น</th>
+                  <th style="width:24%">หมายเลขเครื่อง (SN)</th>
+                  <th style="width:9%">จำนวน</th>
+                  <th style="width:4%"></th>
+                </tr>
+              </thead>
+              <tbody id="itemsBody"></tbody>
+            </table>
+          </div>
+          <button class="btn-add" id="btnAddRow" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            เพิ่มรายการ
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="step entrance" style="animation-delay:.10s">
+        <div class="step-badge">3</div>
+        <div class="step-head">เหตุผลการนำออก<span class="step-hint">อธิบายสั้นๆ ว่านำไปทำอะไร</span></div>
+        <div class="card">
+          <label>เหตุผล <span class="req">*</span></label>
+          <textarea id="reason" rows="3" placeholder="เช่น นำไปติดตั้งงานลูกค้า, นำไปซ่อมภายนอก, ใช้ในการอบรม"></textarea>
+        </div>
+      </div>
+
+      <!-- Step 4 -->
+      <div class="step" id="managerSection" style="display:none;">
+        <div class="step-badge">4</div>
+        <div class="step-head">การอนุมัติของผู้จัดการ<span class="step-hint">ระบบจับคู่ผู้อนุมัติให้อัตโนมัติตามฝ่าย</span></div>
+        <div class="card">
+          <div id="managerInfo"></div>
+        </div>
+      </div>
+
+      <div class="submit-bar">
+        <button class="btn-submit" id="submitBtn" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          บันทึกคำขออนุญาต
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-box"><div class="spinner"></div><span id="loadingText">กำลังโหลด...</span></div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<div class="modal-overlay" id="successModal">
+  <div class="modal-card">
+    <div class="modal-check">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <h3>บันทึกคำขอเรียบร้อยแล้ว</h3>
+    <div class="modal-ticket" id="modalTicketNo">TK000000-000</div>
+    <p class="modal-sub">ระบบได้ส่งคำขอนำอุปกรณ์ออกนอกบริษัทเรียบร้อยแล้ว รอการอนุมัติจากผู้จัดการที่เกี่ยวข้อง</p>
+    <div class="modal-actions">
+      <button class="btn-modal-primary" id="modalNewRequest">ยื่นคำขอใหม่</button>
+      <button class="btn-modal-secondary" id="modalClose">ปิดหน้าต่างนี้</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  // ⚠️ ใส่ URL และ anon key ให้ถูกต้อง
+  const SUPABASE_URL = 'https://fnbkcgkuykdabbensvif.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZuYmtjZ2t1eWtkYWJiZW5zdmlmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkzMDE0MTQsImV4cCI6MjEwNDg3NzQxNH0.L6x3nqAy2rqcxdtzyTs4MHLPubtBqD3Tnk9e97EfEJE';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  var rowCount = 0, currentManagerInfo = null, currentEmployee = null, searchTimeout = null, managerOptions = [];
+
+  document.getElementById('requestDate').textContent = new Date().toLocaleDateString('th-TH', { year:'numeric', month:'long', day:'numeric' });
+
+  function openSidebar()  { document.getElementById('sidebar').classList.add('open'); document.getElementById('sidebarOverlay').classList.add('open'); }
+  function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('open'); }
+  function navigateTo(page) { window.location.href = page + '.html'; }
+
+  function showLoading(t) { document.getElementById('loadingText').textContent = t || 'กำลังโหลด...'; document.getElementById('loadingOverlay').classList.add('show'); }
+  function hideLoading()  { document.getElementById('loadingOverlay').classList.remove('show'); }
+
+  function esc(s) {
+    if (!s) return '-';
+    return s.toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+  }
+
+  // ---------- Toast (แทนที่ alert() แบบเดิม) ----------
+  function showToast(msg, type) {
+    var container = document.getElementById('toastContainer');
+    var toast = document.createElement('div');
+    toast.className = 'toast' + (type ? ' toast-' + type : '');
+    toast.textContent = msg;
+    container.appendChild(toast);
+    requestAnimationFrame(function() { toast.classList.add('show'); });
+    setTimeout(function() {
+      toast.classList.remove('show');
+      setTimeout(function() { toast.remove(); }, 250);
+    }, 3600);
+  }
+
+  function showMsg(id, msg, type) {
+    var el = document.getElementById(id);
+    var cls = type === 'error' ? 'msg-error' : (type === 'success' ? 'msg-success' : 'msg-info');
+    el.innerHTML = '<div class="msg-box ' + cls + '">' + msg + '</div>';
+    if (type !== 'info') setTimeout(function() { el.innerHTML = ''; }, 3000);
+  }
+
+  function initials(name) {
+    if (!name) return '?';
+    var parts = name.replace(/^(คุณ|นาย|นาง|นางสาว)\s*/,'').trim().split(/\s+/);
+    return (parts[0] ? parts[0].charAt(0) : '?').toUpperCase();
+  }
+
+  function addItemRow() {
+    rowCount++;
+    var tbody = document.getElementById('itemsBody');
+    var row = tbody.insertRow();
+    row.innerHTML =
+        '<td data-label="ลำดับ"><span class="row-num">' + rowCount + '</span></td>'
+      + '<td data-label="รายการอุปกรณ์"><input type="text" name="item_name" placeholder="ชื่ออุปกรณ์" required></td>'
+      + '<td data-label="ยี่ห้อ"><input type="text" name="brand" placeholder="ยี่ห้อ"></td>'
+      + '<td data-label="รุ่น"><input type="text" name="model" placeholder="รุ่น"></td>'
+      + '<td data-label="Serial Number"><input type="text" name="serial_no" placeholder="Serial Number"></td>'
+      + '<td data-label="จำนวน"><input type="number" name="quantity" value="1" min="1"></td>'
+      + '<td><button type="button" class="btn-remove" data-remove><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></td>';
+  }
+
+  function reorderRows() {
+    var rows = document.querySelectorAll('#itemsBody tr');
+    rowCount = rows.length;
+    rows.forEach(function(r, i) { r.cells[0].querySelector('.row-num').textContent = i + 1; });
+  }
+
+  function setupAutoSearch() {
+    document.getElementById('empCode').addEventListener('input', function() {
+      var v = this.value.trim();
+      if (!v) { clearEmp(); document.getElementById('managerSection').style.display = 'none'; document.getElementById('searchResult').innerHTML = ''; currentManagerInfo = null; currentEmployee = null; managerOptions = []; return; }
+      if (searchTimeout) clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(function() { performSearch(v); }, 500);
+    });
+  }
+
+  async function performSearch(empCode) {
+    showMsg('searchResult', 'กำลังค้นหาข้อมูล...', 'info');
+    const { data, error } = await sb.from('employees').select('*').eq('employees_code', empCode).maybeSingle();
+    if (error) { clearEmp(); showMsg('searchResult', 'เกิดข้อผิดพลาด: ' + esc(error.message), 'error'); return; }
+    if (data) {
+      currentEmployee = data;
+      document.getElementById('empName').value    = data.name_thai || '';
+      document.getElementById('section').value    = data.section || '';
+      document.getElementById('department').value = data.department || '';
+      document.getElementById('position').value   = data.position || '';
+
+      document.getElementById('searchResult').innerHTML = '';
+      var card = document.getElementById('empCard');
+      card.classList.add('show');
+      document.getElementById('empAvatar').textContent = initials(data.name_thai);
+      document.getElementById('empNameDisplay').textContent = data.name_thai || '-';
+      document.getElementById('empPositionTag').textContent = data.position || '-';
+      document.getElementById('empSectionTag').textContent = data.section || '-';
+      document.getElementById('empDeptTag').textContent = data.department || '-';
+
+      if (data.section) loadManagersForSection(data.section);
+      else { document.getElementById('managerSection').style.display = 'none'; currentManagerInfo = null; managerOptions = []; }
+    } else {
+      clearEmp();
+      showMsg('searchResult', 'ไม่พบรหัสพนักงาน: ' + esc(empCode), 'error');
+      document.getElementById('managerSection').style.display = 'none';
+      currentManagerInfo = null; currentEmployee = null; managerOptions = [];
+    }
+  }
+
+  async function loadManagersForSection(section) {
+    var box = document.getElementById('managerSection');
+    box.style.display = 'block';
+    document.getElementById('managerInfo').innerHTML = '<span style="color:var(--muted);font-size:14px;">กำลังค้นหาผู้อนุมัติ...</span>';
+
+    // ดึงข้อมูลผู้อนุมัติทั้งหมดมาเช็คฝั่ง JS เพื่อรองรับช่องว่างหรืออักขระซ่อนในข้อมูลเดิม
+    const { data, error } = await sb.from('profiles').select('name,email,section').eq('role', 'approver');
+
+    if (error) {
+      currentManagerInfo = null;
+      managerOptions = [];
+      document.getElementById('managerInfo').innerHTML = '<div class="msg-box msg-error">เกิดข้อผิดพลาดในการค้นหาผู้อนุมัติ: ' + esc(error.message) + '</div>';
+      return;
+    }
+
+    var cleanTargetSection = (section || '').trim();
+    managerOptions = (data || []).filter(function(m) {
+      return (m.section || '').trim() === cleanTargetSection;
+    });
+
+    if (managerOptions.length === 0) {
+      currentManagerInfo = null;
+      document.getElementById('managerInfo').innerHTML = '<div class="msg-box msg-error">ไม่พบผู้อนุมัติสำหรับฝ่าย "' + esc(section) + '" กรุณาติดต่อผู้ดูแลระบบ</div>';
+    } else if (managerOptions.length === 1) {
+      currentManagerInfo = managerOptions[0];
+      document.getElementById('managerInfo').innerHTML =
+        '<div class="manager-card">'
+        + '<div class="manager-avatar">' + initials(currentManagerInfo.name) + '</div>'
+        + '<div>'
+        + '<div class="manager-info-name">' + esc(currentManagerInfo.name) + '</div>'
+        + '<div class="manager-info-email">' + esc(currentManagerInfo.email) + '</div>'
+        + '<div class="manager-info-note">ระบบจะแจ้งการอนุมัติไปยังอีเมลนี้โดยอัตโนมัติ</div>'
+        + '</div></div>';
+    } else {
+      currentManagerInfo = null;
+      var options = '<option value="">-- กรุณาเลือกผู้อนุมัติ --</option>'
+        + managerOptions.map(function(m) { return '<option value="' + esc(m.email) + '">' + esc(m.name) + '</option>'; }).join('');
+      document.getElementById('managerInfo').innerHTML =
+        '<label style="margin-bottom:8px;">ฝ่ายนี้มีผู้อนุมัติมากกว่า 1 คน กรุณาเลือก <span class="req">*</span></label>'
+        + '<select id="managerSelect">' + options + '</select>';
+      document.getElementById('managerSelect').addEventListener('change', function() {
+        var email = this.value;
+        currentManagerInfo = managerOptions.find(function(m) { return m.email === email; }) || null;
+      });
+    }
+  }
+
+  function clearEmp() {
+    ['empName','section','department','position'].forEach(function(id) { document.getElementById(id).value = ''; });
+    document.getElementById('empCard').classList.remove('show');
+  }
+
+  async function generateTicketNo() {
+    var now = new Date();
+    var y = String(now.getFullYear()).slice(-2);
+    var m = String(now.getMonth()+1).padStart(2,'0');
+    var d = String(now.getDate()).padStart(2,'0');
+    var prefix = 'TK' + y + m + d;
+    const { count } = await sb.from('fm009_requests').select('*', { count: 'exact', head: true }).like('ticket_no', prefix + '%');
+    var seq = String((count||0) + 1).padStart(3,'0');
+    return prefix + '-' + seq;
+  }
+
+  async function notifyManager(managerEmail, ticketNo, empName, department, reason, items) {
+    if (!managerEmail) return;
+    var itemsHtml = items.map(function(it, i) {
+      return (i+1) + '. ' + esc(it.item_name) + ' | ยี่ห้อ: ' + esc(it.brand||'-') + ' | รุ่น: ' + esc(it.model||'-') + ' | SN: ' + esc(it.serial_no||'-') + ' | จำนวน: ' + it.quantity + ' ชิ้น';
+    }).join('<br>');
+    var html = '<p>เรียน ผู้จัดการ</p>'
+      + '<p>🎫 Ticket ID: <strong>' + esc(ticketNo) + '</strong><br>'
+      + '👤 ผู้ขอ: ' + esc(empName) + '<br>'
+      + '🏢 แผนก: ' + esc(department) + '<br>'
+      + '📝 เหตุผล: ' + esc(reason) + '</p>'
+      + '<p>📦 รายการอุปกรณ์:<br>' + itemsHtml + '</p>'
+      + '<p>⏰ ยื่นคำขอเมื่อ: ' + new Date().toLocaleString('th-TH') + '</p>'
+      + '<p style="color:#94a3b8;font-size:12px;">ข้อความนี้ส่งจากระบบอัตโนมัติ กรุณาอย่าตอบกลับ</p>';
+    try {
+      await sb.functions.invoke('send-email', { body: { to: managerEmail, subject: '[' + ticketNo + '] คำขออนุญาตนำอุปกรณ์ออกนอกบริษัท - ' + empName, html: html } });
+    } catch (e) { console.error('notifyManager failed:', e); }
+  }
+
+  async function submitForm() {
+    var empCode = document.getElementById('empCode').value.trim();
+    var empName = document.getElementById('empName').value.trim();
+    if (!empCode || !empName || !currentEmployee) { showToast('กรุณากรอกรหัสพนักงานที่ถูกต้อง', 'error'); return; }
+
+    if (!currentManagerInfo || !currentManagerInfo.email) {
+      if (managerOptions.length > 1) showToast('กรุณาเลือกผู้อนุมัติก่อนบันทึกคำขอ', 'error');
+      else showToast('ไม่พบผู้อนุมัติสำหรับฝ่ายนี้ กรุณาติดต่อผู้ดูแลระบบก่อนยื่นคำขอ', 'error');
+      return;
+    }
+
+    var reason = document.getElementById('reason').value.trim();
+    if (!reason) { showToast('กรุณาระบุเหตุผลการนำออก', 'error'); return; }
+    var rows = document.querySelectorAll('#itemsBody tr');
+    if (!rows.length) { showToast('กรุณาเพิ่มรายการอุปกรณ์อย่างน้อย 1 รายการ', 'error'); return; }
+    var items = [], hasError = false;
+    for (var i = 0; i < rows.length; i++) {
+      var row = rows[i];
+      var itemName = row.querySelector('input[name="item_name"]') ? row.querySelector('input[name="item_name"]').value.trim() : '';
+      if (!itemName) { showToast('กรุณากรอกชื่ออุปกรณ์ในลำดับที่ ' + (i+1), 'error'); hasError = true; break; }
+      items.push({
+        item_name: itemName,
+        brand: row.querySelector('input[name="brand"]') ? (row.querySelector('input[name="brand"]').value || null) : null,
+        model: row.querySelector('input[name="model"]') ? (row.querySelector('input[name="model"]').value || null) : null,
+        serial_no: row.querySelector('input[name="serial_no"]') ? (row.querySelector('input[name="serial_no"]').value || null) : null,
+        quantity: row.querySelector('input[name="quantity"]') ? parseInt(row.querySelector('input[name="quantity"]').value || '1') : 1
+      });
+    }
+    if (hasError) return;
+
+    var department = document.getElementById('department').value;
+    var managerEmail = currentManagerInfo.email;
+
+    document.getElementById('submitBtn').disabled = true;
+    showLoading('กำลังบันทึกข้อมูล กรุณารอสักครู่...');
+    try {
+      var ticketNo = await generateTicketNo();
+      const { data: reqRow, error: reqErr } = await sb.from('fm009_requests').insert({
+        ticket_no: ticketNo,
+        employee_code: empCode,
+        employee_name: empName,
+        department: department,
+        reason: reason,
+        manager_email: managerEmail,
+        status: 'รอการอนุมัติ',
+        request_date: new Date().toISOString()
+      }).select().single();
+      if (reqErr) throw reqErr;
+
+      const itemsPayload = items.map(function(it) { return { request_id: reqRow.id, item_name: it.item_name, brand: it.brand, model: it.model, serial_no: it.serial_no, quantity: it.quantity }; });
+      const { error: itemsErr } = await sb.from('fm009_request_items').insert(itemsPayload);
+      if (itemsErr) throw itemsErr;
+
+      //await notifyManager(managerEmail, ticketNo, empName, department, reason, items);
+
+      hideLoading();
+      document.getElementById('submitBtn').disabled = false;
+      document.getElementById('modalTicketNo').textContent = ticketNo;
+      document.getElementById('successModal').classList.add('show');
+    } catch (e) {
+      hideLoading();
+      document.getElementById('submitBtn').disabled = false;
+      showToast('เกิดข้อผิดพลาด: ' + (e.message || e), 'error');
+    }
+  }
+
+  function resetForm() {
+    ['empCode','empName','section','department','position','reason'].forEach(function(id) { document.getElementById(id).value = ''; });
+    document.getElementById('searchResult').innerHTML = '';
+    document.getElementById('empCard').classList.remove('show');
+    document.getElementById('managerSection').style.display = 'none';
+    document.getElementById('itemsBody').innerHTML = '';
+    rowCount = 0; currentManagerInfo = null; currentEmployee = null; managerOptions = [];
+    addItemRow();
+  }
+
+  document.getElementById('itemsBody').addEventListener('click', function(e) {
+    var btn = e.target.closest('button[data-remove]');
+    if (btn) { btn.closest('tr').remove(); reorderRows(); }
+  });
+
+  document.getElementById('menuBtn').addEventListener('click', openSidebar);
+  document.getElementById('sidebarOverlay').addEventListener('click', closeSidebar);
+  document.getElementById('btnAddRow').addEventListener('click', addItemRow);
+  document.getElementById('submitBtn').addEventListener('click', submitForm);
+
+  document.getElementById('nav-form').addEventListener('click',   function() { navigateTo('index'); });
+  document.getElementById('nav-approve').addEventListener('click', function() { navigateTo('approve'); });
+  document.getElementById('nav-track').addEventListener('click',   function() { navigateTo('track'); });
+  document.getElementById('nav-return').addEventListener('click',  function() { navigateTo('return'); });
+  document.getElementById('nav-report').addEventListener('click',  function() { navigateTo('report'); });
+
+  document.getElementById('modalNewRequest').addEventListener('click', function() {
+    document.getElementById('successModal').classList.remove('show');
+    resetForm();
+  });
+  document.getElementById('modalClose').addEventListener('click', function() {
+    document.getElementById('successModal').classList.remove('show');
+  });
+
+  addItemRow();
+  setupAutoSearch();
+</script>
+</body>
+</html>

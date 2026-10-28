@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard สรุปคำขอ - FM009</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  body { font-family: 'Sarabun', sans-serif; margin: 0; background: #f4f5f7; }
+  .topbar { background:#1f2937; color:#fff; padding:14px 20px; }
+  .container { max-width: 1000px; margin: 20px auto; padding: 0 16px; }
+  .card { background:#fff; border-radius:8px; padding:20px; margin-bottom:16px; box-shadow:0 1px 3px rgba(0,0,0,.1); }
+  .filter-row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+  select, button { padding:8px 12px; font-size:14px; border-radius:6px; border:1px solid #ccc; }
+  button { cursor:pointer; border:none; color:#fff; background:#2563eb; }
+  .summary-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:14px; margin-bottom:16px; }
+  .summary-box { background:#fff; border-radius:8px; padding:16px; text-align:center; box-shadow:0 1px 3px rgba(0,0,0,.1); }
+  .summary-box .num { font-size:28px; font-weight:bold; }
+  .summary-box .label { color:#6b7280; font-size:13px; margin-top:4px; }
+  .num-pending { color:#b45309; }
+  .num-approved { color:#16a34a; }
+  .num-rejected { color:#dc2626; }
+  .num-total { color:#1f2937; }
+  table { width:100%; border-collapse: collapse; margin-top:8px; }
+  th, td { text-align:left; padding:8px; border-bottom:1px solid #eee; font-size:14px; }
+  th { background:#f9fafb; }
+  .status-pending { color:#b45309; font-weight:bold; }
+  .status-approved { color:#16a34a; font-weight:bold; }
+  .status-rejected { color:#dc2626; font-weight:bold; }
+  .muted { color:#6b7280; font-size:13px; }
+  .err { color:#dc2626; font-size:14px; }
+  .bar-wrap { background:#f3f4f6; border-radius:4px; overflow:hidden; height:18px; margin-top:4px; }
+  .bar-fill { height:100%; background:#2563eb; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <strong>FM009 · Dashboard สรุปคำขอเบิกอุปกรณ์</strong>
+</div>
+
+<div class="container">
+  <div class="card">
+    <div class="filter-row">
+      <label class="muted">เดือน:</label>
+      <select id="month-filter" onchange="loadDashboard()">
+        <option value="all">ทั้งหมด</option>
+      </select>
+      <label class="muted">แผนก:</label>
+      <select id="department-filter" onchange="loadDashboard()">
+        <option value="all">ทั้งหมด</option>
+      </select>
+      <button onclick="loadDashboard()">รีเฟรช</button>
+    </div>
+  </div>
+
+  <div id="summary" class="summary-grid"></div>
+
+  <div class="card">
+    <h3 style="margin-top:0;">สรุปตามแผนก</h3>
+    <div id="dept-table"><p class="muted">กำลังโหลด...</p></div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0;">รายละเอียดทั้งหมด</h3>
+    <div id="detail-table"><p class="muted">กำลังโหลด...</p></div>
+  </div>
+
+  <p class="err" id="load-error"></p>
+</div>
+
+<script>
+  const SUPABASE_URL = 'https://fnbkcgkuykdabbensvif.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZuYmtjZ2t1eWtkYWJiZW5zdmlmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkzMDE0MTQsImV4cCI6MjEwNDg3NzQxNH0.L6x3nqAy2rqcxdtzyTs4MHLPubtBqD3Tnk9e97EfEJE'; // TODO: ใส่ anon key จริง
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const statusLabel = { pending: 'รอดำเนินการ', approved: 'อนุมัติแล้ว', rejected: 'ปฏิเสธแล้ว' };
+
+  document.addEventListener('DOMContentLoaded', loadDashboard);
+
+  async function loadDashboard() {
+    const errEl = document.getElementById('load-error');
+    errEl.textContent = '';
+
+    const { data, error } = await sb
+      .from('fm009_request_statistics')
+      .select('*')
+      .order('month', { ascending: false });
+
+    if (error) {
+      errEl.textContent = 'โหลดข้อมูลล้มเหลว: ' + error.message;
+      return;
+    }
+
+    populateFilters(data);
+    const filtered = applyFilters(data);
+    renderSummary(filtered);
+    renderDeptTable(filtered);
+    renderDetailTable(filtered);
+  }
+
+  function populateFilters(data) {
+    const monthSelect = document.getElementById('month-filter');
+    const deptSelect = document.getElementById('department-filter');
+    const currentMonth = monthSelect.value;
+    const currentDept = deptSelect.value;
+
+    const months = [...new Set(data.map(d => d.month))].sort().reverse();
+    const depts = [...new Set(data.map(d => d.department).filter(Boolean))].sort();
+
+    monthSelect.innerHTML = '<option value="all">ทั้งหมด</option>' +
+      months.map(m => `<option value="${m}">${new Date(m).toLocaleDateString('th-TH', { year: 'numeric', month: 'long' })}</option>`).join('');
+    deptSelect.innerHTML = '<option value="all">ทั้งหมด</option>' +
+      depts.map(d => `<option value="${d}">${d}</option>`).join('');
+
+    monthSelect.value = currentMonth || 'all';
+    deptSelect.value = currentDept || 'all';
+  }
+
+  function applyFilters(data) {
+    const month = document.getElementById('month-filter').value;
+    const dept = document.getElementById('department-filter').value;
+    return data.filter(d =>
+      (month === 'all' || d.month === month) &&
+      (dept === 'all' || d.department === dept)
+    );
+  }
+
+  function renderSummary(data) {
+    const totals = { pending: 0, approved: 0, rejected: 0 };
+    let grandTotal = 0;
+    for (const row of data) {
+      if (totals[row.status] !== undefined) totals[row.status] += row.total;
+      grandTotal += row.total;
+    }
+
+    document.getElementById('summary').innerHTML = `
+      <div class="summary-box"><div class="num num-total">${grandTotal}</div><div class="label">คำขอทั้งหมด</div></div>
+      <div class="summary-box"><div class="num num-pending">${totals.pending}</div><div class="label">รอดำเนินการ</div></div>
+      <div class="summary-box"><div class="num num-approved">${totals.approved}</div><div class="label">อนุมัติแล้ว</div></div>
+      <div class="summary-box"><div class="num num-rejected">${totals.rejected}</div><div class="label">ปฏิเสธแล้ว</div></div>
+    `;
+  }
+
+  function renderDeptTable(data) {
+    const deptMap = {};
+    let maxTotal = 0;
+    for (const row of data) {
+      const dept = row.department || '(ไม่ระบุแผนก)';
+      if (!deptMap[dept]) deptMap[dept] = { pending: 0, approved: 0, rejected: 0, total: 0 };
+      deptMap[dept][row.status] = (deptMap[dept][row.status] || 0) + row.total;
+      deptMap[dept].total += row.total;
+      if (deptMap[dept].total > maxTotal) maxTotal = deptMap[dept].total;
+    }
+
+    const depts = Object.entries(deptMap).sort((a, b) => b[1].total - a[1].total);
+    if (depts.length === 0) {
+      document.getElementById('dept-table').innerHTML = '<p class="muted">ไม่มีข้อมูล</p>';
+      return;
+    }
+
+    let html = '<table><tr><th>แผนก</th><th>รอดำเนินการ</th><th>อนุมัติแล้ว</th><th>ปฏิเสธแล้ว</th><th>รวม</th><th style="width:150px;">สัดส่วน</th></tr>';
+    for (const [dept, v] of depts) {
+      const pct = maxTotal > 0 ? Math.round((v.total / maxTotal) * 100) : 0;
+      html += `<tr>
+        <td>${dept}</td>
+        <td class="status-pending">${v.pending || 0}</td>
+        <td class="status-approved">${v.approved || 0}</td>
+        <td class="status-rejected">${v.rejected || 0}</td>
+        <td><strong>${v.total}</strong></td>
+        <td><div class="bar-wrap"><div class="bar-fill" style="width:${pct}%"></div></div></td>
+      </tr>`;
+    }
+    html += '</table>';
+    document.getElementById('dept-table').innerHTML = html;
+  }
+
+  function renderDetailTable(data) {
+    if (data.length === 0) {
+      document.getElementById('detail-table').innerHTML = '<p class="muted">ไม่มีข้อมูล</p>';
+      return;
+    }
+
+    const sorted = [...data].sort((a, b) => new Date(b.month) - new Date(a.month));
+    let html = '<table><tr><th>เดือน</th><th>แผนก</th><th>สถานะ</th><th>จำนวน</th></tr>';
+    for (const row of sorted) {
+      const monthLabel = new Date(row.month).toLocaleDateString('th-TH', { year: 'numeric', month: 'long' });
+      html += `<tr>
+        <td>${monthLabel}</td>
+        <td>${row.department || '(ไม่ระบุแผนก)'}</td>
+        <td class="status-${row.status}">${statusLabel[row.status] || row.status}</td>
+        <td>${row.total}</td>
+      </tr>`;
+    }
+    html += '</table>';
+    document.getElementById('detail-table').innerHTML = html;
+  }
+</script>
+
+</body>
+</html>

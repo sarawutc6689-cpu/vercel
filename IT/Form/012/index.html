@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FOM 012</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+</head>
+<body>
+<div class="header">
+  <div><i class="fas fa-box"></i> ระบบจัดการอุปกรณ์</div>
+  <div class="nav">
+    <a href="index.html" class="active">ยื่นคำร้อง</a>
+    <a href="approve.html">อนุมัติ</a>
+    <a href="report.html">รายงาน</a>
+  </div>
+</div>
+
+<div class="hero">
+  <h1><i class="fas fa-file-alt"></i> ฟอร์มขอนำเครื่องมือ อุปกรณ์สารสนเทศส่วนตัวเข้า-ออกบริษัท</h1>
+  <p>กรอกข้อมูลให้ครบถ้วนเพื่อส่งคำร้องขออนุมัติ</p>
+</div>
+
+<div class="container">
+  <div class="card" id="formCard">
+    <div id="alertMsg"></div>
+
+    <div class="step-tabs">
+      <div class="step active" onclick="setType('import')"><i class="fas fa-download"></i> นำเข้า</div>
+      <div class="step" onclick="setType('export')"><i class="fas fa-upload"></i> นำออก</div>
+    </div>
+
+    <div class="form-group">
+      <label>รหัสพนักงาน</label>
+      <div class="flex">
+        <input type="text" id="empCode" placeholder="กรอกรหัสพนักงาน" onkeypress="if(event.key==='Enter')searchEmployee()">
+        <button class="btn btn-light" onclick="searchEmployee()">ค้นหา</button>
+      </div>
+    </div>
+    <div id="empInfo"></div>
+
+    <div id="refSection" class="ref-box">
+      <label>อ้างอิง Ticket ID (นำเข้า)</label>
+      <div class="flex">
+        <input type="text" id="refTicket" placeholder="PS-YYYYMMDD-XXXX">
+        <button class="btn btn-light" onclick="checkTicket()">ตรวจสอบ</button>
+      </div>
+      <div id="refResult"></div>
+    </div>
+
+    <div class="row-2">
+      <div class="form-group"><label>อุปกรณ์ *</label><input type="text" id="device" placeholder="โน้ตบุ๊ค, จอ, เมาส์"></div>
+      <div class="form-group"><label>ยี่ห้อ *</label><input type="text" id="brand" placeholder="Dell, Samsung"></div>
+      <div class="form-group"><label>รุ่น *</label><input type="text" id="model" placeholder="รุ่น"></div>
+      <div class="form-group"><label>Serial No.</label><input type="text" id="serial" placeholder="ถ้ามี"></div>
+      <div class="form-group"><label>จำนวน *</label><input type="number" id="qty" value="1" min="1"></div>
+    </div>
+
+    <div class="form-group">
+      <label>เหตุผล *</label>
+      <textarea id="reason" rows="3" placeholder="ระบุเหตุผลในการขออนุมัติ"></textarea>
+    </div>
+
+    <button class="btn btn-primary" style="width:100%" id="submitBtn" onclick="submitForm()"><i class="fas fa-paper-plane"></i> ส่งคำร้อง</button>
+  </div>
+  <p class="iso-label" id="isoLabel">ฟอร์มขอนำเครื่องมือและอุปกรณ์สารสนเทศส่วนตัวเข้า-ออกบริษัท หน้า 1/2 | พัฒนาโดย Sarawut.C</p>
+
+  <div id="successScreen" class="card success-screen">
+    <i class="fas fa-check-circle" style="font-size:64px;color:#10b981"></i>
+    <h2>ส่งคำร้องสำเร็จ!</h2>
+    <div class="ticket-id" id="newTicketId"></div>
+    <p>กรุณาบันทึก Ticket ID นี้ไว้เป็นหลักฐาน</p>
+    <button class="btn btn-primary" onclick="resetForm()">ยื่นคำร้องใหม่</button>
+  </div>
+</div>
+
+<script>
+let currentUser = null, currentType = 'import', ticketValidated = false;
+const LOCKED = ['device', 'brand', 'model', 'qty'];
+
+function setType(type) {
+  currentType = type;
+  document.querySelectorAll('.step').forEach((s, i) => s.classList.toggle('active', (type === 'import') === (i === 0)));
+  $('refSection').classList.toggle('show', type === 'export');
+  $('isoLabel').textContent = 'ฟอร์มขอนำเครื่องมือและอุปกรณ์สารสนเทศส่วนตัวเข้า-ออกบริษัท | พัฒนาโดย Sarawut.C | หน้า ' + (type === 'export' ? '2' : '1') + '/2';
+  if (type === 'import') {
+    ticketValidated = false;
+    LOCKED.forEach(f => $(f).disabled = false);
+  }
+}
+
+function showAlert(msg, type) {
+  $('alertMsg').innerHTML = `<div class="alert alert-${type}">${esc(msg)}</div>`;
+  setTimeout(() => $('alertMsg').innerHTML = '', 3000);
+}
+
+function searchEmployee() {
+  const code = $('empCode').value.trim();
+  if (!code) return showAlert('กรุณากรอกรหัสพนักงาน', 'error');
+  rpc('fom012_get_user', { p_code: code }).then(r => {
+    if (r.found) {
+      currentUser = r;
+      $('empInfo').innerHTML = `<div class="emp-card">
+        <i class="fas fa-user-circle" style="font-size:48px;color:#1e3a5f"></i>
+        <div><strong>${esc(r.name)}</strong><br>${esc(r.section)} | ${esc(r.position)}<br><small>รหัส: ${esc(r.code)}</small></div></div>`;
+      showAlert('พบข้อมูลพนักงาน', 'success');
+    } else {
+      currentUser = null;
+      $('empInfo').innerHTML = '';
+      showAlert('ไม่พบรหัสพนักงานนี้ในระบบ', 'error');
+    }
+  }).catch(e => showAlert('เกิดข้อผิดพลาด: ' + e.message, 'error'));
+}
+
+function checkTicket() {
+  if (!currentUser) return showAlert('กรุณาค้นหาพนักงานก่อน', 'error');
+  const id = $('refTicket').value.trim();
+  if (!id) return showAlert('กรุณากรอก Ticket ID', 'error');
+  rpc('fom012_check_import_ticket', { p_ticket: id, p_code: currentUser.code }).then(r => {
+    if (r.valid) {
+      ticketValidated = true;
+      const d = r.device;
+      $('refResult').innerHTML = `<div class="alert alert-success" style="margin-top:8px">${esc(r.message)}<br>
+        <strong>อุปกรณ์:</strong> ${esc(d.name)}<br><strong>ยี่ห้อ/รุ่น:</strong> ${esc(d.brand)} ${esc(d.model)}<br>
+        <strong>Serial:</strong> ${esc(d.serial || '-')}<br><strong>จำนวน:</strong> ${esc(d.qty)}</div>`;
+      $('device').value = d.name; $('brand').value = d.brand; $('model').value = d.model;
+      $('serial').value = d.serial || ''; $('qty').value = d.qty;
+      LOCKED.forEach(f => $(f).disabled = true);
+    } else {
+      ticketValidated = false;
+      $('refResult').innerHTML = `<div class="alert alert-error" style="margin-top:8px">${esc(r.message)}</div>`;
+    }
+  }).catch(e => showAlert('เกิดข้อผิดพลาด: ' + e.message, 'error'));
+}
+
+function submitForm() {
+  if (!currentUser) return showAlert('กรุณาค้นหาพนักงานก่อน', 'error');
+  if (currentType === 'export' && !ticketValidated) return showAlert('กรุณาตรวจสอบ Ticket อ้างอิงให้ถูกต้อง', 'error');
+  const v = id => $(id).value.trim();
+  if (!v('device') || !v('brand') || !v('model') || !v('qty') || !v('reason')) return showAlert('กรุณากรอกข้อมูลให้ครบถ้วน', 'error');
+
+  const payload = {
+    code: currentUser.code, device: v('device'), brand: v('brand'), model: v('model'),
+    serial: v('serial'), qty: parseInt(v('qty')), reason: v('reason'),
+    requestType: currentType === 'import' ? 'นำเข้า' : 'นำออก',
+    referenceTicketId: currentType === 'export' ? v('refTicket') : ''
+  };
+  $('submitBtn').disabled = true;
+  rpc('fom012_submit_request', { p: payload }).then(r => {
+    $('formCard').style.display = 'none';
+    $('newTicketId').innerText = r.ticketId;
+    $('successScreen').style.display = 'block';
+  }).catch(e => showAlert('ส่งคำร้องไม่สำเร็จ: ' + e.message, 'error'))
+    .finally(() => $('submitBtn').disabled = false);
+}
+
+function resetForm() {
+  $('formCard').style.display = 'block';
+  $('successScreen').style.display = 'none';
+  ['empCode','device','brand','model','serial','reason','refTicket'].forEach(id => $(id).value = '');
+  $('qty').value = '1';
+  ['empInfo','refResult','alertMsg'].forEach(id => $(id).innerHTML = '');
+  currentUser = null;
+  setType('import');
+}
+</script>
+</body>
+</html>

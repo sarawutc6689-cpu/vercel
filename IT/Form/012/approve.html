@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>อนุมัติคำร้อง</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+</head>
+<body>
+<div class="header">
+  <div><i class="fas fa-box"></i> ระบบจัดการอุปกรณ์</div>
+  <div class="nav">
+    <a href="index.html">ยื่นคำร้อง</a>
+    <a href="approve.html" class="active">อนุมัติ</a>
+    <a href="report.html">รายงาน</a>
+  </div>
+</div>
+
+<div class="hero">
+  <h1><i class="fas fa-user-check"></i> อนุมัติคำร้อง</h1>
+  <p>สำหรับผู้จัดการพิจารณาอนุมัติคำร้อง</p>
+</div>
+
+<div class="container" style="max-width:none;margin:-30px 24px 40px">
+  <div id="loginSection">
+    <div class="card login-card">
+      <i class="fas fa-lock" style="font-size:48px;color:#1e3a5f"></i>
+      <h2>เข้าสู่ระบบผู้จัดการ</h2>
+      <input type="text" id="username" placeholder="ชื่อผู้ใช้ หรืออีเมล" autocomplete="username" style="margin-bottom:0">
+      <input type="password" id="password" placeholder="รหัสผ่าน" autocomplete="current-password" onkeypress="if(event.key==='Enter')login()">
+      <button class="btn btn-primary" onclick="login()" style="width:100%">เข้าสู่ระบบ</button>
+      <div id="loginError" style="color:red;margin-top:12px"></div>
+    </div>
+  </div>
+
+  <div id="approveSection" style="display:none">
+    <div class="card flush">
+      <div class="card-header">
+        <h2><i class="fas fa-list"></i> รายการรออนุมัติ</h2>
+        <div style="display:flex;gap:8px;align-items:center">
+          <div id="managerInfo" style="background:#e2e8f0;padding:6px 16px;border-radius:20px"></div>
+          <button class="btn btn-light" onclick="logout()"><i class="fas fa-sign-out-alt"></i> ออกจากระบบ</button>
+        </div>
+      </div>
+      <div class="filter-bar" style="align-items:center">
+        <span><i class="fas fa-filter"></i> กรอง:</span>
+        <select id="typeFilter" onchange="filterTable()">
+          <option value="all">ทั้งหมด</option>
+          <option value="นำเข้า">นำเข้า</option>
+          <option value="นำออก">นำออก</option>
+        </select>
+        <span id="countDisplay" style="margin-left:auto">0 รายการ</span>
+      </div>
+      <div id="tableContainer" style="overflow-x:auto"></div>
+    </div>
+  </div>
+</div>
+<div id="toast"></div>
+
+<script>
+let allRequests = [];
+
+async function login() {
+  const id = $('username').value.trim(), pass = $('password').value;
+  if (!id || !pass) { $('loginError').innerText = 'กรุณากรอกชื่อผู้ใช้และรหัสผ่าน'; return; }
+  try {
+    const email = await rpc('fom012_login_email', { p_login: id });
+    const { error } = email ? await sb.auth.signInWithPassword({ email, password: pass }) : { error: true };
+    if (error) throw new Error('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
+    await enter();
+  } catch (e) { $('loginError').innerText = e.message; }
+}
+
+// ตรวจสิทธิ์ผู้ล็อกอิน แล้วเปิดหน้ารายการ
+async function enter() {
+  try {
+    const r = await rpc('fom012_whoami');
+    $('loginSection').style.display = 'none';
+    $('approveSection').style.display = 'block';
+    $('managerInfo').innerHTML = `<i class="fas fa-user"></i> ${esc(r.name)} - ${esc(r.section)}`;
+    loadRequests();
+  } catch (e) { $('loginError').innerText = e.message; }
+}
+
+async function logout() { await sb.auth.signOut(); location.reload(); }
+
+// ถ้าเคยล็อกอินค้างไว้ ข้ามหน้า login
+sb.auth.getSession().then(({ data }) => { if (data.session) enter(); });
+
+function loadRequests() {
+  $('tableContainer').innerHTML = '<div class="empty-state"><i class="fas fa-spinner fa-spin"></i> กำลังโหลด...</div>';
+  rpc('fom012_get_pending').then(rows => {
+    allRequests = rows || [];
+    $('countDisplay').innerText = allRequests.length + ' รายการ';
+    filterTable();
+  }).catch(e => $('tableContainer').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i> ${esc(e.message)}</div>`);
+}
+
+function filterTable() {
+  const t = $('typeFilter').value;
+  renderTable(t === 'all' ? allRequests : allRequests.filter(r => r.type === t));
+}
+
+function renderTable(rows) {
+  if (!rows.length) {
+    $('tableContainer').innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i> ไม่มีคำร้องที่รออนุมัติ</div>';
+    return;
+  }
+  let h = `<table style="min-width:1300px;table-layout:fixed">
+    <colgroup>
+      <col style="width:150px"><col style="width:110px"><col style="width:140px"><col style="width:110px">
+      <col style="width:170px"><col style="width:170px"><col style="width:80px"><col style="width:220px">
+      <col style="width:140px"><col style="width:200px">
+    </colgroup>
+    <thead><tr><th>Ticket ID</th><th>วันที่</th><th>แผนก</th><th>ประเภท</th><th>ผู้ยื่น</th><th>อุปกรณ์</th><th>จำนวน</th><th>เหตุผล</th><th>อ้างอิง</th><th>ดำเนินการ</th></tr></thead><tbody>`;
+  for (const r of rows) {
+    const badge = r.type === 'นำเข้า'
+      ? '<span class="badge badge-import"><i class="fas fa-download"></i> นำเข้า</span>'
+      : '<span class="badge badge-export"><i class="fas fa-upload"></i> นำออก</span>';
+    h += `<tr>
+      <td><code>${esc(r.ticketId)}</code></td><td>${fmtDate(r.date)}</td><td>${esc(r.section)}</td><td>${badge}</td>
+      <td><strong>${esc(r.name)}</strong><br><small>${esc(r.position)}</small></td>
+      <td>${esc(r.device)}<br><small>${esc(r.brand)} ${esc(r.model)}</small></td>
+      <td style="text-align:center">${esc(r.qty)}</td>
+      <td>${esc(r.reason.substring(0, 50))}${r.reason.length > 50 ? '...' : ''}</td>
+      <td>${esc(r.refTicket || '-')}</td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-approve" onclick="approveRequest('${esc(r.ticketId)}','approved')"><i class="fas fa-check"></i> อนุมัติ</button>
+        <button class="btn btn-reject" onclick="approveRequest('${esc(r.ticketId)}','rejected')"><i class="fas fa-times"></i> ไม่อนุมัติ</button>
+      </td></tr>`;
+  }
+  $('tableContainer').innerHTML = h + '</tbody></table>';
+}
+
+function approveRequest(ticketId, status) {
+  rpc('fom012_update_approval', { p_ticket: ticketId, p_status: status })
+    .then(r => { showToast('✅ ' + r.message, 'success'); loadRequests(); })
+    .catch(e => showToast('❌ ' + e.message, 'error'));
+}
+
+function showToast(msg, type) {
+  $('toast').innerHTML = `<div class="toast ${type}">${esc(msg)}</div>`;
+  setTimeout(() => $('toast').innerHTML = '', 3000);
+}
+</script>
+</body>
+</html>

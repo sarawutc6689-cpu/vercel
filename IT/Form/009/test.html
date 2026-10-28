@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ยื่นคำขอนำอุปกรณ์ออกนอกบริษัท</title>
+<style>
+    :root {
+      --primary:#1a56db; --primary-dark:#1e40af; --primary-light:#dbeafe;
+      --sidebar-bg1:#0f2050; --sidebar-bg2:#1a3a7a;
+      --bg:#f0f4f8; --white:#ffffff; --border:#e2e8f0;
+      --text:#1e293b; --text-muted:#64748b;
+      --success:#059669; --warning:#f59e0b; --danger:#ef4444;
+      --sidebar-w:240px; --topbar-h:60px; --radius:10px;
+      --shadow:0 2px 8px rgba(0,0,0,0.08);
+    }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Sarabun','TH Sarabun New','Noto Sans Thai',Tahoma,sans-serif;font-size:16px;background:var(--bg);color:var(--text);min-height:100vh;display:flex;}
+    .sidebar{width:var(--sidebar-w);min-height:100vh;background:linear-gradient(180deg,var(--sidebar-bg1) 0%,var(--sidebar-bg2) 100%);position:fixed;top:0;left:0;bottom:0;z-index:200;display:flex;flex-direction:column;box-shadow:3px 0 12px rgba(0,0,0,0.18);transition:transform .28s ease;}
+    .sidebar-logo{padding:22px 20px 16px;border-bottom:1px solid rgba(255,255,255,.10);}
+    .sidebar-logo .logo-title{font-size:15px;font-weight:700;color:#fff;line-height:1.4;}
+    .sidebar-logo .logo-sub{font-size:12px;color:rgba(255,255,255,.45);margin-top:3px;}
+    .sidebar-nav{flex:1;padding:10px 0;overflow-y:auto;}
+    .nav-group-label{font-size:11px;font-weight:700;color:rgba(255,255,255,.35);letter-spacing:1.1px;text-transform:uppercase;padding:16px 20px 6px;}
+    .nav-item{display:flex;align-items:center;gap:12px;padding:12px 20px;color:rgba(255,255,255,.70);text-decoration:none;font-size:15px;font-weight:500;border:none;background:none;width:100%;text-align:left;cursor:pointer;position:relative;transition:all .18s;}
+    .nav-item:hover{background:rgba(255,255,255,.09);color:#fff;}
+    .nav-item.active{background:rgba(59,130,246,.20);color:#93c5fd;font-weight:700;}
+    .nav-item.active::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:#3b82f6;border-radius:0 4px 4px 0;}
+    .nav-item .nav-icon{font-size:18px;width:24px;text-align:center;flex-shrink:0;}
+    .sidebar-footer{padding:14px 20px;border-top:1px solid rgba(255,255,255,.08);font-size:12px;color:rgba(255,255,255,.28);}
+    .topbar{position:fixed;top:0;left:var(--sidebar-w);right:0;height:var(--topbar-h);background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 28px;gap:14px;z-index:100;box-shadow:0 1px 4px rgba(0,0,0,.06);}
+    .topbar-menu-btn{display:none;background:none;border:none;font-size:22px;cursor:pointer;color:var(--text-muted);}
+    .topbar-title{font-size:18px;font-weight:700;color:var(--text);flex:1;}
+    .main-wrapper{margin-left:var(--sidebar-w);padding-top:var(--topbar-h);flex:1;}
+    .main-content{padding:28px;}
+    .loading-overlay{display:none;position:fixed;inset:0;background:rgba(15,32,80,.45);z-index:999;align-items:center;justify-content:center;}
+    .loading-overlay.show{display:flex;}
+    .loading-box{background:var(--white);padding:32px 48px;border-radius:14px;text-align:center;font-size:16px;font-weight:600;color:var(--text);box-shadow:0 8px 32px rgba(0,0,0,.18);}
+    .spinner{width:38px;height:38px;border:4px solid var(--primary-light);border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 16px;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.40);z-index:199;}
+    @media(max-width:900px){
+      .sidebar{transform:translateX(-100%);}
+      .sidebar.open{transform:translateX(0);}
+      .sidebar-overlay.open{display:block;}
+      .main-wrapper{margin-left:0;}
+      .topbar{left:0;}
+      .topbar-menu-btn{display:block;}
+      .main-content{padding:16px;}
+    }
+    label{font-size:14px;font-weight:600;color:#334155;margin-bottom:6px;display:block;}
+    input,select,textarea{padding:10px 13px;border:1px solid var(--border);border-radius:8px;font-size:16px;font-family:inherit;background:var(--white);color:var(--text);width:100%;transition:border-color .2s,box-shadow .2s;}
+    input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(26,86,219,.10);}
+    input[readonly]{background:#f1f5f9;color:#475569;border-color:var(--border);}
+    table{width:100%;border-collapse:collapse;font-size:15px;}
+    th{background:#f1f5f9;color:var(--primary-dark);font-weight:700;padding:11px 13px;text-align:left;border:1px solid var(--border);font-size:14px;}
+    td{padding:10px 13px;border:1px solid var(--border);color:var(--text);}
+    .section-card{background:var(--white);border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);margin-bottom:22px;overflow:hidden;}
+    .section-card-title{font-size:16px;font-weight:700;color:var(--primary-dark);padding:14px 22px;background:#f8fafc;border-bottom:2px solid var(--primary-light);}
+    .form-body{padding:20px 22px;}
+    .form-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;margin-bottom:16px;}
+    .form-group{display:flex;flex-direction:column;}
+    .req{color:var(--danger);}
+    .btn-add{background:var(--primary);color:#fff;border:none;padding:9px 20px;border-radius:8px;cursor:pointer;font-size:15px;font-weight:600;font-family:inherit;margin:0 22px 18px;}
+    .btn-add:hover{background:var(--primary-dark);}
+    .btn-remove{background:var(--danger);color:#fff;border:none;padding:5px 11px;border-radius:6px;cursor:pointer;font-size:13px;}
+    .btn-submit{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;border:none;padding:14px;border-radius:var(--radius);cursor:pointer;font-size:17px;font-weight:700;width:100%;font-family:inherit;}
+    .btn-submit:hover{opacity:.92;}
+    .btn-submit:disabled{opacity:.55;cursor:not-allowed;}
+    .info-box{background:#eff6ff;border-left:4px solid var(--primary);color:#1e40af;padding:12px 16px;border-radius:8px;font-size:15px;margin-bottom:10px;}
+    .success-box{background:#f0fdf4;border-left:4px solid var(--success);color:#166534;padding:12px 16px;border-radius:8px;font-size:15px;margin-bottom:10px;}
+    .error-box{background:#fef2f2;border-left:4px solid var(--danger);color:#b91c1c;padding:12px 16px;border-radius:8px;font-size:15px;margin-bottom:10px;}
+    .manager-box{background:#f0f9ff;padding:14px 18px;border-radius:8px;border-left:4px solid var(--warning);font-size:15px;}
+</style>
+</head>
+<body>
+
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-title">ระบบนำอุปกรณ์<br>ออกนอกบริษัท</div>
+    <div class="logo-sub">IT Asset Management</div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-group-label">เมนูหลัก</div>
+    <button class="nav-item active" id="nav-form"><span class="nav-icon"></span> ยื่นคำขอ</button>
+    <button class="nav-item" id="nav-approve"><span class="nav-icon"></span> อนุมัติคำขอ</button>
+    <button class="nav-item" id="nav-track"><span class="nav-icon"></span> ติดตามสถานะ</button>
+    <button class="nav-item" id="nav-return"><span class="nav-icon"></span> บันทึกการคืน</button>
+    <div class="nav-group-label">รายงาน</div>
+    <button class="nav-item" id="nav-report"><span class="nav-icon"></span> รายงานสรุป</button>
+  </nav>
+  <div class="sidebar-footer">ระบบนำอุปกรณ์ออกนอกบริษัท<br>พัฒนาโดย Sarawut.C</div>
+</div>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<div class="main-wrapper">
+  <div class="topbar">
+    <button class="topbar-menu-btn" id="menuBtn">&#9776;</button>
+    <div class="topbar-title"> ยื่นคำขอนำเครื่องมือ/อุปกรณ์ออกนอกบริษัท</div>
+  </div>
+  <div class="main-content">
+
+    <div class="section-card">
+      <div class="section-card-title">ข้อมูลผู้ยื่น</div>
+      <div class="form-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label>รหัสพนักงาน <span class="req">*</span></label>
+            <input type="text" id="empCode" placeholder="พิมพ์รหัสพนักงาน" autocomplete="off">
+          </div>
+        </div>
+        <div id="searchResult"></div>
+        <div class="form-row">
+          <div class="form-group"><label>ชื่อ-นามสกุล</label><input type="text" id="empName" readonly></div>
+          <div class="form-group"><label>ฝ่าย</label><input type="text" id="section" readonly></div>
+          <div class="form-group"><label>แผนก</label><input type="text" id="department" readonly></div>
+          <div class="form-group"><label>ตำแหน่ง</label><input type="text" id="position" readonly></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-card-title">รายการเครื่องมือ/อุปกรณ์</div>
+      <div style="overflow-x:auto;padding:20px 22px 0;">
+        <table id="itemsTable">
+          <thead>
+            <tr>
+              <th style="width:5%">ลำดับ</th>
+              <th style="width:25%">รายการอุปกรณ์</th>
+              <th style="width:15%">ยี่ห้อ</th>
+              <th style="width:15%">รุ่น</th>
+              <th style="width:25%">หมายเลขเครื่อง (SN)</th>
+              <th style="width:10%">จำนวน</th>
+              <th style="width:5%"></th>
+            </tr>
+          </thead>
+          <tbody id="itemsBody"></tbody>
+        </table>
+      </div>
+      <button class="btn-add" id="btnAddRow">+ เพิ่มรายการ</button>
+    </div>
+
+    <div class="section-card">
+      <div class="section-card-title">รายละเอียดเพิ่มเติม</div>
+      <div class="form-body">
+        <div class="form-row">
+          <div class="form-group" style="grid-column:1/-1">
+            <label>เหตุผลการนำออก <span class="req">*</span></label>
+            <textarea id="reason" rows="3" placeholder="เช่น นำไปติดตั้งงานลูกค้า, นำไปซ่อมภายนอก, ใช้ในการอบรม"></textarea>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>วันที่ยื่นคำขอ</label><input type="text" id="requestDate" readonly></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-card" id="managerSection" style="display:none;">
+      <div class="section-card-title">การอนุมัติของผู้จัดการ</div>
+      <div class="form-body"><div id="managerInfo" class="manager-box"></div></div>
+    </div>
+
+    <button class="btn-submit" id="submitBtn">&#128190; บันทึกคำขออนุญาต</button>
+  </div>
+</div>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-box"><div class="spinner"></div><span id="loadingText">กำลังโหลด...</span></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  // ⚠️ ใส่ anon public key จริงแทน SUPABASE_ANON_KEY
+  const SUPABASE_URL = 'https://fnbkcgkuykdabbensvif.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZuYmtjZ2t1eWtkYWJiZW5zdmlmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkzMDE0MTQsImV4cCI6MjEwNDg3NzQxNH0.L6x3nqAy2rqcxdtzyTs4MHLPubtBqD3Tnk9e97EfEJE';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  var rowCount = 0, currentManagerInfo = null, currentEmployee = null, searchTimeout = null, managerOptions = [];
+
+  document.getElementById('requestDate').value = new Date().toLocaleDateString('th-TH', { year:'numeric', month:'long', day:'numeric' });
+
+  function openSidebar()  { document.getElementById('sidebar').classList.add('open'); document.getElementById('sidebarOverlay').classList.add('open'); }
+  function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('open'); }
+  function navigateTo(page) { window.location.href = page + '.html'; }
+
+  function showLoading(t) { document.getElementById('loadingText').textContent = t || 'กำลังโหลด...'; document.getElementById('loadingOverlay').classList.add('show'); }
+  function hideLoading()  { document.getElementById('loadingOverlay').classList.remove('show'); }
+
+  function esc(s) {
+    if (!s) return '-';
+    return s.toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+  }
+
+  function showMsg(id, msg, type) {
+    var el = document.getElementById(id);
+    var cls = type === 'error' ? 'error-box' : (type === 'success' ? 'success-box' : 'info-box');
+    el.innerHTML = '<div class="' + cls + '">' + msg + '</div>';
+    if (type !== 'info') setTimeout(function() { el.innerHTML = ''; }, 3000);
+  }
+
+  function addItemRow() {
+    rowCount++;
+    var tbody = document.getElementById('itemsBody');
+    var row = tbody.insertRow();
+    row.innerHTML = '<td>' + rowCount + '</td>'
+      + '<td><input type="text" name="item_name" style="width:100%" placeholder="ชื่ออุปกรณ์" required></td>'
+      + '<td><input type="text" name="brand" style="width:100%" placeholder="ยี่ห้อ"></td>'
+      + '<td><input type="text" name="model" style="width:100%" placeholder="รุ่น"></td>'
+      + '<td><input type="text" name="serial_no" style="width:100%" placeholder="Serial Number"></td>'
+      + '<td><input type="number" name="quantity" value="1" style="width:70px" min="1"></td>'
+      + '<td><button class="btn-remove" data-remove>ลบ</button></td>';
+  }
+
+  function reorderRows() {
+    var rows = document.querySelectorAll('#itemsBody tr');
+    rowCount = rows.length;
+    rows.forEach(function(r, i) { r.cells[0].innerText = i + 1; });
+  }
+
+  function setupAutoSearch() {
+    document.getElementById('empCode').addEventListener('input', function() {
+      var v = this.value.trim();
+      if (!v) { clearEmp(); document.getElementById('managerSection').style.display = 'none'; document.getElementById('searchResult').innerHTML = ''; currentManagerInfo = null; currentEmployee = null; managerOptions = []; return; }
+      if (searchTimeout) clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(function() { performSearch(v); }, 500);
+    });
+  }
+
+  async function performSearch(empCode) {
+    showMsg('searchResult', 'กำลังค้นหาข้อมูล...', 'info');
+    const { data, error } = await sb.from('employees').select('*').eq('employees_code', empCode).maybeSingle();
+    if (error) { clearEmp(); showMsg('searchResult', 'เกิดข้อผิดพลาด: ' + error.message, 'error'); return; }
+    if (data) {
+      currentEmployee = data;
+      document.getElementById('empName').value    = data.name_thai || '';
+      document.getElementById('section').value    = data.section || '';
+      document.getElementById('department').value = data.department || '';
+      document.getElementById('position').value   = data.position || '';
+      showMsg('searchResult', 'พบข้อมูล: ' + (data.name_thai||'') + ' (' + (data.position||'') + ')', 'success');
+      if (data.section) loadManagersForSection(data.section);
+      else { document.getElementById('managerSection').style.display = 'none'; currentManagerInfo = null; managerOptions = []; }
+    } else {
+      clearEmp();
+      showMsg('searchResult', 'ไม่พบรหัสพนักงาน: ' + empCode, 'error');
+      document.getElementById('managerSection').style.display = 'none';
+      currentManagerInfo = null; currentEmployee = null; managerOptions = [];
+    }
+  }
+
+  async function loadManagersForSection(section) {
+    var box = document.getElementById('managerSection');
+    box.style.display = 'block';
+    document.getElementById('managerInfo').innerHTML = '<span style="color:#64748b;">กำลังค้นหาผู้อนุมัติ...</span>';
+
+    const { data, error } = await sb.from('profiles').select('name,email,section').eq('role', 'approver').eq('section', section);
+
+    if (error) {
+      currentManagerInfo = null;
+      managerOptions = [];
+      document.getElementById('managerInfo').innerHTML = '<strong style="color:#dc2626;">เกิดข้อผิดพลาดในการค้นหาผู้อนุมัติ: ' + esc(error.message) + '</strong>';
+      return;
+    }
+
+    managerOptions = data || [];
+
+    if (managerOptions.length === 0) {
+      currentManagerInfo = null;
+      document.getElementById('managerInfo').innerHTML = '<strong style="color:#dc2626;">ไม่พบผู้อนุมัติสำหรับฝ่าย "' + esc(section) + '" กรุณาติดต่อผู้ดูแลระบบ</strong>';
+    } else if (managerOptions.length === 1) {
+      currentManagerInfo = managerOptions[0];
+      document.getElementById('managerInfo').innerHTML = '<strong>' + esc(currentManagerInfo.name) + '</strong><br>อีเมล: ' + esc(currentManagerInfo.email) + '<br><span style="color:#f59e0b;font-size:14px;margin-top:8px;display:inline-block;">ระบบจะแจ้งการอนุมัติไปยังอีเมลผู้จัดการอัตโนมัติ</span>';
+    } else {
+      currentManagerInfo = null;
+      var options = '<option value="">-- กรุณาเลือกผู้อนุมัติ --</option>'
+        + managerOptions.map(function(m) { return '<option value="' + esc(m.email) + '">' + esc(m.name) + '</option>'; }).join('');
+      document.getElementById('managerInfo').innerHTML =
+        '<label style="margin-bottom:6px;">ฝ่ายนี้มีผู้อนุมัติมากกว่า 1 คน กรุณาเลือก <span class="req">*</span></label>'
+        + '<select id="managerSelect" style="margin-top:6px;">' + options + '</select>';
+      document.getElementById('managerSelect').addEventListener('change', function() {
+        var email = this.value;
+        currentManagerInfo = managerOptions.find(function(m) { return m.email === email; }) || null;
+      });
+    }
+  }
+
+  function clearEmp() {
+    ['empName','section','department','position'].forEach(function(id) { document.getElementById(id).value = ''; });
+  }
+
+  async function generateTicketNo() {
+    var now = new Date();
+    var y = String(now.getFullYear()).slice(-2);
+    var m = String(now.getMonth()+1).padStart(2,'0');
+    var d = String(now.getDate()).padStart(2,'0');
+    var prefix = 'TK' + y + m + d;
+    const { count } = await sb.from('fm009_requests').select('*', { count: 'exact', head: true }).like('ticket_no', prefix + '%');
+    var seq = String((count||0) + 1).padStart(3,'0');
+    return prefix + '-' + seq;
+  }
+
+  async function notifyManager(managerEmail, ticketNo, empName, department, reason, items) {
+    if (!managerEmail) return;
+    var itemsHtml = items.map(function(it, i) {
+      return (i+1) + '. ' + esc(it.item_name) + ' | ยี่ห้อ: ' + esc(it.brand||'-') + ' | รุ่น: ' + esc(it.model||'-') + ' | SN: ' + esc(it.serial_no||'-') + ' | จำนวน: ' + it.quantity + ' ชิ้น';
+    }).join('<br>');
+    var html = '<p>เรียน ผู้จัดการ</p>'
+      + '<p>🎫 Ticket ID: <strong>' + esc(ticketNo) + '</strong><br>'
+      + '👤 ผู้ขอ: ' + esc(empName) + '<br>'
+      + '🏢 แผนก: ' + esc(department) + '<br>'
+      + '📝 เหตุผล: ' + esc(reason) + '</p>'
+      + '<p>📦 รายการอุปกรณ์:<br>' + itemsHtml + '</p>'
+      + '<p>⏰ ยื่นคำขอเมื่อ: ' + new Date().toLocaleString('th-TH') + '</p>'
+      + '<p style="color:#94a3b8;font-size:12px;">ข้อความนี้ส่งจากระบบอัตโนมัติ กรุณาอย่าตอบกลับ</p>';
+    try {
+      await sb.functions.invoke('send-email', { body: { to: managerEmail, subject: '[' + ticketNo + '] คำขออนุญาตนำอุปกรณ์ออกนอกบริษัท - ' + empName, html: html } });
+    } catch (e) { console.error('notifyManager failed:', e); }
+  }
+
+  async function submitForm() {
+    var empCode = document.getElementById('empCode').value.trim();
+    var empName = document.getElementById('empName').value.trim();
+    if (!empCode || !empName || !currentEmployee) { alert('กรุณากรอกรหัสพนักงานที่ถูกต้อง'); return; }
+
+    if (!currentManagerInfo || !currentManagerInfo.email) {
+      if (managerOptions.length > 1) alert('กรุณาเลือกผู้อนุมัติก่อนบันทึกคำขอ');
+      else alert('ไม่พบผู้อนุมัติสำหรับฝ่ายนี้ กรุณาติดต่อผู้ดูแลระบบก่อนยื่นคำขอ');
+      return;
+    }
+
+    var reason = document.getElementById('reason').value.trim();
+    if (!reason) { alert('กรุณาระบุเหตุผลการนำออก'); return; }
+    var rows = document.querySelectorAll('#itemsBody tr');
+    if (!rows.length) { alert('กรุณาเพิ่มรายการอุปกรณ์อย่างน้อย 1 รายการ'); return; }
+    var items = [], hasError = false;
+    for (var i = 0; i < rows.length; i++) {
+      var row = rows[i];
+      var itemName = row.querySelector('input[name="item_name"]') ? row.querySelector('input[name="item_name"]').value.trim() : '';
+      if (!itemName) { alert('กรุณากรอกชื่ออุปกรณ์ในลำดับที่ ' + (i+1)); hasError = true; break; }
+      items.push({
+        item_name: itemName,
+        brand: row.querySelector('input[name="brand"]') ? (row.querySelector('input[name="brand"]').value || null) : null,
+        model: row.querySelector('input[name="model"]') ? (row.querySelector('input[name="model"]').value || null) : null,
+        serial_no: row.querySelector('input[name="serial_no"]') ? (row.querySelector('input[name="serial_no"]').value || null) : null,
+        quantity: row.querySelector('input[name="quantity"]') ? parseInt(row.querySelector('input[name="quantity"]').value || '1') : 1
+      });
+    }
+    if (hasError) return;
+
+    var department = document.getElementById('department').value;
+    var managerEmail = currentManagerInfo.email;
+
+    document.getElementById('submitBtn').disabled = true;
+    showLoading('กำลังบันทึกข้อมูล กรุณารอสักครู่...');
+    try {
+      var ticketNo = await generateTicketNo();
+      const { data: reqRow, error: reqErr } = await sb.from('fm009_requests').insert({
+        ticket_no: ticketNo,
+        employee_code: empCode,
+        employee_name: empName,
+        department: department,
+        reason: reason,
+        manager_email: managerEmail,
+        status: 'รอการอนุมัติ',
+        request_date: new Date().toISOString()
+      }).select().single();
+      if (reqErr) throw reqErr;
+
+      const itemsPayload = items.map(function(it) { return { request_id: reqRow.id, item_name: it.item_name, brand: it.brand, model: it.model, serial_no: it.serial_no, quantity: it.quantity }; });
+      const { error: itemsErr } = await sb.from('fm009_request_items').insert(itemsPayload);
+      if (itemsErr) throw itemsErr;
+
+      await notifyManager(managerEmail, ticketNo, empName, department, reason, items);
+
+      hideLoading();
+      document.getElementById('submitBtn').disabled = false;
+      alert('บันทึกคำขอเรียบร้อยแล้ว (Ticket: ' + ticketNo + ')');
+      if (confirm('ต้องการล้างข้อมูลเพื่อกรอกคำขอใหม่?')) resetForm();
+    } catch (e) {
+      hideLoading();
+      document.getElementById('submitBtn').disabled = false;
+      alert('เกิดข้อผิดพลาด: ' + (e.message || e));
+    }
+  }
+
+  function resetForm() {
+    ['empCode','empName','section','department','position','reason'].forEach(function(id) { document.getElementById(id).value = ''; });
+    document.getElementById('searchResult').innerHTML = '';
+    document.getElementById('managerSection').style.display = 'none';
+    document.getElementById('itemsBody').innerHTML = '';
+    rowCount = 0; currentManagerInfo = null; currentEmployee = null; managerOptions = [];
+    addItemRow();
+  }
+
+  document.getElementById('itemsBody').addEventListener('click', function(e) {
+    var btn = e.target.closest('button[data-remove]');
+    if (btn) { btn.closest('tr').remove(); reorderRows(); }
+  });
+
+  document.getElementById('menuBtn').addEventListener('click', openSidebar);
+  document.getElementById('sidebarOverlay').addEventListener('click', closeSidebar);
+  document.getElementById('btnAddRow').addEventListener('click', addItemRow);
+  document.getElementById('submitBtn').addEventListener('click', submitForm);
+
+  document.getElementById('nav-form').addEventListener('click',   function() { navigateTo('index'); });
+  document.getElementById('nav-approve').addEventListener('click', function() { navigateTo('approve'); });
+  document.getElementById('nav-track').addEventListener('click',   function() { navigateTo('track'); });
+  document.getElementById('nav-return').addEventListener('click',  function() { navigateTo('return'); });
+  document.getElementById('nav-report').addEventListener('click',  function() { navigateTo('report'); });
+
+  addItemRow();
+  setupAutoSearch();
+</script>
+</body>
+</html>

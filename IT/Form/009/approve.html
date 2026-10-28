@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FM009 - อนุมัติคำขอเบิกอุปกรณ์</title>
+<style>
+    :root {
+      --primary:#1a56db; --primary-dark:#1e40af; --primary-light:#dbeafe;
+      --sidebar-bg1:#0f2050; --sidebar-bg2:#1a3a7a;
+      --bg:#f0f4f8; --white:#ffffff; --border:#e2e8f0;
+      --text:#1e293b; --text-muted:#64748b;
+      --success:#059669; --warning:#f59e0b; --danger:#ef4444;
+      --sidebar-w:240px; --topbar-h:60px; --radius:10px;
+      --shadow:0 2px 8px rgba(0,0,0,0.08);
+    }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Sarabun','TH Sarabun New','Noto Sans Thai',Tahoma,sans-serif;font-size:16px;background:var(--bg);color:var(--text);min-height:100vh;display:flex;}
+    .sidebar{width:var(--sidebar-w);min-height:100vh;background:linear-gradient(180deg,var(--sidebar-bg1) 0%,var(--sidebar-bg2) 100%);position:fixed;top:0;left:0;bottom:0;z-index:200;display:flex;flex-direction:column;box-shadow:3px 0 12px rgba(0,0,0,0.18);}
+    .sidebar-logo{padding:22px 20px 16px;border-bottom:1px solid rgba(255,255,255,.10);}
+    .sidebar-logo .logo-title{font-size:15px;font-weight:700;color:#fff;line-height:1.4;}
+    .sidebar-logo .logo-sub{font-size:12px;color:rgba(255,255,255,.45);margin-top:3px;}
+    .sidebar-nav{flex:1;padding:10px 0;overflow-y:auto;}
+    .nav-group-label{font-size:11px;font-weight:700;color:rgba(255,255,255,.35);letter-spacing:1.1px;text-transform:uppercase;padding:16px 20px 6px;}
+    .nav-item{display:flex;align-items:center;gap:12px;padding:12px 20px;color:rgba(255,255,255,.70);text-decoration:none;font-size:15px;font-weight:500;border:none;background:none;width:100%;text-align:left;cursor:pointer;position:relative;transition:all .18s;}
+    .nav-item:hover{background:rgba(255,255,255,.09);color:#fff;}
+    .nav-item.active{background:rgba(59,130,246,.20);color:#93c5fd;font-weight:700;}
+    .nav-item.active::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:#3b82f6;border-radius:0 4px 4px 0;}
+    .topbar{position:fixed;top:0;left:var(--sidebar-w);right:0;height:var(--topbar-h);background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 28px;z-index:100;box-shadow:0 1px 4px rgba(0,0,0,.06);}
+    .topbar-title{font-size:18px;font-weight:700;color:var(--text);}
+    .user-info{font-size:14px;color:var(--text-muted);display:flex;align-items:center;gap:12px;}
+    .btn-logout{background:var(--danger);color:#fff;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:13px;font-family:inherit;}
+    .main-wrapper{margin-left:var(--sidebar-w);padding-top:var(--topbar-h);flex:1;width:calc(100% - var(--sidebar-w));}
+    .main-content{padding:28px;}
+    .section-card{background:var(--white);border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);margin-bottom:22px;overflow:hidden;padding:20px;}
+    select{padding:10px 13px;border:1px solid var(--border);border-radius:8px;font-size:16px;font-family:inherit;background:var(--white);color:var(--text);width:100%;max-width:300px;}
+    table{width:100%;border-collapse:collapse;font-size:14px;margin-top:10px;}
+    th{background:#f1f5f9;color:var(--primary-dark);font-weight:700;padding:8px 10px;text-align:left;border:1px solid var(--border);}
+    td{padding:8px 10px;border:1px solid var(--border);color:var(--text);}
+    .req-card{background:#fff;border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,0.05);}
+    .req-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;border-bottom:1px solid var(--border);padding-bottom:8px;}
+    .loading-overlay{display:none;position:fixed;inset:0;background:rgba(15,32,80,.45);z-index:999;align-items:center;justify-content:center;color:#fff;font-size:18px;font-weight:600;}
+    .loading-overlay.show{display:flex;}
+</style>
+</head>
+<body>
+
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-title">ระบบนำอุปกรณ์<br>ออกนอกบริษัท</div>
+    <div class="logo-sub">IT Asset Management</div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-group-label">เมนูหลัก</div>
+    <button class="nav-item" onclick="navigateTo('index')">ยื่นคำขอ</button>
+    <button class="nav-item active" onclick="navigateTo('approve')">อนุมัติคำขอ</button>
+    <button class="nav-item" onclick="navigateTo('track')">ติดตามสถานะ</button>
+    <button class="nav-item" onclick="navigateTo('return')">บันทึกการคืน</button>
+    <div class="nav-group-label">รายงาน</div>
+    <button class="nav-item" onclick="navigateTo('report')">รายงานสรุป</button>
+  </nav>
+    <div class="sidebar-footer">ระบบนำอุปกรณ์ออกนอกบริษัท<br>พัฒนาโดย Sarawut.C</div>
+</div>
+
+<div class="main-wrapper">
+  <div class="topbar">
+    <div class="topbar-title">FM009 · อนุมัติคำขอเบิกอุปกรณ์</div>
+    <div class="user-info">
+      <span id="userEmailDisplay">กำลังโหลด...</span>
+      <button class="btn-logout" onclick="logout()">ออกจากระบบ</button>
+    </div>
+  </div>
+  <div class="main-content">
+    <div class="section-card">
+      <label style="margin-bottom:8px;display:block;">กรองสถานะ:</label>
+      <select id="status-filter" onchange="loadRequests()">
+        <option value="รอการอนุมัติ">รอการอนุมัติ</option>
+        <option value="อนุมัติแล้ว">อนุมัติแล้ว</option>
+        <option value="ไม่อนุมัติ">ไม่อนุมัติ</option>
+        <option value="all">ทั้งหมด</option>
+      </select>
+    </div>
+
+    <div id="requestsList">
+      <p style="color:var(--text-muted);">กำลังโหลดข้อมูล...</p>
+    </div>
+  </div>
+</div>
+
+<div class="loading-overlay" id="loadingOverlay">กำลังประมวลผล...</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = 'https://fnbkcgkuykdabbensvif.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZuYmtjZ2t1eWtkYWJiZW5zdmlmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkzMDE0MTQsImV4cCI6MjEwNDg3NzQxNH0.L6x3nqAy2rqcxdtzyTs4MHLPubtBqD3Tnk9e97EfEJE';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  let currentApproverEmail = null;
+
+  function navigateTo(page) { window.location.href = page + '.html'; }
+  function showLoading() { document.getElementById('loadingOverlay').classList.add('show'); }
+  function hideLoading() { document.getElementById('loadingOverlay').classList.remove('show'); }
+
+  function esc(s) {
+    if (!s) return '-';
+    return s.toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+  }
+
+  async function checkUser() {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) {
+      // ยังไม่ได้ login ผ่าน Supabase Auth -> เด้งไปหน้า login ทันที
+      window.location.href = 'login.html';
+      return null;
+    }
+
+    // เช็คว่า email ที่ login เข้ามา มีสิทธิ์ role = 'approver' ในตาราง profiles หรือไม่
+    const { data: profile, error: profileErr } = await sb
+      .from('profiles')
+      .select('role, email')
+      .eq('email', session.user.email)
+      .eq('role', 'approver')
+      .maybeSingle();
+
+    if (profileErr) {
+      alert('เกิดข้อผิดพลาดในการตรวจสอบสิทธิ์: ' + profileErr.message);
+      await sb.auth.signOut();
+      window.location.href = 'login.html';
+      return null;
+    }
+
+    if (!profile) {
+      // login สำเร็จ แต่ไม่มีสิทธิ์ผู้อนุมัติ (ไม่มีใน profiles หรือ role ไม่ใช่ approver)
+      alert('บัญชีนี้ไม่มีสิทธิ์ผู้อนุมัติ (ไม่พบใน profiles หรือ role ไม่ใช่ approver)');
+      await sb.auth.signOut();
+      window.location.href = 'login.html';
+      return null;
+    }
+
+    document.getElementById('userEmailDisplay').textContent = session.user.email;
+    currentApproverEmail = session.user.email;
+    return session;
+  }
+
+  async function loadRequests() {
+    const statusFilter = document.getElementById('status-filter').value;
+    let query = sb.from('fm009_requests').select('*, fm009_request_items(*)')
+      .eq('manager_email', currentApproverEmail)
+      .order('request_date', { ascending: false });
+    
+    if (statusFilter !== 'all') {
+      query = query.eq('status', statusFilter);
+    }
+
+    const { data: requests, error } = await query;
+    const container = document.getElementById('requestsList');
+
+    if (error) {
+      container.innerHTML = '<p style="color:var(--danger);">เกิดข้อผิดพลาดในการโหลดข้อมูล: ' + esc(error.message) + '</p>';
+      return;
+    }
+
+    if (!requests || requests.length === 0) {
+      container.innerHTML = '<p style="color:var(--text-muted);">ไม่มีรายการคำขอในหมวดนี้</p>';
+      return;
+    }
+
+    let html = '';
+    for (let req of requests) {
+      let itemsHtml = '';
+      if (req.fm009_request_items && req.fm009_request_items.length > 0) {
+        itemsHtml = `<table>
+          <thead>
+            <tr>
+              <th>อุปกรณ์</th>
+              <th>ยี่ห้อ</th>
+              <th>รุ่น</th>
+              <th>S/N</th>
+              <th>จำนวน</th>
+            </tr>
+          </thead>
+          <tbody>`;
+        req.fm009_request_items.forEach(it => {
+          itemsHtml += `<tr>
+            <td>${esc(it.item_name)}</td>
+            <td>${esc(it.brand)}</td>
+            <td>${esc(it.model)}</td>
+            <td>${esc(it.serial_no)}</td>
+            <td>${it.quantity}</td>
+          </tr>`;
+        });
+        itemsHtml += `</tbody></table>`;
+      } else {
+        itemsHtml = '<p style="font-size:14px;color:var(--text-muted);">ไม่มีรายการอุปกรณ์</p>';
+      }
+
+      let reqDate = new Date(req.request_date).toLocaleString('th-TH');
+
+      html += `<div class="req-card">
+        <div class="req-header">
+          <div>
+            <strong>${esc(req.ticket_no)}</strong> | ${esc(req.employee_name)} (${esc(req.employee_code)})<br>
+            <span style="font-size:13px;color:var(--text-muted);">แผนก: ${esc(req.department)} | วันที่ยื่น: ${reqDate}</span>
+          </div>
+          <div><strong style="color:var(--primary);">${esc(req.status)}</strong></div>
+        </div>
+        <div style="margin-bottom:12px;font-size:15px;">
+          <strong>เหตุผล:</strong> ${esc(req.reason)}
+        </div>
+        ${itemsHtml}
+        ${(req.status === 'pending' || req.status === 'รอการอนุมัติ') ? `
+          <div style="margin-top:15px; display:flex; gap:10px;">
+            <button onclick="approveRequest('${req.id}')" style="background:#059669; color:#fff; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:600;">อนุมัติ</button>
+            <button onclick="rejectRequest('${req.id}')" style="background:#dc2626; color:#fff; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:600;">ไม่อนุมัติ</button>
+          </div>
+        ` : ''}
+      </div>`;
+    }
+    container.innerHTML = html;
+  }
+
+  async function approveRequest(requestId) {
+    if (!confirm('คุณต้องการอนุมัติคำขอนี้ใช่หรือไม่?')) return;
+    showLoading();
+    const { error } = await sb.from('fm009_requests')
+      .update({ status: 'อนุมัติแล้ว' })
+      .eq('id', requestId);
+    hideLoading();
+
+    if (error) {
+      alert('เกิดข้อผิดพลาด: ' + error.message);
+    } else {
+      alert('อนุมัติคำขอเรียบร้อยแล้ว');
+      loadRequests();
+    }
+  }
+
+  async function rejectRequest(requestId) {
+    const reason = prompt('กรุณาระบุเหตุผลที่ไม่ino/ไม่อนุมัติ:');
+    if (reason === null) return;
+    
+    showLoading();
+    const { error } = await sb.from('fm009_requests')
+      .update({ status: 'ไม่อนุมัติ', reject_reason: reason })
+      .eq('id', requestId);
+    hideLoading();
+
+    if (error) {
+      alert('เกิดข้อผิดพลาด: ' + error.message);
+    } else {
+      alert('บันทึกการปฏิเสธคำขอเรียบร้อยแล้ว');
+      loadRequests();
+    }
+  }
+
+  async function logout() {
+    await sb.auth.signOut();
+    window.location.href = 'login.html';
+  }
+
+  (async () => {
+    const session = await checkUser();
+    if (session) loadRequests();
+  })();
+</script>
+</body>
+</html>

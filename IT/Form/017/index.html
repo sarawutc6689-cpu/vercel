@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FOM 017</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config-employees.js"></script>
+  <script src="config-assets.js"></script>
+  <style>
+    :root {
+      --primary-main: #2563eb;
+      --primary-dark: #1d4ed8;
+      --card-border: #e2e8f0;
+    }
+    body {
+      background: linear-gradient(145deg, #f0f4fe 0%, #e9f0ff 100%);
+      min-height: 100vh; padding: 24px 20px;
+      font-family: 'Segoe UI', 'Sarabun', system-ui, sans-serif;
+    }
+    .main-container { max-width: 1400px; margin: 0 auto; }
+    .page-header { text-align: center; margin-bottom: 28px; }
+    .page-header h1 {
+      font-size: 1.9rem; font-weight: 600; letter-spacing: -0.3px; margin-bottom: 6px;
+      background: linear-gradient(135deg, #1e40af, #2563eb);
+      background-clip: text; -webkit-background-clip: text; color: transparent;
+    }
+    .page-header p { color: #475569; font-size: 0.95rem; }
+    .card {
+      border-radius: 24px; background: #fff; margin-bottom: 24px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.03), 0 2px 6px rgba(0,0,0,0.05);
+      border: 1px solid var(--card-border);
+    }
+    .card-header {
+      background: #fff; border-bottom: 1px solid #eef2ff;
+      padding: 1rem 1.5rem; border-radius: 24px 24px 0 0 !important;
+    }
+    .card-header h4 { margin: 0; font-size: 1.1rem; font-weight: 600; color: #1e40af; }
+    .nav-tabs { border-bottom: 1px solid #e2edff; gap: 6px; margin-bottom: 24px; }
+    .nav-tabs .nav-link {
+      border: none; color: #4b5563; font-weight: 500; padding: 10px 20px;
+      border-radius: 40px; transition: all 0.2s; font-size: 0.9rem;
+    }
+    .nav-tabs .nav-link:hover { color: var(--primary-main); background: #f0f6ff; }
+    .nav-tabs .nav-link.active { color: var(--primary-main); background: #eef4ff; font-weight: 600; }
+    .btn-primary {
+      background: var(--primary-main); border: none; padding: 8px 18px;
+      font-weight: 500; border-radius: 40px; transition: all 0.2s;
+    }
+    .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); box-shadow: 0 8px 18px rgba(37,99,235,0.2); }
+    .btn-primary:disabled { opacity: 0.5; transform: none; box-shadow: none; }
+    .btn-outline-secondary { border-radius: 40px; border-color: #cbd5e1; color: #334155; }
+    .status-badge { display: inline-block; padding: 4px 12px; border-radius: 30px; font-size: 12px; font-weight: 600; }
+    .status-available { background: #e6f7ec; color: #15803d; }
+    .status-borrowed { background: #fff3e3; color: #b45309; }
+    .asset-item { cursor: pointer; transition: all 0.15s; border-left: 3px solid transparent; background: white; }
+    .asset-item:hover { border-left-color: var(--primary-main); background: #fafcff; transform: translateX(2px); }
+    .asset-item.selected { border-left-color: var(--primary-main); background: #f0f7ff; }
+    .employee-info-card {
+      background: #f8fafc; border-left: 4px solid var(--primary-main);
+      border-radius: 16px; padding: 14px 18px; font-size: 0.88rem; color: #1e293b;
+    }
+    .employee-info-card p { margin: 4px 0; }
+    #employeeSearchResults, #returnerSearchResults {
+      border: 1px solid #e2edff; border-radius: 20px; background: #fff;
+      box-shadow: 0 8px 18px rgba(0,0,0,0.05); z-index: 1050;
+    }
+    .employee-result-item { cursor: pointer; padding: 12px 16px; border-bottom: 1px solid #f0f4fe; transition: background 0.15s; }
+    .employee-result-item:last-child { border-bottom: none; }
+    .employee-result-item:hover { background: #f5f9ff; }
+    .form-control, .form-select { border-radius: 14px; border: 1px solid #cbd5e1; padding: 10px 14px; font-size: 0.9rem; }
+    .form-control:focus, .form-select:focus { border-color: var(--primary-main); box-shadow: 0 0 0 3px rgba(37,99,235,0.15); }
+    .table thead th { background: #f9fbfe; font-weight: 600; font-size: 0.82rem; color: #334155; border-bottom: 1px solid #e2edff; }
+    .table tbody tr:hover { background: #f8faff; }
+    @media (max-width: 768px) { body { padding: 12px; } .nav-tabs .nav-link { padding: 6px 12px; font-size: 13px; } }
+    footer { text-align: center; padding: 30px; color: #94a3b8; font-size: 0.9rem; border-top: 1px solid #e2e8f0; }
+    footer p { margin-bottom: 8px; }
+    .iso-label { text-align: right; font-size: 12px; color: #888; margin-top: 8px; padding-right: 12px; }
+  </style>
+</head>
+<body>
+<div class="main-container">
+  <div class="page-header">
+    <h1><i class="fas fa-laptop-code me-2" style="background:linear-gradient(135deg,#2563eb,#1e40af);background-clip:text;-webkit-background-clip:text;color:transparent;"></i>ทะเบียนทรัพย์สินอุปกรณ์สารสนเทศ</h1>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <h4><i class="fas fa-exchange-alt me-2 text-primary"></i>ฟอร์มการรับมอบ-ส่งคืนทรัพย์สินอุปกรณ์สารสนเทศ</h4>
+    </div>
+    <div class="card-body">
+      <ul class="nav nav-tabs" id="mainTab" role="tablist">
+        <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#borrow"><i class="fas fa-hand-holding-heart me-1"></i>รับมอบ</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#return"><i class="fas fa-undo-alt me-1"></i>ส่งคืน</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#list"><i class="fas fa-table-list me-1"></i>รายการทรัพย์สิน</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#report"><i class="fas fa-chart-line me-1"></i>รายงาน</button></li>
+      </ul>
+      <div class="tab-content">
+
+        <!-- รับมอบ -->
+        <div class="tab-pane fade show active" id="borrow">
+          <div class="row g-4">
+            <div class="col-md-5">
+              <div class="card h-100 border-0 shadow-none" style="background:#fefefe;">
+                <div class="card-body px-0 pt-0">
+                  <h6 class="fw-semibold mb-3"><i class="fas fa-search me-2 text-primary"></i>ค้นหาทรัพย์สินที่พร้อมใช้งาน</h6>
+                  <input type="text" class="form-control mb-3" id="searchBorrow" placeholder="ชื่อเครื่อง / Serial ...">
+                  <div id="availableAssetsList" style="max-height:460px;overflow-y:auto;">
+                    <div class="text-center text-muted py-4"><i class="fas fa-circle-notch fa-spin me-2"></i>กำลังโหลด...</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-7">
+              <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                  <h6 class="fw-semibold mb-3"><i class="fas fa-pen-alt me-2 text-primary"></i>ฟอร์มบันทึกการรับมอบ</h6>
+                  <form id="borrowForm" novalidate>
+                    <input type="hidden" id="borrowAssetId">
+                    <div class="row g-3 mb-3">
+                      <div class="col-md-5">
+                        <label class="form-label fw-medium small">ชื่อเครื่อง <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control bg-light" id="borrowAssetCode" readonly placeholder="เลือกจากรายการ">
+                      </div>
+                      <div class="col-md-7">
+                        <label class="form-label fw-medium small">ประเภท/สเปก</label>
+                        <input type="text" class="form-control bg-light" id="borrowAssetName" readonly>
+                      </div>
+                    </div>
+                    <div class="mb-3">
+                      <label class="form-label fw-medium small">ค้นหาพนักงาน (รหัส/ชื่อ) <span class="text-danger">*</span></label>
+                      <div class="input-group">
+                        <input type="text" class="form-control" id="employeeSearch" placeholder="พิมพ์รหัสพนักงาน หรือ ชื่อ...">
+                        <button type="button" class="btn btn-outline-secondary" id="btnSearchEmp"><i class="fas fa-search"></i></button>
+                        <button type="button" class="btn btn-outline-danger" id="btnClearEmp" style="display:none;"><i class="fas fa-times"></i></button>
+                      </div>
+                      <div id="employeeSearchResults" style="display:none;" class="mt-2"></div>
+                    </div>
+                    <div id="selectedEmployeeInfo" style="display:none;" class="employee-info-card mb-3">
+                      <p><i class="fas fa-id-card me-2 text-primary"></i><strong>รหัส:</strong> <span id="ei-code"></span></p>
+                      <p><i class="fas fa-user-circle me-2 text-primary"></i><strong>ชื่อ-นามสกุล:</strong> <span id="ei-name"></span></p>
+                      <p><i class="fas fa-building me-2 text-primary"></i><strong>ฝ่าย/แผนก:</strong> <span id="ei-dept"></span></p>
+                      <p><i class="fas fa-briefcase me-2 text-primary"></i><strong>ตำแหน่ง:</strong> <span id="ei-position"></span></p>
+                    </div>
+                    <input type="hidden" id="selectedEmployeeCodeInput">
+                    <input type="hidden" id="selectedEmployeeSection">
+                    <input type="hidden" id="selectedEmployeeDepartment">
+                    <input type="hidden" id="selectedEmployeePosition">
+                    <div class="mb-3">
+                      <label class="form-label fw-medium small">วันที่รับมอบ <span class="text-danger">*</span></label>
+                      <input type="date" class="form-control" id="borrowDate" required>
+                    </div>
+                    <div class="mb-3">
+                      <label class="form-label fw-medium small">หมายเหตุ</label>
+                      <textarea class="form-control" id="borrowNotes" rows="2" placeholder="ระบุรายละเอียดเพิ่มเติม (ถ้ามี)"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100" id="submitBorrowBtn" disabled>
+                      <i class="fas fa-check-circle me-2"></i>บันทึกการรับมอบ
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </div>
+            <p class="iso-label">FOM 017 IT Rev.01 (12/05/2026)</p>
+          </div>
+        </div>
+
+        <!-- ส่งคืน -->
+        <div class="tab-pane fade" id="return">
+          <div class="row g-4">
+            <div class="col-md-5">
+              <div class="card h-100 border-0 shadow-none">
+                <div class="card-body px-0 pt-0">
+                  <h6 class="fw-semibold mb-3"><i class="fas fa-box-open me-2 text-primary"></i>ทรัพย์สินที่กำลังถูกยืม</h6>
+                  <input type="text" class="form-control mb-3" id="searchReturn" placeholder="ค้นหาชื่อเครื่อง / ผู้ยืม...">
+                  <div id="borrowedAssetsList" style="max-height:460px;overflow-y:auto;">
+                    <div class="text-center text-muted py-4"><i class="fas fa-circle-notch fa-spin me-2"></i>กำลังโหลด...</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-7">
+              <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                  <h6 class="fw-semibold mb-3"><i class="fas fa-reply-all me-2 text-primary"></i>ฟอร์มบันทึกการส่งคืน</h6>
+                  <form id="returnForm" novalidate>
+                    <input type="hidden" id="returnAssetId">
+                    <div class="row g-3 mb-3">
+                      <div class="col-md-5">
+                        <label class="form-label fw-medium small">ชื่อเครื่อง <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control bg-light" id="returnAssetCode" readonly>
+                      </div>
+                      <div class="col-md-7">
+                        <label class="form-label fw-medium small">ประเภท/สเปก</label>
+                        <input type="text" class="form-control bg-light" id="returnAssetName" readonly>
+                      </div>
+                    </div>
+                    <div class="mb-3">
+                      <label class="form-label fw-medium small">ผู้ยืม (ผู้รับมอบ)</label>
+                      <input type="text" class="form-control bg-light" id="borrowerInfo" readonly>
+                    </div>
+                    <div class="mb-3">
+                      <label class="form-label fw-medium small">ค้นหาผู้ส่งคืน (รหัส/ชื่อ) <span class="text-danger">*</span></label>
+                      <div class="input-group">
+                        <input type="text" class="form-control" id="returnerSearch" placeholder="พิมพ์รหัสพนักงาน หรือ ชื่อ...">
+                        <button type="button" class="btn btn-outline-secondary" id="btnSearchReturner"><i class="fas fa-search"></i></button>
+                        <button type="button" class="btn btn-outline-danger" id="btnClearReturner" style="display:none;"><i class="fas fa-times"></i></button>
+                      </div>
+                      <div id="returnerSearchResults" style="display:none;" class="mt-2"></div>
+                    </div>
+                    <div id="selectedReturnerInfo" style="display:none;" class="employee-info-card mb-3">
+                      <p><i class="fas fa-id-card me-2 text-primary"></i><strong>รหัส:</strong> <span id="ri-code"></span></p>
+                      <p><i class="fas fa-user-circle me-2 text-primary"></i><strong>ชื่อ-นามสกุล:</strong> <span id="ri-name"></span></p>
+                      <p><i class="fas fa-building me-2 text-primary"></i><strong>ฝ่าย/แผนก:</strong> <span id="ri-dept"></span></p>
+                      <p><i class="fas fa-briefcase me-2 text-primary"></i><strong>ตำแหน่ง:</strong> <span id="ri-position"></span></p>
+                    </div>
+                    <input type="hidden" id="returnerName">
+                    <div class="row g-3 mb-3">
+                      <div class="col-6">
+                        <label class="form-label fw-medium small">วันที่ส่งคืน <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="returnActualDate" required>
+                      </div>
+                      <div class="col-6">
+                        <label class="form-label fw-medium small">สภาพทรัพย์สิน <span class="text-danger">*</span></label>
+                        <select class="form-select" id="returnCondition" required>
+                          <option value="">เลือกสภาพ...</option>
+                          <option value="ดีเยี่ยม">ดีเยี่ยม</option>
+                          <option value="ดี">ดี</option>
+                          <option value="ปกติ">ปกติ</option>
+                          <option value="ชำรุดเล็กน้อย">ชำรุดเล็กน้อย</option>
+                          <option value="ชำรุด">ชำรุด</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="mb-3">
+                      <label class="form-label fw-medium small">หมายเหตุ</label>
+                      <textarea class="form-control" id="returnNotes" rows="2" placeholder="บันทึกเพิ่มเติม เช่น ความเสียหาย"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100"><i class="fas fa-check-double me-2"></i>บันทึกการส่งคืน</button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- รายการทรัพย์สิน -->
+        <div class="tab-pane fade" id="list">
+          <div class="d-flex flex-wrap gap-2 mb-4">
+            <div class="flex-grow-1"><input type="text" class="form-control" id="globalSearch" placeholder="ค้นหาทรัพย์สิน (ชื่อเครื่อง, Serial, ผู้ใช้)"></div>
+            <button class="btn btn-primary px-4" id="btnSearch"><i class="fas fa-search me-1"></i>ค้นหา</button>
+            <button class="btn btn-outline-secondary px-4" id="btnRefresh"><i class="fas fa-sync-alt me-1"></i>รีเฟรช</button>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-hover align-middle" style="font-size:0.85rem;">
+              <thead><tr><th>ชื่อเครื่อง</th><th>ประเภท</th><th>Serial Number</th><th>ยี่ห้อ / รุ่น</th><th>สถานะ</th><th>ผู้ใช้งาน</th><th>วันที่รับมอบ</th></tr></thead>
+              <tbody id="assetsTableBody"><tr><td colspan="7" class="text-center py-5 text-muted"><i class="fas fa-circle-notch fa-spin me-2"></i>กำลังโหลดข้อมูล...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- รายงาน -->
+        <div class="tab-pane fade" id="report">
+          <div class="card border-0 shadow-sm">
+            <div class="card-body">
+              <h6 class="fw-semibold mb-3"><i class="fas fa-calendar-alt me-2 text-primary"></i>รายงานประวัติการรับมอบ-ส่งคืน</h6>
+              <div class="row g-3 mb-4 align-items-end">
+                <div class="col-md-4"><label class="form-label fw-medium small">วันที่เริ่มต้น</label><input type="date" class="form-control" id="reportStartDate"></div>
+                <div class="col-md-4"><label class="form-label fw-medium small">วันที่สิ้นสุด</label><input type="date" class="form-control" id="reportEndDate"></div>
+                <div class="col-md-4"><button class="btn btn-primary w-100" id="btnGenReport"><i class="fas fa-chart-simple me-2"></i>สร้างรายงาน</button></div>
+              </div>
+              <div class="table-responsive">
+                <table class="table table-hover align-middle" style="font-size:0.85rem;">
+                  <thead><tr><th>วันที่ทำรายการ</th><th>ชื่อเครื่อง</th><th>รายการ</th><th>ชื่อผู้ทำรายการ</th><th>ฝ่าย/แผนก</th><th>รายละเอียด</th></tr></thead>
+                  <tbody id="reportTableBody"><tr><td colspan="6" class="text-center text-muted py-4">เลือกช่วงวันที่และกดสร้างรายงาน</td></tr></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+  <footer>
+    <p>ระบบรับมอบ-ส่งคืนทรัพย์สิน © 2026 | พัฒนาโดย Sarawut.C</p>
+    <p>สำหรับใช้ภายในองค์กรเท่านั้น</p>
+  </footer>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+// พนักงาน -> โปรเจค A (rpcA) | ทรัพย์สิน/ยืม-คืน/รายงาน -> โปรเจค B (rpcB)
+let availableAssets = [], borrowedAssets = [];
+let searchTimeout = null, returnerSearchTimeout = null;
+
+$(function() {
+  const today = new Date().toISOString().split('T')[0];
+  $('#borrowDate').val(today);
+  $('#returnActualDate').val(today);
+  $('#reportStartDate').val(today.substring(0,8)+'01');
+  $('#reportEndDate').val(today);
+
+  loadAvailableAssets(); loadBorrowedAssets(); loadAllAssets();
+
+  $('[data-bs-toggle="tab"]').on('shown.bs.tab', function(e) {
+    const t = $(e.target).data('bsTarget');
+    if(t==='#borrow') loadAvailableAssets();
+    if(t==='#return') loadBorrowedAssets();
+    if(t==='#list') loadAllAssets();
+  });
+
+  $('#searchBorrow').on('input', function() {
+    let kw = this.value.toLowerCase();
+    renderAvailableAssets(availableAssets.filter(a =>
+      a.AssetCode.toLowerCase().includes(kw) || (a.SerialNumber||'').toLowerCase().includes(kw)
+    ));
+  });
+  $('#searchReturn').on('input', function() {
+    let kw = this.value.toLowerCase();
+    renderBorrowedAssets(borrowedAssets.filter(a =>
+      a.AssetCode.toLowerCase().includes(kw) || (a.User||'').toLowerCase().includes(kw)
+    ));
+  });
+
+  // Employee search — รับมอบ (โปรเจค A)
+  $('#btnSearchEmp').on('click', doSearchEmployee);
+  $('#employeeSearch').on('keypress', function(e){ if(e.which===13){ e.preventDefault(); doSearchEmployee(); } });
+  $('#employeeSearch').on('input', function() {
+    clearTimeout(searchTimeout);
+    if(!this.value.trim()){ hideEmployeeResults(); return; }
+    searchTimeout = setTimeout(doSearchEmployee, 400);
+  });
+  $('#btnClearEmp').on('click', clearEmployee);
+
+  // Returner search — ส่งคืน (โปรเจค A)
+  $('#btnSearchReturner').on('click', doSearchReturner);
+  $('#returnerSearch').on('keypress', function(e){ if(e.which===13){ e.preventDefault(); doSearchReturner(); } });
+  $('#returnerSearch').on('input', function() {
+    clearTimeout(returnerSearchTimeout);
+    if(!this.value.trim()){ hideReturnerResults(); return; }
+    returnerSearchTimeout = setTimeout(doSearchReturner, 400);
+  });
+  $('#btnClearReturner').on('click', clearReturner);
+
+  $(document).on('click', function(e) {
+    if(!$(e.target).closest('#employeeSearch,#employeeSearchResults,#btnSearchEmp').length) hideEmployeeResults();
+    if(!$(e.target).closest('#returnerSearch,#returnerSearchResults,#btnSearchReturner').length) hideReturnerResults();
+  });
+
+  $('#btnSearch').on('click', function() {
+    let kw = $('#globalSearch').val().trim();
+    if(!kw){ loadAllAssets(); return; }
+    $('#assetsTableBody').html('<tr><td colspan="7" class="text-center"><i class="fas fa-circle-notch fa-spin me-2"></i>ค้นหา...</td></tr>');
+    rpcB('fom017_search_assets', { p_keyword: kw }).then(renderAllAssets).catch(handleError);
+  });
+  $('#globalSearch').on('keypress', function(e){ if(e.which===13) $('#btnSearch').click(); });
+  $('#btnRefresh').on('click', function(){ $('#globalSearch').val(''); loadAllAssets(); });
+  $('#borrowForm').on('submit', submitBorrow);
+  $('#returnForm').on('submit', submitReturn);
+  $('#btnGenReport').on('click', doGenerateReport);
+});
+
+function loadAvailableAssets() {
+  $('#availableAssetsList').html('<div class="text-center py-4"><i class="fas fa-circle-notch fa-spin me-2"></i>กำลังโหลด...</div>');
+  rpcB('fom017_get_available_assets').then(assets => { availableAssets = assets||[]; renderAvailableAssets(availableAssets); }).catch(handleError);
+}
+function loadBorrowedAssets() {
+  $('#borrowedAssetsList').html('<div class="text-center py-4"><i class="fas fa-circle-notch fa-spin me-2"></i>กำลังโหลด...</div>');
+  rpcB('fom017_get_borrowed_assets').then(assets => { borrowedAssets = assets||[]; renderBorrowedAssets(borrowedAssets); }).catch(handleError);
+}
+function loadAllAssets() {
+  $('#assetsTableBody').html('<tr><td colspan="7" class="text-center"><i class="fas fa-circle-notch fa-spin me-2"></i>กำลังโหลด...</td></tr>');
+  rpcB('fom017_get_all_assets').then(renderAllAssets).catch(handleError);
+}
+
+function renderAvailableAssets(assets) {
+  if(!assets.length){ $('#availableAssetsList').html('<div class="alert alert-light text-center"><i class="fas fa-info-circle me-1"></i>ไม่มีทรัพย์สินที่พร้อมรับมอบ</div>'); return; }
+  let html = '<div class="list-group list-group-flush">';
+  assets.forEach(a => {
+    let sel = ($('#borrowAssetId').val()===a.AssetId)?'selected':'';
+    html += '<div class="list-group-item asset-item '+sel+'" onclick="selectForBorrow(\''+escapeAttr(a.AssetId)+'\',\''+escapeAttr(a.AssetCode)+'\',\''+escapeAttr(a.AssetName)+'\')"><div class="d-flex justify-content-between"><div><strong>'+escapeHtml(a.AssetCode)+'</strong><br><small class="text-secondary">'+escapeHtml(a.AssetName)+'</small></div><span class="status-badge status-available">พร้อมใช้</span></div><small class="text-muted"><i class="fas fa-microchip me-1"></i>'+escapeHtml(a.SerialNumber||'-')+' &nbsp; '+escapeHtml(a.Brand||'')+'</small></div>';
+  });
+  html += '</div>'; $('#availableAssetsList').html(html);
+}
+
+function renderBorrowedAssets(assets) {
+  if(!assets.length){ $('#borrowedAssetsList').html('<div class="alert alert-light text-center"><i class="fas fa-info-circle me-1"></i>ไม่มีรายการยืมค้าง</div>'); return; }
+  let html = '<div class="list-group list-group-flush">';
+  assets.forEach(a => {
+    let sel = ($('#returnAssetId').val()===a.AssetId)?'selected':'';
+    html += '<div class="list-group-item asset-item '+sel+'" onclick="selectForReturn(\''+escapeAttr(a.AssetId)+'\',\''+escapeAttr(a.AssetCode)+'\',\''+escapeAttr(a.AssetName)+'\',\''+escapeAttr(a.User)+'\')"><div class="d-flex justify-content-between"><div><strong>'+escapeHtml(a.AssetCode)+'</strong><br><small>'+escapeHtml(a.AssetName)+'</small></div><span class="status-badge status-borrowed">กำลังใช้งาน</span></div><small><i class="fas fa-user me-1"></i>'+escapeHtml(a.User||'-')+'</small></div>';
+  });
+  html += '</div>'; $('#borrowedAssetsList').html(html);
+}
+
+function renderAllAssets(assets) {
+  if(!assets||!assets.length){ $('#assetsTableBody').html('<tr><td colspan="7" class="text-center text-muted">ไม่พบข้อมูลทรัพย์สิน</td></tr>'); return; }
+  let html = '';
+  assets.forEach(a => {
+    let cls = a.Status==='ใช้งาน'?'status-available':'status-borrowed';
+    html += '<tr><td><strong>'+escapeHtml(a.AssetCode)+'</strong></td><td>'+escapeHtml(a.AssetName)+'</td><td><small>'+escapeHtml(a.SerialNumber||'-')+'</small></td><td>'+escapeHtml(a.Brand||'-')+' '+escapeHtml(a.Model||'')+'</td><td><span class="status-badge '+cls+'">'+escapeHtml(a.Status)+'</span></td><td><small>'+escapeHtml(a.User||'-')+'</small></td><td>'+escapeHtml(a.BorrowDate||'-')+'</td></tr>';
+  });
+  $('#assetsTableBody').html(html);
+}
+
+function selectForBorrow(id, code, name) {
+  $('#borrowAssetId').val(id); $('#borrowAssetCode').val(code); $('#borrowAssetName').val(name);
+  $('.asset-item').removeClass('selected'); event.currentTarget.classList.add('selected');
+  checkBorrowReady();
+}
+function selectForReturn(id, code, name, borrower) {
+  $('#returnAssetId').val(id); $('#returnAssetCode').val(code); $('#returnAssetName').val(name); $('#borrowerInfo').val(borrower);
+  $('.asset-item').removeClass('selected'); event.currentTarget.classList.add('selected');
+}
+function checkBorrowReady() {
+  $('#submitBorrowBtn').prop('disabled', !($('#borrowAssetId').val() && $('#selectedEmployeeCodeInput').val()));
+}
+
+// Employee search — รับมอบ (โปรเจค A)
+function doSearchEmployee() {
+  let kw = $('#employeeSearch').val().trim();
+  if(!kw){ hideEmployeeResults(); return; }
+  rpcA('fom017_search_employees', { p_keyword: kw }).then(renderEmployeeResults).catch(handleError);
+}
+function renderEmployeeResults(users) {
+  if(!users||!users.length){ $('#employeeSearchResults').html('<div class="p-3 text-danger"><i class="fas fa-exclamation-triangle me-1"></i>ไม่พบข้อมูลพนักงาน</div>').show(); return; }
+  let html = '';
+  users.forEach(u => {
+    html += '<div class="employee-result-item" data-code="'+escapeAttr(u.code)+'" data-name="'+escapeAttr(u.name)+'" data-section="'+escapeAttr(u.section)+'" data-department="'+escapeAttr(u.department)+'" data-position="'+escapeAttr(u.position)+'"><strong>'+escapeHtml(u.code)+'</strong> - '+escapeHtml(u.name)+'<br><small class="text-secondary">'+escapeHtml(u.position||'-')+' | '+escapeHtml(u.section||'')+(u.department?' - '+escapeHtml(u.department):'')+'</small></div>';
+  });
+  $('#employeeSearchResults').html(html).show();
+  $('#employeeSearchResults .employee-result-item').on('click', function() {
+    selectEmployee($(this).data('code'), $(this).data('name'), $(this).data('section'), $(this).data('department'), $(this).data('position'));
+  });
+}
+function hideEmployeeResults() { $('#employeeSearchResults').hide(); }
+function selectEmployee(code, name, section, department, position) {
+  hideEmployeeResults();
+  $('#employeeSearch').val(code+' - '+name);
+  $('#selectedEmployeeCodeInput').val(code);
+  $('#selectedEmployeeSection').val(section||'');
+  $('#selectedEmployeeDepartment').val(department||'');
+  $('#selectedEmployeePosition').val(position||'');
+  $('#ei-code').text(code); $('#ei-name').text(name);
+  $('#ei-dept').text((section||'')+(department?' - '+department:''));
+  $('#ei-position').text(position||'-');
+  $('#selectedEmployeeInfo').show(); $('#btnClearEmp').show();
+  checkBorrowReady();
+}
+function clearEmployee() {
+  $('#selectedEmployeeCodeInput,#employeeSearch,#selectedEmployeeSection,#selectedEmployeeDepartment,#selectedEmployeePosition').val('');
+  $('#selectedEmployeeInfo').hide(); $('#btnClearEmp').hide();
+  hideEmployeeResults(); checkBorrowReady();
+}
+
+// Returner search — ส่งคืน (โปรเจค A)
+function doSearchReturner() {
+  let kw = $('#returnerSearch').val().trim();
+  if(!kw){ hideReturnerResults(); return; }
+  rpcA('fom017_search_employees', { p_keyword: kw }).then(renderReturnerResults).catch(handleError);
+}
+function renderReturnerResults(users) {
+  if(!users||!users.length){ $('#returnerSearchResults').html('<div class="p-3 text-danger"><i class="fas fa-exclamation-triangle me-1"></i>ไม่พบข้อมูลพนักงาน</div>').show(); return; }
+  let html = '';
+  users.forEach(u => {
+    html += '<div class="employee-result-item" data-code="'+escapeAttr(u.code)+'" data-name="'+escapeAttr(u.name)+'" data-section="'+escapeAttr(u.section)+'" data-department="'+escapeAttr(u.department)+'" data-position="'+escapeAttr(u.position)+'"><strong>'+escapeHtml(u.code)+'</strong> - '+escapeHtml(u.name)+'<br><small class="text-secondary">'+escapeHtml(u.position||'-')+' | '+escapeHtml(u.section||'')+(u.department?' - '+escapeHtml(u.department):'')+'</small></div>';
+  });
+  $('#returnerSearchResults').html(html).show();
+  $('#returnerSearchResults .employee-result-item').on('click', function() {
+    selectReturner($(this).data('code'), $(this).data('name'), $(this).data('section'), $(this).data('department'), $(this).data('position'));
+  });
+}
+function hideReturnerResults() { $('#returnerSearchResults').hide(); }
+function selectReturner(code, name, section, department, position) {
+  hideReturnerResults();
+  $('#returnerSearch').val(code+' - '+name);
+  $('#returnerName').val(code+' - '+name+(position?' ('+position+')':''));
+  $('#ri-code').text(code); $('#ri-name').text(name);
+  $('#ri-dept').text((section||'')+(department?' - '+department:''));
+  $('#ri-position').text(position||'-');
+  $('#selectedReturnerInfo').show(); $('#btnClearReturner').show();
+}
+function clearReturner() {
+  $('#returnerName,#returnerSearch').val('');
+  $('#selectedReturnerInfo').hide(); $('#btnClearReturner').hide();
+  hideReturnerResults();
+}
+
+function submitBorrow(e) {
+  e.preventDefault();
+  let assetId=$('#borrowAssetId').val(), assetCode=$('#borrowAssetCode').val(),
+      empCode=$('#selectedEmployeeCodeInput').val(), borrowDate=$('#borrowDate').val();
+  if(!assetId||!empCode||!borrowDate){ Swal.fire('ข้อมูลไม่ครบ','กรุณาเลือกทรัพย์สินและพนักงานให้ถูกต้อง','warning'); return; }
+  const empName = $('#employeeSearch').val().split(' - ').slice(1).join(' - ') || empCode;
+  Swal.fire({
+    title:'ยืนยันการรับมอบ',
+    html:'<div style="text-align:left"><p><strong>ทรัพย์สิน:</strong> '+escapeHtml(assetCode)+' - '+escapeHtml($('#borrowAssetName').val())+'</p><p><strong>ผู้รับมอบ:</strong> '+escapeHtml(empName)+' ('+escapeHtml(empCode)+')</p><p><strong>วันที่รับมอบ:</strong> '+borrowDate+'</p></div>',
+    icon:'question', showCancelButton:true, confirmButtonText:'ยืนยัน', cancelButtonText:'ยกเลิก'
+  }).then(function(res) {
+    if(!res.isConfirmed) return;
+    Swal.fire({title:'กำลังบันทึก...', allowOutsideClick:false, didOpen:function(){ Swal.showLoading(); }});
+    rpcB('fom017_borrow_asset', {
+      p_asset_id: assetId, p_emp_code: empCode, p_emp_name: empName,
+      p_section: $('#selectedEmployeeSection').val(), p_department: $('#selectedEmployeeDepartment').val(),
+      p_position: $('#selectedEmployeePosition').val(), p_borrow_date: borrowDate, p_notes: $('#borrowNotes').val()
+    }).then(function(result) {
+      Swal.fire(result.success?'สำเร็จ':'เกิดข้อผิดพลาด', result.message, result.success?'success':'error');
+      if(result.success){ clearBorrowForm(); loadAvailableAssets(); loadBorrowedAssets(); }
+    }).catch(handleError);
+  });
+}
+
+function submitReturn(e) {
+  e.preventDefault();
+  let assetId=$('#returnAssetId').val(), returner=$('#returnerName').val().trim(),
+      retDate=$('#returnActualDate').val(), condition=$('#returnCondition').val();
+  if(!assetId){ Swal.fire('แจ้งเตือน','กรุณาเลือกทรัพย์สิน','warning'); return; }
+  if(!returner){ Swal.fire('แจ้งเตือน','กรุณาค้นหาและเลือกผู้ส่งคืน','warning'); return; }
+  if(!retDate){ Swal.fire('แจ้งเตือน','กรุณาระบุวันที่ส่งคืน','warning'); return; }
+  if(!condition){ Swal.fire('แจ้งเตือน','กรุณาเลือกสภาพทรัพย์สิน','warning'); return; }
+  Swal.fire({
+    title:'ยืนยันการส่งคืน',
+    html:'<div style="text-align:left"><p><strong>ทรัพย์สิน:</strong> '+escapeHtml($('#returnAssetCode').val())+' - '+escapeHtml($('#returnAssetName').val())+'</p><p><strong>ผู้ส่งคืน:</strong> '+escapeHtml($('#ri-name').text()||returner)+'</p><p><strong>วันที่ส่งคืน:</strong> '+retDate+'</p><p><strong>สภาพ:</strong> '+escapeHtml(condition)+'</p></div>',
+    icon:'question', showCancelButton:true, confirmButtonText:'ยืนยัน', cancelButtonText:'ยกเลิก'
+  }).then(function(res) {
+    if(!res.isConfirmed) return;
+    Swal.fire({title:'กำลังดำเนินการ...', allowOutsideClick:false, didOpen:function(){ Swal.showLoading(); }});
+    rpcB('fom017_return_asset', {
+      p_asset_id: assetId, p_returner_name: returner, p_return_date: retDate,
+      p_condition: condition, p_notes: $('#returnNotes').val()
+    }).then(function(result) {
+      Swal.fire(result.success?'สำเร็จ':'ผิดพลาด', result.message, result.success?'success':'error');
+      if(result.success){ clearReturnForm(); loadAvailableAssets(); loadBorrowedAssets(); }
+    }).catch(handleError);
+  });
+}
+
+function doGenerateReport() {
+  let start=$('#reportStartDate').val(), end=$('#reportEndDate').val();
+  if(!start||!end){ Swal.fire('กรุณาเลือกช่วงวันที่','','warning'); return; }
+  if(end<start){ Swal.fire('วันที่สิ้นสุดต้องไม่น้อยกว่าวันเริ่ม','','error'); return; }
+  $('#reportTableBody').html('<tr><td colspan="6" class="text-center"><i class="fas fa-spinner fa-pulse me-2"></i>กำลังสร้างรายงาน...</td></tr>');
+  rpcB('fom017_generate_report', { p_start: start, p_end: end }).then(function(reports) {
+    if(!reports||!reports.length){ $('#reportTableBody').html('<tr><td colspan="6" class="text-center text-muted">ไม่มีข้อมูลในช่วงเวลานี้</td></tr>'); return; }
+    let html = '';
+    reports.forEach(function(r) {
+      let badge = r.action==='BORROW'?'<span class="badge bg-primary bg-opacity-10 text-primary px-3 py-1 rounded-pill">รับมอบ</span>':'<span class="badge bg-success bg-opacity-10 text-success px-3 py-1 rounded-pill">ส่งคืน</span>';
+      html += '<tr><td><small>'+escapeHtml(r.timestamp)+'</small></td><td>'+escapeHtml(r.assetCode)+'</td><td>'+badge+'</td><td>'+escapeHtml(r.userName||'-')+'</td><td><small>'+escapeHtml(r.department||'-')+'</small></td><td><small>'+escapeHtml(r.details||'-')+'</small></td></tr>';
+    });
+    $('#reportTableBody').html(html);
+  }).catch(handleError);
+}
+
+function clearBorrowForm() {
+  $('#borrowAssetId,#borrowAssetCode,#borrowAssetName,#borrowNotes').val('');
+  $('#borrowDate').val(new Date().toISOString().split('T')[0]);
+  clearEmployee(); $('#submitBorrowBtn').prop('disabled',true); $('.asset-item').removeClass('selected');
+}
+function clearReturnForm() {
+  $('#returnAssetId,#returnAssetCode,#returnAssetName,#borrowerInfo,#returnNotes').val('');
+  $('#returnCondition').val('');
+  $('#returnActualDate').val(new Date().toISOString().split('T')[0]);
+  clearReturner(); $('.asset-item').removeClass('selected');
+}
+function handleError(err) { Swal.fire('เกิดข้อผิดพลาด', err.message||'โปรดลองอีกครั้ง', 'error'); }
+</script>
+</body>
+</html>
