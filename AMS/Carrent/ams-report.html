@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>รายงาน AMS - แจ้งซ่อม/PM</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Prompt', sans-serif; }
+
+        :root {
+            --primary: #0A2472; --primary-light: #0E4B9E;
+            --success: #28a745; --warning: #ffc107; --danger: #dc3545;
+            --light: #f8f9fa; --dark: #343a40; --gray: #6c757d; --border: #dee2e6;
+        }
+
+        body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; }
+
+        .navbar {
+            max-width: 1400px; margin: 0 auto 20px; background: var(--primary);
+            border-radius: 20px; padding: 14px 20px; display: flex; gap: 12px;
+            justify-content: center; flex-wrap: wrap;
+        }
+        .navbar a {
+            color: white; text-decoration: none; padding: 10px 22px; border-radius: 50px;
+            background: rgba(255,255,255,0.12); font-size: 14px; font-weight: 500;
+            display: flex; align-items: center; gap: 8px;
+        }
+
+        .header {
+            background: white; border-radius: 20px; padding: 20px 30px; margin-bottom: 25px;
+            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;
+        }
+        .logo { display: flex; align-items: center; gap: 15px; }
+        .logo-icon { width: 60px; height: 60px; background: var(--primary); border-radius: 15px; display: flex; align-items: center; justify-content: center; color: white; font-size: 30px; }
+        .logo-text h1 { color: var(--primary); font-size: 22px; }
+        .logo-text p { color: var(--gray); font-size: 14px; }
+
+        .export-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
+        .btn-export { padding: 10px 20px; border-radius: 10px; border: none; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 14px; }
+        .btn-csv { background: #198754; color: white; }
+        .btn-pdf { background: #dc3545; color: white; }
+
+        .widgets-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 25px; }
+        @media (max-width: 900px) { .widgets-grid { grid-template-columns: repeat(2, 1fr); } }
+
+        .widget { background: white; border-radius: 18px; padding: 22px; display: flex; align-items: center; gap: 16px; }
+        .widget-icon { width: 55px; height: 55px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: white; }
+        .widget.total .widget-icon { background: var(--primary); }
+        .widget.waiting .widget-icon { background: var(--danger); }
+        .widget.working .widget-icon { background: var(--warning); }
+        .widget.done .widget-icon { background: var(--success); }
+        .widget-value { font-size: 28px; font-weight: 700; color: var(--dark); }
+        .widget-label { font-size: 13px; color: var(--gray); }
+
+        .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px; }
+        @media (max-width: 900px) { .charts-grid { grid-template-columns: 1fr; } }
+        .chart-card { background: white; border-radius: 18px; padding: 22px; }
+        .chart-card h3 { color: var(--primary); font-size: 16px; margin-bottom: 15px; }
+        .chart-container { height: 260px; position: relative; }
+
+        .card { background: white; border-radius: 20px; padding: 25px; margin-bottom: 25px; }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; }
+        .card-header h2 { color: var(--primary); font-size: 18px; display: flex; align-items: center; gap: 10px; }
+
+        .search-filter-bar { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+        .search-box { position: relative; flex: 1; min-width: 250px; }
+        .search-box input { width: 100%; padding: 12px 15px 12px 42px; border: 2px solid var(--border); border-radius: 10px; font-family: 'Prompt', sans-serif; font-size: 14px; }
+        .search-box i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--gray); }
+        .filter-select { padding: 12px 15px; border: 2px solid var(--border); border-radius: 10px; font-family: 'Prompt', sans-serif; font-size: 14px; min-width: 150px; }
+
+        table { width: 100%; border-collapse: collapse; }
+        th { background: var(--primary); color: white; padding: 12px; text-align: left; font-size: 13px; font-weight: 500; }
+        td { padding: 12px; border-bottom: 1px solid var(--border); font-size: 13px; }
+        tr:hover td { background: var(--light); }
+        .table-container { overflow-x: auto; }
+
+        .status-badge { padding: 5px 10px; border-radius: 50px; font-size: 11px; font-weight: 500; white-space: nowrap; }
+        .status-waiting { background: rgba(220,53,69,0.1); color: var(--danger); }
+        .status-working { background: rgba(255,193,7,0.15); color: #b8860b; }
+        .status-done { background: rgba(40,167,69,0.1); color: var(--success); }
+        .job-type-tag { padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; }
+        .job-type-tag.FIX { background: rgba(220,53,69,0.1); color: var(--danger); }
+        .job-type-tag.PM { background: rgba(40,167,69,0.1); color: var(--success); }
+
+        .no-data { text-align: center; padding: 40px; color: var(--gray); }
+
+        .footer { text-align: center; margin-top: 20px; color: white; font-size: 13px; }
+
+        .loading-overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; }
+        .loading-spinner { background: white; padding: 30px; border-radius: 20px; text-align: center; }
+        .loading-spinner i { font-size: 40px; color: var(--primary); animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        @media print {
+            body { background: white; padding: 0; }
+            .navbar, .export-buttons, .search-filter-bar { display: none !important; }
+            .widget, .chart-card, .card, .header { box-shadow: none; break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-overlay" id="loadingOverlay"><div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i></div></div>
+
+    <div class="container">
+        <div class="navbar">
+            <a href="home.html"><i class="fas fa-home"></i> หน้าแรก</a>
+            <a href="index.html"><i class="fas fa-calendar-plus"></i> จองรถ</a>
+            <a href="approve.html"><i class="fas fa-check-circle"></i> อนุมัติ</a>
+            <a href="calendar.html"><i class="fas fa-calendar-alt"></i> ปฏิทิน</a>
+            <a href="report.html"><i class="fas fa-chart-bar"></i> รายงานจอง</a>
+            <a href="helpdesk.html"><i class="fas fa-wrench"></i> แจ้งซ่อม/PM</a>
+            <a href="ams-report.html"><i class="fas fa-chart-pie"></i> รายงานซ่อม/PM</a>
+        </div>
+
+        <div class="header">
+            <div class="logo">
+                <div class="logo-icon"><i class="fas fa-chart-pie"></i></div>
+                <div class="logo-text"><h1>รายงาน AMS</h1><p>แดชบอร์ดงานซ่อม/PM ทั้งหมด</p></div>
+            </div>
+            <div class="export-buttons">
+                <button class="btn-export btn-csv" onclick="exportCSV()"><i class="fas fa-file-csv"></i> Export CSV</button>
+                <button class="btn-export btn-pdf" onclick="window.print()"><i class="fas fa-file-pdf"></i> Export PDF</button>
+            </div>
+        </div>
+
+        <div class="widgets-grid">
+            <div class="widget total"><div class="widget-icon"><i class="fas fa-clipboard-list"></i></div><div><div class="widget-value" id="widgetTotal">0</div><div class="widget-label">งานทั้งหมด</div></div></div>
+            <div class="widget waiting"><div class="widget-icon"><i class="fas fa-hourglass-half"></i></div><div><div class="widget-value" id="widgetWaiting">0</div><div class="widget-label">รอดำเนินการ</div></div></div>
+            <div class="widget working"><div class="widget-icon"><i class="fas fa-user-hard-hat"></i></div><div><div class="widget-value" id="widgetWorking">0</div><div class="widget-label">กำลังดำเนินการ</div></div></div>
+            <div class="widget done"><div class="widget-icon"><i class="fas fa-check-double"></i></div><div><div class="widget-value" id="widgetDone">0</div><div class="widget-label">เสร็จสิ้น</div></div></div>
+        </div>
+
+        <div class="charts-grid">
+            <div class="chart-card">
+                <h3><i class="fas fa-balance-scale"></i> งานซ่อม (FIX) เทียบกับงาน PM</h3>
+                <div class="chart-container"><canvas id="typeChart"></canvas></div>
+            </div>
+            <div class="chart-card">
+                <h3><i class="fas fa-chart-line"></i> จำนวนงานตามเดือน</h3>
+                <div class="chart-container"><canvas id="monthlyChart"></canvas></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2><i class="fas fa-search"></i> ค้นหา / รายการงานทั้งหมด</h2>
+            </div>
+
+            <div class="search-filter-bar">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" placeholder="ค้นหา: เลขที่งาน, ชื่อร้าน, ชื่ออะไหล่, ทะเบียนรถ, ผู้แจ้ง...">
+                </div>
+                <select class="filter-select" id="typeFilter">
+                    <option value="">ประเภททั้งหมด</option>
+                    <option value="FIX">FIX (แจ้งซ่อม)</option>
+                    <option value="PM">PM</option>
+                </select>
+                <select class="filter-select" id="statusFilter">
+                    <option value="">สถานะทั้งหมด</option>
+                    <option value="waiting">รอดำเนินการ</option>
+                    <option value="working">กำลังดำเนินการ</option>
+                    <option value="done">เสร็จสิ้น</option>
+                </select>
+            </div>
+
+            <div class="table-container">
+                <table id="jobsTable">
+                    <thead>
+                        <tr><th>เลขที่งาน</th><th>ประเภท</th><th>รถ</th><th>ผู้แจ้ง</th><th>ช่าง</th><th>อะไหล่/ร้าน</th><th>สถานะ</th><th>วันที่แจ้ง</th></tr>
+                    </thead>
+                    <tbody id="jobsTableBody"><tr><td colspan="8" class="no-data">กำลังโหลด...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="footer"><p>ระบบแจ้งซ่อม/PM © 2026 | สำหรับใช้ภายในองค์กรเท่านั้น | พัฒนาโดย Sarawut.C</p></div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://clowvcraydxpvwdbpkhi.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNsb3d2Y3JheWR4cHZ3ZGJwa2hpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3NTA3NTAsImV4cCI6MjEwMzMyNjc1MH0.pXV0g3JfakqNRgKjgCe87Reie5ZhXzqYXpZ3OVkluHk';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let jobs = [];
+        let partsByJob = {}; // job_id -> [parts]
+        let filteredJobs = [];
+        let typeChartInstance = null, monthlyChartInstance = null;
+
+        function showLoading() { document.getElementById('loadingOverlay').style.display = 'flex'; }
+        function hideLoading() { document.getElementById('loadingOverlay').style.display = 'none'; }
+
+        function jobStatus(job) {
+            if (job.closed_at) return 'done';
+            if (job.technician_id) return 'working';
+            return 'waiting';
+        }
+        function statusLabel(s) {
+            return s === 'done' ? 'เสร็จสิ้น' : s === 'working' ? 'กำลังดำเนินการ' : 'รอดำเนินการ';
+        }
+        function statusClass(s) {
+            return s === 'done' ? 'status-done' : s === 'working' ? 'status-working' : 'status-waiting';
+        }
+
+        async function loadData() {
+            showLoading();
+
+            const { data: jobData, error: jobErr } = await supabaseClient
+                .from('repair_jobs')
+                .select('*, cars(name), employees(name), technician:profiles(fullname)')
+                .order('created_at', { ascending: false });
+
+            const { data: partData, error: partErr } = await supabaseClient
+                .from('repair_parts')
+                .select('*');
+
+            if (jobErr) console.error(jobErr);
+            if (partErr) console.error(partErr);
+
+            jobs = jobData || [];
+            partsByJob = {};
+            (partData || []).forEach(p => {
+                if (!partsByJob[p.job_id]) partsByJob[p.job_id] = [];
+                partsByJob[p.job_id].push(p);
+            });
+
+            hideLoading();
+            applyFilters();
+            renderCharts();
+        }
+
+        function applyFilters() {
+            const search = document.getElementById('searchInput').value.trim().toLowerCase();
+            const typeFilter = document.getElementById('typeFilter').value;
+            const statusFilter = document.getElementById('statusFilter').value;
+
+            filteredJobs = jobs.filter(j => {
+                if (typeFilter && j.job_type !== typeFilter) return false;
+                if (statusFilter && jobStatus(j) !== statusFilter) return false;
+
+                if (search) {
+                    const parts = partsByJob[j.id] || [];
+                    const haystack = [
+                        j.job_no, j.cars?.name, j.employees?.name, j.employee_code,
+                        j.technician?.fullname, j.detail,
+                        ...parts.map(p => p.part_name), ...parts.map(p => p.shop)
+                    ].filter(Boolean).join(' ').toLowerCase();
+                    if (!haystack.includes(search)) return false;
+                }
+                return true;
+            });
+
+            updateWidgets();
+            renderTable();
+        }
+
+        function updateWidgets() {
+            document.getElementById('widgetTotal').textContent = filteredJobs.length;
+            document.getElementById('widgetWaiting').textContent = filteredJobs.filter(j => jobStatus(j) === 'waiting').length;
+            document.getElementById('widgetWorking').textContent = filteredJobs.filter(j => jobStatus(j) === 'working').length;
+            document.getElementById('widgetDone').textContent = filteredJobs.filter(j => jobStatus(j) === 'done').length;
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('jobsTableBody');
+            if (filteredJobs.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" class="no-data">ไม่พบข้อมูล</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = filteredJobs.map(j => {
+                const st = jobStatus(j);
+                const parts = partsByJob[j.id] || [];
+                const partsText = parts.length
+                    ? parts.map(p => `${p.part_name}${p.shop ? ' (' + p.shop + ')' : ''}`).join(', ')
+                    : '-';
+                const created = new Date(j.created_at).toLocaleDateString('th-TH', { timeZone: 'Asia/Bangkok', day: '2-digit', month: '2-digit', year: 'numeric' });
+                return `
+                    <tr>
+                        <td><strong>${j.job_no || '-'}</strong></td>
+                        <td><span class="job-type-tag ${j.job_type}">${j.job_type}</span></td>
+                        <td>${j.cars?.name || '-'}</td>
+                        <td>${j.employees?.name || j.employee_code}</td>
+                        <td>${j.technician?.fullname || '-'}</td>
+                        <td>${partsText}</td>
+                        <td><span class="status-badge ${statusClass(st)}">${statusLabel(st)}</span></td>
+                        <td>${created}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function renderCharts() {
+            const fixCount = jobs.filter(j => j.job_type === 'FIX').length;
+            const pmCount = jobs.filter(j => j.job_type === 'PM').length;
+
+            if (typeChartInstance) typeChartInstance.destroy();
+            typeChartInstance = new Chart(document.getElementById('typeChart').getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['งานซ่อม (FIX)', 'งาน PM'],
+                    datasets: [{ data: [fixCount, pmCount], backgroundColor: ['#dc3545', '#28a745'], borderWidth: 2, borderColor: '#fff' }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+            });
+
+            const monthNames = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+            const counts = new Array(12).fill(0);
+            jobs.forEach(j => { counts[new Date(j.created_at).getMonth()]++; });
+
+            if (monthlyChartInstance) monthlyChartInstance.destroy();
+            monthlyChartInstance = new Chart(document.getElementById('monthlyChart').getContext('2d'), {
+                type: 'bar',
+                data: { labels: monthNames, datasets: [{ label: 'จำนวนงาน', data: counts, backgroundColor: 'rgba(10,36,114,0.6)', borderRadius: 5 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+            });
+        }
+
+        function exportCSV() {
+            const headers = ['เลขที่งาน', 'ประเภท', 'รถ', 'ผู้แจ้ง', 'ช่าง', 'อะไหล่/ร้าน', 'สถานะ', 'วันที่แจ้ง'];
+            const rows = [headers.join(',')];
+            filteredJobs.forEach(j => {
+                const st = jobStatus(j);
+                const parts = partsByJob[j.id] || [];
+                const partsText = parts.map(p => `${p.part_name}${p.shop ? ' (' + p.shop + ')' : ''}`).join(' / ');
+                const created = new Date(j.created_at).toLocaleDateString('th-TH', { timeZone: 'Asia/Bangkok' });
+                rows.push([
+                    `"${j.job_no || ''}"`, `"${j.job_type}"`, `"${j.cars?.name || ''}"`,
+                    `"${j.employees?.name || j.employee_code}"`, `"${j.technician?.fullname || ''}"`,
+                    `"${partsText}"`, `"${statusLabel(st)}"`, `"${created}"`
+                ].join(','));
+            });
+            const blob = new Blob(['\ufeff' + rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `AMS_รายงาน_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadData();
+            document.getElementById('searchInput').addEventListener('input', applyFilters);
+            document.getElementById('typeFilter').addEventListener('change', applyFilters);
+            document.getElementById('statusFilter').addEventListener('change', applyFilters);
+        });
+    </script>
+</body>
+</html>

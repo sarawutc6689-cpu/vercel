@@ -1,0 +1,1248 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ปฏิทินการจองรถ</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        /* CSS เดิมทั้งหมดอยู่ที่นี่ */
+        :root {
+            --primary: #4361ee;
+            --primary-light: #4895ef;
+            --secondary: #3f37c9;
+            --success: #4cc9f0;
+            --warning: #f72585;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --gray: #6c757d;
+            --gray-light: #e9ecef;
+            --border-radius: 12px;
+            --box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            --transition: all 0.3s ease;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Roboto', 'Kanit', sans-serif;
+            background-color: #f5f7fb;
+            color: var(--dark);
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 25px 30px;
+            border-radius: var(--border-radius);
+            margin-bottom: 30px;
+            box-shadow: var(--box-shadow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .header-title {
+            font-size: 28px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .header-title i {
+            font-size: 32px;
+            background-color: rgba(255,255,255,0.2);
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border-radius: var(--border-radius);
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-family: 'Roboto', 'Kanit', sans-serif;
+            font-size: 16px;
+        }
+        
+        .btn-primary {
+            background-color: white;
+            color: var(--primary);
+        }
+        
+        .btn-primary:hover {
+            background-color: rgba(255,255,255,0.9);
+            transform: translateY(-2px);
+        }
+        
+        .btn-outline {
+            background-color: transparent;
+            color: white;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+        
+        .btn-outline:hover {
+            background-color: rgba(255,255,255,0.1);
+            border-color: rgba(255,255,255,0.5);
+        }
+        
+        .month-display {
+            font-size: 24px;
+            font-weight: 600;
+            min-width: 250px;
+            text-align: center;
+            background-color: rgba(255,255,255,0.1);
+            padding: 10px 20px;
+            border-radius: var(--border-radius);
+        }
+        
+        /* Calendar Container */
+        .calendar-container {
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 30px;
+            box-shadow: var(--box-shadow);
+            margin-bottom: 30px;
+        }
+        
+        .calendar-header {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .day-header {
+            font-weight: 600;
+            padding: 15px;
+            background-color: var(--primary);
+            color: white;
+            border-radius: var(--border-radius);
+        }
+        
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+        }
+        
+        .calendar-day {
+            min-height: 120px;
+            border: 1px solid var(--gray-light);
+            border-radius: var(--border-radius);
+            padding: 10px;
+            background-color: white;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .calendar-day:hover {
+            background-color: #f8f9fa;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .calendar-day.empty {
+            background-color: #f8f9fa;
+            border: 1px dashed #dee2e6;
+            opacity: 0.5;
+        }
+        
+        .calendar-day.today {
+            background-color: rgba(67, 97, 238, 0.1);
+            border: 2px solid var(--primary);
+        }
+        
+        .day-number {
+            font-weight: 600;
+            font-size: 18px;
+            margin-bottom: 8px;
+            color: var(--dark);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .day-events {
+            max-height: 80px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+        
+        .day-events::-webkit-scrollbar {
+            width: 4px;
+        }
+        
+        .day-events::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        .day-events::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+        
+        .event-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background-color: var(--warning);
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .event-item {
+            background-color: var(--primary);
+            color: white;
+            padding: 6px 8px;
+            border-radius: 6px;
+            margin-bottom: 5px;
+            font-size: 12px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            cursor: pointer;
+            transition: var(--transition);
+            border-left: 3px solid var(--secondary);
+        }
+        
+        .event-item:hover {
+            opacity: 0.9;
+            transform: translateX(3px);
+            padding-right: 12px;
+        }
+        
+        /* Stats Section */
+        .stats-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 20px;
+            box-shadow: var(--box-shadow);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+        }
+        
+        .stat-icon.reservations {
+            background-color: var(--primary);
+        }
+        
+        .stat-icon.vehicles {
+            background-color: var(--success);
+        }
+        
+        .stat-icon.departments {
+            background-color: var(--warning);
+        }
+        
+        .stat-content {
+            flex-grow: 1;
+        }
+        
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: var(--gray);
+        }
+        
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .modal-content {
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 30px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: var(--box-shadow);
+            animation: slideUp 0.3s ease;
+        }
+        
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--gray-light);
+        }
+        
+        .modal-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--primary);
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: var(--gray);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+        
+        .modal-close:hover {
+            background-color: var(--gray-light);
+            color: var(--dark);
+        }
+        
+        /* Event Details */
+        .event-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .event-detail {
+            background-color: #f8f9fa;
+            border-radius: var(--border-radius);
+            padding: 20px;
+            border-left: 4px solid var(--primary);
+            transition: var(--transition);
+        }
+        
+        .event-detail:hover {
+            background-color: #e9ecef;
+            transform: translateX(5px);
+        }
+        
+        .event-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .event-vehicle {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--primary);
+        }
+        
+        .event-status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .status-active {
+            background-color: rgba(46, 204, 113, 0.2);
+            color: #27ae60;
+        }
+        
+        .status-pending {
+            background-color: rgba(241, 196, 15, 0.2);
+            color: #f39c12;
+        }
+        
+        .status-completed {
+            background-color: rgba(52, 152, 219, 0.2);
+            color: #2980b9;
+        }
+        
+        .event-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .event-detail-item {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .event-detail-label {
+            font-weight: 600;
+            color: var(--gray);
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        
+        .event-detail-value {
+            font-size: 16px;
+        }
+        
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: var(--gray);
+            font-size: 14px;
+            margin-top: 30px;
+            border-top: 1px solid var(--gray-light);
+        }
+        
+        /* Loading */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+            font-size: 18px;
+            color: var(--gray);
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(67, 97, 238, 0.2);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Message */
+        .message {
+            padding: 15px 20px;
+            border-radius: var(--border-radius);
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .message.success {
+            background-color: rgba(46, 204, 113, 0.1);
+            border-left: 5px solid #27ae60;
+            color: #27ae60;
+        }
+        
+        .message.error {
+            background-color: rgba(231, 76, 60, 0.1);
+            border-left: 5px solid #e74c3c;
+            color: #e74c3c;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .header-controls {
+                justify-content: center;
+            }
+            
+            .calendar-day {
+                min-height: 80px;
+            }
+            
+            .calendar-header {
+                gap: 5px;
+            }
+            
+            .day-header {
+                padding: 10px 5px;
+                font-size: 14px;
+            }
+            
+            .event-item {
+                display: none;
+            }
+            
+            .event-badge {
+                width: 20px;
+                height: 20px;
+                font-size: 10px;
+            }
+            
+            .stats-section {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            body {
+                padding: 10px;
+            }
+            
+            .header-title {
+                font-size: 22px;
+            }
+            
+            .month-display {
+                font-size: 20px;
+                min-width: 200px;
+            }
+            
+            .calendar-day {
+                min-height: 70px;
+                padding: 5px;
+            }
+            
+            .day-number {
+                font-size: 14px;
+                margin-bottom: 4px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-title">
+                <i class="fas fa-calendar-alt"></i>
+                <div>
+                    <div>ปฏิทินการจองรถ</div>
+                    <div style="font-size: 16px; font-weight: 300; opacity: 0.9;">ระบบจัดการตารางการใช้รถยนต์บริษัท</div>
+                </div>
+            </div>
+            
+            <div class="header-controls">
+                <button class="btn btn-outline" id="prevMonth">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button class="btn btn-outline" id="todayBtn">
+                    <i class="fas fa-calendar-day"></i> วันนี้
+                </button>
+                <button class="btn btn-outline" id="nextMonth">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+                <div class="month-display" id="currentMonth"></div>
+                <button class="btn btn-primary" id="refreshBtn">
+                    <i class="fas fa-sync-alt"></i> รีเฟรช
+                </button>
+            </div>
+        </div>
+        
+        <!-- Message -->
+        <div class="message" id="message"></div>
+        
+        <!-- Stats -->
+        <div class="stats-section">
+            <div class="stat-card">
+                <div class="stat-icon reservations">
+                    <i class="fas fa-calendar-check"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value" id="totalReservations">0</div>
+                    <div class="stat-label">การจองทั้งหมด</div>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon vehicles">
+                    <i class="fas fa-car"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value" id="activeVehicles">0</div>
+                    <div class="stat-label">รถที่ถูกจอง</div>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon departments">
+                    <i class="fas fa-building"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value" id="activeDepartments">0</div>
+                    <div class="stat-label">แผนกที่ใช้งาน</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Calendar -->
+        <div class="calendar-container">
+            <div class="calendar-header">
+                <div class="day-header">อาทิตย์</div>
+                <div class="day-header">จันทร์</div>
+                <div class="day-header">อังคาร</div>
+                <div class="day-header">พุธ</div>
+                <div class="day-header">พฤหัสบดี</div>
+                <div class="day-header">ศุกร์</div>
+                <div class="day-header">เสาร์</div>
+            </div>
+            
+            <div class="calendar-grid" id="calendarGrid">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <div>กำลังโหลดข้อมูล...</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Info -->
+        <div style="background-color: white; border-radius: var(--border-radius); padding: 15px; margin-bottom: 20px; box-shadow: var(--box-shadow);">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <div>
+                    <strong>จำนวนข้อมูล:</strong>
+                    <span id="dataCount">0</span> รายการ
+                </div>
+                <div>
+                    <strong>อัพเดทล่าสุด:</strong>
+                    <span id="lastUpdated">--</span>
+                </div>
+                <div>
+                    <button class="btn btn-outline" onclick="showRawData()" style="padding: 8px 15px; font-size: 14px;">
+                        <i class="fas fa-database"></i> ดูข้อมูลดิบ
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <p>ระบบปฏิทินการจองรถ | บริษัท TokaiSolidtire จำกัด</p>
+            <p>พัฒนาโดย Sarawut.C</p>
+        </div>
+    </div>
+    
+    <!-- Event Details Modal -->
+    <div class="modal" id="eventModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title" id="modalTitle">รายละเอียดการจอง</div>
+                <button class="modal-close" id="closeModal">&times;</button>
+            </div>
+            <div id="eventList" class="event-list">
+                <!-- Event details will be populated here -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Raw Data Modal -->
+    <div class="modal" id="rawDataModal">
+        <div class="modal-content" style="max-width: 90%;">
+            <div class="modal-header">
+                <div class="modal-title">ข้อมูลดิบจาก Google Sheets</div>
+                <button class="modal-close" onclick="closeRawData()">&times;</button>
+            </div>
+            <div id="rawDataContent" style="font-family: monospace; font-size: 12px; max-height: 60vh; overflow-y: auto;">
+                <!-- Raw data will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ข้อมูลตัวอย่าง (ใช้งานทันที)
+        const sampleData = [
+            {
+                "name": "ITSupport Tokai",
+                "code": "EMP005",
+                "department": "IT",
+                "position": "เจ้าหน้าที่ IT",
+                "choose": "Honda Wave",
+                "rentStartdate": "2026-01-28",
+                "rentEnddate": "2026-01-29",
+                "startTime": "06:00",
+                "endTime": "20:00",
+                "reason": "ขนสินค้าให้ลูกค้า"
+            }
+        ];
+
+        // ตัวแปรหลัก
+        let reservationsData = [];
+        let currentMonth = new Date().getMonth();
+        let currentYear = new Date().getFullYear();
+
+        // DOM Elements
+        const elements = {
+            currentMonth: document.getElementById('currentMonth'),
+            calendarGrid: document.getElementById('calendarGrid'),
+            prevMonthBtn: document.getElementById('prevMonth'),
+            nextMonthBtn: document.getElementById('nextMonth'),
+            todayBtn: document.getElementById('todayBtn'),
+            refreshBtn: document.getElementById('refreshBtn'),
+            eventModal: document.getElementById('eventModal'),
+            modalTitle: document.getElementById('modalTitle'),
+            eventList: document.getElementById('eventList'),
+            closeModal: document.getElementById('closeModal'),
+            totalReservations: document.getElementById('totalReservations'),
+            activeVehicles: document.getElementById('activeVehicles'),
+            activeDepartments: document.getElementById('activeDepartments'),
+            lastUpdated: document.getElementById('lastUpdated'),
+            message: document.getElementById('message'),
+            dataCount: document.getElementById('dataCount')
+        };
+
+        // เริ่มต้น
+        document.addEventListener('DOMContentLoaded', function() {
+            initCalendar();
+            loadData();
+            setupEventListeners();
+        });
+
+        function initCalendar() {
+            updateCalendarDisplay();
+        }
+
+        function setupEventListeners() {
+            elements.prevMonthBtn.addEventListener('click', goToPreviousMonth);
+            elements.nextMonthBtn.addEventListener('click', goToNextMonth);
+            elements.todayBtn.addEventListener('click', goToToday);
+            elements.refreshBtn.addEventListener('click', loadData);
+            elements.closeModal.addEventListener('click', closeEventModal);
+            
+            elements.eventModal.addEventListener('click', function(e) {
+                if (e.target === elements.eventModal) {
+                    closeEventModal();
+                }
+            });
+        }
+
+        // โหลดข้อมูล
+        async function loadData() {
+            showLoading();
+            showMessage('กำลังโหลดข้อมูล...', 'info');
+            
+            try {
+                // ลองโหลดจาก Google Sheets
+                const data = await loadFromGoogleSheets();
+                reservationsData = data;
+                
+                if (reservationsData.length > 0) {
+                    showMessage(`โหลดข้อมูลสำเร็จ: ${reservationsData.length} รายการ`, 'success');
+                    updateStats();
+                    renderCalendar();
+                    updateLastUpdated();
+                } else {
+                    throw new Error('ไม่พบข้อมูล');
+                }
+                
+            } catch (error) {
+                console.log('ใช้ข้อมูลตัวอย่าง:', error.message);
+                reservationsData = sampleData;
+                showMessage('ใช้ข้อมูลตัวอย่าง', 'warning');
+                updateStats();
+                renderCalendar();
+                updateLastUpdated();
+            }
+        }
+
+        // โหลดจาก Google Sheets (แบบง่าย)
+        async function loadFromGoogleSheets() {
+            const SHEET_ID = '1-5izB7N6ldxHAa3ca0RNhGP8Z36vuA0mw9Wi_xR_Lj4';
+            
+            // ลองหลายวิธี
+            const methods = [
+                async () => await tryMethod1(SHEET_ID),
+                async () => await tryMethod2(SHEET_ID),
+                async () => await tryMethod3(SHEET_ID)
+            ];
+            
+            for (let i = 0; i < methods.length; i++) {
+                try {
+                    const data = await methods[i]();
+                    if (data && data.length > 0) {
+                        console.log(`Method ${i + 1} successful: ${data.length} items`);
+                        return data;
+                    }
+                } catch (error) {
+                    console.log(`Method ${i + 1} failed:`, error.message);
+                }
+            }
+            
+            throw new Error('All methods failed');
+        }
+
+        async function tryMethod1(sheetId) {
+            // วิธีที่ 1: CSV Export
+            const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
+            const response = await fetch(url);
+            const csv = await response.text();
+            return parseCSV(csv);
+        }
+
+        async function tryMethod2(sheetId) {
+            // วิธีที่ 2: Google Sheets API
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/Sheet1`;
+            const response = await fetch(url);
+            const data = await response.json();
+            
+            if (data.values) {
+                const headers = data.values[0];
+                const rows = data.values.slice(1);
+                
+                return rows.map(row => {
+                    const obj = {};
+                    headers.forEach((header, index) => {
+                        obj[header] = row[index] || '';
+                    });
+                    return obj;
+                });
+            }
+            
+            return [];
+        }
+
+        async function tryMethod3(sheetId) {
+            // วิธีที่ 3: Apps Script
+            const scriptUrl = 'https://script.google.com/macros/s/AKfycbzcMdFcpQkAxIbb0iEJJfZ8fD0YgiGUetRkkw1UyMv7uY3tlza345UoL1uNrNbOUKRx/exec';
+            const response = await fetch(scriptUrl);
+            const data = await response.json();
+            
+            if (data.data) {
+                return data.data;
+            }
+            
+            return [];
+        }
+
+        function parseCSV(csvText) {
+            const lines = csvText.split('\n').filter(line => line.trim() !== '');
+            if (lines.length < 2) return [];
+            
+            const headers = lines[0].split(',').map(h => h.trim());
+            const result = [];
+            
+            for (let i = 1; i < lines.length; i++) {
+                const values = lines[i].split(',').map(v => v.trim());
+                const obj = {};
+                
+                headers.forEach((header, index) => {
+                    if (index < values.length) {
+                        obj[header] = values[index];
+                    }
+                });
+                
+                // แปลงชื่อคอลัมน์ให้ตรงกัน
+                obj.name = obj.name || obj.Name || obj['ชื่อ-สกุล'] || '';
+                obj.choose = obj.choose || obj.Choose || obj.vehicle || '';
+                obj.department = obj.department || obj.Department || obj.dept || '';
+                obj.rentStartdate = obj.rentStartdate || obj.rentStartDate || obj.startdate || '';
+                obj.rentEnddate = obj.rentEnddate || obj.rentEndDate || obj.enddate || '';
+                
+                if (obj.name && obj.name.trim() !== '') {
+                    result.push(obj);
+                }
+            }
+            
+            return result;
+        }
+
+        // แปลงวันที่
+        function parseDate(dateStr) {
+            if (!dateStr || dateStr.trim() === '') return '';
+            
+            // ลองแปลงหลายรูปแบบ
+            const date = new Date(dateStr);
+            
+            // ถ้าข้อมูลเป็นรูปแบบ DD/MM/YYYY
+            if (dateStr.includes('/')) {
+                const parts = dateStr.split('/');
+                if (parts.length === 3) {
+                    const day = parseInt(parts[0]);
+                    const month = parseInt(parts[1]) - 1;
+                    const year = parseInt(parts[2]);
+                    
+                    // ถ้าปีมีแค่ 2 หลัก
+                    const fullYear = year < 100 ? year + 2500 : year;
+                    
+                    return new Date(fullYear, month, day).toISOString().split('T')[0];
+                }
+            }
+            
+            // ถ้าแปลงด้วย Date() ได้
+            if (!isNaN(date.getTime())) {
+                return date.toISOString().split('T')[0];
+            }
+            
+            return dateStr;
+        }
+
+        // อัพเดทปฏิทิน
+        function updateCalendarDisplay() {
+            const monthNames = [
+                'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+                'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
+            ];
+            
+            elements.currentMonth.textContent = 
+                `${monthNames[currentMonth]} ${currentYear + 543}`;
+        }
+
+        function renderCalendar() {
+            if (!reservationsData || reservationsData.length === 0) {
+                elements.calendarGrid.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+                        <i class="fas fa-database" style="font-size: 48px; color: var(--gray); margin-bottom: 15px;"></i>
+                        <div style="color: var(--gray); font-size: 18px;">ไม่พบข้อมูลการจองรถ</div>
+                        <button class="btn btn-primary" onclick="loadData()" style="margin-top: 15px;">
+                            <i class="fas fa-redo"></i> โหลดข้อมูลใหม่
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+            
+            // สร้างปฏิทิน (เริ่มจากวันอาทิตย์)
+            const firstDay = new Date(currentYear, currentMonth, 1);
+            const lastDay = new Date(currentYear, currentMonth + 1, 0);
+            const daysInMonth = lastDay.getDate();
+            
+            // วันที่เริ่มต้นของเดือน (0 = อาทิตย์, 1 = จันทร์, ..., 6 = เสาร์)
+            let firstDayOfWeek = firstDay.getDay();
+            // ในปฏิทินไทย อาทิตย์ = 0, จันทร์ = 1, ..., เสาร์ = 6
+            // ไม่ต้องปรับเปลี่ยนเพราะเราต้องการให้อาทิตย์เป็นวันแรก
+            
+            const today = new Date();
+            const isTodayMonth = today.getMonth() === currentMonth && today.getFullYear() === currentYear;
+            
+            let calendarHTML = '';
+            
+            // วันว่างก่อนวันที่ 1 (วันอาทิตย์ถึงวันก่อนหน้า)
+            for (let i = 0; i < firstDayOfWeek; i++) {
+                calendarHTML += '<div class="calendar-day empty"></div>';
+            }
+            
+            // วันในเดือน
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const dayReservations = getReservationsForDate(dateStr);
+                
+                const todayClass = isTodayMonth && day === today.getDate() ? 'today' : '';
+                
+                calendarHTML += `
+                    <div class="calendar-day ${todayClass}">
+                        <div class="day-number">${day}</div>
+                `;
+                
+                if (dayReservations.length > 0) {
+                    calendarHTML += `
+                        <div class="event-badge">${dayReservations.length}</div>
+                        <div class="day-events">
+                    `;
+                    
+                    dayReservations.slice(0, 2).forEach(reservation => {
+                        const color = getVehicleColor(reservation.choose);
+                        calendarHTML += `
+                            <div class="event-item" style="background-color: ${color};"
+                                 onclick="showEventDetails('${dateStr}')">
+                                ${reservation.choose.split(' ')[0]}: ${reservation.name.split(' ')[0]}
+                            </div>
+                        `;
+                    });
+                    
+                    calendarHTML += '</div>';
+                }
+                
+                calendarHTML += '</div>';
+            }
+            
+            elements.calendarGrid.innerHTML = calendarHTML;
+        }
+
+        function getReservationsForDate(dateStr) {
+            return reservationsData.filter(reservation => {
+                const startDate = parseDate(reservation.rentStartdate);
+                const endDate = parseDate(reservation.rentEnddate);
+                
+                if (!startDate || !endDate) return false;
+                
+                return dateStr >= startDate && dateStr <= endDate;
+            });
+        }
+
+        function getVehicleColor(vehicleName) {
+            const colors = [
+                '#4361ee', '#3f37c9', '#4cc9f0', '#f72585',
+                '#7209b7', '#3a0ca3', '#06d6a0', '#ffd166'
+            ];
+            
+            if (!vehicleName) return colors[0];
+            
+            let hash = 0;
+            for (let i = 0; i < vehicleName.length; i++) {
+                hash = vehicleName.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            
+            return colors[Math.abs(hash) % colors.length];
+        }
+
+        function showEventDetails(dateStr) {
+            const date = new Date(dateStr);
+            const formattedDate = date.toLocaleDateString('th-TH', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                weekday: 'long'
+            });
+            
+            const reservations = getReservationsForDate(dateStr);
+            
+            elements.modalTitle.textContent = `การจองรถวันที่ ${formattedDate}`;
+            elements.eventList.innerHTML = '';
+            
+            if (reservations.length === 0) {
+                elements.eventList.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: var(--gray);">
+                        <i class="fas fa-calendar-times" style="font-size: 48px; margin-bottom: 15px;"></i>
+                        <div>ไม่มีการจองรถในวันนี้</div>
+                    </div>
+                `;
+            } else {
+                reservations.forEach(reservation => {
+                    const eventDetail = document.createElement('div');
+                    eventDetail.className = 'event-detail';
+                    
+                    const status = getReservationStatus(reservation, dateStr);
+                    const statusClass = `status-${status}`;
+                    const statusText = status === 'active' ? 'อนุมัติ' : 
+                                     status === 'pending' ? 'รออนุมัติ' : 'เสร็จสิ้น';
+                    
+                    eventDetail.innerHTML = `
+                        <div class="event-header">
+                            <div class="event-vehicle">${reservation.choose || 'ไม่ระบุรถ'}</div>
+                            <span class="event-status ${statusClass}">${statusText}</span>
+                        </div>
+                        <div class="event-details">
+                            <div class="event-detail-item">
+                                <span class="event-detail-label">ผู้จอง</span>
+                                <span class="event-detail-value">${reservation.name || '-'}</span>
+                            </div>
+                            <div class="event-detail-item">
+                                <span class="event-detail-label">รหัสพนักงาน</span>
+                                <span class="event-detail-value">${reservation.code || '-'}</span>
+                            </div>
+                            <div class="event-detail-item">
+                                <span class="event-detail-label">แผนก</span>
+                                <span class="event-detail-value">${reservation.department || '-'}</span>
+                            </div>
+                            <div class="event-detail-item">
+                                <span class="event-detail-label">วันที่จอง</span>
+                                <span class="event-detail-value">${formatDate(reservation.rentStartdate)} - ${formatDate(reservation.rentEnddate)}</span>
+                            </div>
+                            <div class="event-detail-item">
+                                <span class="event-detail-label">เวลา</span>
+                                <span class="event-detail-value">${reservation.startTime || '-'} - ${reservation.endTime || '-'}</span>
+                            </div>
+                            <div class="event-detail-item">
+                                <span class="event-detail-label">เหตุผล</span>
+                                <span class="event-detail-value">${reservation.reason || '-'}</span>
+                            </div>
+                        </div>
+                    `;
+                    
+                    elements.eventList.appendChild(eventDetail);
+                });
+            }
+            
+            elements.eventModal.style.display = 'flex';
+        }
+
+        function getReservationStatus(reservation, dateStr) {
+            const today = new Date().toISOString().split('T')[0];
+            const startDate = parseDate(reservation.rentStartdate);
+            const endDate = parseDate(reservation.rentEnddate);
+            
+            if (!startDate || !endDate) return 'pending';
+            
+            if (today > endDate) return 'completed';
+            if (today >= startDate && today <= endDate) return 'active';
+            return 'pending';
+        }
+
+        function closeEventModal() {
+            elements.eventModal.style.display = 'none';
+        }
+
+        function goToPreviousMonth() {
+            currentMonth--;
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            }
+            updateCalendarDisplay();
+            renderCalendar();
+        }
+
+        function goToNextMonth() {
+            currentMonth++;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            updateCalendarDisplay();
+            renderCalendar();
+        }
+
+        function goToToday() {
+            const today = new Date();
+            currentMonth = today.getMonth();
+            currentYear = today.getFullYear();
+            updateCalendarDisplay();
+            renderCalendar();
+        }
+
+        function updateStats() {
+            elements.totalReservations.textContent = reservationsData.length;
+            elements.dataCount.textContent = reservationsData.length;
+            
+            const vehicles = [...new Set(reservationsData.map(item => item.choose).filter(Boolean))];
+            elements.activeVehicles.textContent = vehicles.length;
+            
+            const departments = [...new Set(reservationsData.map(item => item.department).filter(Boolean))];
+            elements.activeDepartments.textContent = departments.length;
+        }
+
+        function updateLastUpdated() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+            const dateString = now.toLocaleDateString('th-TH');
+            elements.lastUpdated.textContent = `${dateString} ${timeString}`;
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            
+            const date = new Date(parseDate(dateStr));
+            if (isNaN(date.getTime())) return dateStr;
+            
+            const day = date.getDate().toString().padStart(2, '0');
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const year = (date.getFullYear() + 543).toString().slice(-2);
+            return `${day}/${month}/${year}`;
+        }
+
+        function showLoading() {
+            elements.calendarGrid.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <div>กำลังโหลดข้อมูล...</div>
+                </div>
+            `;
+        }
+
+        function showMessage(text, type) {
+            elements.message.textContent = text;
+            elements.message.className = `message ${type}`;
+            elements.message.style.display = 'block';
+            
+            setTimeout(() => {
+                elements.message.style.display = 'none';
+            }, 3000);
+        }
+
+        function showRawData() {
+            const modal = document.getElementById('rawDataModal');
+            const content = document.getElementById('rawDataContent');
+            
+            let html = '<div style="margin-bottom: 10px;"><strong>ข้อมูลทั้งหมด:</strong> ' + reservationsData.length + ' รายการ</div>';
+            
+            reservationsData.forEach((item, index) => {
+                html += `
+                    <div style="border: 1px solid #ddd; border-radius: 5px; padding: 10px; margin-bottom: 10px;">
+                        <div><strong>รายการที่ ${index + 1}: ${item.name || 'ไม่มีชื่อ'}</strong></div>
+                        <div>รถ: ${item.choose || 'ไม่ระบุ'}</div>
+                        <div>วันที่: ${item.rentStartdate || 'ไม่ระบุ'} ถึง ${item.rentEnddate || 'ไม่ระบุ'}</div>
+                        <div>แปลงแล้ว: ${parseDate(item.rentStartdate)} ถึง ${parseDate(item.rentEnddate)}</div>
+                        <div>แผนก: ${item.department || 'ไม่ระบุ'}</div>
+                    </div>
+                `;
+            });
+            
+            content.innerHTML = html;
+            modal.style.display = 'flex';
+        }
+
+        function closeRawData() {
+            document.getElementById('rawDataModal').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

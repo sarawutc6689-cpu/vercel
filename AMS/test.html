@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบจองรถ - Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --primary-light: #3b82f6;
+            --secondary: #64748b;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #3b82f6;
+            --light: #f1f5f9;
+            --dark: #0f172a;
+            --gray: #64748b;
+            --gray-light: #e2e8f0;
+            
+            --sidebar-width: 280px;
+            --header-height: 70px;
+            --border-radius: 16px;
+            --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            --transition: all 0.3s ease;
+        }
+
+        body {
+            font-family: 'Prompt', 'Sarabun', sans-serif;
+            background-color: #f8fafc;
+            color: var(--dark);
+            min-height: 100vh;
+        }
+
+        /* Main Layout */
+        .app {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+            color: white;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            transition: var(--transition);
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar-header {
+            padding: 30px 25px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: var(--primary-light);
+        }
+
+        .logo-text h2 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .logo-text p {
+            font-size: 12px;
+            opacity: 0.6;
+        }
+
+        /* User Info */
+        .user-info {
+            padding: 25px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            background: var(--primary);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .user-details h4 {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+
+        .user-details span {
+            font-size: 13px;
+            opacity: 0.6;
+        }
+
+        /* Navigation */
+        .nav-menu {
+            padding: 25px;
+        }
+
+        .nav-section {
+            margin-bottom: 25px;
+        }
+
+        .nav-section-title {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.5;
+            margin-bottom: 15px;
+            padding-left: 15px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            margin-bottom: 5px;
+            border-radius: 12px;
+            transition: var(--transition);
+            cursor: pointer;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .nav-item.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .nav-icon {
+            width: 40px;
+            font-size: 18px;
+        }
+
+        .nav-text {
+            flex: 1;
+            font-size: 15px;
+            font-weight: 400;
+        }
+
+        .nav-badge {
+            background: var(--danger);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            padding: 30px;
+            background: #f8fafc;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .page-title h1 {
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--dark);
+            margin-bottom: 5px;
+        }
+
+        .page-title p {
+            color: var(--gray);
+            font-size: 14px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 500;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: var(--transition);
+            font-family: 'Prompt', sans-serif;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .btn-outline {
+            background: white;
+            border: 1px solid var(--gray-light);
+            color: var(--dark);
+        }
+
+        .btn-outline:hover {
+            background: var(--light);
+            border-color: var(--primary);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            transition: var(--transition);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .stat-icon.primary {
+            background: rgba(37, 99, 235, 0.1);
+            color: var(--primary);
+        }
+
+        .stat-icon.success {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .stat-icon.warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+
+        .stat-icon.info {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--info);
+        }
+
+        .stat-content h3 {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--gray);
+            margin-bottom: 5px;
+        }
+
+        .stat-content .number {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 5px;
+        }
+
+        .stat-content .trend {
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .trend.up {
+            color: var(--success);
+        }
+
+        .trend.down {
+            color: var(--danger);
+        }
+
+        /* Charts Section */
+        .charts-section {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .chart-card {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 25px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .chart-header h3 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .chart-container {
+            height: 300px;
+            position: relative;
+        }
+
+        /* Recent Activity */
+        .recent-section {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 25px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .section-header h3 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .view-all {
+            color: var(--primary);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* Table */
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            text-align: left;
+            padding: 15px;
+            font-weight: 500;
+            color: var(--gray);
+            border-bottom: 2px solid var(--gray-light);
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid var(--gray-light);
+        }
+
+        tr:hover td {
+            background-color: var(--light);
+        }
+
+        .status {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            display: inline-block;
+        }
+
+        .status-approved {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .status-pending {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+
+        .status-rejected {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        .status-completed {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--info);
+        }
+
+        .user-avatar-small {
+            width: 35px;
+            height: 35px;
+            border-radius: 10px;
+            background: var(--light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+        }
+
+        .vehicle-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .vehicle-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: var(--light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+        }
+
+        /* Loading */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 50px;
+            color: var(--gray);
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--gray-light);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 15px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid var(--gray-light);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--gray);
+            font-size: 13px;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .charts-section {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .sidebar {
+                width: 80px;
+            }
+            
+            .sidebar-header, .user-info, .nav-text, .nav-badge {
+                display: none;
+            }
+            
+            .nav-item {
+                justify-content: center;
+            }
+            
+            .nav-icon {
+                width: auto;
+            }
+            
+            .main-content {
+                margin-left: 80px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .header-actions {
+                width: 100%;
+            }
+            
+            .btn {
+                flex: 1;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <div class="logo-icon">
+                        <i class="fas fa-car-side"></i>
+                    </div>
+                    <div class="logo-text">
+                        <h2>Mouldmate AMS</h2>
+                        <p>Automotive Management System</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="user-info">
+                <div class="user-avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="user-details">
+                    <h4>ผู้ดูแลระบบ</h4>
+                    <span>Sarawut.C</span>
+                </div>
+            </div>
+
+            <div class="nav-menu">
+                <div class="nav-section">
+                    <div class="nav-section-title">เมนูหลัก</div>
+                    <div class="nav-item active" onclick="window.location.href='#'">
+                        <div class="nav-icon"><i class="fas fa-tachometer-alt"></i></div>
+                        <div class="nav-text">Dashboard</div>
+                    </div>
+                    <div class="nav-item" onclick="window.location.href='https://script.google.com/macros/s/AKfycby2iYSxYLXle1eQ2gds0P8h6aop521ijZiifuBDIwHKAHIha9A5mC0OZQhVsWUejUrI/exec'">
+                        <div class="nav-icon"><i class="fas fa-calendar-alt"></i></div>
+                        <div class="nav-text">ตารางการจองรถ</div>
+                    </div>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">การจัดการ</div>
+                    <div class="nav-item" onclick="window.location.href='https://script.google.com/macros/s/AKfycbyU3xroJAgi8QPRqsTyMIVc-d3-EjmvAy1a80phgYh0ZoeRkLJl8o7B2iR_PW1D07e_Eg/exec'">
+                        <div class="nav-icon"><i class="fas fa-plus-circle"></i></div>
+                        <div class="nav-text">เข้าระบบจองรถ</div>
+                    </div>
+                    <div class="nav-item" onclick="window.location.href='https://script.google.com/macros/s/AKfycbyU3xroJAgi8QPRqsTyMIVc-d3-EjmvAy1a80phgYh0ZoeRkLJl8o7B2iR_PW1D07e_Eg/exec?page=approve'">
+                        <div class="nav-icon"><i class="fas fa-check-circle"></i></div>
+                        <div class="nav-text">อนุมัติการจอง</div>
+                        <span class="nav-badge" id="pendingBadge">0</span>
+                    </div>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">รายงาน</div>
+                    <div class="nav-item" onclick="window.location.href='https://script.google.com/macros/s/AKfycbwZP85voU54TQ33BbqTqN4fQ91GCixPNtKrlSvWWr6qd0O5pxTX-WC7Tfu1e5m4NBMM/exec'">
+                        <div class="nav-icon"><i class="fas fa-chart-bar"></i></div>
+                        <div class="nav-text">รายงานการจอง</div>
+                    </div>
+                    <div class="nav-item" onclick="window.location.href='https://t.me/+AvnDc_Cx-18yMmU1'">
+                        <div class="nav-icon"><i class="fas fa-telegram"></i></div>
+                        <div class="nav-text">เข้ากลุ่ม Telegram 
+                        </div>
+                    </div>
+
+
+
+
+                    
+                </div>
+
+               
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+            <div class="header">
+                <div class="page-title">
+                    <h1>Dashboard</h1>
+                    <p id="lastUpdateInfo">กำลังโหลดข้อมูล...</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-outline" id="refreshBtn">
+                        <i class="fas fa-sync-alt"></i>
+                        รีเฟรช
+                    </button>
+                    <button class="btn btn-primary" onclick="window.location.href='https://script.google.com/macros/s/AKfycbzVwWfVRx5TPz4wh69UbxBTmawSroZXfnYHZdC5AawT80kLbNzmkMds3GoSYobJHZqvyg/exec'">
+                        <i class="fas fa-plus"></i>
+                        จองรถใหม่
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon primary">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>การจองทั้งหมด</h3>
+                        <div class="number" id="totalReservations">0</div>
+                        <div class="trend up">
+                            <i class="fas fa-arrow-up"></i>
+                            <span id="totalTrend">ทั้งหมด</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon success">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>อนุมัติแล้ว</h3>
+                        <div class="number" id="approvedCount">0</div>
+                        <div class="trend up">
+                            <i class="fas fa-arrow-up"></i>
+                            <span id="approvedTrend">รายการ</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon warning">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>รออนุมัติ</h3>
+                        <div class="number" id="pendingCount">0</div>
+                        <div class="trend down">
+                            <i class="fas fa-arrow-down"></i>
+                            <span id="pendingTrend">รายการ</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon info">
+                        <i class="fas fa-building"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>แผนกที่ใช้งาน</h3>
+                        <div class="number" id="departmentCount">0</div>
+                        <div class="trend up">
+                            <i class="fas fa-arrow-up"></i>
+                            <span id="deptTrend">แผนก</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="charts-section">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3><i class="fas fa-chart-line" style="margin-right: 10px; color: var(--primary);"></i>สถิติการจองรายวัน</h3>
+                        <select class="btn-outline" id="timeRangeSelect" style="padding: 8px 15px; border-radius: 8px;">
+                            <option value="7">7 วันที่ผ่านมา</option>
+                            <option value="30" selected>30 วันที่ผ่านมา</option>
+                            <option value="90">90 วันที่ผ่านมา</option>
+                        </select>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="trendChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3><i class="fas fa-chart-pie" style="margin-right: 10px; color: var(--primary);"></i>สัดส่วนสถานะ</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="statusChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="recent-section">
+                <div class="section-header">
+                    <h3><i class="fas fa-history" style="margin-right: 10px; color: var(--primary);"></i>รายการจองล่าสุด</h3>
+                    <a href="#" class="view-all" onclick="window.location.href='https://script.google.com/macros/s/AKfycbzVwWfVRx5TPz4wh69UbxBTmawSroZXfnYHZdC5AawT80kLbNzmkMds3GoSYobJHZqvyg/exec?page=approve'">ดูทั้งหมด <i class="fas fa-arrow-right"></i></a>
+                </div>
+                
+                <div class="table-responsive">
+                    <div class="loading" id="loadingSpinner">
+                        <div class="spinner"></div>
+                        <span>กำลังโหลดข้อมูล...</span>
+                    </div>
+                    <table id="recentTable" style="display: none;">
+                        <thead>
+                            <tr>
+                                <th>พนักงาน</th>
+                                <th>แผนก</th>
+                                <th>รถที่จอง</th>
+                                <th>วันที่จอง</th>
+                                <th>ระยะเวลา</th>
+                                <th>สถานะ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="footer">
+                <div>
+                    <i class="fas fa-database"></i>
+                    <span id="dataStats">โหลดข้อมูลล่าสุด: -</span>
+                </div>
+                <div>
+                   ระบบจองรถใช้งานบริษัท แผนกยานยนต์ © 2026 | พัฒนาโดย Sarawut.C
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== กำหนดค่า API ====================
+        const API_URL = 'https://script.google.com/macros/s/AKfycbzVwWfVRx5TPz4wh69UbxBTmawSroZXfnYHZdC5AawT80kLbNzmkMds3GoSYobJHZqvyg/exec';
+        
+        // ==================== ตัวแปรหลัก ====================
+        let allReservations = [];
+        let chartInstances = {};
+
+        // ==================== ฟังก์ชันจัดการวันที่ ====================
+        
+        // แปลงวันที่จาก Google Sheets
+        function parseGoogleSheetsDate(dateValue) {
+            if (!dateValue || dateValue === '') return null;
+            
+            try {
+                // ถ้าเป็นตัวเลข (Google Sheets serial number)
+                if (typeof dateValue === 'number') {
+                    // Google Sheets ใช้ระบบวันที่แบบ serial (วันที่ 1 = 31/12/1899)
+                    const GOOGLE_SHEETS_EPOCH = new Date(1899, 11, 30); // 30/12/1899
+                    const msPerDay = 24 * 60 * 60 * 1000;
+                    const date = new Date(GOOGLE_SHEETS_EPOCH.getTime() + (dateValue * msPerDay));
+                    
+                    // ตรวจสอบปีไม่ให้เกินจริง
+                    if (date.getFullYear() > 3000 || date.getFullYear() < 1900) {
+                        return null;
+                    }
+                    return date;
+                }
+                
+                // ถ้าเป็น string
+                if (typeof dateValue === 'string') {
+                    // ลองตรวจสอบรูปแบบ DD/MM/YYYY
+                    const match = dateValue.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+                    if (match) {
+                        const [_, d, m, y] = match;
+                        const year = parseInt(y);
+                        
+                        // ถ้าปีมากกว่า 2500 แสดงว่าเป็นปี พ.ศ. ให้ลบ 543
+                        const adYear = year > 2500 ? year - 543 : year;
+                        
+                        // ตรวจสอบปีที่ได้
+                        if (adYear > 3000 || adYear < 1900) {
+                            return null;
+                        }
+                        
+                        return new Date(adYear, parseInt(m)-1, parseInt(d));
+                    }
+                    
+                    // ลอง parse ทั่วไป
+                    const date = new Date(dateValue);
+                    if (!isNaN(date.getTime())) {
+                        const year = date.getFullYear();
+                        if (year > 3000 || year < 1900) {
+                            return null;
+                        }
+                        return date;
+                    }
+                }
+                
+                return null;
+            } catch (e) {
+                console.error('Error parsing date:', e, dateValue);
+                return null;
+            }
+        }
+
+        // จัดรูปแบบวันที่แบบไทย
+        function formatThaiDate(date) {
+            if (!date) return '-';
+            
+            try {
+                const day = String(date.getDate()).padStart(2, '0');
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const thaiYear = date.getFullYear() + 543;
+                return `${day}/${month}/${thaiYear}`;
+            } catch (e) {
+                return '-';
+            }
+        }
+
+        // จัดรูปแบบวันที่แบบสั้น
+        function formatShortDate(date) {
+            if (!date) return '-';
+            
+            try {
+                const day = String(date.getDate()).padStart(2, '0');
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const year = date.getFullYear();
+                return `${day}/${month}/${year}`;
+            } catch (e) {
+                return '-';
+            }
+        }
+
+        // ==================== ฟังก์ชันโหลดข้อมูล ====================
+        
+        async function loadData() {
+            showLoading(true);
+            
+            try {
+                // ลองโหลดจาก API
+                const response = await fetch(`${API_URL}?action=getReservations&t=${new Date().getTime()}`);
+                const result = await response.json();
+                
+                if (result.status === 'success' && result.data) {
+                    allReservations = processData(result.data);
+                } else {
+                    // ถ้าไม่ได้ ให้ใช้ข้อมูลตัวอย่าง
+                    allReservations = generateSampleData();
+                }
+            } catch (error) {
+                console.error('Error loading data:', error);
+                allReservations = generateSampleData();
+            }
+            
+            // อัพเดท dashboard
+            updateDashboard();
+            showLoading(false);
+        }
+
+        // ประมวลผลข้อมูล
+        function processData(rawData) {
+            if (!rawData || !Array.isArray(rawData)) return [];
+            
+            return rawData.map((item, index) => {
+                // แปลงวันที่ต่างๆ
+                const timestamp = parseGoogleSheetsDate(item.Timestamp || item.timestamp);
+                const rentStart = parseGoogleSheetsDate(item.rentStartdate || item.rentStartDate);
+                const rentEnd = parseGoogleSheetsDate(item.rentEnddate || item.rentEndDate);
+                
+                return {
+                    ...item,
+                    Timestamp: timestamp,
+                    rentStartdate: rentStart,
+                    rentEnddate: rentEnd,
+                    // เก็บค่าวันที่ที่จัดรูปแบบแล้ว
+                    displayTimestamp: timestamp ? formatThaiDate(timestamp) : '-',
+                    displayRentStart: rentStart ? formatShortDate(rentStart) : '-',
+                    displayRentEnd: rentEnd ? formatShortDate(rentEnd) : '-',
+                };
+            }).filter(item => {
+                // กรองเอาเฉพาะรายการที่มีข้อมูล
+                return item.name || item.department || item.choose;
+            });
+        }
+
+        // สร้างข้อมูลตัวอย่าง (สำหรับทดสอบ)
+        function generateSampleData() {
+            const departments = ['ผลิต', 'ซ่อมบำรุง', 'QC', 'คลังสินค้า', 'จัดซื้อ'];
+            const vehicles = ['รถกระบะ 4 ประตู', 'รถตู้', 'รถเก๋ง', 'รถกระบะ 2 ประตู'];
+            const names = ['สมชาย ใจดี', 'สมหญิง รักงาน', 'วิชัย มั่งมี', 'นภาพร แสนดี'];
+            
+            const today = new Date();
+            
+            return Array(25).fill(null).map((_, i) => {
+                const timestamp = new Date(today);
+                timestamp.setDate(today.getDate() - Math.floor(Math.random() * 30));
+                
+                const startDate = new Date(today);
+                startDate.setDate(today.getDate() + Math.floor(Math.random() * 10));
+                
+                const endDate = new Date(startDate);
+                endDate.setDate(startDate.getDate() + Math.floor(Math.random() * 3) + 1);
+                
+                const rand = Math.random();
+                let approval = 'รออนุมัติ';
+                if (rand < 0.3) approval = 'อนุมัติ';
+                else if (rand < 0.5) approval = 'ปฏิเสธ';
+                else if (rand < 0.7) approval = 'เสร็จสิ้น';
+                
+                return {
+                    Timestamp: timestamp,
+                    rentStartdate: startDate,
+                    rentEnddate: endDate,
+                    Code: `EMP${String(i+1).padStart(3, '0')}`,
+                    name: names[i % names.length],
+                    department: departments[i % departments.length],
+                    position: 'พนักงาน',
+                    contact: '081-234-5678',
+                    choose: vehicles[i % vehicles.length],
+                    reason: 'งานบริการ',
+                    approval: approval,
+                    displayTimestamp: formatThaiDate(timestamp),
+                    displayRentStart: formatShortDate(startDate),
+                    displayRentEnd: formatShortDate(endDate),
+                };
+            });
+        }
+
+        // ==================== ฟังก์ชันอัพเดท UI ====================
+        
+        function updateDashboard() {
+            if (!allReservations || allReservations.length === 0) return;
+            
+            // คำนวณสถิติ
+            const total = allReservations.length;
+            const approved = allReservations.filter(r => {
+                const approval = (r.approval || '').toLowerCase().trim();
+                return approval === 'อนุมัติ' || approval === 'approved' || approval === 'yes';
+            }).length;
+            
+            const pending = allReservations.filter(r => {
+                const approval = (r.approval || '').toLowerCase().trim();
+                return approval === '' || approval === 'รออนุมัติ' || approval === 'pending' || approval === null;
+            }).length;
+            
+            const departments = [...new Set(allReservations.map(r => r.department).filter(Boolean))].length;
+            
+            // อัพเดทตัวเลข
+            document.getElementById('totalReservations').textContent = total;
+            document.getElementById('approvedCount').textContent = approved;
+            document.getElementById('pendingCount').textContent = pending;
+            document.getElementById('departmentCount').textContent = departments;
+            
+            // อัพเดทข้อความแนวโน้ม
+            document.getElementById('totalTrend').textContent = `ทั้งหมด ${total} รายการ`;
+            document.getElementById('approvedTrend').textContent = `${approved} รายการ`;
+            document.getElementById('pendingTrend').textContent = `${pending} รายการ`;
+            document.getElementById('deptTrend').textContent = `${departments} แผนก`;
+            
+            // อัพเดท badge
+            const pendingBadge = document.getElementById('pendingBadge');
+            if (pendingBadge) {
+                pendingBadge.textContent = pending;
+            }
+            
+            // อัพเดท footer
+            const now = new Date();
+            document.getElementById('dataStats').innerHTML = `โหลดข้อมูลล่าสุด: ${formatThaiDate(now)} ${now.toLocaleTimeString('th-TH')} (${total} รายการ)`;
+            document.getElementById('lastUpdateInfo').innerHTML = `อัพเดทล่าสุด ${formatThaiDate(now)} ${now.toLocaleTimeString('th-TH')}`;
+            
+            // อัพเดทตาราง
+            updateTable();
+            
+            // อัพเดท charts
+            updateCharts();
+        }
+
+        function updateTable() {
+            const tbody = document.getElementById('tableBody');
+            if (!tbody) return;
+            
+            // เรียงตามวันที่ล่าสุด
+            const sorted = [...allReservations]
+                .sort((a, b) => {
+                    const dateA = a.Timestamp ? new Date(a.Timestamp) : new Date(0);
+                    const dateB = b.Timestamp ? new Date(b.Timestamp) : new Date(0);
+                    return dateB - dateA;
+                })
+                .slice(0, 15);
+            
+            if (sorted.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 40px;">ไม่มีข้อมูลการจอง</td></tr>`;
+                return;
+            }
+            
+            tbody.innerHTML = sorted.map(item => {
+                // กำหนดสถานะ
+                let statusClass = 'status-pending';
+                let statusText = 'รออนุมัติ';
+                
+                const approval = (item.approval || '').toLowerCase().trim();
+                if (approval === 'อนุมัติ' || approval === 'approved' || approval === 'yes') {
+                    statusClass = 'status-approved';
+                    statusText = 'อนุมัติ';
+                } else if (approval === 'ปฏิเสธ' || approval === 'rejected' || approval === 'ไม่อนุมัติ') {
+                    statusClass = 'status-rejected';
+                    statusText = 'ปฏิเสธ';
+                } else if (approval === 'เสร็จสิ้น' || approval === 'completed') {
+                    statusClass = 'status-completed';
+                    statusText = 'เสร็จสิ้น';
+                }
+                
+                // ใช้วันที่ที่จัดรูปแบบไว้
+                const requestDate = item.displayTimestamp || '-';
+                const startDate = item.displayRentStart || '-';
+                const endDate = item.displayRentEnd || '-';
+                
+                return `
+                    <tr>
+                        <td>
+                            <div class="vehicle-info">
+                                <div class="user-avatar-small">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div>
+                                    <strong>${item.name || '-'}</strong><br>
+                                    <small style="color: var(--gray);">${item.Code || ''}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>${item.department || '-'}</td>
+                        <td>
+                            <div class="vehicle-info">
+                                <div class="vehicle-icon">
+                                    <i class="fas fa-car"></i>
+                                </div>
+                                <span>${item.choose || '-'}</span>
+                            </div>
+                        </td>
+                        <td>${requestDate}</td>
+                        <td>${startDate} - ${endDate}</td>
+                        <td><span class="status ${statusClass}">${statusText}</span></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // ==================== ฟังก์ชันจัดการ Charts ====================
+        
+        function initializeCharts() {
+            // Trend Chart
+            const trendCtx = document.getElementById('trendChart').getContext('2d');
+            chartInstances.trend = new Chart(trendCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'จำนวนการจอง',
+                        data: [],
+                        borderColor: '#2563eb',
+                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Status Chart
+            const statusCtx = document.getElementById('statusChart').getContext('2d');
+            chartInstances.status = new Chart(statusCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['อนุมัติ', 'รออนุมัติ', 'ปฏิเสธ', 'เสร็จสิ้น'],
+                    datasets: [{
+                        data: [0, 0, 0, 0],
+                        backgroundColor: ['#10b981', '#f59e0b', '#ef4444', '#3b82f6'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+        }
+
+        function updateCharts() {
+            if (!allReservations.length || !chartInstances.trend || !chartInstances.status) return;
+            
+            const days = parseInt(document.getElementById('timeRangeSelect').value);
+            
+            // อัพเดท trend chart
+            const dailyCounts = Array(days).fill(0);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            allReservations.forEach(item => {
+                if (!item.Timestamp) return;
+                
+                const date = new Date(item.Timestamp);
+                date.setHours(0, 0, 0, 0);
+                
+                const diffDays = Math.floor((today - date) / (1000 * 60 * 60 * 24));
+                if (diffDays >= 0 && diffDays < days) {
+                    dailyCounts[days - 1 - diffDays]++;
+                }
+            });
+            
+            const labels = Array(days).fill(0).map((_, i) => {
+                const d = new Date();
+                d.setDate(d.getDate() - (days - 1 - i));
+                return d.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
+            });
+            
+            chartInstances.trend.data.labels = labels;
+            chartInstances.trend.data.datasets[0].data = dailyCounts;
+            chartInstances.trend.update();
+            
+            // อัพเดท status chart
+            const approved = allReservations.filter(r => {
+                const a = (r.approval || '').toLowerCase().trim();
+                return a === 'อนุมัติ' || a === 'approved';
+            }).length;
+            
+            const pending = allReservations.filter(r => {
+                const a = (r.approval || '').toLowerCase().trim();
+                return !a || a === 'รออนุมัติ' || a === 'pending';
+            }).length;
+            
+            const rejected = allReservations.filter(r => {
+                const a = (r.approval || '').toLowerCase().trim();
+                return a === 'ปฏิเสธ' || a === 'rejected';
+            }).length;
+            
+            const completed = allReservations.filter(r => {
+                const a = (r.approval || '').toLowerCase().trim();
+                return a === 'เสร็จสิ้น' || a === 'completed';
+            }).length;
+            
+            chartInstances.status.data.datasets[0].data = [approved, pending, rejected, completed];
+            chartInstances.status.update();
+        }
+
+        // ==================== ฟังก์ชันช่วยเหลือ ====================
+        
+        function showLoading(show) {
+            const spinner = document.getElementById('loadingSpinner');
+            const table = document.getElementById('recentTable');
+            
+            if (spinner && table) {
+                if (show) {
+                    spinner.style.display = 'flex';
+                    table.style.display = 'none';
+                } else {
+                    spinner.style.display = 'none';
+                    table.style.display = 'table';
+                }
+            }
+        }
+
+        // ==================== Event Listeners ====================
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // สร้าง charts
+            initializeCharts();
+            
+            // โหลดข้อมูล
+            loadData();
+            
+            // รีเฟรชข้อมูล
+            document.getElementById('refreshBtn').addEventListener('click', loadData);
+            
+            // เปลี่ยนช่วงเวลา
+            document.getElementById('timeRangeSelect').addEventListener('change', updateCharts);
+            
+            // ออกจากระบบ
+            document.getElementById('logoutBtn').addEventListener('click', function() {
+                if (confirm('คุณต้องการออกจากระบบใช่หรือไม่?')) {
+                    window.location.href = 'https://script.google.com/macros/s/AKfycbzVwWfVRx5TPz4wh69UbxBTmawSroZXfnYHZdC5AawT80kLbNzmkMds3GoSYobJHZqvyg/exec';
+                }
+            });
+            
+            // รีเฟรชอัตโนมัติทุก 5 นาที
+            setInterval(loadData, 5 * 60 * 1000);
+        });
+    </script>
+</body>
+</html>

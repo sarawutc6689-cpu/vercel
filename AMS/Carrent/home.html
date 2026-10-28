@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบจองรถ - แผนกยานยนต์</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Prompt', sans-serif;
+        }
+
+        :root {
+            --primary: #0A2472;
+            --primary-light: #0E4B9E;
+            --success: #28a745;
+            --warning: #ffc107;
+            --info: #118ab2;
+            --purple: #7209b7;
+            --gray: #6c757d;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container { max-width: 1300px; width: 100%; }
+
+        .header {
+            background: white;
+            border-radius: 20px;
+            padding: 35px 30px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .logo-icon {
+            width: 70px;
+            height: 70px;
+            background: var(--primary);
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 34px;
+            margin: 0 auto 20px;
+        }
+
+        .header h1 { color: var(--primary); font-size: 28px; margin-bottom: 8px; }
+        .header p { color: var(--gray); font-size: 15px; }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 22px;
+        }
+
+        @media (max-width: 1100px) {
+            .menu-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 560px) {
+            .menu-grid { grid-template-columns: 1fr; }
+        }
+
+        .menu-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px 20px;
+            text-align: center;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 14px;
+            transition: all 0.3s;
+        }
+
+        .menu-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+        }
+
+        .menu-icon {
+            width: 72px;
+            height: 72px;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            color: white;
+        }
+
+        .menu-icon.book { background: var(--primary); }
+        .menu-icon.approve { background: var(--success); }
+        .menu-icon.report { background: var(--info); }
+        .menu-icon.calendar { background: var(--purple); }
+
+        .menu-card h2 { color: var(--primary); font-size: 18px; }
+        .menu-card p { color: var(--gray); font-size: 13px; line-height: 1.5; }
+
+        .menu-card .btn-go {
+            margin-top: 5px;
+            padding: 9px 22px;
+            background: #f8f9fa;
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: white;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo-icon"><i class="fas fa-car"></i></div>
+            <h1>ระบบจองรถ แผนกยานยนต์</h1>
+            <p>Vehicle Reservation System — เลือกเมนูที่ต้องการใช้งาน</p>
+        </div>
+
+        <div class="menu-grid">
+            <a href="index.html" class="menu-card">
+                <div class="menu-icon book"><i class="fas fa-calendar-plus"></i></div>
+                <h2>จองรถ</h2>
+                <p>ค้นหาพนักงาน เลือกรถ และส่งคำขอจองรถ</p>
+                <span class="btn-go">เข้าใช้งาน <i class="fas fa-arrow-right"></i></span>
+            </a>
+
+            <a href="approve.html" class="menu-card">
+                <div class="menu-icon approve"><i class="fas fa-check-circle"></i></div>
+                <h2>อนุมัติการจอง</h2>
+                <p>ดูรายการรออนุมัติ และอนุมัติ/ไม่อนุมัติคำขอจองรถ</p>
+                <span class="btn-go">เข้าใช้งาน <i class="fas fa-arrow-right"></i></span>
+            </a>
+
+            <a href="calendar.html" class="menu-card">
+                <div class="menu-icon calendar"><i class="fas fa-calendar-alt"></i></div>
+                <h2>ปฏิทินการจอง</h2>
+                <p>ดูภาพรวมว่ารถแต่ละคันถูกจองวันไหนบ้าง</p>
+                <span class="btn-go">เข้าใช้งาน <i class="fas fa-arrow-right"></i></span>
+            </a>
+
+            <a href="report.html" class="menu-card">
+                <div class="menu-icon report"><i class="fas fa-chart-bar"></i></div>
+                <h2>รายงาน</h2>
+                <p>ดูสถิติและรายงานการใช้งานรถของบริษัท</p>
+                <span class="btn-go">เข้าใช้งาน <i class="fas fa-arrow-right"></i></span>
+            </a>
+        </div>
+
+        <div class="footer">
+            <p>ระบบขอจองรถใช้งานบริษัท © 2026 | สำหรับใช้ภายในองค์กรเท่านั้น | พัฒนาโดย Sarawut.C</p>
+        </div>
+    </div>
+</body>
+</html>

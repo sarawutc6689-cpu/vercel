@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ปฏิทินแจ้งเตือนของฉัน</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Sarabun', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            width: 100%;
+        }
+        
+        .calendar-wrapper {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .calendar-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .calendar-header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .month-display {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 30px;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+        }
+        
+        .month-display button {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            cursor: pointer;
+            color: #667eea;
+            padding: 10px 20px;
+            border-radius: 10px;
+            transition: background 0.3s;
+        }
+        
+        .month-display button:hover {
+            background: #e9ecef;
+        }
+        
+        .month-year {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            background: #f1f3f5;
+            padding: 15px;
+            text-align: center;
+            font-weight: bold;
+            color: #495057;
+        }
+        
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            padding: 20px;
+            background: white;
+        }
+        
+        .calendar-day {
+            min-height: 100px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            position: relative;
+            transition: transform 0.3s;
+        }
+        
+        .calendar-day:hover {
+            transform: scale(1.02);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .calendar-day.today {
+            background: linear-gradient(135deg, #667eea20 0%, #764ba220 100%);
+            border: 2px solid #667eea;
+        }
+        
+        .day-number {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .reminder {
+            background: #667eea;
+            color: white;
+            padding: 3px 6px;
+            border-radius: 5px;
+            font-size: 0.8em;
+            margin-top: 5px;
+            cursor: pointer;
+            list-style: none;
+            transition: background 0.3s;
+        }
+        
+        .reminder:hover {
+            background: #764ba2;
+        }
+        
+        .reminder.important {
+            background: #dc3545;
+        }
+        
+        .reminder.meeting {
+            background: #28a745;
+        }
+        
+        .reminder.birthday {
+            background: #ffc107;
+            color: #333;
+        }
+        
+        .add-reminder-section {
+            padding: 30px;
+            background: #f8f9fa;
+            border-top: 2px solid #e9ecef;
+        }
+        
+        .add-reminder-section h3 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #495057;
+            font-weight: bold;
+        }
+        
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+        
+        .form-group textarea {
+            height: 80px;
+            resize: vertical;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .reminder-list {
+            margin-top: 30px;
+        }
+        
+        .reminder-item {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .reminder-info h4 {
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .reminder-info p {
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .reminder-actions button {
+            background: none;
+            border: none;
+            color: #dc3545;
+            cursor: pointer;
+            margin-left: 10px;
+            font-size: 1.2em;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #28a745;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            animation: slideIn 0.3s ease;
+            z-index: 1000;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="calendar-wrapper">
+            <div class="calendar-header">
+                <h1>📅 ปฏิทินแจ้งเตือนของฉัน</h1>
+                <p>จัดการนัดหมายและกิจกรรมต่างๆ ได้ง่ายๆ</p>
+            </div>
+            
+            <div class="month-display">
+                <button onclick="changeMonth(-1)">←</button>
+                <span class="month-year" id="monthYearDisplay">มกราคม 2024</span>
+                <button onclick="changeMonth(1)">→</button>
+            </div>
+            
+            <div class="weekdays">
+                <div>อา</div>
+                <div>จ</div>
+                <div>อ</div>
+                <div>พ</div>
+                <div>พฤ</div>
+                <div>ศ</div>
+                <div>ส</div>
+            </div>
+            
+            <div class="calendar-grid" id="calendarGrid">
+                <!-- ปฏิทินจะถูกสร้างด้วย JavaScript -->
+            </div>
+            
+            <div class="add-reminder-section">
+                <h3>➕ เพิ่มการแจ้งเตือน</h3>
+                <form id="reminderForm">
+                    <div class="form-group">
+                        <label for="reminderDate">วันที่</label>
+                        <input type="date" id="reminderDate" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="reminderTime">เวลา</label>
+                        <input type="time" id="reminderTime">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="reminderTitle">หัวข้อ</label>
+                        <input type="text" id="reminderTitle" placeholder="เช่น ประชุมทีม" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="reminderDescription">รายละเอียด</label>
+                        <textarea id="reminderDescription" placeholder="ระบุรายละเอียดเพิ่มเติม..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="reminderType">ประเภท</label>
+                        <select id="reminderType">
+                            <option value="general">ทั่วไป</option>
+                            <option value="important">สำคัญ</option>
+                            <option value="meeting">ประชุม</option>
+                            <option value="birthday">วันเกิด</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="btn">บันทึกการแจ้งเตือน</button>
+                </form>
+                
+                <div class="reminder-list" id="reminderList">
+                    <h3>📋 รายการแจ้งเตือนทั้งหมด</h3>
+                    <!-- รายการแจ้งเตือนจะแสดงที่นี่ -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ข้อมูลตัวอย่าง
+        let reminders = [
+            {
+                id: 1,
+                date: '2024-01-15',
+                time: '09:00',
+                title: 'ประชุมทีม',
+                description: 'ประชุมวางแผนโครงการ',
+                type: 'meeting'
+            },
+            {
+                id: 2,
+                date: '2024-01-20',
+                time: '14:30',
+                title: 'ส่งงานลูกค้า',
+                description: 'ส่งงานด่วน!',
+                type: 'important'
+            },
+            {
+                id: 3,
+                date: '2024-01-25',
+                time: '00:00',
+                title: 'วันเกิดเพื่อน',
+                description: 'อย่าลืมอวยพร',
+                type: 'birthday'
+            }
+        ];
+        
+        let currentDate = new Date();
+        let currentMonth = currentDate.getMonth();
+        let currentYear = currentDate.getFullYear();
+        
+        const monthNames = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+                           'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+        
+        // แสดงปฏิทิน
+        function renderCalendar() {
+            const calendarGrid = document.getElementById('calendarGrid');
+            const monthYearDisplay = document.getElementById('monthYearDisplay');
+            
+            monthYearDisplay.textContent = `${monthNames[currentMonth]} ${currentYear}`;
+            
+            const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+            
+            let calendarHTML = '';
+            
+            // เพิ่มช่องว่างสำหรับวันก่อนหน้า
+            for (let i = 0; i < firstDay; i++) {
+                calendarHTML += '<div class="calendar-day"></div>';
+            }
+            
+            // เพิ่มวันในเดือน
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const dayReminders = reminders.filter(r => r.date === dateStr);
+                
+                let isToday = false;
+                const today = new Date();
+                if (today.getDate() === day && today.getMonth() === currentMonth && today.getFullYear() === currentYear) {
+                    isToday = true;
+                }
+                
+                calendarHTML += `<div class="calendar-day ${isToday ? 'today' : ''}">`;
+                calendarHTML += `<div class="day-number">${day}</div>`;
+                
+                dayReminders.forEach(reminder => {
+                    calendarHTML += `<div class="reminder ${reminder.type}" onclick="showReminderDetails(${reminder.id})">`;
+                    calendarHTML += `<strong>${reminder.time}</strong> ${reminder.title}`;
+                    calendarHTML += '</div>';
+                });
+                
+                calendarHTML += '</div>';
+            }
+            
+            calendarGrid.innerHTML = calendarHTML;
+            renderReminderList();
+        }
+        
+        // เปลี่ยนเดือน
+        function changeMonth(delta) {
+            currentMonth += delta;
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            } else if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            renderCalendar();
+        }
+        
+        // เพิ่มการแจ้งเตือน
+        document.getElementById('reminderForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const newReminder = {
+                id: Date.now(),
+                date: document.getElementById('reminderDate').value,
+                time: document.getElementById('reminderTime').value || '00:00',
+                title: document.getElementById('reminderTitle').value,
+                description: document.getElementById('reminderDescription').value,
+                type: document.getElementById('reminderType').value
+            };
+            
+            reminders.push(newReminder);
+            renderCalendar();
+            showNotification('เพิ่มการแจ้งเตือนเรียบร้อยแล้ว!');
+            this.reset();
+        });
+        
+        // แสดงรายการแจ้งเตือนทั้งหมด
+        function renderReminderList() {
+            const reminderList = document.getElementById('reminderList');
+            
+            // เรียงตามวันที่
+            const sortedReminders = [...reminders].sort((a, b) => new Date(a.date) - new Date(b.date));
+            
+            let listHTML = '<h3>📋 รายการแจ้งเตือนทั้งหมด</h3>';
+            
+            if (sortedReminders.length === 0) {
+                listHTML += '<p>ยังไม่มีรายการแจ้งเตือน</p>';
+            } else {
+                sortedReminders.forEach(reminder => {
+                    const dateParts = reminder.date.split('-');
+                    const thaiDate = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
+                    
+                    listHTML += `
+                        <div class="reminder-item">
+                            <div class="reminder-info">
+                                <h4>${reminder.title}</h4>
+                                <p>📅 ${thaiDate} ${reminder.time !== '00:00' ? 'เวลา ' + reminder.time : ''}</p>
+                                <p>${reminder.description}</p>
+                                <small>ประเภท: ${getTypeName(reminder.type)}</small>
+                            </div>
+                            <div class="reminder-actions">
+                                <button onclick="deleteReminder(${reminder.id})">🗑️</button>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            
+            reminderList.innerHTML = listHTML;
+        }
+        
+        function getTypeName(type) {
+            const types = {
+                'general': 'ทั่วไป',
+                'important': 'สำคัญ',
+                'meeting': 'ประชุม',
+                'birthday': 'วันเกิด'
+            };
+            return types[type] || type;
+        }
+        
+        // ลบการแจ้งเตือน
+        function deleteReminder(id) {
+            if (confirm('ต้องการลบการแจ้งเตือนนี้ใช่หรือไม่?')) {
+                reminders = reminders.filter(r => r.id !== id);
+                renderCalendar();
+                showNotification('ลบการแจ้งเตือนเรียบร้อยแล้ว');
+            }
+        }
+        
+        // แสดงรายละเอียดการแจ้งเตือน
+        function showReminderDetails(id) {
+            const reminder = reminders.find(r => r.id === id);
+            if (reminder) {
+                alert(`📌 ${reminder.title}\n📝 ${reminder.description}\n📅 ${reminder.date}\n⏰ ${reminder.time}`);
+            }
+        }
+        
+        // แสดงการแจ้งเตือน
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+        
+        // ตรวจสอบการแจ้งเตือนของวันนี้
+        function checkTodayReminders() {
+            const today = new Date();
+            const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+            
+            const todayReminders = reminders.filter(r => r.date === todayStr);
+            
+            if (todayReminders.length > 0) {
+                showNotification(`วันนี้มี ${todayReminders.length} รายการแจ้งเตือน`);
+            }
+        }
+        
+        // เริ่มต้นใช้งาน
+        renderCalendar();
+        checkTodayReminders();
+        
+        // ตรวจสอบการแจ้งเตือนทุกๆ 1 ชั่วโมง
+        setInterval(checkTodayReminders, 3600000);
+    </script>
+</body>
+</html>

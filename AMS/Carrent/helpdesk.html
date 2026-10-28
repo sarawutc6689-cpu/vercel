@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AMS - ระบบแจ้งซ่อม/PM</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Prompt', sans-serif; }
+
+        :root {
+            --primary: #0A2472;
+            --primary-light: #0E4B9E;
+            --success: #28a745;
+            --warning: #ffc107;
+            --danger: #dc3545;
+            --light: #f8f9fa;
+            --dark: #343a40;
+            --gray: #6c757d;
+            --border: #dee2e6;
+        }
+
+        body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; }
+
+        .navbar {
+            max-width: 1400px; margin: 0 auto 20px; background: var(--primary);
+            border-radius: 20px; padding: 14px 20px; display: flex; gap: 12px;
+            justify-content: center; flex-wrap: wrap;
+        }
+        .navbar a {
+            color: white; text-decoration: none; padding: 10px 22px; border-radius: 50px;
+            background: rgba(255,255,255,0.12); font-size: 14px; font-weight: 500;
+            display: flex; align-items: center; gap: 8px;
+        }
+
+        .header {
+            background: white; border-radius: 20px; padding: 20px 30px; margin-bottom: 30px;
+            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;
+        }
+        .logo { display: flex; align-items: center; gap: 15px; }
+        .logo-icon {
+            width: 60px; height: 60px; background: var(--primary); border-radius: 15px;
+            display: flex; align-items: center; justify-content: center; color: white; font-size: 30px;
+        }
+        .logo-text h1 { color: var(--primary); font-size: 24px; }
+        .logo-text p { color: var(--gray); font-size: 14px; }
+
+        .user-area { display: flex; align-items: center; gap: 15px; }
+        .user-info { display: none; align-items: center; gap: 10px; padding: 10px 20px; background: var(--light); border-radius: 50px; }
+        .btn-login, .btn-logout { padding: 10px 25px; border: none; border-radius: 50px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+        .btn-login { background: var(--primary); color: white; }
+        .btn-logout { background: var(--danger); color: white; display: none; }
+
+        .card { background: white; border-radius: 20px; padding: 25px; margin-bottom: 25px; }
+        .card-header {
+            display: flex; align-items: center; gap: 10px; margin-bottom: 20px;
+            padding-bottom: 15px; border-bottom: 2px solid var(--border);
+        }
+        .card-header i { font-size: 22px; color: var(--primary); }
+        .card-header h2 { color: var(--primary); font-size: 18px; }
+
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        @media (max-width: 700px) { .form-row { grid-template-columns: 1fr; } }
+
+        .form-group { margin-bottom: 18px; }
+        label { display: block; margin-bottom: 6px; font-weight: 500; font-size: 14px; }
+        .required::after { content: " *"; color: var(--danger); }
+
+        input, select, textarea {
+            width: 100%; padding: 11px 14px; border: 2px solid var(--border);
+            border-radius: 10px; font-size: 14px; font-family: 'Prompt', sans-serif;
+        }
+        textarea { min-height: 80px; }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); }
+
+        .job-type-toggle { display: flex; gap: 10px; margin-bottom: 18px; }
+        .job-type-btn {
+            flex: 1; padding: 14px; border: 2px solid var(--border); border-radius: 12px;
+            text-align: center; cursor: pointer; font-weight: 600; color: var(--gray);
+        }
+        .job-type-btn.selected.fix { border-color: var(--danger); background: rgba(220,53,69,0.08); color: var(--danger); }
+        .job-type-btn.selected.pm { border-color: var(--success); background: rgba(40,167,69,0.08); color: var(--success); }
+
+        .employee-autocomplete-wrap { position: relative; }
+        .auto-complete {
+            position: absolute; top: 100%; left: 0; right: 0; background: white;
+            border: 2px solid var(--border); border-radius: 12px; margin-top: 5px;
+            max-height: 200px; overflow-y: auto; z-index: 1000; display: none;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .auto-complete-item { padding: 10px 15px; cursor: pointer; border-bottom: 1px solid var(--border); }
+        .auto-complete-item:hover { background: var(--light); }
+
+        .btn { padding: 13px 25px; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-family: 'Prompt', sans-serif; font-size: 14px; }
+        .btn-primary { background: var(--primary); color: white; width: 100%; }
+        .btn-primary:hover { background: var(--primary-light); }
+        .btn-success { background: var(--success); color: white; }
+        .btn-warning { background: var(--warning); color: var(--dark); }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-sm { padding: 8px 16px; font-size: 12px; }
+        .btn-icon-sm { padding: 4px 9px; font-size: 11px; border-radius: 8px; }
+
+        table { width: 100%; border-collapse: collapse; }
+        th { background: var(--primary); color: white; padding: 12px; font-weight: 500; text-align: left; font-size: 13px; }
+        td { padding: 12px; border-bottom: 1px solid var(--border); font-size: 13px; }
+        tr:hover td { background: var(--light); }
+        .table-container { overflow-x: auto; }
+
+        .status-badge { padding: 5px 10px; border-radius: 50px; font-size: 11px; font-weight: 500; display: inline-block; white-space: nowrap; }
+        .status-waiting { background: rgba(220,53,69,0.1); color: var(--danger); }
+        .status-working { background: rgba(255,193,7,0.15); color: #b8860b; }
+        .status-done { background: rgba(40,167,69,0.1); color: var(--success); }
+
+        .job-type-tag { padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; }
+        .job-type-tag.FIX { background: rgba(220,53,69,0.1); color: var(--danger); }
+        .job-type-tag.PM { background: rgba(40,167,69,0.1); color: var(--success); }
+
+        .no-data { text-align: center; padding: 40px; color: var(--gray); }
+
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center; }
+        .modal-content { background: white; border-radius: 20px; padding: 30px; max-width: 900px; width: 92%; max-height: 85vh; overflow-y: auto; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .modal-header h2 { color: var(--primary); font-size: 18px; }
+        .modal-close { background: none; border: none; font-size: 24px; cursor: pointer; color: var(--gray); }
+
+        .detail-section { margin-bottom: 18px; padding: 15px; background: var(--light); border-radius: 10px; }
+        .detail-section h3 { color: var(--primary); margin-bottom: 10px; font-size: 14px; }
+        .detail-row { display: flex; margin-bottom: 6px; font-size: 13px; }
+        .detail-label { width: 110px; color: var(--gray); }
+        .detail-value { flex: 1; font-weight: 500; }
+
+        .part-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px dashed var(--border); font-size: 13px; gap: 10px; }
+        .part-item:last-child { border-bottom: none; }
+        .part-item-right { display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+
+        .staff-only-note { text-align: center; padding: 15px; color: var(--gray); font-size: 13px; background: var(--light); border-radius: 10px; }
+
+        .reopened-note { text-align: center; padding: 10px; color: #b8860b; font-size: 12px; background: rgba(255,193,7,0.15); border-radius: 10px; margin-bottom: 18px; }
+
+        .photo-hint { font-size: 12px; color: var(--gray); margin-top: 4px; }
+        .photo-preview-list { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+        .photo-thumb { position: relative; width: 90px; height: 90px; border-radius: 10px; overflow: hidden; border: 2px solid var(--border); }
+        .photo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .photo-thumb .remove-photo {
+            position: absolute; top: 3px; right: 3px; background: rgba(220,53,69,0.9); color: white;
+            border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; cursor: pointer; line-height: 1;
+        }
+        .job-photos-view { display: flex; gap: 10px; flex-wrap: wrap; }
+        .job-photos-view a img {
+            width: 90px; height: 90px; object-fit: cover; border-radius: 10px; border: 2px solid var(--border); display: block;
+        }
+
+        .login-hint { margin-top: 15px; padding: 12px; background: var(--light); border-radius: 10px; font-size: 12px; color: var(--gray); }
+
+        .footer { text-align: center; margin-top: 30px; color: white; font-size: 13px; }
+
+        .loading-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; }
+        .swal2-container { z-index: 9999 !important; }
+        .loading-spinner { background: white; padding: 30px; border-radius: 20px; text-align: center; }
+        .loading-spinner i { font-size: 40px; color: var(--primary); animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .pdf-template {
+    width: 794px; min-height: 1123px; background: white; position: relative;
+    padding: 45px 55px; font-family: 'Prompt', sans-serif; color: #222; box-sizing: border-box;
+}
+.pdf-watermark {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-35deg);
+    font-size: 85px; font-weight: 700; color: rgba(10, 100, 220, 0.10);
+    white-space: nowrap; z-index: 0; pointer-events: none; letter-spacing: 4px;
+}
+.pdf-content { position: relative; z-index: 1; }
+.pdf-header { text-align: center; border-bottom: 3px solid var(--primary); padding-bottom: 15px; margin-bottom: 25px; }
+.pdf-header h1 { color: var(--primary); font-size: 22px; margin-bottom: 4px; }
+.pdf-header p { color: var(--gray); font-size: 13px; }
+.pdf-row { display: flex; margin-bottom: 9px; font-size: 14px; }
+.pdf-label { width: 140px; color: var(--gray); font-weight: 500; }
+.pdf-value { flex: 1; font-weight: 600; }
+.pdf-section-title {
+    color: var(--primary); font-size: 15px; font-weight: 600; margin: 22px 0 10px;
+    border-left: 4px solid var(--primary); padding-left: 8px;
+}
+.pdf-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.pdf-table th { background: var(--primary); color: white; padding: 8px; text-align: left; }
+.pdf-table td { padding: 8px; border-bottom: 1px solid #ddd; }
+.pdf-footer {
+    position: absolute; bottom: 30px; left: 55px; right: 55px; text-align: center;
+    font-size: 11px; color: #999; border-top: 1px solid #ddd; padding-top: 10px;
+}
+
+.pdf-photos { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+.pdf-photos img { width: 150px; height: 150px; object-fit: cover; border: 1px solid #ccc; border-radius: 8px; }
+        
+    </style>
+</head>
+<body>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i></div>
+    </div>
+
+    <!-- Login: รหัสพนักงานอย่างเดียว (มีช่องรหัสผ่านสำรอง ซ่อนไว้ กรณีเป็นผู้อนุมัติที่มีรหัสผ่านจริง) -->
+    <div class="modal" id="loginModal">
+        <div class="modal-content" style="max-width:400px;">
+            <div class="modal-header">
+                <h2><i class="fas fa-user-hard-hat"></i> เข้าสู่ระบบอนุมัติ</h2>
+                <button class="modal-close" id="closeLoginModal">&times;</button>
+            </div>
+            <div class="form-group">
+                <label>รหัสพนักงาน</label>
+                <input type="text" id="loginCode" placeholder="กรอกรหัสพนักงาน">
+            </div>
+            <div class="form-group" id="loginPasswordGroup" style="display:none;">
+                <label>รหัสผ่าน</label>
+                <input type="password" id="loginPassword" placeholder="สำหรับบัญชีผู้อนุมัติเท่านั้น">
+            </div>
+            <button class="btn btn-primary" id="loginBtn"><i class="fas fa-sign-in-alt"></i> เข้าสู่ระบบ</button>
+            <div class="login-hint">ช่างเข้าด้วยรหัสพนักงานอย่างเดียว ไม่ต้องมีรหัสผ่าน</div>
+        </div>
+    </div>
+
+    <!-- Manage / detail modal -->
+    <div class="modal" id="manageModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-wrench"></i> รายละเอียดงาน</h2>
+                <button class="modal-close" id="closeManageModal">&times;</button>
+            </div>
+            <div id="manageContent"></div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="navbar">
+            <a href="home.html"><i class="fas fa-home"></i> หน้าแรก</a>
+            <a href="index.html"><i class="fas fa-calendar-plus"></i> จองรถ</a>
+            <a href="approve.html"><i class="fas fa-check-circle"></i> อนุมัติ</a>
+            <a href="calendar.html"><i class="fas fa-calendar-alt"></i> ปฏิทิน</a>
+            <a href="report.html"><i class="fas fa-chart-bar"></i> รายงาน</a>
+            <a href="helpdesk.html"><i class="fas fa-wrench"></i> แจ้งซ่อม/PM</a>
+            <a href="ams-report.html"><i class="fas fa-chart-pie"></i> รายงานซ่อม/PM</a>
+        </div>
+
+        <div class="header">
+            <div class="logo">
+                <div class="logo-icon"><i class="fas fa-wrench"></i></div>
+                <div class="logo-text">
+                    <h1>AMS - ระบบแจ้งซ่อม/PM</h1>
+                    <p>Automotive Maintenance System</p>
+                </div>
+            </div>
+            <div class="user-area">
+                <div class="user-info" id="userInfo"><i class="fas fa-user-circle"></i><span id="currentUser"></span></div>
+                <button class="btn-login" id="showLoginModal"><i class="fas fa-sign-in-alt"></i> เข้าสู่ระบบอนุมัติ</button>
+                <button class="btn-logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> ออกจากระบบ</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header"><i class="fas fa-plus-circle"></i><h2>แจ้งงานใหม่</h2></div>
+
+            <div class="job-type-toggle">
+                <div class="job-type-btn fix selected" data-type="FIX"><i class="fas fa-tools"></i> แจ้งซ่อม (FIX)</div>
+                <div class="job-type-btn pm" data-type="PM"><i class="fas fa-calendar-check"></i> งาน PM</div>
+            </div>
+            <input type="hidden" id="jobType" value="FIX">
+
+            <form id="jobForm">
+                <div class="form-row">
+                    <div class="form-group employee-autocomplete-wrap">
+                        <label class="required">รหัสพนักงานผู้แจ้ง</label>
+                        <input type="text" id="employeeCode" placeholder="พิมพ์รหัสพนักงาน">
+                        <div class="auto-complete" id="employeeAutoComplete"></div>
+                    </div>
+                    <div class="form-group">
+                        <label class="required">รถ</label>
+                        <select id="carSelect"><option value="">-- เลือกรถ --</option></select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>เลขไมล์ปัจจุบัน</label>
+                        <input type="number" id="mileOld" placeholder="เช่น 15000">
+                    </div>
+                    <div class="form-group" id="mileNextGroup" style="display:none;">
+                        <label>เลขไมล์ครั้งถัดไป (PM)</label>
+                        <input type="number" id="mileNext" placeholder="เช่น 20000">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="required">รายละเอียดอาการ/งาน</label>
+                    <textarea id="detail" placeholder="อธิบายอาการเสีย หรือรายการ PM ที่ต้องทำ"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>รูปภาพประกอบ (สูงสุด 3 รูป)</label>
+                    <input type="file" id="jobPhotos" accept="image/*" multiple>
+                    <div class="photo-hint">แนบรูปสภาพรถ/อาการเสีย เพื่อให้ช่างประเมินงานได้ง่ายขึ้น</div>
+                    <div class="photo-preview-list" id="photoPreview"></div>
+                </div>
+
+                <button type="submit" class="btn btn-primary" id="submitJobBtn"><i class="fas fa-paper-plane"></i> ส่งแจ้งงาน</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <div class="card-header"><i class="fas fa-list"></i><h2>รายการงานทั้งหมด</h2></div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr><th>เลขที่งาน</th><th>ประเภท</th><th>รถ</th><th>ผู้แจ้ง</th><th>ช่าง</th><th>สถานะ</th><th></th></tr>
+                    </thead>
+                    <tbody id="jobsTableBody">
+                        <tr><td colspan="7" class="no-data">กำลังโหลด...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="footer"><p>ระบบแจ้งซ่อมและบำรุงรักษา © 2026 | สำหรับใช้ภายในองค์กรเท่านั้น | พัฒนาโดย Sarawut.C</p></div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://clowvcraydxpvwdbpkhi.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNsb3d2Y3JheWR4cHZ3ZGJwa2hpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3NTA3NTAsImV4cCI6MjEwMzMyNjc1MH0.pXV0g3JfakqNRgKjgCe87Reie5ZhXzqYXpZ3OVkluHk';
+        const EMAIL_DOMAIN = 'carreservation.internal';
+        // ต้องตรงกับค่าใน create-technicians.js เป๊ะ
+        const SHARED_TECH_PASSWORD = 'AMS-internal-2026-xk9';
+
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let employees = [];
+        let cars = [];
+        let technicians = [];
+        let jobs = [];
+        let currentUser = null;
+        let currentRole = null; // 'admin' | 'technician' | null
+
+        // ==================== รูปภาพประกอบ (แนบตอนแจ้งงาน) ====================
+        const MAX_PHOTOS = 3;
+        const MAX_PHOTO_BYTES = 5 * 1024 * 1024; // 5MB
+        let selectedPhotos = [];
+
+        function setupPhotoInput() {
+            document.getElementById('jobPhotos').addEventListener('change', function (e) {
+                const files = Array.from(e.target.files);
+                for (const file of files) {
+                    if (selectedPhotos.length >= MAX_PHOTOS) {
+                        Swal.fire('เกินจำนวนที่กำหนด', `แนบรูปได้สูงสุด ${MAX_PHOTOS} รูป`, 'warning');
+                        break;
+                    }
+                    if (!file.type.startsWith('image/')) {
+                        Swal.fire('ไฟล์ไม่ถูกต้อง', `${file.name} ไม่ใช่ไฟล์รูปภาพ`, 'warning');
+                        continue;
+                    }
+                    if (file.size > MAX_PHOTO_BYTES) {
+                        Swal.fire('ไฟล์ใหญ่เกินไป', `${file.name} มีขนาดเกิน 5MB`, 'warning');
+                        continue;
+                    }
+                    selectedPhotos.push(file);
+                }
+                this.value = ''; // reset เพื่อให้เลือกไฟล์เดิมซ้ำได้
+                renderPhotoPreview();
+            });
+        }
+
+        function renderPhotoPreview() {
+            const box = document.getElementById('photoPreview');
+            box.innerHTML = selectedPhotos.map((file, idx) => `
+                <div class="photo-thumb">
+                    <img src="${URL.createObjectURL(file)}">
+                    <button type="button" class="remove-photo" onclick="removePhoto(${idx})">&times;</button>
+                </div>
+            `).join('');
+        }
+
+        function removePhoto(idx) {
+            selectedPhotos.splice(idx, 1);
+            renderPhotoPreview();
+        }
+
+        function resetPhotoSelection() {
+            selectedPhotos = [];
+            renderPhotoPreview();
+        }
+
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result.split(',')[1]);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function uploadPhotosForJob(jobId) {
+            for (const file of selectedPhotos) {
+                try {
+                    const base64Data = await fileToBase64(file);
+                    const { data, error } = await supabaseClient.functions.invoke('upload-to-drive', {
+                        body: {
+                            fileName: `${jobId}_${Date.now()}_${file.name}`,
+                            mimeType: file.type,
+                            base64Data
+                        }
+                    });
+                    if (error || !data || data.error) {
+    let realMessage = 'ไม่สามารถอัปโหลดขึ้น Google Drive ได้';
+    try {
+        if (error && error.context && typeof error.context.text === 'function') {
+            const bodyText = await error.context.text();
+            realMessage = bodyText;
+        } else if (data?.error) {
+            realMessage = JSON.stringify(data.error);
+        }
+    } catch (e) {
+        realMessage = 'อ่านรายละเอียด error ไม่ได้: ' + e.message;
+    }
+    console.error('upload error', realMessage);
+    Swal.fire('อัปโหลดรูปไม่สำเร็จ', `${file.name}: ${realMessage}`, 'warning');
+    continue;
+}
+                    const { error: insertError } = await supabaseClient.from('job_photos').insert({
+    job_id: jobId,
+    photo_url: data.viewUrl || data.webViewLink
+});
+if (insertError) {
+    console.error('insert job_photos error', insertError);
+    Swal.fire('บันทึกรูปไม่สำเร็จ', insertError.message, 'warning');
+}
+                } catch (err) {
+                    console.error(err);
+                    Swal.fire('อัปโหลดรูปไม่สำเร็จ', `${file.name}: ${err.message}`, 'warning');
+                }
+            }
+        }
+
+        function showLoading() { document.getElementById('loadingOverlay').style.display = 'flex'; }
+        function hideLoading() { document.getElementById('loadingOverlay').style.display = 'none'; }
+        function isStaff() { return currentRole === 'admin' || currentRole === 'technician'; }
+
+        // ==================== โหลดข้อมูลพื้นฐาน ====================
+        async function loadEmployees() {
+            const { data } = await supabaseClient.from('employees').select('*');
+            employees = data || [];
+        }
+
+        async function loadCars() {
+            const { data } = await supabaseClient.from('cars').select('*').order('name');
+            cars = data || [];
+            const select = document.getElementById('carSelect');
+            select.innerHTML = '<option value="">-- เลือกรถ --</option>' +
+                cars.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+        }
+
+        async function loadTechnicians() {
+            if (!isStaff()) { technicians = []; return; }
+            const { data, error } = await supabaseClient.from('profiles').select('*').eq('role', 'technician');
+            if (error) { console.error(error); technicians = []; return; }
+            technicians = data || [];
+        }
+
+        // ==================== Autocomplete รหัสพนักงาน ====================
+        function setupEmployeeAutocomplete() {
+            const input = document.getElementById('employeeCode');
+            const box = document.getElementById('employeeAutoComplete');
+
+            input.addEventListener('input', () => {
+                const val = input.value.trim().toLowerCase();
+                if (val.length < 2) { box.style.display = 'none'; return; }
+                const filtered = employees.filter(e =>
+                    (e.code || '').toLowerCase().includes(val) || (e.name || '').toLowerCase().includes(val)
+                ).slice(0, 5);
+                if (filtered.length === 0) { box.style.display = 'none'; return; }
+                box.innerHTML = filtered.map(e => `<div class="auto-complete-item" data-code="${e.code}"><strong>${e.code}</strong> — ${e.name}</div>`).join('');
+                box.querySelectorAll('.auto-complete-item').forEach(item => {
+                    item.addEventListener('click', function () {
+                        input.value = this.dataset.code;
+                        box.style.display = 'none';
+                    });
+                });
+                box.style.display = 'block';
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.employee-autocomplete-wrap')) box.style.display = 'none';
+            });
+        }
+
+        // ==================== Job type toggle ====================
+        document.querySelectorAll('.job-type-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                document.querySelectorAll('.job-type-btn').forEach(b => b.classList.remove('selected'));
+                this.classList.add('selected');
+                document.getElementById('jobType').value = this.dataset.type;
+                document.getElementById('mileNextGroup').style.display = this.dataset.type === 'PM' ? 'block' : 'none';
+            });
+        });
+
+        // ==================== โหลดงาน ====================
+        async function loadJobs() {
+            const { data, error } = await supabaseClient
+                .from('repair_jobs')
+                .select('*, cars(name), employees(name), technician:profiles(fullname)')
+                .order('created_at', { ascending: false });
+            if (error) { console.error(error); jobs = []; }
+            else { jobs = data || []; }
+            renderJobsTable();
+        }
+
+        function jobStatus(job) {
+            if (job.closed_at) return { text: 'ปิดงานแล้ว', cls: 'status-done' };
+            if (job.technician_id) return { text: 'กำลังดำเนินการ', cls: 'status-working' };
+            return { text: 'รอรับงาน', cls: 'status-waiting' };
+        }
+
+        function renderJobsTable() {
+            const tbody = document.getElementById('jobsTableBody');
+            if (jobs.length === 0) { tbody.innerHTML = `<tr><td colspan="7" class="no-data">ยังไม่มีงานในระบบ</td></tr>`; return; }
+            tbody.innerHTML = jobs.map(j => {
+                const st = jobStatus(j);
+                return `
+                    <tr>
+                        <td><strong>${j.job_no || '-'}</strong></td>
+                        <td><span class="job-type-tag ${j.job_type}">${j.job_type}</span></td>
+                        <td>${j.cars?.name || '-'}</td>
+                        <td>${j.employees?.name || j.employee_code}</td>
+                        <td>${j.technician?.fullname || '-'}</td>
+                        <td><span class="status-badge ${st.cls}">${st.text}</span></td>
+                        <td><button class="btn btn-sm btn-primary" onclick="openManage('${j.id}')"><i class="fas fa-eye"></i> ดู</button></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // ==================== ตารางอะไหล่/บิล พร้อมคำนวณ VAT และเส้นแบ่งระหว่างบิล ====================
+function calcVat(price, billType) {
+    const base = Number(price) || 0;
+    if (billType === 'cash') {
+        return { exc: base, vat: 0, inc: base };
+    }
+    const vat = base * 0.07;
+    return { exc: base, vat, inc: base + vat };
+}
+function fmtMoney(n) {
+    return n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function renderPartsTableHTML(parts, canEdit, jobId) {
+    if (!parts || !parts.length) return '<div style="color:var(--gray);font-size:13px;">ยังไม่มีรายการอะไหล่</div>';
+
+    const sorted = [...parts].sort((a, b) => (a.inv_no || '').localeCompare(b.inv_no || ''));
+    let lastInv, totalExc = 0, totalVat = 0, totalInc = 0;
+
+    const rows = sorted.map(p => {
+        const { exc, vat, inc } = calcVat(p.price, p.bill_type);
+        totalExc += exc; totalVat += vat; totalInc += inc;
+        const inv = p.inv_no || '-';
+        const border = inv !== lastInv ? 'border-top:2px solid var(--primary);' : '';
+        lastInv = inv;
+        return `
+            <tr>
+                <td style="${border}">${inv}</td>
+                <td style="${border}">${p.shop || '-'}</td>
+                <td style="${border}">${p.part_name}</td>
+                <td style="${border}">${p.qty}</td>
+                <td style="${border}text-align:right;">${fmtMoney(exc)}</td>
+                <td style="${border}text-align:right;">${fmtMoney(vat)}</td>
+                <td style="${border}text-align:right;">${fmtMoney(inc)}</td>
+                ${canEdit ? `<td style="${border}white-space:nowrap;">
+                    <button class="btn btn-warning btn-icon-sm" onclick="editPart('${p.id}','${jobId}')" title="แก้ไข"><i class="fas fa-edit"></i></button>
+                    <button class="btn btn-danger btn-icon-sm" onclick="deletePart('${p.id}','${jobId}')" title="ลบ"><i class="fas fa-trash"></i></button>
+                </td>` : ''}
+            </tr>
+        `;
+    }).join('');
+
+    return `
+        <div class="table-container">
+            <table style="font-size:12px;">
+                <thead>
+                    <tr>
+                        <th>เลขที่บิล</th><th>ร้าน/ผู้ขาย</th><th>รายการ</th><th>จำนวน</th>
+                        <th style="text-align:right;">ราคา(บาท)<br>Exc.Vat</th>
+                        <th style="text-align:right;">Vat(+7%)</th>
+                        <th style="text-align:right;">ราคา(บาท)<br>Inc.Vat</th>
+                        ${canEdit ? '<th></th>' : ''}
+                    </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="4" style="text-align:right;font-weight:600;border-top:2px solid var(--primary);">รวม</td>
+                        <td style="text-align:right;font-weight:600;border-top:2px solid var(--primary);">${fmtMoney(totalExc)}</td>
+                        <td style="text-align:right;font-weight:600;border-top:2px solid var(--primary);">${fmtMoney(totalVat)}</td>
+                        <td style="text-align:right;font-weight:600;border-top:2px solid var(--primary);">${fmtMoney(totalInc)}</td>
+                        ${canEdit ? '<td style="border-top:2px solid var(--primary);"></td>' : ''}
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    `;
+}
+
+function buildPdfPartsTable(parts) {
+    if (!parts || !parts.length) return '<div style="color:#999;font-size:13px;">ยังไม่มีรายการอะไหล่</div>';
+
+    const sorted = [...parts].sort((a, b) => (a.inv_no || '').localeCompare(b.inv_no || ''));
+    let lastInv, totalExc = 0, totalVat = 0, totalInc = 0;
+
+    const rows = sorted.map(p => {
+        const { exc, vat, inc } = calcVat(p.price, p.bill_type);
+        totalExc += exc; totalVat += vat; totalInc += inc;
+        const inv = p.inv_no || '-';
+        const border = inv !== lastInv ? 'border-top:2px solid var(--primary);' : '';
+        lastInv = inv;
+        return `<tr>
+            <td style="${border}">${inv}</td>
+            <td style="${border}">${p.shop || '-'}</td>
+            <td style="${border}">${p.part_name}</td>
+            <td style="${border}">${p.qty}</td>
+            <td style="${border}text-align:right;">${fmtMoney(exc)}</td>
+            <td style="${border}text-align:right;">${fmtMoney(vat)}</td>
+            <td style="${border}text-align:right;">${fmtMoney(inc)}</td>
+        </tr>`;
+    }).join('');
+
+    return `
+        <table class="pdf-table">
+            <thead><tr>
+                <th>เลขที่บิล</th><th>ร้าน/ผู้ขาย</th><th>รายการ</th><th>จำนวน</th>
+                <th style="text-align:right;">ราคา(บาท)Exc.Vat</th>
+                <th style="text-align:right;">Vat(+7%)</th>
+                <th style="text-align:right;">ราคา(บาท)Inc.Vat</th>
+            </tr></thead>
+            <tbody>${rows}</tbody>
+            <tfoot><tr>
+                <td colspan="4" style="text-align:right;font-weight:600;border-top:2px solid var(--primary);">รวม</td>
+                <td style="text-align:right;font-weight:600;border-top:2px solid var(--primary);">${fmtMoney(totalExc)}</td>
+                <td style="text-align:right;font-weight:600;border-top:2px solid var(--primary);">${fmtMoney(totalVat)}</td>
+                <td style="text-align:right;font-weight:600;border-top:2px solid var(--primary);">${fmtMoney(totalInc)}</td>
+            </tr></tfoot>
+        </table>
+    `;
+}
+
+
+        // ==================== รายละเอียด/จัดการงาน ====================
+        async function openManage(jobId) {
+            const job = jobs.find(j => j.id === jobId);
+            if (!job) return;
+
+            showLoading();
+            const { data: parts } = await supabaseClient.from('repair_parts').select('*').eq('job_id', jobId).order('created_at');
+            const { data: photosData } = await supabaseClient.functions.invoke('upload-to-drive', {
+    body: { action: 'list', jobId: jobId }
+});
+const photos = (photosData && photosData.files) || [];
+            hideLoading();
+
+            const st = jobStatus(job);
+            // staff แก้ไขช่าง/อะไหล่ได้เสมอ แม้งานจะปิดแล้ว
+            const canEdit = isStaff();
+
+            let html = `
+                <div class="detail-section">
+                    <h3>📋 ข้อมูลงาน</h3>
+                    <div class="detail-row"><span class="detail-label">เลขที่งาน:</span><span class="detail-value">${job.job_no}</span></div>
+                    <div class="detail-row"><span class="detail-label">ประเภท:</span><span class="detail-value"><span class="job-type-tag ${job.job_type}">${job.job_type}</span></span></div>
+                    <div class="detail-row"><span class="detail-label">รถ:</span><span class="detail-value">${job.cars?.name || '-'}</span></div>
+                    <div class="detail-row"><span class="detail-label">ผู้แจ้ง:</span><span class="detail-value">${job.employees?.name || job.employee_code}</span></div>
+                    <div class="detail-row"><span class="detail-label">ไมล์ปัจจุบัน:</span><span class="detail-value">${job.mile_old || '-'}</span></div>
+                    ${job.mile_next ? `<div class="detail-row"><span class="detail-label">ไมล์ครั้งถัดไป:</span><span class="detail-value">${job.mile_next}</span></div>` : ''}
+                    <div class="detail-row"><span class="detail-label">รายละเอียด:</span><span class="detail-value">${job.detail || '-'}</span></div>
+                    <div class="detail-row"><span class="detail-label">สถานะ:</span><span class="detail-value"><span class="status-badge ${st.cls}">${st.text}</span></span></div>
+                    <div class="detail-row"><span class="detail-label">ช่างรับผิดชอบ:</span><span class="detail-value">${job.technician?.fullname || '-'}</span></div>
+                </div>
+
+                ${photos && photos.length ? `
+                <div class="detail-section">
+                    <h3>📷 รูปภาพประกอบ</h3>
+                    <div class="job-photos-view">
+                        ${photos.map(p => `<a href="${p.webViewLink || p.viewUrl}" target="_blank" rel="noopener"><img src="${p.viewUrl}" alt="รูปประกอบงาน"></a>`).join('')}
+                    </div>
+                </div>` : ''}
+
+                <div class="detail-section">
+    <h3>🔧 อะไหล่/บิล</h3>
+    ${renderPartsTableHTML(parts, canEdit, job.id)}
+</div>
+            `;
+
+            if (canEdit) {
+                if (job.closed_at) {
+                    html += `<div class="reopened-note"><i class="fas fa-info-circle"></i> งานนี้ปิดแล้ว แต่คุณยังแก้ไขช่าง/อะไหล่ได้ในฐานะ staff</div>`;
+                }
+                html += `
+                    <div class="detail-section">
+                        <h3>👷 มอบหมายช่าง</h3>
+                        <select id="assignTechSelect" style="margin-bottom:10px;">
+                            <option value="">-- เลือกช่าง --</option>
+                            ${technicians.map(t => `<option value="${t.id}" ${t.id === job.technician_id ? 'selected' : ''}>${t.fullname || t.username}</option>`).join('')}
+                        </select>
+                        <button class="btn btn-warning btn-sm" onclick="assignTech('${job.id}')" style="width:100%;"><i class="fas fa-user-check"></i> ${job.technician_id ? 'เปลี่ยนช่าง' : 'มอบหมาย'}</button>
+                    </div>
+
+                    <div class="detail-section">
+                        <h3>➕ เพิ่มอะไหล่</h3>
+                        <div class="form-row">
+                            <input type="text" id="partName" placeholder="ชื่ออะไหล่" style="margin-bottom:8px;">
+                            <input type="number" id="partQty" placeholder="จำนวน" style="margin-bottom:8px;">
+                        </div>
+                        <div class="form-row">
+                            <input type="number" id="partPrice" placeholder="ราคารวม (บาท)" style="margin-bottom:8px;">
+                            <input type="text" id="partShop" placeholder="ร้าน/ผู้ขาย" style="margin-bottom:8px;">
+                        </div>
+                        <input type="text" id="partInv" placeholder="เลขที่บิล (ถ้ามี)" style="margin-bottom:10px;">
+                        <select id="partBillType" style="margin-bottom:10px;">
+                          <option value="cash">บิลเงินสด (ไม่มี Vat)</option>
+                          <option value="inv">ใบกำกับภาษี (มี Vat 7%)</option>
+                        </select>
+
+                        <button class="btn btn-primary btn-sm" onclick="addPart('${job.id}')" style="width:100%;"><i class="fas fa-plus"></i> เพิ่มรายการ</button>
+                    </div>
+                `;
+
+                if (job.closed_at) {
+                    html += `<button class="btn btn-warning" onclick="reopenJob('${job.id}')" style="width:100%; margin-top:10px;"><i class="fas fa-undo"></i> เปิดงานอีกครั้ง</button>`;
+                } else {
+                    html += `<button class="btn btn-success" onclick="closeJob('${job.id}')" style="width:100%; margin-top:10px;"><i class="fas fa-check-double"></i> ปิดงาน</button>`;
+                }
+            } else if (!isStaff()) {
+                html += `<div class="staff-only-note"><i class="fas fa-lock"></i> ต้องเข้าสู่ระบบช่างเพื่อมอบหมาย/เพิ่มอะไหล่/ปิดงาน</div>`;
+            }
+
+            html = `<button class="btn btn-primary btn-sm" onclick="exportJobPDF('${job.id}')" style="width:100%; margin-bottom:18px;"><i class="fas fa-file-pdf"></i> ส่งออก PDF</button>` + html;
+
+            document.getElementById('manageContent').innerHTML = html;
+            document.getElementById('manageModal').style.display = 'flex';
+        }
+
+        async function exportJobPDF(jobId) {
+    const job = jobs.find(j => j.id === jobId);
+    if (!job) return;
+
+    showLoading();
+    const { data: parts } = await supabaseClient.from('repair_parts').select('*').eq('job_id', jobId).order('created_at');
+
+    // ดึงรายชื่อไฟล์รูปจาก Drive แล้วโหลดมาเป็น base64 เพื่อฝังใน PDF (เลี่ยงปัญหา CORS)
+   let photoDataUrls = [];
+try {
+    const { data: photosData } = await supabaseClient.functions.invoke('upload-to-drive', {
+        body: { action: 'list', jobId: jobId }
+    });
+    const files = (photosData && photosData.files) || [];
+    for (const f of files) {
+        const { data: dlData } = await supabaseClient.functions.invoke('upload-to-drive', {
+            body: { action: 'download', fileId: f.id }
+        });
+        if (dlData && dlData.dataUrl) photoDataUrls.push(dlData.dataUrl);
+    }
+} catch (e) {
+    console.error('load photos for pdf error', e);
+}
+
+    const st = jobStatus(job);
+   
+
+    const container = document.createElement('div');
+    container.className = 'pdf-template';
+    container.style.position = 'fixed';
+    container.style.top = '-9999px';
+    container.style.left = '-9999px';
+    container.innerHTML = `
+        <div class="pdf-watermark">TOKAISOLIDTIRE</div>
+        <div class="pdf-content">
+            <div class="pdf-header">
+                <h1>ใบแจ้งซ่อม / PM</h1>
+                <p>AMS - Automotive Maintenance System</p>
+            </div>
+            <div class="pdf-row"><div class="pdf-label">เลขที่งาน</div><div class="pdf-value">${job.job_no}</div></div>
+            <div class="pdf-row"><div class="pdf-label">ประเภทงาน</div><div class="pdf-value">${job.job_type === 'FIX' ? 'แจ้งซ่อม (FIX)' : 'งาน PM'}</div></div>
+            <div class="pdf-row"><div class="pdf-label">รถ</div><div class="pdf-value">${job.cars?.name || '-'}</div></div>
+            <div class="pdf-row"><div class="pdf-label">ผู้แจ้ง</div><div class="pdf-value">${job.employees?.name || job.employee_code}</div></div>
+            <div class="pdf-row"><div class="pdf-label">ไมล์ปัจจุบัน</div><div class="pdf-value">${job.mile_old || '-'}</div></div>
+            ${job.mile_next ? `<div class="pdf-row"><div class="pdf-label">ไมล์ครั้งถัดไป</div><div class="pdf-value">${job.mile_next}</div></div>` : ''}
+            <div class="pdf-row"><div class="pdf-label">รายละเอียด</div><div class="pdf-value">${job.detail || '-'}</div></div>
+            <div class="pdf-row"><div class="pdf-label">สถานะ</div><div class="pdf-value">${st.text}</div></div>
+            <div class="pdf-row"><div class="pdf-label">ช่างรับผิดชอบ</div><div class="pdf-value">${job.technician?.fullname || '-'}</div></div>
+            <div class="pdf-row"><div class="pdf-label">วันที่แจ้ง</div><div class="pdf-value">${new Date(job.created_at).toLocaleString('th-TH')}</div></div>
+
+            ${photoDataUrls.length ? `
+            <div class="pdf-section-title">รูปภาพประกอบ</div>
+            <div class="pdf-photos">
+                ${photoDataUrls.map(url => `<img src="${url}">`).join('')}
+            </div>
+            ` : ''}
+                       <div class="pdf-section-title">รายการอะไหล่/บิล</div>
+            ${buildPdfPartsTable(parts)}
+        </div>
+            
+        <div class="pdf-footer">ระบบงานซ่อม แผนกยานยนต์ | ใช้ภายในองค์กรเท่านั้น | พัฒนาโดย Sarawut.C</div>
+    `;
+    document.body.appendChild(container);
+
+    try {
+        const canvas = await html2canvas(container, { scale: 2, useCORS: true });
+        const imgData = canvas.toDataURL('image/jpeg', 0.95);
+
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const imgWidth = pageWidth;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+        let heightLeft = imgHeight;
+let position = 0;
+pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+heightLeft -= pageHeight;
+while (heightLeft > 2) {
+    position -= pageHeight;
+    pdf.addPage();
+    pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+    heightLeft -= pageHeight;
+}
+
+        pdf.save(`${job.job_no}.pdf`);
+    } catch (err) {
+        console.error(err);
+        Swal.fire('ผิดพลาด', 'สร้าง PDF ไม่สำเร็จ: ' + err.message, 'error');
+    } finally {
+        document.body.removeChild(container);
+        hideLoading();
+    }
+}
+
+        async function assignTech(jobId) {
+            const techId = document.getElementById('assignTechSelect').value;
+            if (!techId) { Swal.fire('เลือกช่างก่อน', '', 'warning'); return; }
+            showLoading();
+            const { error } = await supabaseClient.from('repair_jobs').update({ technician_id: techId, assigned_at: new Date().toISOString() }).eq('id', jobId);
+            hideLoading();
+            if (error) { Swal.fire('ผิดพลาด', error.message, 'error'); return; }
+            Swal.fire('สำเร็จ', 'มอบหมาย/เปลี่ยนช่างเรียบร้อย', 'success');
+            document.getElementById('manageModal').style.display = 'none';
+            await loadJobs();
+        }
+
+        async function addPart(jobId) {
+    const part_name = document.getElementById('partName').value.trim();
+    const qty = parseFloat(document.getElementById('partQty').value);
+    const price = parseFloat(document.getElementById('partPrice').value);
+    const shop = document.getElementById('partShop').value.trim();
+    const inv_no = document.getElementById('partInv').value.trim();
+    const bill_type = document.getElementById('partBillType').value;
+
+    if (!part_name || !qty || !price) { Swal.fire('ข้อมูลไม่ครบ', 'กรุณากรอกชื่ออะไหล่ จำนวน และราคา', 'warning'); return; }
+
+    showLoading();
+    const { error } = await supabaseClient.from('repair_parts').insert({
+        job_id: jobId, part_name, qty, price, shop: shop || null, inv_no: inv_no || null,
+        bill_type
+    });
+            hideLoading();
+            if (error) { Swal.fire('ผิดพลาด', error.message, 'error'); return; }
+            Swal.fire('สำเร็จ', 'เพิ่มรายการอะไหล่แล้ว', 'success');
+            openManage(jobId);
+        }
+
+        // ==================== แก้ไขรายการอะไหล่ (รวมถึงราคา) ====================
+        async function editPart(partId, jobId) {
+            showLoading();
+            const { data: part, error: fetchError } = await supabaseClient.from('repair_parts').select('*').eq('id', partId).single();
+            hideLoading();
+
+            if (fetchError || !part) { Swal.fire('ผิดพลาด', 'ไม่พบรายการอะไหล่นี้', 'error'); return; }
+            
+            const { value: formValues } = await Swal.fire({
+    title: 'แก้ไขรายการอะไหล่',
+    html: `
+        <input id="swal-part-name" class="swal2-input" placeholder="ชื่ออะไหล่" value="${part.part_name ? part.part_name.replace(/"/g, '&quot;') : ''}">
+        <input id="swal-part-qty" type="number" class="swal2-input" placeholder="จำนวน" value="${part.qty ?? ''}">
+        <input id="swal-part-price" type="number" step="0.01" class="swal2-input" placeholder="ราคารวม (บาท)" value="${part.price ?? ''}">
+        <input id="swal-part-shop" class="swal2-input" placeholder="ร้าน/ผู้ขาย" value="${part.shop ? part.shop.replace(/"/g, '&quot;') : ''}">
+        <input id="swal-part-inv" class="swal2-input" placeholder="เลขที่บิล (ถ้ามี)" value="${part.inv_no ? part.inv_no.replace(/"/g, '&quot;') : ''}">
+        <select id="swal-part-billtype" class="swal2-select" style="display:block;width:100%;padding:10px;margin:6px auto;border-radius:5px;border:1px solid #d9d9d9;">
+            <option value="cash" ${part.bill_type === 'cash' ? 'selected' : ''}>บิลเงินสด (ไม่มี Vat)</option>
+            <option value="inv" ${part.bill_type === 'inv' ? 'selected' : ''}>ใบกำกับภาษี (มี Vat 7%)</option>
+        </select>
+    `,
+    focusConfirm: false,
+    showCancelButton: true,
+    confirmButtonText: 'บันทึก',
+    cancelButtonText: 'ยกเลิก',
+    confirmButtonColor: '#0A2472',
+    preConfirm: () => {
+        const part_name = document.getElementById('swal-part-name').value.trim();
+        const qty = parseFloat(document.getElementById('swal-part-qty').value);
+        const price = parseFloat(document.getElementById('swal-part-price').value);
+        const shop = document.getElementById('swal-part-shop').value.trim();
+        const inv_no = document.getElementById('swal-part-inv').value.trim();
+        const bill_type = document.getElementById('swal-part-billtype').value;
+        if (!part_name || !qty || isNaN(price)) {
+            Swal.showValidationMessage('กรุณากรอกชื่ออะไหล่ จำนวน และราคาให้ครบถ้วน');
+            return false;
+        }
+        return { part_name, qty, price, shop, inv_no, bill_type };
+    }
+});
+            
+
+            if (!formValues) return;
+
+            showLoading();
+            const { error: updateError } = await supabaseClient.from('repair_parts').update({
+    part_name: formValues.part_name,
+    qty: formValues.qty,
+    price: formValues.price,
+    shop: formValues.shop || null,
+    inv_no: formValues.inv_no || null,
+    bill_type: formValues.bill_type
+}).eq('id', partId);
+            hideLoading();
+
+            if (updateError) { Swal.fire('ผิดพลาด', updateError.message, 'error'); return; }
+            Swal.fire('สำเร็จ', 'แก้ไขรายการเรียบร้อย', 'success');
+            openManage(jobId);
+        }
+
+        // ==================== ลบรายการอะไหล่ ====================
+        async function deletePart(partId, jobId) {
+            const result = await Swal.fire({
+                title: 'ยืนยันลบรายการนี้?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'ลบ',
+                cancelButtonText: 'ยกเลิก',
+                confirmButtonColor: '#dc3545'
+            });
+            if (!result.isConfirmed) return;
+
+            showLoading();
+            const { error } = await supabaseClient.from('repair_parts').delete().eq('id', partId);
+            hideLoading();
+
+            if (error) { Swal.fire('ผิดพลาด', error.message, 'error'); return; }
+            Swal.fire('สำเร็จ', 'ลบรายการเรียบร้อย', 'success');
+            openManage(jobId);
+        }
+
+        async function closeJob(jobId) {
+            const result = await Swal.fire({ title: 'ยืนยันปิดงาน?', icon: 'question', showCancelButton: true, confirmButtonText: 'ปิดงาน' });
+            if (!result.isConfirmed) return;
+            showLoading();
+            const { error } = await supabaseClient.from('repair_jobs').update({ closed_at: new Date().toISOString() }).eq('id', jobId);
+            hideLoading();
+            if (error) { Swal.fire('ผิดพลาด', error.message, 'error'); return; }
+            Swal.fire('สำเร็จ', 'ปิดงานเรียบร้อย', 'success');
+            document.getElementById('manageModal').style.display = 'none';
+            await loadJobs();
+        }
+
+        // ==================== เปิดงานที่ปิดแล้วกลับมาแก้ไข ====================
+        async function reopenJob(jobId) {
+            const result = await Swal.fire({
+                title: 'เปิดงานนี้อีกครั้ง?',
+                text: 'สถานะจะกลับไปเป็นยังไม่ปิดงาน เพื่อให้แก้ไขช่าง/อะไหล่ต่อได้',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'เปิดงานอีกครั้ง',
+                cancelButtonText: 'ยกเลิก'
+            });
+            if (!result.isConfirmed) return;
+            showLoading();
+            const { error } = await supabaseClient.from('repair_jobs').update({ closed_at: null }).eq('id', jobId);
+            hideLoading();
+            if (error) { Swal.fire('ผิดพลาด', error.message, 'error'); return; }
+            Swal.fire('สำเร็จ', 'เปิดงานอีกครั้งเรียบร้อย', 'success');
+            document.getElementById('manageModal').style.display = 'none';
+            await loadJobs();
+        }
+
+        // ==================== Login (รหัสพนักงาน / รหัสผ่านคงที่สำหรับช่าง) ====================
+        async function tryLogin(code, password) {
+            const pseudoEmail = `${code}@${EMAIL_DOMAIN}`;
+            const { data, error } = await supabaseClient.auth.signInWithPassword({ email: pseudoEmail, password });
+            if (error || !data.user) return false;
+            const { data: profile } = await supabaseClient.from('profiles').select('*').eq('id', data.user.id).single();
+            if (!profile || (profile.role !== 'admin' && profile.role !== 'technician')) {
+                await supabaseClient.auth.signOut();
+                return false;
+            }
+            currentUser = code;
+            currentRole = profile.role;
+            return true;
+        }
+
+        async function logout() {
+            await supabaseClient.auth.signOut();
+            currentUser = null; currentRole = null;
+            updateAuthUI();
+            renderJobsTable();
+        }
+
+        function updateAuthUI() {
+            const ui = document.getElementById('userInfo');
+            const loginBtn = document.getElementById('showLoginModal');
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (currentUser) {
+                document.getElementById('currentUser').textContent = `${currentUser} (${currentRole === 'admin' ? 'ผู้อนุมัติ' : 'ช่าง'})`;
+                ui.style.display = 'flex'; loginBtn.style.display = 'none'; logoutBtn.style.display = 'flex';
+            } else {
+                ui.style.display = 'none'; loginBtn.style.display = 'flex'; logoutBtn.style.display = 'none';
+            }
+        }
+
+        async function init() {
+            showLoading();
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session) {
+                const { data: profile } = await supabaseClient.from('profiles').select('*').eq('id', session.user.id).single();
+                if (profile && (profile.role === 'admin' || profile.role === 'technician')) {
+                    currentUser = profile.username; currentRole = profile.role;
+                }
+            }
+            updateAuthUI();
+            await loadEmployees();
+            await loadCars();
+            await loadTechnicians();
+            await loadJobs();
+            setupEmployeeAutocomplete();
+            setupPhotoInput();
+            hideLoading();
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            init();
+
+            const loginModal = document.getElementById('loginModal');
+            const manageModal = document.getElementById('manageModal');
+
+            document.getElementById('showLoginModal').addEventListener('click', () => {
+                loginModal.style.display = 'flex';
+                document.getElementById('loginCode').value = '';
+                document.getElementById('loginPassword').value = '';
+                document.getElementById('loginPasswordGroup').style.display = 'none';
+            });
+            document.getElementById('closeLoginModal').addEventListener('click', () => { loginModal.style.display = 'none'; });
+            document.getElementById('closeManageModal').addEventListener('click', () => { manageModal.style.display = 'none'; });
+
+            document.getElementById('loginBtn').addEventListener('click', async () => {
+                const code = document.getElementById('loginCode').value.trim();
+                if (!code) { Swal.fire('กรุณากรอกรหัสพนักงาน', '', 'warning'); return; }
+
+                const typedPassword = document.getElementById('loginPassword').value.trim();
+                showLoading();
+
+                // ลองรหัสผ่านคงที่ของช่างก่อนเสมอ
+                let success = await tryLogin(code, SHARED_TECH_PASSWORD);
+
+                // ถ้าไม่สำเร็จ และมีการพิมพ์รหัสผ่านมาด้วย (กรณีผู้อนุมัติ) ลองใช้รหัสผ่านที่พิมพ์
+                if (!success && typedPassword) {
+                    success = await tryLogin(code, typedPassword);
+                }
+
+                hideLoading();
+
+                if (success) {
+                    Swal.fire('สำเร็จ', 'เข้าสู่ระบบเรียบร้อย', 'success');
+                    loginModal.style.display = 'none';
+                    updateAuthUI();
+                    await loadTechnicians();
+                    renderJobsTable();
+                } else if (!typedPassword) {
+                    // ให้โอกาสกรอกรหัสผ่าน (กรณีเป็นบัญชีผู้อนุมัติที่มีรหัสผ่านจริง ไม่ใช่ช่าง)
+                    document.getElementById('loginPasswordGroup').style.display = 'block';
+                    Swal.fire('เข้าสู่ระบบแบบช่างไม่สำเร็จ', 'ถ้าเป็นบัญชีผู้อนุมัติ กรุณากรอกรหัสผ่านในช่องที่ปรากฏ แล้วกดเข้าสู่ระบบอีกครั้ง', 'info');
+                } else {
+                    Swal.fire('เข้าสู่ระบบไม่สำเร็จ', 'รหัสพนักงานหรือรหัสผ่านไม่ถูกต้อง', 'error');
+                }
+            });
+
+            document.getElementById('logoutBtn').addEventListener('click', () => {
+                Swal.fire({ title: 'ออกจากระบบ?', icon: 'question', showCancelButton: true, confirmButtonText: 'ออกจากระบบ' })
+                    .then(r => { if (r.isConfirmed) logout(); });
+            });
+
+            document.getElementById('jobForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const employeeCode = document.getElementById('employeeCode').value.trim();
+                const carId = document.getElementById('carSelect').value;
+                const jobType = document.getElementById('jobType').value;
+                const mileOld = document.getElementById('mileOld').value;
+                const mileNext = document.getElementById('mileNext').value;
+                const detail = document.getElementById('detail').value.trim();
+
+                if (!employeeCode) { Swal.fire('ข้อมูลไม่ครบ', 'กรุณากรอกรหัสพนักงาน', 'warning'); return; }
+                if (!carId) { Swal.fire('ข้อมูลไม่ครบ', 'กรุณาเลือกรถ', 'warning'); return; }
+                if (!detail) { Swal.fire('ข้อมูลไม่ครบ', 'กรุณากรอกรายละเอียด', 'warning'); return; }
+
+                const submitBtn = document.getElementById('submitJobBtn');
+                submitBtn.disabled = true;
+
+                showLoading();
+                const { data, error } = await supabaseClient.from('repair_jobs').insert({
+                    employee_code: employeeCode,
+                    car_id: carId,
+                    job_type: jobType,
+                    mile_old: mileOld || null,
+                    mile_next: mileNext || null,
+                    detail
+                }).select().single();
+
+                if (error) {
+                    hideLoading();
+                    submitBtn.disabled = false;
+                    Swal.fire('ผิดพลาด', error.message.includes('foreign key') ? 'ไม่พบรหัสพนักงานนี้ในระบบ' : error.message, 'error');
+                    return;
+                }
+
+                if (selectedPhotos.length > 0) {
+                    await uploadPhotosForJob(data.id);
+                }
+                hideLoading();
+                submitBtn.disabled = false;
+
+                Swal.fire('สำเร็จ', `แจ้งงานเรียบร้อย เลขที่งาน: ${data.job_no}`, 'success');
+                document.getElementById('jobForm').reset();
+                document.getElementById('mileNextGroup').style.display = 'none';
+                document.querySelectorAll('.job-type-btn').forEach(b => b.classList.remove('selected'));
+                document.querySelector('.job-type-btn.fix').classList.add('selected');
+                document.getElementById('jobType').value = 'FIX';
+                resetPhotoSelection();
+                await loadJobs();
+            });
+
+            window.addEventListener('click', (e) => {
+                if (e.target === loginModal) loginModal.style.display = 'none';
+                if (e.target === manageModal) manageModal.style.display = 'none';
+            });
+        });
+    </script>
+</body>
+</html>

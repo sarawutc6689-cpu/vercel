@@ -1,0 +1,1458 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบอนุมัติการจองรถ - Car Rent Approval</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary: #1e3a8a;
+            --primary-light: #3b82f6;
+            --secondary: #0ea5e9;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #0ea5e9;
+            --light: #f8fafc;
+            --dark: #1e293b;
+            --gray: #64748b;
+            --border: #e2e8f0;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            background: white;
+            border-radius: 20px;
+            padding: 20px 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-icon {
+            width: 60px;
+            height: 60px;
+            background: var(--primary);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 30px;
+        }
+
+        .logo-text h1 {
+            color: var(--dark);
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .logo-text p {
+            color: var(--gray);
+            font-size: 14px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-light);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(30, 58, 138, 0.3);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #0ca678;
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+            transform: translateY(-2px);
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            color: white;
+        }
+
+        .btn-info {
+            background: var(--info);
+            color: white;
+        }
+
+        .btn-info:hover {
+            background: #0284c7;
+            transform: translateY(-2px);
+        }
+
+        .btn-outline {
+            background: white;
+            color: var(--dark);
+            border: 1px solid var(--border);
+        }
+
+        .btn-outline:hover {
+            background: var(--light);
+        }
+
+        /* Filters */
+        .filters {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .filter-title {
+            font-size: 18px;
+            color: var(--dark);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .filter-title i {
+            color: var(--primary);
+        }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filter-group label {
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .filter-group select, .filter-group input {
+            padding: 12px 15px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .filter-group select:focus, .filter-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1);
+        }
+
+        .status-badges {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .status-badge {
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .status-badge.all {
+            background: var(--light);
+            color: var(--dark);
+        }
+
+        .status-badge.all:hover, .status-badge.all.active {
+            background: var(--dark);
+            color: white;
+        }
+
+        .status-badge.pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-badge.pending:hover, .status-badge.pending.active {
+            background: #856404;
+            color: white;
+        }
+
+        .status-badge.approved {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-badge.approved:hover, .status-badge.approved.active {
+            background: #155724;
+            color: white;
+        }
+
+        .status-badge.rejected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-badge.rejected:hover, .status-badge.rejected.active {
+            background: #721c24;
+            color: white;
+        }
+
+        /* Stats */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .stat-icon.pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .stat-icon.approved {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .stat-icon.rejected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .stat-icon.total {
+            background: #e0f2fe;
+            color: #0369a1;
+        }
+
+        .stat-info h3 {
+            font-size: 14px;
+            color: var(--gray);
+            margin-bottom: 5px;
+        }
+
+        .stat-info p {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--dark);
+        }
+
+        /* Reservations */
+        .reservations-container {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .reservations-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .reservations-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 18px;
+            color: var(--dark);
+        }
+
+        .reservations-title i {
+            color: var(--primary);
+        }
+
+        .reservations-count {
+            background: var(--light);
+            padding: 5px 15px;
+            border-radius: 50px;
+            font-size: 14px;
+            color: var(--gray);
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 60px;
+            color: var(--gray);
+        }
+
+        .loading i {
+            font-size: 40px;
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+
+        /* No Data */
+        .no-data {
+            text-align: center;
+            padding: 60px;
+            color: var(--gray);
+        }
+
+        .no-data i {
+            font-size: 50px;
+            color: var(--border);
+            margin-bottom: 15px;
+        }
+
+        /* Reservation Card */
+        .reservation-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            border-left: 5px solid var(--warning);
+            transition: all 0.3s;
+        }
+
+        .reservation-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .reservation-card.approved {
+            border-left-color: var(--success);
+        }
+
+        .reservation-card.rejected {
+            border-left-color: var(--danger);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .doc-number {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--primary);
+            background: #e8f4ff;
+            padding: 8px 15px;
+            border-radius: 8px;
+            border: 2px solid var(--primary);
+        }
+
+        .employee-code {
+            background: var(--light);
+            padding: 5px 15px;
+            border-radius: 50px;
+            font-size: 14px;
+            color: var(--gray);
+        }
+
+        .status {
+            padding: 5px 15px;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .status.pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status.approved {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status.rejected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .card-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .info-group {
+            margin-bottom: 5px;
+        }
+
+        .info-label {
+            font-size: 12px;
+            color: var(--gray);
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 15px;
+            border-top: 1px solid var(--border);
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .timestamp {
+            font-size: 13px;
+            color: var(--gray);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .modal-title {
+            font-size: 20px;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .modal-title i {
+            color: var(--primary);
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--gray);
+            transition: all 0.3s;
+        }
+
+        .close-modal:hover {
+            color: var(--danger);
+        }
+
+        .modal-body {
+            margin-bottom: 25px;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .detail-item {
+            margin-bottom: 10px;
+        }
+
+        .detail-label {
+            font-size: 13px;
+            color: var(--gray);
+            margin-bottom: 5px;
+        }
+
+        .detail-value {
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .reason-box {
+            background: var(--light);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            line-height: 1.6;
+        }
+
+        .note-input {
+            width: 100%;
+            padding: 15px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            resize: vertical;
+            min-height: 100px;
+            font-size: 14px;
+            margin: 15px 0;
+        }
+
+        .note-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1);
+        }
+
+        /* Loading Overlay */
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .loading-spinner {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+        }
+
+        .loading-spinner i {
+            font-size: 40px;
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .card-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .card-header {
+                flex-direction: column;
+            }
+            
+            .action-buttons {
+                width: 100%;
+                flex-wrap: wrap;
+            }
+            
+            .action-buttons button {
+                flex: 1;
+            }
+            
+            .modal-footer {
+                flex-direction: column;
+            }
+            
+            .detail-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Animation */
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .reservation-card {
+            animation: slideIn 0.3s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>กำลังดำเนินการ...</p>
+        </div>
+    </div>
+
+    <!-- Detail Modal -->
+    <div class="modal-overlay" id="detailModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">
+                    <i class="fas fa-file-alt"></i>
+                    รายละเอียดการจอง
+                </h3>
+                <button class="close-modal" id="closeModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <div class="detail-label">เลขที่เอกสาร</div>
+                        <div class="detail-value" id="modalDocNumber">-</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">รหัสพนักงาน</div>
+                        <div class="detail-value" id="modalEmpCode">-</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">ชื่อ-สกุล</div>
+                        <div class="detail-value" id="modalName">-</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">ฝ่าย/แผนก</div>
+                        <div class="detail-value" id="modalDept">-</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">ตำแหน่ง</div>
+                        <div class="detail-value" id="modalPosition">-</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">เบอร์ติดต่อ</div>
+                        <div class="detail-value" id="modalContact">-</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">ประเภทรถ</div>
+                        <div class="detail-value" id="modalCar">-</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">วันที่เริ่ม</div>
+                        <div class="detail-value" id="modalStartDate">-</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">วันที่สิ้นสุด</div>
+                        <div class="detail-value" id="modalEndDate">-</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">เวลา</div>
+                        <div class="detail-value" id="modalTime">-</div>
+                    </div>
+                </div>
+                
+                <div class="detail-label">วัตถุประสงค์</div>
+                <div class="reason-box" id="modalReason">-</div>
+                
+                <div class="detail-label">สถานะ</div>
+                <div class="reason-box" id="modalStatus">-</div>
+                
+                <textarea class="note-input" id="modalNote" placeholder="หมายเหตุ (ถ้ามี)"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-danger" id="modalRejectBtn">
+                    <i class="fas fa-times"></i> ไม่อนุมัติ
+                </button>
+                <button class="btn btn-success" id="modalApproveBtn">
+                    <i class="fas fa-check"></i> อนุมัติ
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo-area">
+                <div class="logo-icon">
+                    <i class="fas fa-car"></i>
+                </div>
+                <div class="logo-text">
+                    <h1>ระบบอนุมัติการจองรถ</h1>
+                    <p>Car Rent Approval System</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-primary" id="refreshBtn">
+                    <i class="fas fa-sync-alt"></i> โหลดข้อมูลใหม่
+                </button>
+                <button class="btn btn-info" id="homeBtn">
+                    <i class="fas fa-home"></i> หน้าจองรถ
+                </button>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters">
+            <div class="filter-title">
+                <i class="fas fa-filter"></i>
+                ค้นหาและกรองข้อมูล
+            </div>
+            <div class="filter-grid">
+                <div class="filter-group">
+                    <label>ฝ่าย/แผนก</label>
+                    <select id="deptFilter">
+                        <option value="">ทั้งหมด</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>วันที่จอง</label>
+                    <input type="date" id="dateFilter">
+                </div>
+                <div class="filter-group">
+                    <label>ค้นหา</label>
+                    <input type="text" id="searchFilter" placeholder="เลขที่เอกสาร, ชื่อพนักงาน...">
+                </div>
+            </div>
+            <div style="margin-top: 20px;">
+                <label>สถานะ</label>
+                <div class="status-badges">
+                    <span class="status-badge all active" data-status="">ทั้งหมด</span>
+                    <span class="status-badge pending" data-status="รออนุมัติ">รออนุมัติ</span>
+                    <span class="status-badge approved" data-status="อนุมัติ">อนุมัติ</span>
+                    <span class="status-badge rejected" data-status="ไม่อนุมัติ">ไม่อนุมัติ</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats" id="stats">
+            <div class="stat-card">
+                <div class="stat-icon total">
+                    <i class="fas fa-car"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>ทั้งหมด</h3>
+                    <p id="statTotal">0</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon pending">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>รออนุมัติ</h3>
+                    <p id="statPending">0</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon approved">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>อนุมัติ</h3>
+                    <p id="statApproved">0</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon rejected">
+                    <i class="fas fa-times-circle"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>ไม่อนุมัติ</h3>
+                    <p id="statRejected">0</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reservations -->
+        <div class="reservations-container">
+            <div class="reservations-header">
+                <div class="reservations-title">
+                    <i class="fas fa-list"></i>
+                    รายการขอจองรถ
+                </div>
+                <div class="reservations-count" id="reservationsCount">
+                    แสดง 0 รายการ
+                </div>
+            </div>
+
+            <div id="loading" class="loading">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>กำลังโหลดข้อมูล...</p>
+            </div>
+
+            <div id="reservationsList"></div>
+        </div>
+    </div>
+
+    <script>
+        // ==============================================
+        // ตัวแปรและค่าคงที่
+        // ==============================================
+        
+        const API_URL = 'https://script.google.com/macros/s/AKfycbwXoNtc7cUKEDud1uZVQuuKCpSHimjzmEkKQ0ubr7egdWh6LbM-1GPwcVSUhrv4OdPE/exec';
+        
+        let allReservations = [];
+        let filteredReservations = [];
+        let currentReservation = null;
+        let currentStatus = '';
+        let callbackCounter = 0;
+        let pendingCallbacks = {};
+
+        // ==============================================
+        // ฟังก์ชันเรียก API แบบ JSONP
+        // ==============================================
+        
+        function callAPI(action, params) {
+            return new Promise((resolve, reject) => {
+                callbackCounter++;
+                const callbackName = `jsonp_${callbackCounter}_${Date.now()}`;
+                
+                // เก็บ callback ไว้ใน object
+                pendingCallbacks[callbackName] = {
+                    resolve: resolve,
+                    reject: reject,
+                    timeout: setTimeout(() => {
+                        cleanupCallback(callbackName);
+                        reject(new Error('การเชื่อมต่อใช้เวลานานเกินไป'));
+                    }, 15000)
+                };
+                
+                // สร้าง callback function
+                window[callbackName] = function(data) {
+                    cleanupCallback(callbackName);
+                    resolve(data);
+                };
+                
+                // สร้าง URL
+                const url = new URL(API_URL);
+                url.searchParams.append('action', action);
+                url.searchParams.append('callback', callbackName);
+                
+                Object.keys(params).forEach(key => {
+                    url.searchParams.append(key, params[key]);
+                });
+                
+                // สร้าง script tag
+                const script = document.createElement('script');
+                script.src = url.toString();
+                script.id = `script_${callbackName}`;
+                
+                script.onerror = function() {
+                    cleanupCallback(callbackName);
+                    reject(new Error('ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้'));
+                };
+                
+                document.head.appendChild(script);
+            });
+        }
+
+        function cleanupCallback(callbackName) {
+            if (pendingCallbacks[callbackName]) {
+                clearTimeout(pendingCallbacks[callbackName].timeout);
+                delete pendingCallbacks[callbackName];
+            }
+            
+            if (window[callbackName]) {
+                delete window[callbackName];
+            }
+            
+            const script = document.getElementById(`script_${callbackName}`);
+            if (script) {
+                script.remove();
+            }
+        }
+
+        // ==============================================
+        // ฟังก์ชันจัดการ Loading
+        // ==============================================
+        
+        function showLoading() {
+            document.getElementById('loadingOverlay').style.display = 'flex';
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }
+
+        // ==============================================
+        // ฟังก์ชันแสดง Notification
+        // ==============================================
+        
+        function showNotification(title, message, type = 'success') {
+            Swal.fire({
+                icon: type,
+                title: title,
+                text: message,
+                confirmButtonColor: '#1e3a8a',
+                timer: type === 'success' ? 2000 : null,
+                showConfirmButton: type !== 'success'
+            });
+        }
+
+        // ==============================================
+        // ฟังก์ชันดึงข้อมูลจาก Server
+        // ==============================================
+        
+        async function fetchReservations() {
+            showLoading();
+            
+            try {
+                const result = await callAPI('getReservations', {});
+                
+                if (result && result.success && result.data) {
+                    allReservations = result.data;
+                    
+                    // เรียงตามวันที่ (ใหม่สุดขึ้นก่อน)
+                    allReservations.sort((a, b) => {
+                        return new Date(b.timestamp) - new Date(a.timestamp);
+                    });
+                    
+                    applyFilters();
+                    updateStats();
+                    populateDepartmentFilter();
+                    
+                    document.getElementById('loading').style.display = 'none';
+                } else {
+                    throw new Error(result?.message || 'ไม่สามารถโหลดข้อมูลได้');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('loading').innerHTML = `
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <p>เกิดข้อผิดพลาดในการโหลดข้อมูล</p>
+                    <button class="btn btn-primary" onclick="fetchReservations()" style="margin-top: 15px;">
+                        <i class="fas fa-sync-alt"></i> ลองอีกครั้ง
+                    </button>
+                `;
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // ==============================================
+        // ฟังก์ชันแสดงรายการจอง
+        // ==============================================
+        
+        function displayReservations(reservations) {
+            const container = document.getElementById('reservationsList');
+            
+            if (!reservations || reservations.length === 0) {
+                container.innerHTML = `
+                    <div class="no-data">
+                        <i class="fas fa-folder-open"></i>
+                        <p>ไม่พบรายการจองรถ</p>
+                    </div>
+                `;
+                document.getElementById('reservationsCount').textContent = 'แสดง 0 รายการ';
+                return;
+            }
+            
+            let html = '';
+            
+            reservations.forEach(res => {
+                // ทำความสะอาดสถานะ
+                let status = res.approval || 'รออนุมัติ';
+                if (status.startsWith('/')) {
+                    status = status.substring(1);
+                }
+                
+                let statusClass = '';
+                if (status === 'อนุมัติ') {
+                    statusClass = 'approved';
+                } else if (status === 'ไม่อนุมัติ') {
+                    statusClass = 'rejected';
+                } else {
+                    statusClass = 'pending';
+                    status = 'รออนุมัติ';
+                }
+                
+                const deptInfo = `${res.department || ''}${res.section ? ' / ' + res.section : ''}`;
+                
+                html += `
+                    <div class="reservation-card ${statusClass}" data-doc="${res.documentNumber}">
+                        <div class="card-header">
+                            <div class="doc-number">${res.documentNumber || 'ไม่มีเลขที่'}</div>
+                            <div class="employee-code">${res.employeeCode || '-'}</div>
+                            <div class="status ${statusClass}">${status}</div>
+                        </div>
+                        
+                        <div class="card-content">
+                            <div class="info-group">
+                                <div class="info-label">ชื่อ-สกุล</div>
+                                <div class="info-value">${res.name || '-'}</div>
+                            </div>
+                            <div class="info-group">
+                                <div class="info-label">ฝ่าย/แผนก</div>
+                                <div class="info-value">${deptInfo || '-'}</div>
+                            </div>
+                            <div class="info-group">
+                                <div class="info-label">ประเภทรถ</div>
+                                <div class="info-value">${res.choose || '-'}</div>
+                            </div>
+                            <div class="info-group">
+                                <div class="info-label">วันที่เริ่ม</div>
+                                <div class="info-value">${formatDate(res.rentStartdate)}</div>
+                            </div>
+                            <div class="info-group">
+                                <div class="info-label">วันที่สิ้นสุด</div>
+                                <div class="info-value">${formatDate(res.rentEnddate)}</div>
+                            </div>
+                            <div class="info-group">
+                                <div class="info-label">เวลา</div>
+                                <div class="info-value">${res.startTime || '-'} - ${res.endTime || '-'}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="card-footer">
+                            <div class="timestamp">
+                                <i class="far fa-clock"></i>
+                                ${formatDateTime(res.timestamp)}
+                            </div>
+                            <div class="action-buttons">
+                                <button class="btn btn-info" onclick="viewDetails('${res.documentNumber}')">
+                                    <i class="fas fa-eye"></i> ดูรายละเอียด
+                                </button>
+                                ${status === 'รออนุมัติ' ? `
+                                    <button class="btn btn-success" onclick="quickApprove('${res.documentNumber}')">
+                                        <i class="fas fa-check"></i> อนุมัติ
+                                    </button>
+                                    <button class="btn btn-danger" onclick="quickReject('${res.documentNumber}')">
+                                        <i class="fas fa-times"></i> ไม่อนุมัติ
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+            document.getElementById('reservationsCount').textContent = `แสดง ${reservations.length} รายการ`;
+        }
+
+        // ==============================================
+        // ฟังก์ชันดูรายละเอียด
+        // ==============================================
+        
+        function viewDetails(docNumber) {
+            const reservation = allReservations.find(r => r.documentNumber === docNumber);
+            if (!reservation) return;
+            
+            currentReservation = reservation;
+            
+            // ทำความสะอาดสถานะ
+            let status = reservation.approval || 'รออนุมัติ';
+            if (status.startsWith('/')) {
+                status = status.substring(1);
+            }
+            
+            // แสดงข้อมูล
+            document.getElementById('modalDocNumber').textContent = reservation.documentNumber || '-';
+            document.getElementById('modalEmpCode').textContent = reservation.employeeCode || '-';
+            document.getElementById('modalName').textContent = reservation.name || '-';
+            document.getElementById('modalDept').textContent = `${reservation.department || ''} ${reservation.section || ''}`;
+            document.getElementById('modalPosition').textContent = reservation.position || '-';
+            document.getElementById('modalContact').textContent = reservation.contact || '-';
+            document.getElementById('modalCar').textContent = reservation.choose || '-';
+            document.getElementById('modalStartDate').textContent = formatDate(reservation.rentStartdate);
+            document.getElementById('modalEndDate').textContent = formatDate(reservation.rentEnddate);
+            document.getElementById('modalTime').textContent = `${reservation.startTime || ''} - ${reservation.endTime || ''}`;
+            document.getElementById('modalReason').textContent = reservation.reason || '-';
+            document.getElementById('modalStatus').textContent = status;
+            document.getElementById('modalNote').value = reservation.note || '';
+            
+            // แสดง/ซ่อนปุ่มตามสถานะ
+            const footer = document.querySelector('.modal-footer');
+            if (status === 'รออนุมัติ') {
+                footer.style.display = 'flex';
+            } else {
+                footer.style.display = 'none';
+            }
+            
+            document.getElementById('detailModal').style.display = 'flex';
+        }
+
+        // ==============================================
+        // ฟังก์ชันอัปเดตสถานะ
+        // ==============================================
+        
+        async function updateStatus(docNumber, status, note = '') {
+            showLoading();
+            
+            try {
+                const result = await callAPI('updateReservation', {
+                    documentNumber: docNumber,
+                    status: status,
+                    note: note
+                });
+                
+                if (result && result.success) {
+                    showNotification('สำเร็จ', `อัปเดตสถานะเป็น ${status} เรียบร้อย`, 'success');
+                    
+                    // อัปเดตข้อมูลใน array
+                    const index = allReservations.findIndex(r => r.documentNumber === docNumber);
+                    if (index !== -1) {
+                        allReservations[index].approval = status;
+                        if (note) allReservations[index].note = note;
+                    }
+                    
+                    // กรองและแสดงข้อมูลใหม่
+                    applyFilters();
+                    updateStats();
+                    
+                    // ปิด modal
+                    document.getElementById('detailModal').style.display = 'none';
+                } else {
+                    showNotification('เกิดข้อผิดพลาด', result?.message || 'ไม่สามารถอัปเดตสถานะได้', 'error');
+                }
+            } catch (error) {
+                showNotification('เกิดข้อผิดพลาด', error.message, 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // ==============================================
+        // ฟังก์ชันอนุมัติ/ไม่อนุมัติแบบเร็ว
+        // ==============================================
+        
+        async function quickApprove(docNumber) {
+            const result = await Swal.fire({
+                title: 'ยืนยันการอนุมัติ?',
+                text: 'คุณต้องการอนุมัติคำขอนี้หรือไม่?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#10b981',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'อนุมัติ',
+                cancelButtonText: 'ยกเลิก'
+            });
+            
+            if (result.isConfirmed) {
+                await updateStatus(docNumber, 'อนุมัติ');
+            }
+        }
+
+        async function quickReject(docNumber) {
+            const { value: note } = await Swal.fire({
+                title: 'ระบุเหตุผลที่ไม่อนุมัติ',
+                input: 'textarea',
+                inputLabel: 'หมายเหตุ',
+                inputPlaceholder: 'กรุณาระบุเหตุผล...',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'ยืนยัน',
+                cancelButtonText: 'ยกเลิก'
+            });
+            
+            if (note !== undefined) {
+                await updateStatus(docNumber, 'ไม่อนุมัติ', note);
+            }
+        }
+
+        // ==============================================
+        // ฟังก์ชันกรองข้อมูล
+        // ==============================================
+        
+        function applyFilters() {
+            const dept = document.getElementById('deptFilter').value;
+            const date = document.getElementById('dateFilter').value;
+            const search = document.getElementById('searchFilter').value.toLowerCase();
+            const status = currentStatus;
+            
+            filteredReservations = allReservations.filter(res => {
+                // กรองตามแผนก
+                if (dept && res.department !== dept && res.section !== dept) {
+                    return false;
+                }
+                
+                // กรองตามวันที่
+                if (date) {
+                    const startDate = res.rentStartdate;
+                    const endDate = res.rentEnddate;
+                    if (!startDate || !endDate) return false;
+                    if (date < startDate || date > endDate) return false;
+                }
+                
+                // กรองตามคำค้นหา
+                if (search) {
+                    const docMatch = res.documentNumber?.toLowerCase().includes(search);
+                    const nameMatch = res.name?.toLowerCase().includes(search);
+                    const codeMatch = res.employeeCode?.toLowerCase().includes(search);
+                    if (!docMatch && !nameMatch && !codeMatch) return false;
+                }
+                
+                // กรองตามสถานะ
+                if (status) {
+                    let resStatus = res.approval || 'รออนุมัติ';
+                    if (resStatus.startsWith('/')) {
+                        resStatus = resStatus.substring(1);
+                    }
+                    if (resStatus !== status) return false;
+                }
+                
+                return true;
+            });
+            
+            displayReservations(filteredReservations);
+        }
+
+        // ==============================================
+        // ฟังก์ชันอัปเดตสถิติ
+        // ==============================================
+        
+        function updateStats() {
+            let pending = 0, approved = 0, rejected = 0;
+            
+            allReservations.forEach(res => {
+                let status = res.approval || 'รออนุมัติ';
+                if (status.startsWith('/')) {
+                    status = status.substring(1);
+                }
+                
+                if (status === 'รออนุมัติ') pending++;
+                else if (status === 'อนุมัติ') approved++;
+                else if (status === 'ไม่อนุมัติ') rejected++;
+            });
+            
+            document.getElementById('statTotal').textContent = allReservations.length;
+            document.getElementById('statPending').textContent = pending;
+            document.getElementById('statApproved').textContent = approved;
+            document.getElementById('statRejected').textContent = rejected;
+        }
+
+        // ==============================================
+        // ฟังก์ชันสร้างตัวกรองแผนก
+        // ==============================================
+        
+        function populateDepartmentFilter() {
+            const depts = new Set();
+            
+            allReservations.forEach(res => {
+                if (res.department) depts.add(res.department);
+                if (res.section) depts.add(res.section);
+            });
+            
+            const select = document.getElementById('deptFilter');
+            const currentValue = select.value;
+            
+            // ล้างตัวเลือกเดิม (ยกเว้นตัวแรก)
+            while (select.options.length > 1) {
+                select.remove(1);
+            }
+            
+            // เพิ่มตัวเลือกใหม่
+            Array.from(depts).sort().forEach(dept => {
+                const option = document.createElement('option');
+                option.value = dept;
+                option.textContent = dept;
+                select.appendChild(option);
+            });
+            
+            // รักษาค่าที่เลือกไว้
+            if (currentValue && Array.from(depts).includes(currentValue)) {
+                select.value = currentValue;
+            }
+        }
+
+        // ==============================================
+        // ฟังก์ชันจัดรูปแบบวันที่
+        // ==============================================
+        
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            try {
+                const [year, month, day] = dateString.split('-');
+                return `${day}/${month}/${year}`;
+            } catch {
+                return dateString;
+            }
+        }
+
+        function formatDateTime(dateTimeString) {
+            if (!dateTimeString) return '-';
+            try {
+                const date = new Date(dateTimeString);
+                return date.toLocaleString('th-TH', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            } catch {
+                return dateTimeString;
+            }
+        }
+
+        // ==============================================
+        // Event Listeners
+        // ==============================================
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // โหลดข้อมูล
+            fetchReservations();
+            
+            // ตัวกรอง
+            document.getElementById('deptFilter').addEventListener('change', applyFilters);
+            document.getElementById('dateFilter').addEventListener('change', applyFilters);
+            document.getElementById('searchFilter').addEventListener('input', applyFilters);
+            
+            // ปุ่มสถานะ
+            document.querySelectorAll('.status-badge').forEach(badge => {
+                badge.addEventListener('click', function() {
+                    document.querySelectorAll('.status-badge').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    currentStatus = this.dataset.status;
+                    applyFilters();
+                });
+            });
+            
+            // ปุ่มรีเฟรช
+            document.getElementById('refreshBtn').addEventListener('click', fetchReservations);
+            
+            // ปุ่มกลับหน้าหลัก
+            document.getElementById('homeBtn').addEventListener('click', () => {
+                window.location.href = 'home.html';
+            });
+            
+            // Modal
+            document.getElementById('closeModal').addEventListener('click', () => {
+                document.getElementById('detailModal').style.display = 'none';
+            });
+            
+            document.getElementById('modalApproveBtn').addEventListener('click', () => {
+                if (currentReservation) {
+                    const note = document.getElementById('modalNote').value;
+                    updateStatus(currentReservation.documentNumber, 'อนุมัติ', note);
+                }
+            });
+            
+            document.getElementById('modalRejectBtn').addEventListener('click', () => {
+                if (currentReservation) {
+                    const note = document.getElementById('modalNote').value;
+                    updateStatus(currentReservation.documentNumber, 'ไม่อนุมัติ', note);
+                }
+            });
+            
+            // ปิด modal เมื่อคลิกนอก
+            document.getElementById('detailModal').addEventListener('click', (e) => {
+                if (e.target === document.getElementById('detailModal')) {
+                    document.getElementById('detailModal').style.display = 'none';
+                }
+            });
+            
+            // รีเฟรชอัตโนมัติทุก 30 วินาที
+            setInterval(fetchReservations, 30000);
+        });
+    </script>
+</body>
+</html>

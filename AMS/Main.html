@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AMS HelpDesk System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary: #7c3aed;
+            --accent: #06b6d4;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --gray: #94a3b8;
+            --gray-light: #e2e8f2;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        body {
+            font-family: 'Kanit', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #eef2f6 0%, #f9fafc 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: var(--dark);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        header {
+            background: white;
+            border-radius: 24px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+        }
+
+        .logo-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .logo-icon {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            color: white;
+            box-shadow: 0 10px 20px rgba(37, 99, 235, 0.3);
+        }
+
+        .logo-text h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1.2;
+        }
+
+        .logo-text p {
+            color: var(--gray);
+            font-size: 1.1rem;
+        }
+
+        .datetime {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .datetime-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--light);
+            padding: 10px 20px;
+            border-radius: 50px;
+            color: var(--dark);
+            font-size: 1rem;
+            box-shadow: var(--shadow);
+        }
+
+        .datetime-item i {
+            color: var(--primary);
+        }
+
+        /* Grid Cards */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 24px;
+            padding: 25px;
+            box-shadow: var(--shadow-lg);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        /* Card Icon Styles - แก้ไขตรงนี้ */
+        .card-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        /* กำหนดสีตามลำดับการ์ด */
+        .card:nth-child(1) .card-icon {
+            background: linear-gradient(135deg, var(--danger), #f87171);
+        }
+        .card:nth-child(2) .card-icon {
+            background: linear-gradient(135deg, var(--warning), #fbbf24);
+        }
+        .card:nth-child(3) .card-icon {
+            background: linear-gradient(135deg, var(--primary), #60a5fa);
+        }
+        .card:nth-child(4) .card-icon {
+            background: linear-gradient(135deg, var(--success), #34d399);
+        }
+        .card:nth-child(5) .card-icon {
+            background: linear-gradient(135deg, var(--secondary), #c084fc);
+        }
+        .card:nth-child(6) .card-icon {
+            background: linear-gradient(135deg, var(--accent), #22d3ee);
+        }
+
+        .card h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--dark);
+        }
+
+        .card p {
+            color: var(--gray);
+            margin-bottom: 20px;
+            line-height: 1.6;
+            flex-grow: 1;
+        }
+
+        .card-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--light);
+            color: var(--primary);
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: 1px solid var(--gray-light);
+            align-self: flex-start;
+        }
+
+        .card-link:hover {
+            background: var(--primary);
+            color: white;
+            transform: translateX(5px);
+            border-color: var(--primary);
+        }
+
+        .card-link i {
+            font-size: 14px;
+        }
+
+        /* Footer */
+        footer {
+            background: white;
+            border-radius: 24px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: var(--shadow-lg);
+        }
+
+        footer p {
+            color: var(--gray);
+            margin-bottom: 10px;
+        }
+
+        footer .copyright {
+            color: var(--dark);
+            font-weight: 500;
+            margin: 15px 0;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 15px;
+        }
+
+        .footer-links a {
+            color: var(--primary);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--primary-dark);
+            text-decoration: underline;
+        }
+
+        /* Animation */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card {
+            animation: fadeInUp 0.5s ease forwards;
+            opacity: 0;
+        }
+
+        .card:nth-child(1) { animation-delay: 0.1s; }
+        .card:nth-child(2) { animation-delay: 0.2s; }
+        .card:nth-child(3) { animation-delay: 0.3s; }
+        .card:nth-child(4) { animation-delay: 0.4s; }
+        .card:nth-child(5) { animation-delay: 0.5s; }
+        .card:nth-child(6) { animation-delay: 0.6s; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .logo-wrapper {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .logo-text h1 {
+                font-size: 2rem;
+            }
+
+            .datetime {
+                justify-content: center;
+            }
+
+            .cards-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .datetime {
+                flex-direction: column;
+            }
+
+            .datetime-item {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="logo-wrapper">
+                <div class="logo-icon">
+                    <i class="fas fa-car"></i>
+                </div>
+                <div class="logo-text">
+                    <h1>AMS HelpDesk System</h1>
+                    <p>ศูนย์กลางแผนกบริการยานยนต์</p>
+                </div>
+            </div>
+
+            <div class="datetime">
+                <div class="datetime-item">
+                    <i class="far fa-calendar-alt"></i>
+                    <span id="current-date">กำลังโหลด...</span>
+                </div>
+                <div class="datetime-item">
+                    <i class="far fa-clock"></i>
+                    <span id="current-time">กำลังโหลด...</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main>
+            <div class="cards-grid">
+                <!-- Card 1: จองรถใช้งาน -->
+                <div class="card">
+                    <div class="card-icon">
+                        <i class="fas fa-truck"></i>
+                    </div>
+                    <h3>จองรถใช้งาน</h3>
+                    <p>ระบบจองรถใช้งาน โฟล์คลิฟ รถกระเช้า รถบรรทุก รถกระบะ สำหรับพนักงานทุกท่าน</p>
+                    <a href="https://sarawutc6689-cpu.github.io/Mouldmate-AMS/Carrent/home.html" class="card-link" target="_blank">
+                        เข้าสู่ระบบ <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+
+                <!-- Card 2: ปฏิทินรถเข้า กทม. -->
+                <div class="card">
+                    <div class="card-icon">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <h3>ปฏิทินรถเข้า กทม.</h3>
+                    <p>ดูปฏิทินรถเข้า กรุงเทพฯ ในเดือนปัจจุบัน อัพเดทล่าสุด</p>
+                    <a href="https://script.google.com/macros/s/AKfycbw8rCO00y2NeSdH2pz6ObZYGqVc2640jh_NqLY0cCKiYbGY7lxHnK8yRKanvhw_3tFp/exec" class="card-link" target="_blank">
+                        เข้าดูปฏิทิน <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+
+                <!-- Card 3: ระบบแจ้งซ่อม -->
+                <div class="card">
+                    <div class="card-icon">
+                        <i class="fas fa-tools"></i>
+                    </div>
+                    <h3>ระบบแจ้งซ่อม</h3>
+                    <p>แจ้งซ่อมยานพาหนะ พร้อมติดตามสถานะ</p>
+                    <a href="https://sarawutc6689-cpu.github.io/Mouldmate-AMS/Carrent/helpdesk.html" class="card-link" target="_blank">
+                        แจ้งซ่อม <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+
+           
+
+              
+
+               
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer>
+            <p>AMS HelpDesk System &copy; 2026 - ศูนย์บริการยานยนต์ | พัฒนาโดย Sarawut.C</p>
+            <p>หากมีปัญหาในการใช้งาน กรุณาติดต่อแผนก IT</p>
+            <p>สำหรับใช้ภายในองค์กรเท่านั้น</p>
+            
+
+            <div class="footer-links">
+                <a href="mailto:itsupport@tokaisolidtire.com">
+                    <i class="far fa-envelope"></i> ติดต่อผู้ดูแลระบบ
+                </a>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // ฟังก์ชันอัพเดทวันที่และเวลา
+        function updateDateTime() {
+            const now = new Date();
+            
+            // จัดรูปแบบวันที่แบบไทย
+            const thaiMonths = [
+                'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+                'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
+            ];
+            
+            const thaiDays = [
+                'อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'
+            ];
+            
+            const day = thaiDays[now.getDay()];
+            const date = now.getDate();
+            const month = thaiMonths[now.getMonth()];
+            const year = now.getFullYear() + 543; // แปลงเป็นปี พ.ศ.
+            
+            const thaiDate = `วัน${day}ที่ ${date} ${month} ${year}`;
+            
+            // จัดรูปแบบเวลา
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const timeString = `${hours}:${minutes}:${seconds} น.`;
+            
+            // อัพเดทค่าใน DOM
+            document.getElementById('current-date').textContent = thaiDate;
+            document.getElementById('current-time').textContent = timeString;
+        }
+
+        // เรียกใช้ครั้งแรกและตั้งเวลาให้อัพเดททุกวินาที
+        updateDateTime();
+        setInterval(updateDateTime, 1000);
+
+        // เพิ่มการแจ้งเตือนเมื่อคลิกลิงก์ที่ยังไม่มี
+        document.querySelectorAll('.card-link[href="#"]').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                alert('ระบบกำลังพัฒนา ติดต่อแผนก IT หากต้องการใช้งาน');
+            });
+        });
+
+        // Console log ยืนยันการทำงาน
+        console.log('AMS HelpDesk System พร้อมใช้งาน');
+    </script>
+</body>
+</html>
