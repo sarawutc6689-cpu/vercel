@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>คู่มือการใช้งาน - OT Time Tracking</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Sarabun', sans-serif; background:#eef2f7; min-height:100vh; }
+
+:root {
+  --bg:#eef2f7; --surface:#ffffff; --card:#f5f8fc; --border:#d0daea;
+  --focus:#2563eb; --accent:#1d4ed8; --accent-lt:#eff6ff; --header:#1e3a8a;
+  --ok:#059669; --ok-lt:#ecfdf5; --err:#dc2626; --err-lt:#fef2f2; --warn:#d97706; --warn-lt:#fffbeb;
+  --t1:#0f172a; --t2:#475569; --t3:#94a3b8;
+  --r:10px; --rs:7px; --sh:0 1px 4px rgba(30,58,138,0.08); --sh-md:0 4px 16px rgba(30,58,138,0.10);
+}
+
+/* ===== Sidebar (identical to index.html) ===== */
+.sidebar{position:fixed;top:0;left:0;width:260px;height:100vh;background:linear-gradient(180deg,#0f2b4d 0%,#0a1e38 100%);color:#fff;z-index:1000;box-shadow:2px 0 12px rgba(0,0,0,0.15);overflow-y:auto}
+.sidebar-header{padding:20px 16px;border-bottom:1px solid rgba(255,255,255,0.1);margin-bottom:20px}
+.sidebar-header .logo-area{display:flex;align-items:center;gap:12px}
+.sidebar-header .logo-icon{width:40px;height:40px;background:rgba(255,255,255,0.15);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;flex-shrink:0}
+.sidebar-header .logo-text{font-size:18px;font-weight:700;letter-spacing:1px}
+.sidebar-header .logo-sub{font-size:10px;color:rgba(255,255,255,0.6);margin-top:4px}
+.sidebar-nav{padding:0 12px}
+.nav-item{margin-bottom:4px}
+.nav-link{display:flex;align-items:center;gap:14px;padding:12px 16px;border-radius:12px;color:rgba(255,255,255,0.75);text-decoration:none;transition:all .2s ease;font-size:15px;font-weight:500}
+.nav-link:hover{background:rgba(255,255,255,0.1);color:#fff}
+.nav-link.active{background:rgba(59,130,246,0.3);color:#fff;border-left:3px solid #3b82f6}
+.nav-icon{font-size:20px;width:28px;text-align:center;flex-shrink:0}
+.nav-text{white-space:nowrap}
+.sidebar-footer{position:absolute;bottom:0;left:0;right:0;padding:20px 16px;border-top:1px solid rgba(255,255,255,0.1);font-size:11px;color:rgba(255,255,255,0.5);text-align:center}
+.sidebar::-webkit-scrollbar{width:4px}
+.sidebar::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.2);border-radius:4px}
+.main-content{margin-left:260px;min-height:100vh}
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%);transition:transform .3s ease}
+  .sidebar.open-mobile{transform:translateX(0)}
+  .main-content{margin-left:0}
+  .menu-toggle{position:fixed;left:16px;top:16px;width:40px;height:40px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:1001;box-shadow:0 2px 8px rgba(0,0,0,0.1);font-size:20px;color:#1e3a8a}
+  .mobile-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:999;display:none}
+  .mobile-overlay.active{display:block}
+}
+@media(min-width:769px){ .menu-toggle,.mobile-overlay{display:none} }
+
+/* ===== Header (identical to index.html) ===== */
+.hdr{background:var(--header);height:64px;padding:0 28px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 10px rgba(30,58,138,0.22);flex-wrap:wrap;gap:10px}
+.hdr-l{display:flex;align-items:center;gap:14px}
+.logo{width:40px;height:40px;border-radius:9px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff}
+.hdr-title{font-size:18px;font-weight:700;color:#fff}
+.hdr-sub{font-size:13px;color:rgba(255,255,255,0.6);margin-top:2px}
+.hdr-r{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.hdr-tag{font-size:13px;color:rgba(255,255,255,0.85);background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);padding:6px 14px;border-radius:6px}
+
+/* ===== Page layout ===== */
+.page{padding:24px}
+.layout{display:grid;grid-template-columns:230px 1fr;gap:18px;align-items:start}
+
+/* TOC */
+.toc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh);padding:16px;position:sticky;top:24px}
+.toc-title{font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:10px;padding:0 6px}
+.toc-link{display:block;padding:9px 10px;border-radius:8px;font-size:14px;color:var(--t2);text-decoration:none;font-weight:500;margin-bottom:2px;transition:background .15s,color .15s}
+.toc-link:hover{background:var(--card);color:var(--t1)}
+.toc-link.on{background:var(--accent-lt);color:var(--accent);font-weight:700}
+
+/* Content */
+.content{display:flex;flex-direction:column;gap:18px}
+.section{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden;scroll-margin-top:24px}
+.sh2{padding:18px 24px;border-bottom:1px solid var(--border);background:var(--card);display:flex;align-items:center;gap:14px}
+.shi{width:38px;height:38px;border-radius:9px;background:#dbeafe;display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0}
+.sh2-title{font-size:17px;font-weight:700;color:var(--t1)}
+.sh2-sub{font-size:12.5px;color:var(--t3);margin-top:2px}
+.sbody{padding:22px 24px;display:flex;flex-direction:column;gap:16px}
+.sbody p{font-size:14.5px;color:var(--t2);line-height:1.8}
+.sbody h4{font-size:14.5px;font-weight:700;color:var(--t1);margin-top:4px}
+
+.steps{display:flex;flex-direction:column;gap:10px;counter-reset:step}
+.step{display:flex;gap:14px;background:var(--card);border:1px solid var(--border);border-radius:var(--rs);padding:14px 16px}
+.step-num{width:26px;height:26px;border-radius:7px;background:var(--accent);color:#fff;font-size:12.5px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.step-txt{font-size:14.5px;color:var(--t2);line-height:1.7}
+.step-txt strong{color:var(--t1)}
+
+.tbl{width:100%;border-collapse:collapse;font-size:14px}
+.tbl th{background:var(--card);color:var(--t2);text-align:left;padding:10px 14px;font-size:11.5px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)}
+.tbl td{padding:11px 14px;border-bottom:1px solid var(--border);color:var(--t2);vertical-align:top}
+.tbl tr:last-child td{border-bottom:none}
+.tbl td strong{color:var(--t1)}
+.tbl code{background:var(--card);border:1px solid var(--border);padding:1px 7px;border-radius:5px;font-size:13px;color:var(--accent)}
+
+.note{border-radius:var(--rs);padding:14px 16px;font-size:14px;line-height:1.7;display:flex;gap:12px;align-items:flex-start}
+.note.info{background:var(--accent-lt);border:1px solid #bfdbfe;color:#1e40af}
+.note.warn{background:var(--warn-lt);border:1px solid #fde68a;color:#92400e}
+.note.ok{background:var(--ok-lt);border:1px solid #a7f3d0;color:#065f46}
+.note .ni{font-size:16px;flex-shrink:0}
+
+.chip-row{display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:5px 14px;font-size:13px;color:var(--t2)}
+.chip.ok{background:var(--ok-lt);border-color:#a7f3d0;color:var(--ok);font-weight:700}
+.chip.err{background:var(--err-lt);border-color:#fecaca;color:var(--err);font-weight:700}
+
+.icon-btn-ex{display:inline-flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--border);border-radius:7px;padding:5px 12px;font-size:13px;color:var(--t1);font-weight:600}
+
+.faq{border:1px solid var(--border);border-radius:var(--rs);overflow:hidden}
+.faq-q{padding:14px 16px;background:var(--card);font-size:14.5px;font-weight:700;color:var(--t1);cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.faq-a{padding:14px 16px;font-size:14px;color:var(--t2);line-height:1.8;border-top:1px solid var(--border);display:none}
+.faq.open .faq-a{display:block}
+.faq-arrow{transition:transform .2s;color:var(--t3);flex-shrink:0}
+.faq.open .faq-arrow{transform:rotate(180deg)}
+
+.footer-note{text-align:center;font-size:12.5px;color:var(--t3);padding:20px 0}
+
+@media(max-width:900px){
+  .layout{grid-template-columns:1fr}
+  .toc{position:static}
+}
+@media(max-width:768px){ .page{padding:16px} }
+</style>
+</head>
+<body>
+
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="logo-area">
+      <div class="logo-icon">OT</div>
+      <div>
+        <div class="logo-text">OT-Test</div>
+        <div class="logo-sub">ระบบลงเวลาโอที</div>
+      </div>
+    </div>
+  </div>
+ <div class="sidebar-nav">
+    <div class="nav-item"><a href="index.html" class="nav-link"><span class="nav-icon">📝</span><span class="nav-text">บันทึกโอที</span></a></div>
+    <div class="nav-item"><a href="report.html" class="nav-link"><span class="nav-icon">📊</span><span class="nav-text">รายงานโอที</span></a></div>
+    <div class="nav-item"><a href="dashboard.html" class="nav-link"><span class="nav-icon">📈</span><span class="nav-text">Dashboard</span></a></div>
+    <div class="nav-item"><a href="manage.html" class="nav-link"><span class="nav-icon">🛠️</span><span class="nav-text">แก้ไขข้อมูลย้อนหลัง</span></a></div>
+    <div class="nav-item"><a href="employees.html" class="nav-link active"><span class="nav-icon">👥</span><span class="nav-text">เพิ่มพนักงาน</span></a></div>
+    <div class="nav-item"><a href="help.html" class="nav-link"><span class="nav-icon">📖</span><span class="nav-text">คู่มือการใช้งาน</span></a></div>
+  </div>
+
+  <div class="sidebar-footer">
+    <div>ระบบบันทึกเวลาทำงานล่วงเวลา</div>
+    <div style="margin-top:6px">พัฒนาโดย Sarawut.C</div>
+  </div>
+</div>
+
+<div class="menu-toggle" id="menuToggle" onclick="openMobileSidebar()">☰</div>
+<div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileSidebar()"></div>
+
+<div class="main-content">
+  <header class="hdr">
+    <div class="hdr-l">
+      <div class="logo">OT</div>
+      <div>
+        <div class="hdr-title">คู่มือการใช้งานระบบ - Test Pogest</div>
+        <div class="hdr-sub">User Guide - Overtime Time Recording System</div>
+      </div>
+    </div>
+    <div class="hdr-r">
+      <div class="hdr-tag">📖 อ่านได้ทุกแผนก</div>
+    </div>
+  </header>
+
+  <div class="page">
+    <div class="layout">
+
+      <!-- TOC -->
+      <nav class="toc" id="toc">
+        <div class="toc-title">สารบัญ</div>
+        <a href="#intro" class="toc-link">1. เกี่ยวกับระบบ</a>
+        <a href="#login" class="toc-link">2. เข้าสู่ระบบ</a>
+        <a href="#record" class="toc-link">3. บันทึกโอที</a>
+        <a href="#hours" class="toc-link">4. กติกาการกรอกชั่วโมง</a>
+        <a href="#manage" class="toc-link">5. แก้ไข / ลบรายการ</a>
+        <a href="#summary" class="toc-link">6. สรุปโอทีวันนี้</a>
+        <a href="#report" class="toc-link">7. รายงานโอที</a>
+        <a href="#dashboard" class="toc-link">8. Dashboard</a>
+        <a href="#faq" class="toc-link">9. คำถามที่พบบ่อย</a>
+      </nav>
+
+      <!-- Content -->
+      <div class="content">
+
+        <div class="section" id="intro">
+          <div class="sh2"><div class="shi">ℹ️</div>
+            <div><div class="sh2-title">1. เกี่ยวกับระบบ</div><div class="sh2-sub">ภาพรวมการทำงานของระบบ OT-Test</div></div>
+          </div>
+          <div class="sbody">
+            <p>ระบบนี้ใช้สำหรับ<strong style="color:var(--t1)">บันทึก แก้ไข และตรวจสอบเวลาทำงานล่วงเวลา (โอที)</strong> ของพนักงาน โดยหัวหน้างานหรือผู้ดูแลแต่ละแผนกเป็นผู้กรอกข้อมูลแทนพนักงานผ่านหน้าจอเดียว ระบบจะค้นหาข้อมูลพนักงานให้อัตโนมัติเมื่อกรอกรหัส และคำนวณสรุปชั่วโมงโอทีของวันนั้นให้ทันที</p>
+            <div class="chip-row">
+              <span class="chip">📝 บันทึกโอที</span>
+              <span class="chip">📊 รายงานโอที</span>
+              <span class="chip">📈 Dashboard</span>
+              <span class="chip">📖 คู่มือการใช้งาน</span>
+            </div>
+            <div class="note info"><span class="ni">💡</span><span>เมนูทั้งหมดอยู่ในแถบด้านซ้าย (บนมือถือให้กดปุ่ม ☰ มุมซ้ายบน) สามารถสลับไปมาระหว่างหน้าได้ตลอดเวลา</span></div>
+          </div>
+        </div>
+
+        <div class="section" id="login">
+          <div class="sh2"><div class="shi">🔐</div>
+            <div><div class="sh2-title">2. เข้าสู่ระบบ</div><div class="sh2-sub">สิทธิ์การเข้าถึงตามแผนก</div></div>
+          </div>
+          <div class="sbody">
+            <p>ผู้ใช้งานต้องเข้าสู่ระบบก่อนจึงจะใช้งานหน้าต่างๆ ได้ ระบบจะจำกัดสิทธิ์ตาม <strong>แผนก</strong> ของผู้ใช้งานแต่ละคนโดยอัตโนมัติ:</p>
+            <table class="tbl">
+              <tr><th>ประเภทผู้ใช้</th><th>สิทธิ์การเข้าถึง</th></tr>
+              <tr><td><strong>หัวหน้างาน / ผู้จัดการแผนก</strong></td><td>ดูและบันทึกข้อมูลได้เฉพาะพนักงานใน <strong>แผนกของตนเอง</strong></td></tr>
+              <tr><td><strong>ผู้ดูแลระบบ</strong></td><td>ดูและบันทึกข้อมูลได้ <strong>ทุกแผนก</strong> (แสดงเป็น "ผู้ดูแลระบบ (ทุกแผนก)" มุมบนขวา)</td></tr>
+            </table>
+            <p>หลังเข้าสู่ระบบสำเร็จ ชื่อผู้ใช้งานและแผนกจะแสดงอยู่มุมบนขวาของทุกหน้า หากต้องการออกจากระบบให้กดปุ่ม <span class="icon-btn-ex">ออกจากระบบ</span> ที่มุมบนขวาเช่นกัน</p>
+            <div class="note warn"><span class="ni">⚠️</span><span>หากเข้าหน้าใดก็ตามโดยยังไม่ได้เข้าสู่ระบบ ระบบจะเด้งไปหน้าล็อกอินให้อัตโนมัติ</span></div>
+          </div>
+        </div>
+
+        <div class="section" id="record">
+          <div class="sh2"><div class="shi">📝</div>
+            <div><div class="sh2-title">3. บันทึกโอที</div><div class="sh2-sub">ขั้นตอนการลงเวลาโอทีให้พนักงาน 1 คน</div></div>
+          </div>
+          <div class="sbody">
+            <div class="steps">
+              <div class="step"><div class="step-num">1</div><div class="step-txt"><strong>กรอกรหัสพนักงาน</strong> ในช่อง "รหัสพนักงาน" — เมื่อพิมพ์เสร็จระบบจะรอประมาณครึ่งวินาทีแล้วค้นหาให้อัตโนมัติ (ไม่ต้องกดปุ่มค้นหา)</div></div>
+              <div class="step"><div class="step-num">2</div><div class="step-txt">หากพบข้อมูล จะมี<strong>การ์ดพนักงาน</strong>ปรากฏขึ้น แสดงชื่อ รหัส แผนก และตำแหน่ง ให้ตรวจสอบว่าเป็นคนที่ต้องการก่อนกรอกต่อ</div></div>
+              <div class="step"><div class="step-num">3</div><div class="step-txt">กรอก <strong>วันที่ทำโอที</strong> รูปแบบ <code>dd/MM/yyyy</code> (ค่าเริ่มต้นคือวันนี้)</div></div>
+              <div class="step"><div class="step-num">4</div><div class="step-txt">กรอก <strong>เวลาเริ่มต้น</strong> และ <strong>เวลาสิ้นสุด</strong> ของการทำโอที</div></div>
+              <div class="step"><div class="step-num">5</div><div class="step-txt">กรอก <strong>รวมชั่วโมง</strong> ที่ต้องการบันทึกจริง (ดูกติกาการกรอกในหัวข้อถัดไป) และ <strong>หมายเหตุ</strong> ถ้ามี</div></div>
+              <div class="step"><div class="step-num">6</div><div class="step-txt">กดปุ่ม <strong>✔ ยืนยันการลงเวลาโอที</strong> — เมื่อสำเร็จจะมีข้อความสีเขียวแจ้งเตือน และแบบฟอร์มจะรีเซ็ตให้พร้อมกรอกรายการถัดไปทันที</div></div>
+            </div>
+            <div class="note info"><span class="ni">💡</span><span>ปุ่ม "ยืนยันการลงเวลาโอที" จะกดไม่ได้จนกว่าจะค้นหาพบพนักงานก่อน (ปุ่มจะเป็นสีเทาจางๆ)</span></div>
+          </div>
+        </div>
+
+        <div class="section" id="hours">
+          <div class="sh2"><div class="shi">⏱</div>
+            <div><div class="sh2-title">4. กติกาการกรอกชั่วโมง</div><div class="sh2-sub">ช่อง "รวมชั่วโมง" มีรูปแบบเฉพาะที่ต้องทำตาม</div></div>
+          </div>
+          <div class="sbody">
+            <p>ระบบรับค่าชั่วโมงโอทีเป็น<strong>ทศนิยม</strong> และบังคับให้ลงท้ายด้วย <code>.00</code> (เต็มชั่วโมง) หรือ <code>.50</code> (ครึ่งชั่วโมง) เท่านั้น เพื่อให้ตรงกับรอบการจ่ายโอทีจริง</p>
+            <table class="tbl">
+              <tr><th>พิมพ์</th><th>ระบบแปลงเป็น</th><th>ผล</th></tr>
+              <tr><td><code>1</code></td><td><code>1.00</code></td><td><span class="chip ok">✓ ถูกต้อง</span></td></tr>
+              <tr><td><code>1.5</code></td><td><code>1.50</code></td><td><span class="chip ok">✓ ถูกต้อง</span></td></tr>
+              <tr><td><code>2.50</code></td><td><code>2.50</code></td><td><span class="chip ok">✓ ถูกต้อง</span></td></tr>
+              <tr><td><code>1.25</code></td><td>ไม่แปลง</td><td><span class="chip err">✕ ไม่ถูกต้อง</span></td></tr>
+            </table>
+            <p>ระบบจะเติม <code>.00</code> หรือเติมเลข <code>0</code> ต่อท้ายให้อัตโนมัติเมื่อคลิกออกจากช่อง (เช่นพิมพ์ <code>1</code> จะกลายเป็น <code>1.00</code>) กรอบช่องจะ<strong>ขึ้นสีแดง</strong>หากรูปแบบยังไม่ถูกต้อง และ<strong>ขึ้นสีเขียว</strong>เมื่อถูกต้องแล้ว</p>
+          </div>
+        </div>
+
+        <div class="section" id="manage">
+          <div class="sh2"><div class="shi">✏️</div>
+            <div><div class="sh2-title">5. แก้ไข / ลบรายการ</div><div class="sh2-sub">จัดการรายการที่บันทึกไปแล้วในวันนี้</div></div>
+          </div>
+          <div class="sbody">
+            <p>ในการ์ด "สรุปโอทีวันนี้" ทางขวาของหน้าบันทึกโอที เมื่อ<strong>เอาเมาส์ไปวางที่รายการ</strong> (หรือแตะค้างบนมือถือ) จะปรากฏไอคอน ✏️ และ 🗑️ ทางด้านขวาของรายการนั้น</p>
+            <table class="tbl">
+              <tr><th>ไอคอน</th><th>การทำงาน</th></tr>
+              <tr><td>✏️ แก้ไข</td><td>เปิดหน้าต่างแก้ไข วันที่ / เวลาเริ่ม-สิ้นสุด / รวมชั่วโมง / หมายเหตุ แล้วกด "บันทึก" เพื่อยืนยัน</td></tr>
+              <tr><td>🗑️ ลบ</td><td>เปิดหน้าต่างยืนยันพร้อมสรุปรายการที่จะลบ กด "ลบ" เพื่อยืนยันการลบถาวร</td></tr>
+            </table>
+            <div class="note warn"><span class="ni">⚠️</span><span>การลบรายการไม่สามารถกู้คืนได้ ควรตรวจสอบข้อมูลในหน้าต่างยืนยันให้แน่ใจก่อนกดลบ</span></div>
+          </div>
+        </div>
+
+        <div class="section" id="summary">
+          <div class="sh2"><div class="shi">📊</div>
+            <div><div class="sh2-title">6. สรุปโอทีวันนี้</div><div class="sh2-sub">ภาพรวมด้านขวาของหน้าบันทึกโอที</div></div>
+          </div>
+          <div class="sbody">
+            <p>การ์ดนี้อัปเดตทันทีหลังบันทึก แก้ไข หรือลบข้อมูล แสดง:</p>
+            <table class="tbl">
+              <tr><th>รายการ</th><th>ความหมาย</th></tr>
+              <tr><td><strong>จำนวนพนักงาน</strong></td><td>จำนวนพนักงานที่มีการลงโอทีในวันนี้ (แผนกของผู้ใช้งาน หรือทุกแผนกหากเป็นผู้ดูแลระบบ)</td></tr>
+              <tr><td><strong>รวมชั่วโมงโอที</strong></td><td>ผลรวมชั่วโมงโอทีของทุกรายการในวันนี้ แสดงเป็นรูปแบบ ชั่วโมง:นาที</td></tr>
+              <tr><td><strong>รายชื่อพนักงานที่ลงโอที</strong></td><td>รายการทั้งหมดของวันนี้ เรียงตามลำดับที่บันทึก พร้อมช่วงเวลาและชั่วโมงรวมของแต่ละคน</td></tr>
+            </table>
+            <p>รายการที่เพิ่งบันทึกใหม่จะมี<strong>กรอบเรืองแสงสีเขียว</strong>ชั่วครู่เพื่อให้สังเกตเห็นง่าย</p>
+          </div>
+        </div>
+
+        <div class="section" id="report">
+          <div class="sh2"><div class="shi">📊</div>
+            <div><div class="sh2-title">7. รายงานโอที</div><div class="sh2-sub">เมนู "รายงานโอที" ในแถบด้านซ้าย</div></div>
+          </div>
+          <div class="sbody">
+            <p>ใช้สำหรับค้นหาและดูรายการโอทีย้อนหลังตามช่วงวันที่ที่ต้องการ เหมาะสำหรับตรวจสอบข้อมูลก่อนนำไปสรุปจ่ายโอทีหรือดึงออกเป็นรายงาน</p>
+            <div class="note info"><span class="ni">✍️</span><span>ส่วนนี้อธิบายไว้แบบภาพรวม แนะนำให้เพิ่มรายละเอียดขั้นตอนจริงของหน้า <code>report.html</code> เพิ่มเติม เช่น การเลือกช่วงวันที่ การกรองตามแผนก หรือการส่งออกไฟล์ เพื่อให้คู่มือถูกต้องตรงกับหน้าจอจริง 100%</span></div>
+          </div>
+        </div>
+
+        <div class="section" id="dashboard">
+          <div class="sh2"><div class="shi">📈</div>
+            <div><div class="sh2-title">8. Dashboard</div><div class="sh2-sub">เมนู "Dashboard" ในแถบด้านซ้าย</div></div>
+          </div>
+          <div class="sbody">
+            <p>แสดงภาพรวมสถิติโอทีในรูปแบบกราฟ/แผนภูมิ เพื่อให้เห็นแนวโน้มการทำโอทีในภาพรวมของแผนกหรือทั้งองค์กร</p>
+            <div class="note info"><span class="ni">✍️</span><span>เช่นเดียวกับหัวข้อรายงาน แนะนำให้เพิ่มรายละเอียดกราฟ ตัวกรอง และวิธีอ่านค่าต่างๆ ของหน้า <code>dashboard.html</code> เพิ่มเติมภายหลัง</span></div>
+          </div>
+        </div>
+
+        <div class="section" id="faq">
+          <div class="sh2"><div class="shi">❓</div>
+            <div><div class="sh2-title">9. คำถามที่พบบ่อย</div><div class="sh2-sub">คลิกที่คำถามเพื่อดูคำตอบ</div></div>
+          </div>
+          <div class="sbody" id="faqList">
+
+            <div class="faq">
+              <div class="faq-q" onclick="toggleFaq(this)"><span>กรอกรหัสพนักงานแล้วไม่พบข้อมูล ต้องทำอย่างไร?</span><span class="faq-arrow">▾</span></div>
+              <div class="faq-a">ตรวจสอบว่าพิมพ์รหัสถูกต้อง และพนักงานคนนั้นอยู่ในแผนกที่ท่านมีสิทธิ์เข้าถึง หากเป็นหัวหน้างาน ระบบจะค้นหาได้เฉพาะพนักงานในแผนกของท่านเท่านั้น หากยืนยันว่าถูกต้องแล้วยังค้นหาไม่พบ ให้แจ้งผู้ดูแลระบบ</div>
+            </div>
+
+            <div class="faq">
+              <div class="faq-q" onclick="toggleFaq(this)"><span>ทำไมกรอกช่อง "รวมชั่วโมง" แล้วขึ้นกรอบสีแดง?</span><span class="faq-arrow">▾</span></div>
+              <div class="faq-a">ค่าที่กรอกต้องลงท้ายด้วย .00 หรือ .50 เท่านั้น เช่น 1.00, 1.50, 2.00 หากพิมพ์ตัวเลขอื่น เช่น 1.25 ระบบจะไม่ยอมรับและปุ่มยืนยันจะบันทึกไม่ได้จนกว่าจะแก้ไขให้ถูกรูปแบบ</div>
+            </div>
+
+            <div class="faq">
+              <div class="faq-q" onclick="toggleFaq(this)"><span>บันทึกโอทีผิดคน แก้ไขได้ไหม?</span><span class="faq-arrow">▾</span></div>
+              <div class="faq-a">ได้ แต่ระบบแก้ไขได้เฉพาะ วันที่ เวลา รวมชั่วโมง และหมายเหตุ ของรายการเดิม หากบันทึกผิดตัวพนักงาน แนะนำให้<strong>ลบรายการเดิมทิ้ง</strong>แล้วบันทึกใหม่ให้ถูกคน แทนการแก้ไข</div>
+            </div>
+
+            <div class="faq">
+              <div class="faq-q" onclick="toggleFaq(this)"><span>ลบรายการไปแล้ว กู้คืนได้หรือไม่?</span><span class="faq-arrow">▾</span></div>
+              <div class="faq-a">ไม่ได้ การลบเป็นการลบถาวร ระบบจะมีหน้าต่างยืนยันก่อนลบทุกครั้งเพื่อป้องกันการลบผิดพลาด กรุณาตรวจสอบรายละเอียดในหน้าต่างยืนยันให้ดีก่อนกดลบ</div>
+            </div>
+
+            <div class="faq">
+              <div class="faq-q" onclick="toggleFaq(this)"><span>สรุปโอทีวันนี้ ไม่รวมข้อมูลของแผนกอื่น ทำไม?</span><span class="faq-arrow">▾</span></div>
+              <div class="faq-a">เป็นไปตามสิทธิ์การเข้าถึง หัวหน้างานแต่ละแผนกจะเห็นข้อมูลเฉพาะแผนกตนเอง มีเพียงผู้ดูแลระบบเท่านั้นที่จะเห็นข้อมูลของทุกแผนกรวมกัน</div>
+            </div>
+
+            <div class="faq">
+              <div class="faq-q" onclick="toggleFaq(this)"><span>ใช้งานบนมือถือได้หรือไม่?</span><span class="faq-arrow">▾</span></div>
+              <div class="faq-a">ได้ หน้าจอปรับขนาดให้เหมาะกับมือถือโดยอัตโนมัติ เมนูด้านซ้ายจะถูกซ่อนไว้ ให้กดปุ่ม ☰ มุมซ้ายบนเพื่อเปิดเมนู</div>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="footer-note">คู่มือฉบับนี้จัดทำเพื่อใช้งานภายในระบบ OT-Over Time Tracking ภายในบริษัทเท่านั้น · หากพบข้อผิดพลาดในเนื้อหา กรุณาแจ้งผู้ดูแลระบบ</div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function openMobileSidebar(){ document.getElementById('sidebar').classList.add('open-mobile'); document.getElementById('mobileOverlay').classList.add('active'); }
+function closeMobileSidebar(){ document.getElementById('sidebar').classList.remove('open-mobile'); document.getElementById('mobileOverlay').classList.remove('active'); }
+
+function toggleFaq(el){
+  el.parentElement.classList.toggle('open');
+}
+
+/* ไฮไลต์สารบัญตามส่วนที่กำลังอ่าน */
+(function(){
+  var links = document.querySelectorAll('.toc-link');
+  var sections = document.querySelectorAll('.section');
+  function onScroll(){
+    var y = window.scrollY + 100;
+    var current = sections[0] ? sections[0].id : null;
+    sections.forEach(function(s){ if (s.offsetTop <= y) current = s.id; });
+    links.forEach(function(l){
+      l.classList.toggle('on', l.getAttribute('href') === '#' + current);
+    });
+  }
+  window.addEventListener('scroll', onScroll);
+  onScroll();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>เข้าสู่ระบบ - OT Time Tracking</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family:'Sarabun', sans-serif; background:#eef2f7; min-height:100vh;
+  display:flex; align-items:center; justify-content:center; padding:20px;
+}
+:root {
+  --surface:#ffffff; --border:#d0daea;
+  --focus:#2563eb; --accent:#1d4ed8; --header:#1e3a8a;
+  --ok:#059669; --ok-lt:#ecfdf5; --err:#dc2626; --err-lt:#fef2f2;
+  --t1:#0f172a; --t2:#475569; --t3:#94a3b8; --rs:7px;
+  --sh-md:0 4px 16px rgba(30,58,138,0.10);
+}
+.card { width:100%; max-width:400px; background:var(--surface); border:1px solid var(--border); border-radius:14px; box-shadow:var(--sh-md); overflow:hidden; }
+.head { background:var(--header); padding:26px 24px 22px; text-align:center; }
+.head .logo { width:52px;height:52px;border-radius:12px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#fff;margin:0 auto 12px; }
+.head h1 { font-size:18px; font-weight:700; color:#fff; }
+.head p { font-size:12.5px; color:rgba(255,255,255,.7); margin-top:5px; }
+.body { padding:26px 24px 24px; }
+.field { margin-bottom:16px; }
+.field label { display:block; font-size:12.5px; font-weight:700; color:var(--t2); margin-bottom:7px; text-transform:uppercase; letter-spacing:.5px; }
+input { width:100%; padding:12px 14px; background:#fff; border:1.5px solid var(--border); border-radius:var(--rs); font-size:15px; font-family:inherit; color:var(--t1); outline:none; transition:border-color .15s; }
+input:focus { border-color:var(--focus); box-shadow:0 0 0 3px rgba(37,99,235,.1); }
+button { width:100%; margin-top:6px; padding:13px; background:var(--accent); color:#fff; border:none; border-radius:var(--rs); font-size:15px; font-weight:700; cursor:pointer; font-family:inherit; transition:background .15s; }
+button:hover:not(:disabled) { background:#1d40b0; }
+button:disabled { opacity:.7; cursor:default; }
+.msg { display:none; margin-bottom:14px; padding:10px 13px; border-radius:var(--rs); font-size:13.5px; font-weight:600; }
+.msg.show { display:block; }
+.msg.err { background:var(--err-lt); color:var(--err); border:1px solid #fecaca; }
+.msg.ok { background:var(--ok-lt); color:var(--ok); border:1px solid #a7f3d0; }
+.foot { padding:14px; text-align:center; color:var(--t3); font-size:12px; border-top:1px solid var(--border); }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="head">
+    <div class="logo">OT</div>
+    <h1>เข้าระบบการลงเวลาขอโอที</h1>
+    <p>สำหรับพนักงานธุรการและผู้จัดการ</p>
+  </div>
+  <div class="body">
+    <form id="f" autocomplete="on">
+      <div class="field">
+        <label>รหัสผู้ใช้งาน</label>
+        <input type="text" id="mcode" name="mcode" placeholder="รหัสพนักงาน" autocomplete="username">
+      </div>
+      <div class="field">
+        <label>รหัสผ่าน</label>
+        <input type="password" id="mpass" name="mpass" placeholder="วันเริ่มงาน" autocomplete="current-password">
+      </div>
+      <div id="msg" class="msg"></div>
+      <button type="submit" id="btn">เข้าสู่ระบบ</button>
+    </form>
+  </div>
+  <div class="foot">ระบบบันทึกเวลาทำงานล่วงเวลา © 2026 | พัฒนาโดย Sarawut.C</div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  const SUPABASE_URL = 'https://gjmgzjsbgqaaxlpbyykt.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdqbWd6anNiZ3FhYXhscGJ5eWt0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwMjQyMjUsImV4cCI6MjEwMTYwMDIyNX0.wacphD2FPgaaETYc0N-Ze4q9gPr2BaO0MKNo9RBnlm0';
+  const HOME_URL = 'index.html';
+  const sbLogin = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const form = document.getElementById('f');
+  const codeEl = document.getElementById('mcode');
+  const passEl = document.getElementById('mpass');
+  const msgEl = document.getElementById('msg');
+  const btn = document.getElementById('btn');
+
+  function showMsg(type, text){
+    msgEl.className = 'msg show ' + type;
+    msgEl.textContent = text;
+  }
+
+  form.addEventListener('submit', async function(e){
+    e.preventDefault();
+    const code = codeEl.value.trim();
+    const pass = passEl.value.trim();
+    if (!code || !pass){ showMsg('err','กรุณากรอกข้อมูลให้ครบ'); return; }
+
+    btn.disabled = true; btn.textContent = 'กำลังตรวจสอบ...';
+    msgEl.className = 'msg';
+
+    try {
+      const { data, error } = await sbLogin.rpc('manager_login', { p_code: code, p_pass: pass });
+      if (error){
+        showMsg('err','เกิดข้อผิดพลาดในการเชื่อมต่อ');
+        btn.disabled = false; btn.textContent = 'เข้าสู่ระบบ';
+        return;
+      }
+      if (data.status === 'success'){
+        localStorage.setItem('mgrToken', code);
+        localStorage.setItem('mgrDept', data.department || '');
+        localStorage.setItem('mgrName', data.name || code);
+        localStorage.setItem('mgrExpire', Date.now() + 1000*60*30);
+        showMsg('ok','เข้าสู่ระบบสำเร็จ กำลังเข้าสู่หน้าหลัก...');
+        setTimeout(function(){ window.location.href = HOME_URL; }, 400);
+      } else if (data.status === 'denied'){
+        showMsg('err', data.message || 'บัญชีนี้ถูกระงับการใช้งาน');
+        btn.disabled = false; btn.textContent = 'เข้าสู่ระบบ';
+      } else {
+        showMsg('err', data.message || 'รหัสผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง');
+        btn.disabled = false; btn.textContent = 'เข้าสู่ระบบ';
+      }
+    } catch (err){
+      showMsg('err','เกิดข้อผิดพลาด: ' + err.message);
+      btn.disabled = false; btn.textContent = 'เข้าสู่ระบบ';
+    }
+  });
+})();
+</script>
+</body>
+</html>

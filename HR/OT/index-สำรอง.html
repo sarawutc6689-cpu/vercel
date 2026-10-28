@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>บันทึกโอที - OT Time Tracking</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="auth.js"></script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Sarabun', sans-serif; background:#eef2f7; min-height:100vh; }
+
+:root {
+  --bg:#eef2f7; --surface:#ffffff; --card:#f5f8fc; --border:#d0daea;
+  --focus:#2563eb; --accent:#1d4ed8; --accent-lt:#eff6ff; --header:#1e3a8a;
+  --ok:#059669; --ok-lt:#ecfdf5; --err:#dc2626; --err-lt:#fef2f2;
+  --t1:#0f172a; --t2:#475569; --t3:#94a3b8;
+  --r:10px; --rs:7px; --sh:0 1px 4px rgba(30,58,138,0.08); --sh-md:0 4px 16px rgba(30,58,138,0.10);
+}
+
+#loadingOverlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:9999;display:none;align-items:center;justify-content:center;backdrop-filter:blur(3px)}
+.loading-spinner{background:#fff;padding:20px 30px;border-radius:12px;display:flex;flex-direction:column;align-items:center;gap:12px;box-shadow:0 4px 20px rgba(0,0,0,0.15)}
+.spinner{width:40px;height:40px;border:3px solid #e2e8f0;border-top-color:#1e3a8a;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:14px;color:#1e3a8a;font-weight:500}
+
+.sidebar{position:fixed;top:0;left:0;width:260px;height:100vh;background:linear-gradient(180deg,#0f2b4d 0%,#0a1e38 100%);color:#fff;z-index:1000;box-shadow:2px 0 12px rgba(0,0,0,0.15);overflow-y:auto}
+.sidebar-header{padding:20px 16px;border-bottom:1px solid rgba(255,255,255,0.1);margin-bottom:20px}
+.sidebar-header .logo-area{display:flex;align-items:center;gap:12px}
+.sidebar-header .logo-icon{width:40px;height:40px;background:rgba(255,255,255,0.15);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;flex-shrink:0}
+.sidebar-header .logo-text{font-size:18px;font-weight:700;letter-spacing:1px}
+.sidebar-header .logo-sub{font-size:10px;color:rgba(255,255,255,0.6);margin-top:4px}
+.sidebar-nav{padding:0 12px}
+.nav-item{margin-bottom:4px}
+.nav-link{display:flex;align-items:center;gap:14px;padding:12px 16px;border-radius:12px;color:rgba(255,255,255,0.75);text-decoration:none;transition:all .2s ease;font-size:15px;font-weight:500}
+.nav-link:hover{background:rgba(255,255,255,0.1);color:#fff}
+.nav-link.active{background:rgba(59,130,246,0.3);color:#fff;border-left:3px solid #3b82f6}
+.nav-icon{font-size:20px;width:28px;text-align:center;flex-shrink:0}
+.nav-text{white-space:nowrap}
+.sidebar-footer{position:absolute;bottom:0;left:0;right:0;padding:20px 16px;border-top:1px solid rgba(255,255,255,0.1);font-size:11px;color:rgba(255,255,255,0.5);text-align:center}
+.sidebar::-webkit-scrollbar{width:4px}
+.sidebar::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.2);border-radius:4px}
+.main-content{margin-left:260px;min-height:100vh}
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%);transition:transform .3s ease}
+  .sidebar.open-mobile{transform:translateX(0)}
+  .main-content{margin-left:0}
+  .menu-toggle{position:fixed;left:16px;top:16px;width:40px;height:40px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:1001;box-shadow:0 2px 8px rgba(0,0,0,0.1);font-size:20px;color:#1e3a8a}
+  .mobile-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:999;display:none}
+  .mobile-overlay.active{display:block}
+}
+@media(min-width:769px){ .menu-toggle,.mobile-overlay{display:none} }
+
+.hdr{background:var(--header);height:64px;padding:0 28px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 10px rgba(30,58,138,0.22);flex-wrap:wrap;gap:10px}
+.hdr-l{display:flex;align-items:center;gap:14px}
+.logo{width:40px;height:40px;border-radius:9px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff}
+.hdr-title{font-size:18px;font-weight:700;color:#fff}
+.hdr-sub{font-size:13px;color:rgba(255,255,255,0.6);margin-top:2px}
+.hdr-r{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.hdr-date{font-size:13px;color:rgba(255,255,255,0.82);background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);padding:6px 18px;border-radius:6px}
+.hdr-user{font-size:13px;color:rgba(255,255,255,0.85);background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);padding:6px 14px;border-radius:6px}
+.hdr-logout{font-size:13px;font-weight:700;color:#fff;background:rgba(220,38,38,0.25);border:1px solid rgba(248,113,113,0.5);padding:6px 14px;border-radius:6px;cursor:pointer;font-family:inherit;transition:background .15s}
+.hdr-logout:hover{background:rgba(220,38,38,0.4)}
+
+.page{padding:20px 24px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;min-height:calc(100vh - 104px)}
+
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh);display:flex;flex-direction:column;overflow:hidden}
+.ph{padding:16px 22px;border-bottom:1px solid var(--border);background:var(--card);display:flex;align-items:center;gap:12px}
+.phi{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:17px}
+.phi.b{background:#dbeafe} .phi.t{background:#ccfbf1}
+.ph-title{font-size:16px;font-weight:700;color:var(--t1)}
+.ph-sub{font-size:12px;color:var(--t3);margin-top:2px}
+.pb{padding:20px 22px;flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:16px}
+.pb::-webkit-scrollbar{width:4px}
+.pb::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+
+.field{display:flex;flex-direction:column;gap:7px}
+.lbl{font-size:12px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.7px}
+.iw{position:relative}
+.ico{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:16px;pointer-events:none}
+.aico{position:absolute;right:13px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--t3);pointer-events:none;transition:opacity .2s}
+input[type="text"],input[type="time"]{width:100%;background:#fff;border:1.5px solid var(--border);border-radius:var(--rs);padding:12px 40px 12px 40px;font-size:16px;font-family:inherit;color:var(--t1);transition:border-color .18s,box-shadow .18s;outline:none}
+input:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(37,99,235,0.1)}
+input::placeholder{color:var(--t3)}
+.hint{font-size:13px;color:var(--t3);margin-top:4px}.hint strong{color:var(--err);font-weight:700}
+textarea{width:100%;background:#fff;border:1.5px solid var(--border);border-radius:var(--rs);padding:10px 14px;font-size:15px;font-family:inherit;color:var(--t1);transition:border-color .18s,box-shadow .18s;outline:none;resize:none;line-height:1.6}
+textarea:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(37,99,235,0.1)}
+textarea::placeholder{color:var(--t3)}
+.tg{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+.ecard{background:var(--accent-lt);border:1.5px solid #bfdbfe;border-radius:var(--rs);padding:16px;display:none}
+.ecard.on{display:block;animation:fu .2s ease}
+@keyframes fu{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
+.etop{display:flex;align-items:center;gap:14px;margin-bottom:12px}
+.eav{width:44px;height:44px;border-radius:10px;background:var(--header);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#fff;flex-shrink:0}
+.ename{font-size:16px;font-weight:700;color:var(--t1)}
+.etag{font-size:12px;color:var(--accent);background:#fff;border:1px solid #bfdbfe;padding:2px 10px;border-radius:4px;margin-top:4px;display:inline-block;font-weight:600}
+.etags{display:flex;flex-wrap:wrap;gap:7px}
+.tag{font-size:13px;color:var(--t2);background:#fff;border:1px solid var(--border);padding:4px 12px;border-radius:20px}
+
+.alert{padding:10px 14px;border-radius:var(--rs);font-size:14px;display:none}
+.alert.err{background:var(--err-lt);border:1px solid #fecaca;color:var(--err)}
+.alert.ok{background:var(--ok-lt);border:1px solid #a7f3d0;color:var(--ok)}
+.alert.on{display:block;animation:fu .2s ease}
+
+.btn-sub{width:100%;padding:14px;background:var(--accent);color:#fff;border:none;border-radius:var(--rs);font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .18s}
+.btn-sub:hover:not(:disabled){background:#1d40b0}
+.btn-sub:disabled{background:#93c5fd;cursor:not-allowed}
+.div{height:1px;background:var(--border);margin:0 -22px}
+
+.sg{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.sc{background:var(--card);border:1px solid var(--border);border-radius:var(--rs);padding:16px 18px}
+.sl{font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px}
+.sv{font-size:32px;font-weight:700;line-height:1}
+.sv.bl{color:var(--accent)} .sv.gr{color:var(--ok)}
+.su{font-size:13px;color:var(--t3);margin-top:4px}
+
+.list-container{flex:1;overflow-y:auto;max-height:calc(100vh - 280px);min-height:300px;margin-top:8px}
+.list-container::-webkit-scrollbar{width:6px}
+.list-container::-webkit-scrollbar-track{background:var(--bg);border-radius:3px}
+.list-container::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.list-container::-webkit-scrollbar-thumb:hover{background:var(--t3)}
+.lh{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-shrink:0}
+.lht{font-size:12px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.7px}
+.lhb{font-size:12px;font-weight:700;color:var(--accent);background:var(--accent-lt);border:1px solid #bfdbfe;padding:3px 11px;border-radius:4px}
+.olist{display:flex;flex-direction:column;gap:7px}
+.oi{background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:12px 16px;display:flex;align-items:center;gap:14px;transition:border-color .15s,box-shadow .15s}
+.oi:hover{border-color:#93c5fd;box-shadow:var(--sh)}
+.oi.new{border-color:#6ee7b7;animation:pg 1.5s ease 1}
+@keyframes pg{0%,100%{box-shadow:none}50%{box-shadow:0 0 0 3px rgba(16,185,129,0.15)}}
+.onum{width:26px;height:26px;border-radius:6px;background:var(--accent-lt);color:var(--accent);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.oinf{flex:1;min-width:0}
+.oname{font-size:15px;font-weight:700;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ocode{font-size:12px;color:var(--t3);margin-top:2px}
+.otm{text-align:right;flex-shrink:0}
+.orange{font-size:13px;color:var(--t2)}
+.otot{font-size:14px;font-weight:700;color:var(--ok);margin-top:3px}
+.oi-actions{display:flex;gap:8px;margin-left:8px;opacity:0;transition:opacity .2s ease}
+.oi:hover .oi-actions{opacity:1}
+.btn-action{background:none;border:none;cursor:pointer;font-size:16px;padding:4px 6px;border-radius:6px;transition:all .2s}
+.btn-edit{color:var(--accent)} .btn-edit:hover{background:var(--accent-lt);transform:scale(1.1)}
+.btn-delete{color:var(--err)} .btn-delete:hover{background:var(--err-lt);transform:scale(1.1)}
+
+.modal{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:10000;align-items:center;justify-content:center}
+.modal.active{display:flex}
+.modal-content{background:var(--surface);border-radius:var(--r);padding:24px;max-width:500px;width:90%;box-shadow:var(--sh-md)}
+.modal-header{font-size:18px;font-weight:700;margin-bottom:16px;color:var(--t1)}
+.modal-body{margin-bottom:20px}
+.modal-footer{display:flex;gap:12px;justify-content:flex-end}
+.modal-btn{padding:10px 20px;border-radius:var(--rs);border:none;cursor:pointer;font-family:inherit;font-weight:600}
+.modal-btn.confirm{background:var(--err);color:#fff} .modal-btn.confirm:hover{background:#b91c1c}
+.modal-btn.cancel{background:var(--card);border:1px solid var(--border)} .modal-btn.cancel:hover{background:var(--bg)}
+
+.empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:40px 0}
+.eico{width:52px;height:52px;border-radius:13px;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:22px}
+.etxt{font-size:14px;color:var(--t3);text-align:center;line-height:1.7}
+.dots{display:flex;gap:6px;align-items:center;justify-content:center;padding:28px}
+.dots span{width:8px;height:8px;border-radius:50%;background:#93c5fd;animation:bc 1.2s infinite}
+.dots span:nth-child(2){animation-delay:.2s} .dots span:nth-child(3){animation-delay:.4s}
+@keyframes bc{0%,80%,100%{transform:scale(.7);opacity:.4}40%{transform:scale(1);opacity:1}}
+
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+@media(max-width:768px){.grid{grid-template-columns:1fr}.page{padding:14px}}
+</style>
+</head>
+<body>
+
+<div id="loadingOverlay">
+  <div class="loading-spinner">
+    <div class="spinner"></div>
+    <div class="loading-text">กำลังโหลด...</div>
+  </div>
+</div>
+
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="logo-area">
+      <div class="logo-icon">OT</div>
+      <div>
+        <div class="logo-text">OT-Time Tracking</div>
+        <div class="logo-sub">ระบบลงเวลาโอที</div>
+      </div>
+    </div>
+  </div>
+   <div class="sidebar-nav">
+    <div class="nav-item"><a href="index.html" class="nav-link"><span class="nav-icon">📝</span><span class="nav-text">บันทึกโอที</span></a></div>
+    <div class="nav-item"><a href="report.html" class="nav-link"><span class="nav-icon">📊</span><span class="nav-text">รายงานโอที</span></a></div>
+    <div class="nav-item"><a href="dashboard.html" class="nav-link"><span class="nav-icon">📈</span><span class="nav-text">Dashboard</span></a></div>
+    <div class="nav-item"><a href="manage.html" class="nav-link"><span class="nav-icon">🛠️</span><span class="nav-text">แก้ไขข้อมูลย้อนหลัง</span></a></div>
+    <div class="nav-item"><a href="employees.html" class="nav-link"><span class="nav-icon">👥</span><span class="nav-text">เพิ่มพนักงาน</span></a></div>
+    <div class="nav-item"><a href="help.html" class="nav-link"><span class="nav-icon">📖</span><span class="nav-text">คู่มือการใช้งาน</span></a></div>
+  </div>
+
+  <div class="sidebar-footer">
+    <div>ระบบบันทึกเวลาทำงานล่วงเวลา</div>
+    <div style="margin-top:6px">พัฒนาโดย Sarawut.C</div>
+  </div>
+</div>
+
+<div class="menu-toggle" id="menuToggle" onclick="openMobileSidebar()">☰</div>
+<div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileSidebar()"></div>
+
+<div class="main-content">
+  <header class="hdr">
+    <div class="hdr-l">
+      <div class="logo">OT</div>
+      <div>
+        <div class="hdr-title">ระบบบันทึกเวลาทำงานล่วงเวลา</div>
+        <div class="hdr-sub">Overtime Time Recording System </div>
+      </div>
+    </div>
+    <div class="hdr-r">
+      <div class="hdr-date" id="hdrDate">—</div>
+      <div class="hdr-user" id="hdrUser">—</div>
+      <button class="hdr-logout" id="logoutBtn" type="button">ออกจากระบบ</button>
+    </div>
+  </header>
+
+  <div class="page">
+    <div class="grid">
+
+      <div class="panel">
+        <div class="ph">
+          <div class="phi b">📝</div>
+          <div>
+            <div class="ph-title">บันทึกเวลาโอที</div>
+            <div class="ph-sub">ค้นหาพนักงานอัตโนมัติเมื่อกรอกรหัส</div>
+          </div>
+        </div>
+        <div class="pb">
+          <div class="field">
+            <div class="lbl">รหัสพนักงาน</div>
+            <div class="iw search-wrap">
+              <span class="ico">🔍</span>
+              <input type="text" id="empCode" placeholder="กรอกรหัสพนักงาน แล้วรอสักครู่..." oninput="onEmpCodeInput()" autocomplete="off">
+              <span class="aico" id="searchIco"></span>
+            </div>
+          </div>
+
+          <div class="alert err" id="alertErr"></div>
+
+          <div class="ecard" id="ecard">
+            <div class="etop">
+              <div class="eav" id="eav">—</div>
+              <div>
+                <div class="ename" id="ename">—</div>
+                <span class="etag" id="etag">—</span>
+              </div>
+            </div>
+            <div class="etags" id="etags"></div>
+          </div>
+
+          <div class="div"></div>
+
+          <div class="field">
+            <div class="lbl">วันที่ทำโอที</div>
+            <div class="iw"><span class="ico">📅</span><input type="text" id="workDate" placeholder="dd/MM/yyyy"></div>
+          </div>
+
+          <div class="tg">
+            <div class="field">
+              <div class="lbl">เวลาเริ่มต้น</div>
+              <div class="iw"><span class="ico">🕐</span><input type="time" id="startTime"></div>
+            </div>
+            <div class="field">
+              <div class="lbl">เวลาสิ้นสุด</div>
+              <div class="iw"><span class="ico">🕔</span><input type="time" id="endTime"></div>
+            </div>
+          </div>
+
+          <div class="field">
+            <div class="lbl">รวมชั่วโมง</div>
+            <div class="iw"><span class="ico">⏱</span><input type="text" id="empTotal" placeholder="เช่น 1.50" maxlength="5" oninput="validateEmpTotal(this)" onblur="fixEmpTotal(this)"></div>
+            <div class="hint">ลงท้ายด้วย <strong>.00</strong> (เต็มชั่วโมง) หรือ <strong>.50</strong> (ครึ่งชั่วโมง) เท่านั้น</div>
+          </div>
+
+          <div class="field">
+            <div class="lbl">หมายเหตุ</div>
+            <textarea id="remark" rows="2" placeholder="หมายเหตุ (ถ้ามี)"></textarea>
+          </div>
+
+          <div class="alert ok" id="alertOk"></div>
+          <div style="flex:1"></div>
+
+          <button class="btn-sub" id="subBtn" onclick="submitForm()" disabled>✔ ยืนยันการลงเวลาโอที</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="ph">
+          <div class="phi t">📊</div>
+          <div>
+            <div class="ph-title">สรุปโอทีวันนี้</div>
+            <div class="ph-sub" id="sumDate">—</div>
+          </div>
+        </div>
+        <div class="pb" style="display:flex;flex-direction:column">
+          <div class="sg">
+            <div class="sc"><div class="sl">จำนวนพนักงาน</div><div class="sv bl" id="cntEmp">—</div><div class="su">คน</div></div>
+            <div class="sc"><div class="sl">รวมชั่วโมงโอที</div><div class="sv gr" id="cntHr">—</div><div class="su">ชั่วโมง</div></div>
+          </div>
+          <div class="lh"><div class="lht">รายชื่อพนักงานที่ลงโอที</div><div class="lhb" id="lhCnt">0 คน</div></div>
+          <div class="list-container" id="listContainer">
+            <div class="olist" id="olist"><div class="dots"><span></span><span></span><span></span></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="deleteModal">
+  <div class="modal-content">
+    <div class="modal-header">⚠️ ยืนยันการลบ</div>
+    <div class="modal-body">
+      <p>คุณต้องการลบรายการนี้ใช่หรือไม่?</p>
+      <p style="margin-top:8px;color:var(--t3);font-size:14px" id="deleteInfo"></p>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn cancel" onclick="closeDeleteModal()">ยกเลิก</button>
+      <button class="modal-btn confirm" onclick="confirmDelete()">ลบ</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="editModal">
+  <div class="modal-content">
+    <div class="modal-header">✏️ แก้ไขข้อมูลโอที</div>
+    <div class="modal-body">
+      <div class="field"><div class="lbl">วันที่</div><input type="text" id="editDate" placeholder="dd/MM/yyyy"></div>
+      <div class="tg" style="margin-top:12px">
+        <div class="field"><div class="lbl">เวลาเริ่ม</div><input type="time" id="editStartTime"></div>
+        <div class="field"><div class="lbl">เวลาสิ้นสุด</div><input type="time" id="editEndTime"></div>
+      </div>
+      <div class="field" style="margin-top:12px"><div class="lbl">รวมชั่วโมง</div><input type="text" id="editEmpTotal" placeholder="เช่น 1.50"></div>
+      <div class="field" style="margin-top:12px"><div class="lbl">หมายเหตุ</div><textarea id="editRemark" rows="2" placeholder="หมายเหตุ (ถ้ามี)"></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn cancel" onclick="closeEditModal()">ยกเลิก</button>
+      <button class="modal-btn confirm" onclick="confirmEdit()" style="background:var(--accent)">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ==========================================
+   SUPABASE CONFIG
+   หมายเหตุ: ตั้งชื่อตัวแปรว่า sb (ไม่ใช่ supabase)
+   เพราะ library ที่โหลดจาก CDN ประกาศชื่อ "supabase"
+   ไว้ใน global scope แล้ว ถ้าตั้งชื่อซ้ำจะ error ทันที
+   ========================================== */
+const SUPABASE_URL = 'https://gjmgzjsbgqaaxlpbyykt.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdqbWd6anNiZ3FhYXhscGJ5eWt0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwMjQyMjUsImV4cCI6MjEwMTYwMDIyNX0.wacphD2FPgaaETYc0N-Ze4q9gPr2BaO0MKNo9RBnlm0';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+var emp = null;
+var newCode = null;
+var searchTimer = null;
+var _currentList = [];
+var currentEditRow = null;
+var currentDeleteRow = null;
+var currentManager = null; // { token, department, name } หลังผ่านการตรวจสอบสิทธิ์
+
+function showLoading(){ var o=document.getElementById('loadingOverlay'); if(o) o.style.display='flex'; }
+function hideLoading(){ var o=document.getElementById('loadingOverlay'); if(o) o.style.display='none'; }
+function openMobileSidebar(){ document.getElementById('sidebar').classList.add('open-mobile'); document.getElementById('mobileOverlay').classList.add('active'); }
+function closeMobileSidebar(){ document.getElementById('sidebar').classList.remove('open-mobile'); document.getElementById('mobileOverlay').classList.remove('active'); }
+
+function today(){ var d=new Date(); return pad(d.getDate())+'/'+pad(d.getMonth()+1)+'/'+d.getFullYear(); }
+function pad(n){ return n<10 ? '0'+n : ''+n; }
+
+function thaiDate(d){
+  var days=['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
+  var mons=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  return 'วัน'+days[d.getDay()]+' '+d.getDate()+' '+mons[d.getMonth()]+' '+(d.getFullYear()+543);
+}
+
+function initials(name){
+  if (!name || name === 'undefined') return 'EMP';
+  var s = name.trim();
+  ['นางสาว','นาย','นาง','ด.ช.','ด.ญ.'].forEach(function(p){
+    if (s.indexOf(p) === 0) s = s.substring(p.length).trim();
+  });
+  return s.length >= 2 ? s.substring(0,2) : (s || 'EMP');
+}
+
+function toISODate(d){
+  if (!d) return null;
+  var p = d.split('/');
+  if (p.length !== 3) return d;
+  return p[2] + '-' + p[1].padStart(2,'0') + '-' + p[0].padStart(2,'0');
+}
+function isoToDisplay(iso){
+  if (!iso) return '';
+  var p = iso.split('-');
+  if (p.length !== 3) return iso;
+  return p[2] + '/' + p[1] + '/' + p[0];
+}
+
+function decToHHmm(dec){
+  if (!dec || dec <= 0) return '0:00';
+  var h = Math.floor(dec);
+  var m = Math.round((dec - h) * 60);
+  if (m === 60) { h++; m = 0; }
+  return h + ':' + (m < 10 ? '0'+m : ''+m);
+}
+
+function escapeHtml(str){
+  if (!str) return '';
+  return String(str).replace(/[&<>]/g, function(m){
+    if (m==='&') return '&amp;'; if (m==='<') return '&lt;'; if (m==='>') return '&gt;'; return m;
+  });
+}
+
+window.onload = async function(){
+  showLoading();
+  currentManager = await window.OTAuth.requireLogin();
+  hideLoading();
+  if (!currentManager) return; // ไม่ผ่านสิทธิ์ -> ถูกเด้งไปหน้า login แล้ว
+
+  document.getElementById('hdrUser').textContent =
+    (currentManager.department === 'ALL' ? 'ผู้ดูแลระบบ (ทุกแผนก)' : 'แผนก: ' + currentManager.department) +
+    ' · ' + currentManager.name;
+
+  var now = new Date();
+  document.getElementById('hdrDate').textContent = thaiDate(now);
+  document.getElementById('sumDate').textContent = thaiDate(now);
+  document.getElementById('workDate').value = today();
+  loadList();
+};
+
+document.getElementById('logoutBtn').addEventListener('click', function(){
+  window.OTAuth.logout();
+});
+
+function onEmpCodeInput(){
+  clearTimeout(searchTimer);
+  var code = document.getElementById('empCode').value.trim();
+
+  document.getElementById('ecard').classList.remove('on');
+  document.getElementById('subBtn').disabled = true;
+  emp = null;
+  hideAlert('err');
+
+  if (!code){ document.getElementById('searchIco').textContent = ''; return; }
+  document.getElementById('searchIco').textContent = '⏳';
+
+  searchTimer = setTimeout(async function(){
+    document.getElementById('searchIco').textContent = '🔄';
+    try {
+      const { data, error } = await sb.rpc('get_employee', { p_code: code, p_manager_token: currentManager.token });
+      document.getElementById('searchIco').textContent = '';
+      if (error) { showAlert('err', 'เกิดข้อผิดพลาด: ' + error.message); return; }
+      if (!data || !data.length) { showAlert('err', 'ไม่พบรหัสพนักงาน หรือพนักงานคนนี้ไม่ได้อยู่ในแผนกของท่าน'); return; }
+
+      var res = data[0];
+      emp = res;
+      document.getElementById('eav').textContent = initials(res.name);
+      document.getElementById('ename').textContent = res.name || '—';
+      document.getElementById('etag').textContent = 'รหัส: ' + (res.code || '—');
+      var t = '';
+      if (res.section)    t += '<span class="tag">📌 ' + escapeHtml(res.section) + '</span>';
+      if (res.department) t += '<span class="tag">🏢 ' + escapeHtml(res.department) + '</span>';
+      if (res.position)   t += '<span class="tag">👤 ' + escapeHtml(res.position) + '</span>';
+      document.getElementById('etags').innerHTML = t;
+      document.getElementById('ecard').classList.add('on');
+      document.getElementById('subBtn').disabled = false;
+    } catch (e) {
+      document.getElementById('searchIco').textContent = '⚠';
+      showAlert('err', 'เกิดข้อผิดพลาด: ' + e.message);
+    }
+  }, 600);
+}
+
+async function submitForm(){
+  if (!emp) { showAlert('err','กรุณากรอกรหัสพนักงาน'); return; }
+  var date     = document.getElementById('workDate').value.trim();
+  var start    = document.getElementById('startTime').value;
+  var end      = document.getElementById('endTime').value;
+  var empTotal = document.getElementById('empTotal').value.trim();
+
+  if (!date || !start || !end || !empTotal) { showAlert('err','กรุณากรอกข้อมูลให้ครบถ้วน'); return; }
+  if (!isValidEmpTotal(empTotal)) {
+    showAlert('err','รวมชั่วโมงต้องลงท้ายด้วย .00 หรือ .50 เท่านั้น เช่น 1.00, 1.50, 2.00');
+    document.getElementById('empTotal').focus(); return;
+  }
+  hideAlert('err');
+
+  var btn = document.getElementById('subBtn');
+  btn.textContent = '⏳ กำลังบันทึก...'; btn.disabled = true;
+
+  try {
+    const { error } = await sb.rpc('submit_ot', {
+      p_emp_code: emp.code,
+      p_date: toISODate(date),
+      p_start: start,
+      p_end: end,
+      p_emp_total: parseFloat(empTotal),
+      p_remark: document.getElementById('remark').value.trim(),
+      p_manager_token: currentManager.token
+    });
+    btn.textContent = '✔ ยืนยันการลงเวลาโอที';
+    if (!error) {
+      newCode = String(emp.code);
+      showAlert('ok','✓ บันทึกข้อมูลสำเร็จแล้ว');
+      setTimeout(function(){ hideAlert('ok'); }, 3500);
+      resetForm();
+      loadList();
+    } else {
+      btn.disabled = false;
+      showAlert('err','บันทึกไม่สำเร็จ: ' + error.message);
+    }
+  } catch (e) {
+    btn.textContent = '✔ ยืนยันการลงเวลาโอที'; btn.disabled = false;
+    showAlert('err','เกิดข้อผิดพลาด: ' + e.message);
+  }
+}
+
+function resetForm(){
+  document.getElementById('empCode').value = '';
+  document.getElementById('startTime').value = '';
+  document.getElementById('endTime').value = '';
+  document.getElementById('empTotal').value = '';
+  document.getElementById('remark').value = '';
+  document.getElementById('searchIco').textContent = '';
+  document.getElementById('ecard').classList.remove('on');
+  document.getElementById('subBtn').disabled = true;
+  document.getElementById('subBtn').textContent = '✔ ยืนยันการลงเวลาโอที';
+  document.getElementById('workDate').value = today();
+  emp = null;
+}
+
+async function loadList(){
+  document.getElementById('olist').innerHTML = '<div class="dots"><span></span><span></span><span></span></div>';
+  var todayISO = toISODate(today());
+
+  try {
+    const { data, error } = await sb.rpc('get_ot_report', {
+      p_manager_token: currentManager.token,
+      p_from: todayISO,
+      p_to: todayISO
+    });
+
+    if (error) throw error;
+
+    var rows = (data || []).slice().sort(function(a,b){ return a.id - b.id; });
+    _currentList = rows;
+
+    var dayTotal = rows.reduce(function(s,r){ return s + (Number(r.emp_total)||0); }, 0);
+
+    document.getElementById('cntEmp').textContent = rows.length;
+    document.getElementById('cntHr').textContent = decToHHmm(dayTotal);
+    document.getElementById('lhCnt').textContent = rows.length + ' คน';
+
+    renderList(_currentList);
+  } catch (e) {
+    document.getElementById('olist').innerHTML =
+      '<p style="color:var(--err);padding:20px;text-align:center;font-size:14px;">โหลดข้อมูลไม่สำเร็จ: ' + escapeHtml(e.message) + '</p>';
+  }
+}
+
+function renderList(list){
+  var el = document.getElementById('olist');
+  if (!list.length) {
+    el.innerHTML = '<div class="empty"><div class="eico">📋</div>' +
+      '<div class="etxt">ยังไม่มีพนักงานลงโอทีในวันนี้<br>บันทึกรายการแรกได้เลย</div></div>';
+    return;
+  }
+  var h = '';
+  for (var i = 0; i < list.length; i++) {
+    var r = list[i];
+    var cls = (String(r.emp_code) === String(newCode)) ? ' new' : '';
+    h += '<div class="oi' + cls + '">' +
+      '<div class="onum">' + (i+1) + '</div>' +
+      '<div class="oinf">' +
+        '<div class="oname">' + escapeHtml(r.emp_name||'—') + '</div>' +
+        '<div class="ocode">รหัส: ' + escapeHtml(r.emp_code||'—') + (r.remark ? ' · ' + escapeHtml(r.remark) : '') + '</div>' +
+      '</div>' +
+      '<div class="otm">' +
+        '<div class="orange">' + (r.start_time||'—') + ' – ' + (r.end_time||'—') + '</div>' +
+        '<div class="otot">⏱ ' + decToHHmm(Number(r.emp_total)) + '</div>' +
+      '</div>' +
+      '<div class="oi-actions">' +
+        '<button class="btn-action btn-edit" data-idx="' + i + '">✏️</button>' +
+        '<button class="btn-action btn-delete" data-idx="' + i + '">🗑️</button>' +
+      '</div>' +
+    '</div>';
+  }
+  el.innerHTML = h;
+  newCode = null;
+
+  el.querySelectorAll('.btn-edit').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      showEditModal(list[parseInt(this.getAttribute('data-idx'))]);
+    });
+  });
+  el.querySelectorAll('.btn-delete').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      showDeleteModal(list[parseInt(this.getAttribute('data-idx'))]);
+    });
+  });
+}
+
+function showAlert(type, msg){
+  var el = document.getElementById(type === 'err' ? 'alertErr' : 'alertOk');
+  el.textContent = msg; el.classList.add('on');
+}
+function hideAlert(type){
+  document.getElementById(type === 'err' ? 'alertErr' : 'alertOk').classList.remove('on');
+}
+
+function isValidEmpTotal(val){ return !!val && /^\d+(\.00|\.50)$/.test(val.trim()); }
+
+function validateEmpTotal(input){
+  input.value = input.value.replace(/[^0-9.]/g, '');
+  input.style.borderColor = (input.value && !isValidEmpTotal(input.value)) ? 'var(--err)' : '';
+}
+function fixEmpTotal(input){
+  var val = input.value.trim();
+  if (!val) return;
+  if (/^\d+$/.test(val)) input.value = val + '.00';
+  if (/^\d+\.5$/.test(val)) input.value = val + '0';
+  input.style.borderColor = isValidEmpTotal(input.value) ? 'var(--ok)' : 'var(--err)';
+}
+
+function showDeleteModal(rowData){
+  currentDeleteRow = rowData.id;
+  document.getElementById('deleteInfo').innerHTML =
+    '<strong>' + escapeHtml(rowData.emp_name) + '</strong><br>' +
+    'วันที่: ' + isoToDisplay(rowData.work_date) + '<br>' +
+    'เวลา: ' + rowData.start_time + ' - ' + rowData.end_time + '<br>' +
+    'รวม: ' + decToHHmm(Number(rowData.emp_total)) + ' ชั่วโมง';
+  document.getElementById('deleteModal').classList.add('active');
+}
+function closeDeleteModal(){
+  document.getElementById('deleteModal').classList.remove('active');
+  currentDeleteRow = null;
+}
+async function confirmDelete(){
+  if (currentDeleteRow === null) return;
+  showLoading();
+  try {
+    const { error } = await sb.rpc('delete_ot', { p_id: currentDeleteRow, p_manager_token: currentManager.token });
+    hideLoading();
+    if (!error) {
+      showAlert('ok', 'ลบข้อมูลสำเร็จ');
+      setTimeout(function(){ hideAlert('ok'); }, 2000);
+      loadList();
+    } else {
+      showAlert('err', 'ลบไม่สำเร็จ: ' + error.message);
+    }
+  } catch (e) {
+    hideLoading();
+    showAlert('err', 'เกิดข้อผิดพลาด: ' + e.message);
+  }
+  closeDeleteModal();
+}
+
+function showEditModal(rowData){
+  currentEditRow = rowData.id;
+  document.getElementById('editDate').value = isoToDisplay(rowData.work_date);
+  document.getElementById('editStartTime').value = rowData.start_time;
+  document.getElementById('editEndTime').value = rowData.end_time;
+  document.getElementById('editEmpTotal').value = Number(rowData.emp_total).toFixed(2);
+  document.getElementById('editRemark').value = rowData.remark || '';
+  document.getElementById('editModal').classList.add('active');
+}
+function closeEditModal(){
+  document.getElementById('editModal').classList.remove('active');
+  currentEditRow = null;
+}
+async function confirmEdit(){
+  if (currentEditRow === null) return;
+
+  var updatedData = {
+    date: document.getElementById('editDate').value.trim(),
+    startTime: document.getElementById('editStartTime').value,
+    endTime: document.getElementById('editEndTime').value,
+    empTotal: document.getElementById('editEmpTotal').value.trim(),
+    remark: document.getElementById('editRemark').value.trim()
+  };
+  if (!updatedData.date || !updatedData.startTime || !updatedData.endTime || !updatedData.empTotal) {
+    showAlert('err', 'กรุณากรอกข้อมูลให้ครบถ้วน'); return;
+  }
+  if (!/^\d+(\.00|\.50)$/.test(updatedData.empTotal)) {
+    showAlert('err', 'รวมชั่วโมงต้องลงท้ายด้วย .00 หรือ .50'); return;
+  }
+
+  showLoading();
+  try {
+    const { error } = await sb.rpc('update_ot', {
+      p_id: currentEditRow,
+      p_date: toISODate(updatedData.date),
+      p_start: updatedData.startTime,
+      p_end: updatedData.endTime,
+      p_emp_total: parseFloat(updatedData.empTotal),
+      p_remark: updatedData.remark,
+      p_manager_token: currentManager.token
+    });
+    hideLoading();
+    if (!error) {
+      showAlert('ok', 'แก้ไขข้อมูลสำเร็จ');
+      setTimeout(function(){ hideAlert('ok'); }, 2000);
+      loadList();
+    } else {
+      showAlert('err', 'แก้ไขไม่สำเร็จ: ' + error.message);
+    }
+  } catch (e) {
+    hideLoading();
+    showAlert('err', 'เกิดข้อผิดพลาด: ' + e.message);
+  }
+  closeEditModal();
+}
+
+document.getElementById('editModal').addEventListener('click', function(e){ if (e.target === this) closeEditModal(); });
+document.getElementById('deleteModal').addEventListener('click', function(e){ if (e.target === this) closeDeleteModal(); });
+
+  // ============================================================
+// check_before_ot_entry.js (ตัวอย่าง — เอาไปแปะในโค้ดฟอร์มกรอก OT ของ OT-Tracking)
+// เช็คก่อนบันทึก OT ว่าพนักงานคนนี้ถูกบล็อกอยู่หรือไม่ (แสดงข้อความเตือนทันที
+// ไม่ต้องรอ error จาก trigger ฝั่ง database ซึ่งเป็นแค่ด่านสุดท้ายกันพลาด)
+// ============================================================
+
+async function checkTransferBlock(employeeCode) {
+  const { data, error } = await sb // sb = Supabase client ของ OT-Tracking (คนละตัวกับระบบโอนย้าย)
+    .from('transfer_block_status')
+    .select('is_blocked')
+    .eq('employee_code', employeeCode)
+    .maybeSingle();
+
+  if (error) {
+    console.error('เช็คสถานะบล็อกไม่สำเร็จ:', error);
+    return false; // เช็คไม่ได้ ปล่อยผ่านไปก่อน ไม่บล็อกการทำงานทั้งระบบ
+  }
+  return data?.is_blocked === true;
+}
+
+// ตัวอย่างการใช้งานก่อน submit ฟอร์ม OT
+// (ในฟอร์มจริงของ OT-Tracking ตัวแปรนี้คือค่าจากช่อง emp_code)
+async function onSubmitOtForm(empCode) {
+  const blocked = await checkTransferBlock(empCode);
+  if (blocked) {
+    alert('พนักงานรหัส ' + empCode + ' อยู่ระหว่างรอการอนุมัติโอนย้าย ไม่สามารถกรอก OT ได้ในขณะนี้');
+    return; // หยุด ไม่ insert ข้อมูล OT
+  }
+  // ... โค้ด insert เข้าตาราง ot_records ต่อตามปกติ
+}
+
+  
+</script>
+</body>
+</html>

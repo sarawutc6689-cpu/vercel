@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MouldMate OT — Over Time</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@500;600;700;800&family=Sarabun:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+  :root{
+    --black:#0a0a0a;
+    --black-2:#131313;
+    --panel:#161616;
+    --panel-hi:#1d1d1d;
+    --line:#2a2a2a;
+    --red:#ff1e2d;
+    --red-dim:#8f0e17;
+    --red-glow:rgba(255,30,45,.35);
+    --paper:#f3f1ee;
+    --muted:#8a8a8a;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    background:var(--black);
+    color:var(--paper);
+    font-family:'Sarabun',sans-serif;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    position:relative;
+    overflow-x:hidden;
+  }
+  ::selection{background:var(--red);color:#0a0a0a;}
+
+  /* ambient red glow */
+  body::before{
+    content:"";
+    position:fixed;
+    top:-20%;left:50%;
+    transform:translateX(-50%);
+    width:1100px;height:700px;
+    background:radial-gradient(ellipse at center, var(--red-glow), transparent 65%);
+    opacity:.35;
+    pointer-events:none;
+    z-index:0;
+  }
+
+  /* hazard stripe accent */
+  .hazard{
+    height:6px;width:100%;
+    background-image:repeating-linear-gradient(
+      115deg,
+      var(--red) 0px, var(--red) 14px,
+      #0a0a0a 14px, #0a0a0a 28px
+    );
+  }
+
+  header{
+    position:relative;
+    z-index:2;
+    padding:44px 6vw 30px;
+    text-align:center;
+  }
+  .eyebrow{
+    font-family:'JetBrains Mono',monospace;
+    font-size:.72rem;
+    letter-spacing:.22em;
+    text-transform:uppercase;
+    color:var(--red);
+  }
+  header h1{
+    font-family:'Kanit',sans-serif;
+    font-weight:800;
+    font-size:clamp(1.8rem,4.4vw,2.8rem);
+    letter-spacing:-.01em;
+    margin-top:10px;
+    color:var(--paper);
+  }
+  header p{
+    color:var(--muted);
+    font-size:.92rem;
+    margin-top:12px;
+  }
+
+  main{
+    position:relative;
+    z-index:2;
+    flex:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px 6vw 60px;
+  }
+
+  .grid3{
+    display:grid;
+    grid-template-columns:repeat(4,minmax(200px,270px));
+    gap:24px;
+    width:100%;
+    max-width:1180px;
+  }
+
+  .card{
+    position:relative;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:22px;
+    padding:38px 26px 30px;
+    text-decoration:none;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    text-align:center;
+    gap:16px;
+    transition:transform .28s ease, border-color .28s ease, box-shadow .28s ease, background .28s ease;
+    overflow:hidden;
+  }
+  .card::after{
+    content:"";
+    position:absolute;
+    left:0;right:0;bottom:0;
+    height:4px;
+    background:var(--red);
+    transform:scaleX(0);
+    transform-origin:left;
+    transition:transform .3s ease;
+  }
+  .card:hover{
+    transform:translateY(-8px);
+    border-color:var(--red-dim);
+    background:var(--panel-hi);
+    box-shadow:0 30px 50px -22px var(--red-glow);
+  }
+  .card:hover::after{transform:scaleX(1);}
+
+  .card-index{
+    position:absolute;
+    top:18px;left:20px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:.68rem;
+    color:var(--muted);
+    letter-spacing:.08em;
+  }
+
+  .card-icon{
+    width:82px;height:82px;
+    border-radius:24px;
+    background:var(--black-2);
+    border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center;
+    font-size:2.1rem;
+    color:var(--red);
+    transition:background .28s, color .28s, transform .28s;
+  }
+  .card:hover .card-icon{
+    background:var(--red);
+    color:#0a0a0a;
+    transform:scale(1.06) rotate(-2deg);
+  }
+
+  .card h2{
+    font-family:'Kanit',sans-serif;
+    font-weight:700;
+    font-size:1.35rem;
+    color:var(--paper);
+  }
+  .card p{
+    font-size:.84rem;
+    color:var(--muted);
+    line-height:1.5;
+  }
+  .card-cta{
+    margin-top:6px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:.72rem;
+    color:var(--red);
+    display:flex;
+    align-items:center;
+    gap:8px;
+    letter-spacing:.05em;
+  }
+  .card-cta i{transition:transform .22s;}
+  .card:hover .card-cta i{transform:translateX(4px);}
+
+  footer{
+    position:relative;
+    z-index:2;
+    border-top:1px solid var(--line);
+    padding:22px 6vw 28px;
+    text-align:center;
+    color:var(--muted);
+    font-size:.75rem;
+  }
+  footer .ver{
+    font-family:'JetBrains Mono',monospace;
+    opacity:.6;
+    margin-top:6px;
+  }
+
+  @media(max-width:980px){
+    .grid3{grid-template-columns:repeat(2,minmax(200px,280px));max-width:620px;}
+  }
+  @media(max-width:520px){
+    .grid3{grid-template-columns:1fr;max-width:380px;}
+  }
+</style>
+</head>
+<body>
+
+  <div class="hazard"></div>
+  <header>
+    <div class="eyebrow">MouldMate · Internal Access</div>
+    <h1>ระบบเข้าใช้งาน</h1>
+    <p>เลือกเมนูที่ต้องการ — คู่มือ / โอที / Executive Dashboard / สรุปรายงาน OT</p>
+  </header>
+
+  <main>
+    <div class="grid3">
+
+      <a class="card" href="https://sarawutc6689-cpu.github.io/Mouldmate-HR/OT/help.html" target="_blank" rel="noopener">
+        <div class="card-index">01</div>
+        <div class="card-icon"><i class="fa-solid fa-book-open"></i></div>
+        <h2>คู่มือ</h2>
+        <p>ขั้นตอนการใช้งานระบบ อธิบายพร้อมภาพประกอบ</p>
+        <div class="card-cta">เปิดคู่มือ <i class="fa-solid fa-arrow-right"></i></div>
+      </a>
+
+      <a class="card" href="https://sarawutc6689-cpu.github.io/Mouldmate-HR/OT/manager-login.html" target="_blank" rel="noopener">
+        <div class="card-index">02</div>
+        <div class="card-icon"><i class="fa-solid fa-clock"></i></div>
+        <h2>โอที</h2>
+        <p>ขอและอนุมัติค่าล่วงเวลา ระบบรวมทุกส่วนงาน</p>
+        <div class="card-cta">เข้าสู่ระบบโอที <i class="fa-solid fa-arrow-right"></i></div>
+      </a>
+
+      <a class="card" href="https://sarawutc6689-cpu.github.io/Mouldmate-HR/OT/dashboard.html" target="_blank" rel="noopener">
+        <div class="card-index">03</div>
+        <div class="card-icon"><i class="fa-solid fa-chart-simple"></i></div>
+        <h2>Executive Dashboard</h2>
+        <p>สรุปข้อมูลแบบ Real-time ระดับผู้บริหาร</p>
+        <div class="card-cta">ดูแดชบอร์ด <i class="fa-solid fa-arrow-right"></i></div>
+      </a>
+
+      <a class="card" href="https://sarawutc6689-cpu.github.io/Mouldmate-HR/OT/report.html" target="_blank" rel="noopener">
+        <div class="card-index">04</div>
+        <div class="card-icon"><i class="fa-solid fa-chart-bar"></i></div>
+        <h2>สรุปรายงาน OT</h2>
+        <p>ข้อมูลโอทีรวมทุกส่วนงาน</p>
+        <div class="card-cta">ดูสรุป OT <i class="fa-solid fa-arrow-right"></i></div>
+      </a>
+
+    </div>
+  </main>
+
+  <footer>
+    <div>&reg; 2026 ระบบบริหารจัดการ-ขอโอที · พัฒนาโดย Sarawut.C</div>
+    <div class="ver">Version 3.0  | ปรับปรุงล่าสุด 18 สิงหาคม 2569</div>
+  </footer>
+
+</body>
+</html>

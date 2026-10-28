@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>จัดการพนักงาน - OT Time Tracking</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="auth.js"></script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Sarabun', sans-serif; background:#eef2f7; min-height:100vh; }
+
+:root {
+  --bg:#eef2f7; --surface:#ffffff; --card:#f5f8fc; --border:#d0daea;
+  --focus:#2563eb; --accent:#1d4ed8; --accent-lt:#eff6ff; --header:#1e3a8a;
+  --ok:#059669; --ok-lt:#ecfdf5; --err:#dc2626; --err-lt:#fef2f2;
+  --t1:#0f172a; --t2:#475569; --t3:#94a3b8;
+  --r:10px; --rs:7px; --sh:0 1px 4px rgba(30,58,138,0.08); --sh-md:0 4px 16px rgba(30,58,138,0.10);
+}
+
+#loadingOverlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:9999;display:none;align-items:center;justify-content:center;backdrop-filter:blur(3px)}
+.loading-spinner{background:#fff;padding:20px 30px;border-radius:12px;display:flex;flex-direction:column;align-items:center;gap:12px;box-shadow:0 4px 20px rgba(0,0,0,0.15)}
+.spinner{width:40px;height:40px;border:3px solid #e2e8f0;border-top-color:#1e3a8a;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:14px;color:#1e3a8a;font-weight:500}
+
+/* SIDEBAR */
+.sidebar{position:fixed;top:0;left:0;width:260px;height:100vh;background:linear-gradient(180deg,#0f2b4d 0%,#0a1e38 100%);color:#fff;z-index:1000;box-shadow:2px 0 12px rgba(0,0,0,0.15);overflow-y:auto}
+.sidebar-header{padding:20px 16px;border-bottom:1px solid rgba(255,255,255,0.1);margin-bottom:20px}
+.sidebar-header .logo-area{display:flex;align-items:center;gap:12px}
+.sidebar-header .logo-icon{width:40px;height:40px;background:rgba(255,255,255,0.15);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;flex-shrink:0}
+.sidebar-header .logo-text{font-size:18px;font-weight:700;letter-spacing:1px}
+.sidebar-header .logo-sub{font-size:10px;color:rgba(255,255,255,0.6);margin-top:4px}
+.sidebar-nav{padding:0 12px}
+.nav-item{margin-bottom:4px}
+.nav-link{display:flex;align-items:center;gap:14px;padding:12px 16px;border-radius:12px;color:rgba(255,255,255,0.75);text-decoration:none;transition:all .2s ease;font-size:15px;font-weight:500}
+.nav-link:hover{background:rgba(255,255,255,0.1);color:#fff}
+.nav-link.active{background:rgba(59,130,246,0.3);color:#fff;border-left:3px solid #3b82f6}
+.nav-icon{font-size:20px;width:28px;text-align:center;flex-shrink:0}
+.nav-text{white-space:nowrap}
+.sidebar-footer{position:absolute;bottom:0;left:0;right:0;padding:20px 16px;border-top:1px solid rgba(255,255,255,0.1);font-size:11px;color:rgba(255,255,255,0.5);text-align:center}
+.sidebar::-webkit-scrollbar{width:4px}
+.sidebar::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.2);border-radius:4px}
+.main-content{margin-left:260px;min-height:100vh}
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%);transition:transform .3s ease}
+  .sidebar.open-mobile{transform:translateX(0)}
+  .main-content{margin-left:0}
+  .menu-toggle{position:fixed;left:16px;top:16px;width:40px;height:40px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:1001;box-shadow:0 2px 8px rgba(0,0,0,0.1);font-size:20px;color:#1e3a8a}
+  .mobile-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:999;display:none}
+  .mobile-overlay.active{display:block}
+}
+@media(min-width:769px){ .menu-toggle,.mobile-overlay{display:none} }
+
+/* HEADER */
+.hdr{background:var(--header);height:62px;padding:0 28px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 10px rgba(30,58,138,0.22);flex-wrap:wrap;gap:10px;margin-bottom:20px}
+.hdr-l{display:flex;align-items:center;gap:14px}
+.logo{width:38px;height:38px;border-radius:8px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff}
+.hdr-title{font-size:17px;font-weight:700;color:#fff}
+.hdr-sub{font-size:12px;color:rgba(255,255,255,0.6);margin-top:2px}
+.hdr-r{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.hdr-user{font-size:13px;color:rgba(255,255,255,0.85);background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);padding:6px 14px;border-radius:6px}
+.hdr-logout{font-size:13px;font-weight:700;color:#fff;background:rgba(220,38,38,0.25);border:1px solid rgba(248,113,113,0.5);padding:6px 14px;border-radius:6px;cursor:pointer;font-family:inherit;transition:background .15s}
+.hdr-logout:hover{background:rgba(220,38,38,0.4)}
+
+.page{padding:0 24px 20px 24px;display:flex;flex-direction:column;gap:18px}
+
+.grid2{display:grid;grid-template-columns:380px 1fr;gap:18px;align-items:start}
+@media(max-width:900px){ .grid2{grid-template-columns:1fr} }
+
+/* PANEL (ฟอร์มเพิ่มพนักงาน) */
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden}
+.ph{padding:16px 22px;border-bottom:1px solid var(--border);background:var(--card);display:flex;align-items:center;gap:12px}
+.phi{width:34px;height:34px;border-radius:8px;background:#dbeafe;display:flex;align-items:center;justify-content:center;font-size:17px}
+.ph-title{font-size:16px;font-weight:700;color:var(--t1)}
+.ph-sub{font-size:12px;color:var(--t3);margin-top:2px}
+.pb{padding:20px 22px;display:flex;flex-direction:column;gap:16px}
+
+.field{display:flex;flex-direction:column;gap:7px}
+.lbl{font-size:12px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.7px}
+input[type="text"],select{width:100%;background:#fff;border:1.5px solid var(--border);border-radius:var(--rs);padding:11px 14px;font-size:15px;font-family:inherit;color:var(--t1);transition:border-color .18s,box-shadow .18s;outline:none}
+input[type="text"]:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(37,99,235,0.1)}
+input[type="text"]:disabled,select:disabled{background:var(--card);color:var(--t3);cursor:not-allowed}
+
+.btn-sub{width:100%;padding:13px;background:var(--accent);color:#fff;border:none;border-radius:var(--rs);font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .18s}
+.btn-sub:hover:not(:disabled){background:#1d40b0}
+.btn-sub:disabled{background:#93c5fd;cursor:not-allowed}
+
+.alert{padding:10px 14px;border-radius:var(--rs);font-size:14px;display:none}
+.alert.err{background:var(--err-lt);border:1px solid #fecaca;color:var(--err)}
+.alert.ok{background:var(--ok-lt);border:1px solid #a7f3d0;color:var(--ok)}
+.alert.on{display:block;animation:fu .2s ease}
+@keyframes fu{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
+
+/* LIST SECTION */
+.section{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden}
+.sec-hdr{padding:14px 20px;border-bottom:1px solid var(--border);background:var(--card);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.sec-title{font-size:14px;font-weight:700;color:var(--t1)}
+.sec-badge{font-size:11px;font-weight:700;color:var(--accent);background:var(--accent-lt);border:1px solid #bfdbfe;padding:3px 10px;border-radius:4px}
+.sec-search{padding:7px 12px;border:1.5px solid var(--border);border-radius:var(--rs);font-size:13px;font-family:inherit;outline:none;min-width:200px}
+.sec-search:focus{border-color:var(--focus)}
+
+table{width:100%;border-collapse:collapse}
+thead tr{background:var(--card)}
+th{padding:11px 16px;text-align:left;font-size:12px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:11px 16px;font-size:14px;border-bottom:1px solid var(--bg);vertical-align:middle}
+td.mono{font-family:monospace;font-size:13px}
+tbody tr:hover{background:#f8faff}
+tbody tr:last-child td{border-bottom:none}
+.dept-badge{font-size:11px;color:var(--t2);background:var(--card);border:1px solid var(--border);padding:2px 8px;border-radius:4px}
+
+.list-wrap{max-height:560px;overflow-y:auto}
+.list-wrap::-webkit-scrollbar{width:6px}
+.list-wrap::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+.empty-box{padding:40px;text-align:center;color:var(--t3)}
+.empty-box .eico{font-size:26px;margin-bottom:10px}
+.dots{display:flex;gap:6px;align-items:center;justify-content:center;padding:32px}
+.dots span{width:8px;height:8px;border-radius:50%;background:#93c5fd;animation:bc 1.2s infinite}
+.dots span:nth-child(2){animation-delay:.2s} .dots span:nth-child(3){animation-delay:.4s}
+@keyframes bc{0%,80%,100%{transform:scale(.7);opacity:.4}40%{transform:scale(1);opacity:1}}
+
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+</style>
+</head>
+<body>
+
+<div id="loadingOverlay">
+  <div class="loading-spinner">
+    <div class="spinner"></div>
+    <div class="loading-text">กำลังโหลด...</div>
+  </div>
+</div>
+
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="logo-area">
+      <div class="logo-icon">OT</div>
+      <div>
+        <div class="logo-text">OT-Time Tracking</div>
+        <div class="logo-sub">ระบบลงเวลาโอที</div>
+      </div>
+    </div>
+  </div>
+  <div class="sidebar-nav">
+    <div class="nav-item"><a href="index.html" class="nav-link"><span class="nav-icon">📝</span><span class="nav-text">บันทึกโอที</span></a></div>
+    <div class="nav-item"><a href="report.html" class="nav-link"><span class="nav-icon">📊</span><span class="nav-text">รายงานโอที</span></a></div>
+    <div class="nav-item"><a href="dashboard.html" class="nav-link"><span class="nav-icon">📈</span><span class="nav-text">Dashboard</span></a></div>
+    <div class="nav-item"><a href="manage.html" class="nav-link"><span class="nav-icon">🛠️</span><span class="nav-text">แก้ไขข้อมูลย้อนหลัง</span></a></div>
+    <div class="nav-item"><a href="employees.html" class="nav-link"><span class="nav-icon">👥</span><span class="nav-text">เพิ่มพนักงาน</span></a></div>
+    <div class="nav-item"><a href="help.html" class="nav-link"><span class="nav-icon">📖</span><span class="nav-text">คู่มือการใช้งาน</span></a></div>
+  </div>
+  <div class="sidebar-footer">
+    <div>ระบบบันทึกเวลาทำงานล่วงเวลา</div>
+    <div style="margin-top:6px">พัฒนาโดย Sarawut.C</div>
+  </div>
+</div>
+
+<div class="menu-toggle" id="menuToggle" onclick="openMobileSidebar()">☰</div>
+<div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileSidebar()"></div>
+
+<div class="main-content">
+  <header class="hdr">
+    <div class="hdr-l">
+      <div class="logo">OT</div>
+      <div>
+        <div class="hdr-title">จัดการพนักงาน</div>
+        <div class="hdr-sub">เพิ่มรหัสพนักงานใหม่เข้าระบบ ไม่ต้องเข้า Supabase</div>
+      </div>
+    </div>
+    <div class="hdr-r">
+      <div class="hdr-user" id="hdrUser">—</div>
+      <button class="hdr-logout" id="logoutBtn" type="button">ออกจากระบบ</button>
+    </div>
+  </header>
+
+  <div class="page">
+    <div class="grid2">
+
+      <!-- FORM เพิ่มพนักงาน -->
+      <div class="panel">
+        <div class="ph">
+          <div class="phi">➕</div>
+          <div>
+            <div class="ph-title">เพิ่มพนักงานใหม่</div>
+            <div class="ph-sub">กรอกข้อมูลให้ครบแล้วกดบันทึก</div>
+          </div>
+        </div>
+        <div class="pb">
+          <div class="alert err" id="alertErr"></div>
+          <div class="alert ok" id="alertOk"></div>
+
+          <div class="field">
+            <div class="lbl">รหัสพนักงาน *</div>
+            <input type="text" id="newCode" placeholder="เช่น 900010" autocomplete="off">
+          </div>
+          <div class="field">
+            <div class="lbl">ชื่อ-สกุล *</div>
+            <input type="text" id="newName" placeholder="เช่น นายสมชาย ใจดี" autocomplete="off">
+          </div>
+          <div class="field">
+            <div class="lbl">ฝ่าย</div>
+            <input type="text" id="newSection" placeholder="เช่น ขายต่างประเทศ" autocomplete="off">
+          </div>
+          <div class="field">
+            <div class="lbl">แผนก</div>
+            <select id="newDept"></select>
+          </div>
+          <div class="field">
+            <div class="lbl">ตำแหน่ง</div>
+            <input type="text" id="newPosition" placeholder="เช่น เจ้าหน้าที่ขายต่างประเทศ" autocomplete="off">
+          </div>
+
+          <button class="btn-sub" id="addBtn" onclick="addEmployee()">✔ บันทึกพนักงานใหม่</button>
+        </div>
+      </div>
+
+      <!-- LIST พนักงานทั้งหมด -->
+      <div class="section">
+        <div class="sec-hdr">
+          <div class="sec-title">รายชื่อพนักงานในระบบ</div>
+          <input type="text" class="sec-search" id="searchBox" placeholder="ค้นหารหัส/ชื่อ...">
+          <div class="sec-badge" id="listBadge">0 คน</div>
+        </div>
+        <div class="list-wrap">
+          <table>
+            <thead>
+              <tr><th>รหัส</th><th>ชื่อ-สกุล</th><th>ฝ่าย</th><th>แผนก</th><th>ตำแหน่ง</th></tr>
+            </thead>
+            <tbody id="listBody">
+              <tr><td colspan="5"><div class="dots"><span></span><span></span><span></span></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://gjmgzjsbgqaaxlpbyykt.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdqbWd6anNiZ3FhYXhscGJ5eWt0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwMjQyMjUsImV4cCI6MjEwMTYwMDIyNX0.wacphD2FPgaaETYc0N-Ze4q9gPr2BaO0MKNo9RBnlm0';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+var currentManager = null;
+var _allEmployees = [];
+
+function showLoading(){ var o=document.getElementById('loadingOverlay'); if(o) o.style.display='flex'; }
+function hideLoading(){ var o=document.getElementById('loadingOverlay'); if(o) o.style.display='none'; }
+function openMobileSidebar(){ document.getElementById('sidebar').classList.add('open-mobile'); document.getElementById('mobileOverlay').classList.add('active'); }
+function closeMobileSidebar(){ document.getElementById('sidebar').classList.remove('open-mobile'); document.getElementById('mobileOverlay').classList.remove('active'); }
+
+function escapeHtml(str){
+  if (!str) return '';
+  return String(str).replace(/[&<>]/g, function(m){
+    if (m==='&') return '&amp;'; if (m==='<') return '&lt;'; if (m==='>') return '&gt;'; return m;
+  });
+}
+
+function showAlert(type, msg){
+  var el = document.getElementById(type === 'err' ? 'alertErr' : 'alertOk');
+  el.textContent = msg; el.classList.add('on');
+  setTimeout(function(){ el.classList.remove('on'); }, type === 'err' ? 5000 : 3000);
+}
+
+/* จำกัดให้เข้าหน้านี้ได้เฉพาะ manager_code นี้เท่านั้น
+   (การเช็คจริงที่ป้องกันได้แน่นอนอยู่ในฟังก์ชัน add_employee/list_employees
+   ฝั่ง Supabase แล้ว อันนี้แค่กันไม่ให้คนอื่นเห็นหน้าฟอร์มโดยไม่จำเป็น) */
+const ALLOWED_MANAGER_CODE = '104058';
+
+window.onload = async function(){
+  showLoading();
+  currentManager = await window.OTAuth.requireLogin();
+  hideLoading();
+  if (!currentManager) return;
+
+  if (currentManager.token !== ALLOWED_MANAGER_CODE) {
+    document.body.innerHTML =
+      '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;' +
+      'min-height:100vh;gap:16px;font-family:\'Sarabun\',sans-serif;text-align:center;padding:24px">' +
+      '<div style="font-size:48px">🚫</div>' +
+      '<div style="font-size:18px;font-weight:700;color:#0f172a">ไม่มีสิทธิ์เข้าถึงหน้านี้</div>' +
+      '<div style="font-size:14px;color:#64748b">หน้าจัดการพนักงานจำกัดสิทธิ์เฉพาะผู้ดูแลระบบเท่านั้น</div>' +
+      '<a href="index.html" style="margin-top:8px;padding:10px 24px;background:#1d4ed8;color:#fff;' +
+      'border-radius:7px;text-decoration:none;font-weight:600">กลับหน้าแรก</a></div>';
+    return;
+  }
+
+  document.getElementById('hdrUser').textContent =
+    (currentManager.department === 'ALL' ? 'ผู้ดูแลระบบ (ทุกแผนก)' : 'แผนก: ' + currentManager.department) +
+    ' · ' + currentManager.name;
+
+  setupDeptField();
+  loadEmployees();
+};
+
+document.getElementById('logoutBtn').addEventListener('click', function(){
+  window.OTAuth.logout();
+});
+document.getElementById('searchBox').addEventListener('input', renderFilteredList);
+
+/* ตั้งค่าช่องเลือกแผนกตามสิทธิ์ของ manager */
+function setupDeptField(){
+  var sel = document.getElementById('newDept');
+  if (currentManager.department === 'ALL') {
+    // ผู้ดูแลระบบ: ให้เลือกจากแผนกที่มีอยู่แล้ว + พิมพ์แผนกใหม่ได้
+    sel.outerHTML = '<input type="text" id="newDept" list="deptList" placeholder="เลือกหรือพิมพ์ชื่อแผนกใหม่" autocomplete="off">' +
+                     '<datalist id="deptList"></datalist>';
+  } else {
+    // manager แผนกเฉพาะ: จำกัดตัวเลือกตามสิทธิ์เท่านั้น
+    var scope = currentManager.department.split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+    sel.innerHTML = scope.map(function(d){ return '<option value="' + escapeHtml(d) + '">' + escapeHtml(d) + '</option>'; }).join('');
+    if (scope.length === 1) sel.disabled = true; // มีแผนกเดียว ไม่ต้องให้เลือก
+  }
+}
+
+async function loadEmployees(){
+  document.getElementById('listBody').innerHTML = '<tr><td colspan="5"><div class="dots"><span></span><span></span><span></span></div></td></tr>';
+  try {
+    const { data, error } = await sb.rpc('list_employees', { p_manager_token: currentManager.token });
+    if (error) throw error;
+    _allEmployees = data || [];
+
+    // เติม datalist แผนก (กรณี ALL) จากข้อมูลที่มีอยู่จริง
+    var deptListEl = document.getElementById('deptList');
+    if (deptListEl) {
+      var depts = Array.from(new Set(_allEmployees.map(function(e){ return e.department; }).filter(Boolean))).sort();
+      deptListEl.innerHTML = depts.map(function(d){ return '<option value="' + escapeHtml(d) + '">'; }).join('');
+    }
+
+    renderFilteredList();
+  } catch (e) {
+    document.getElementById('listBody').innerHTML =
+      '<tr><td colspan="5"><div class="empty-box"><div class="eico">⚠️</div>โหลดรายชื่อไม่สำเร็จ: ' + escapeHtml(e.message) + '</div></td></tr>';
+  }
+}
+
+function renderFilteredList(){
+  var q = document.getElementById('searchBox').value.trim().toLowerCase();
+  var list = !q ? _allEmployees : _allEmployees.filter(function(e){
+    return (e.code||'').toLowerCase().indexOf(q) !== -1 || (e.name||'').toLowerCase().indexOf(q) !== -1;
+  });
+
+  document.getElementById('listBadge').textContent = list.length + ' คน';
+
+  if (!list.length) {
+    document.getElementById('listBody').innerHTML =
+      '<tr><td colspan="5"><div class="empty-box"><div class="eico">👥</div>ไม่พบพนักงาน</div></td></tr>';
+    return;
+  }
+
+  var h = list.map(function(e){
+    return '<tr>' +
+      '<td class="mono">' + escapeHtml(e.code) + '</td>' +
+      '<td>' + escapeHtml(e.name) + '</td>' +
+      '<td>' + escapeHtml(e.section||'—') + '</td>' +
+      '<td><span class="dept-badge">' + escapeHtml(e.department||'—') + '</span></td>' +
+      '<td>' + escapeHtml(e.position||'—') + '</td>' +
+    '</tr>';
+  }).join('');
+  document.getElementById('listBody').innerHTML = h;
+}
+
+async function addEmployee(){
+  var code = document.getElementById('newCode').value.trim();
+  var name = document.getElementById('newName').value.trim();
+  var dept = document.getElementById('newDept').value.trim();
+  var section = document.getElementById('newSection').value.trim();
+  var position = document.getElementById('newPosition').value.trim();
+
+  if (!code || !name || !dept) {
+    showAlert('err', 'กรุณากรอกรหัสพนักงาน ชื่อ-สกุล และแผนกให้ครบ');
+    return;
+  }
+
+  var btn = document.getElementById('addBtn');
+  btn.textContent = '⏳ กำลังบันทึก...'; btn.disabled = true;
+
+  try {
+    const { error } = await sb.rpc('add_employee', {
+      p_manager_token: currentManager.token,
+      p_code: code,
+      p_name: name,
+      p_section: section,
+      p_department: dept,
+      p_position: position
+    });
+    btn.textContent = '✔ บันทึกพนักงานใหม่'; btn.disabled = false;
+
+    if (!error) {
+      showAlert('ok', '✓ เพิ่มพนักงาน "' + name + '" สำเร็จแล้ว');
+      document.getElementById('newCode').value = '';
+      document.getElementById('newName').value = '';
+      document.getElementById('newSection').value = '';
+      document.getElementById('newPosition').value = '';
+      document.getElementById('newDept').value = '';
+      loadEmployees();
+    } else {
+      showAlert('err', 'เพิ่มไม่สำเร็จ: ' + error.message);
+    }
+  } catch (e) {
+    btn.textContent = '✔ บันทึกพนักงานใหม่'; btn.disabled = false;
+    showAlert('err', 'เกิดข้อผิดพลาด: ' + e.message);
+  }
+}
+</script>
+</body>
+</html>
