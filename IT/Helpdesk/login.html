@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IT Helpdesk · เข้าสู่ระบบ</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Sarabun', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary: #2F7FB8;
+            --primary-light: #E7F2FB;
+            --primary-soft: #DCE9F5;
+            --primary-bg: #F7FBFE;
+            --white: #ffffff;
+            --gray-50: #f8fafc;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e1;
+            --gray-600: #475569;
+            --gray-700: #334155;
+            --gray-800: #1e293b;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        body {
+            background: var(--primary-bg);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-container {
+            max-width: 420px;
+            width: 100%;
+        }
+
+        .login-card {
+            background: var(--white);
+            border-radius: 28px;
+            padding: 40px 32px;
+            box-shadow: 0 20px 40px rgba(43, 110, 211, 0.1);
+            border: 1px solid var(--gray-200);
+            backdrop-filter: blur(10px);
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .login-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--primary-light);
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            color: var(--primary);
+            font-size: 40px;
+        }
+
+        .login-header h1 {
+            color: var(--gray-800);
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .login-header p {
+            color: var(--gray-600);
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--gray-700);
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .input-group {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 16px;
+            color: var(--gray-400);
+            font-size: 16px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 14px 20px 14px 48px;
+            border: 1.5px solid var(--gray-200);
+            border-radius: 16px;
+            font-size: 14px;
+            transition: all 0.2s;
+            background: var(--gray-50);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: var(--white);
+            box-shadow: 0 0 0 4px var(--primary-light);
+        }
+
+        .form-input::placeholder {
+            color: var(--gray-400);
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 16px;
+            color: var(--gray-400);
+            cursor: pointer;
+            font-size: 16px;
+            transition: color 0.2s;
+        }
+
+        .toggle-password:hover {
+            color: var(--primary);
+        }
+
+        .remember-forgot {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            margin-bottom: 24px;
+            font-size: 13px;
+        }
+
+        .forgot-link {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .forgot-link:hover {
+            text-decoration: underline;
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .btn-login:hover {
+            background: #1e5bbf;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(43, 110, 211, 0.3);
+        }
+
+        .btn-login:active {
+            transform: translateY(0);
+        }
+
+        .btn-login i {
+            font-size: 18px;
+        }
+
+        .login-divider {
+            position: relative;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .login-divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: var(--gray-200);
+        }
+
+        .login-divider span {
+            position: relative;
+            background: var(--white);
+            padding: 0 12px;
+            color: var(--gray-600);
+            font-size: 12px;
+        }
+
+        .demo-accounts {
+            background: var(--gray-50);
+            border-radius: 16px;
+            padding: 16px;
+            margin-top: 20px;
+        }
+
+        .demo-title {
+            font-size: 12px;
+            color: var(--gray-600);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .demo-title i {
+            color: var(--warning);
+        }
+
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .demo-item {
+            background: var(--white);
+            border: 1px solid var(--gray-200);
+            border-radius: 12px;
+            padding: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .demo-item:hover {
+            border-color: var(--primary);
+            background: var(--primary-light);
+        }
+
+        .demo-role {
+            font-weight: 600;
+            color: var(--gray-800);
+            font-size: 12px;
+            margin-bottom: 2px;
+        }
+
+        .demo-pass {
+            color: var(--gray-600);
+            font-size: 10px;
+        }
+
+        .login-footer {
+            text-align: center;
+            margin-top: 24px;
+            color: var(--gray-600);
+            font-size: 12px;
+        }
+
+        .login-footer a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .login-footer a:hover {
+            text-decoration: underline;
+        }
+
+        .alert {
+            background: #fef2f2;
+            border: 1px solid #fee2e2;
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 20px;
+            color: var(--danger);
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .alert i {
+            font-size: 16px;
+        }
+
+        .alert.success {
+            background: #ecfdf5;
+            border-color: #d1fae5;
+            color: #065f46;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 480px) {
+            .login-card {
+                padding: 30px 20px;
+            }
+
+            .demo-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="login-icon">
+                    <i class="fas fa-headset"></i>
+                </div>
+                <h1>IT Helpdesk</h1>
+                <p>ระบบแจ้งซ่อมออนไลน์</p>
+            </div>
+
+            <!-- Alert Message -->
+            <div id="alertMessage" class="alert" style="display: none;">
+                <i class="fas fa-exclamation-circle"></i>
+                <span id="alertText"></span>
+            </div>
+
+            <!-- Login Form -->
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label class="form-label">ชื่อผู้ใช้</label>
+                    <div class="input-group">
+                        <i class="fas fa-user input-icon"></i>
+                        <input type="text" class="form-input" id="username" 
+                               placeholder="กรอกชื่อผู้ใช้" autocomplete="off" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">รหัสผ่าน</label>
+                    <div class="input-group">
+                        <i class="fas fa-lock input-icon"></i>
+                        <input type="password" class="form-input" id="password" 
+                               placeholder="กรอกรหัสผ่าน" required>
+                        <i class="fas fa-eye toggle-password" onclick="togglePassword()"></i>
+                    </div>
+                </div>
+
+                <div class="remember-forgot">
+                    <a href="#" class="forgot-link" onclick="showForgotPassword(event)">ลืมรหัสผ่าน?</a>
+                </div>
+
+                <button type="submit" class="btn-login" id="loginBtn">
+                    <i class="fas fa-sign-in-alt"></i>
+                    <span>เข้าสู่ระบบ</span>
+                </button>
+            </form>
+
+            <div class="login-divider">
+                <span>บัญชีผู้ใช้งาน</span>
+            </div>
+
+            <div class="demo-accounts">
+                <div class="demo-title">
+                    <i class="fas fa-info-circle"></i>
+                    <span>คลิกเพื่อกรอกชื่อผู้ใช้อัตโนมัติ (ต้องใส่รหัสผ่านเอง)</span>
+                </div>
+                <div class="demo-grid">
+                    <div class="demo-item" onclick="fillUsername('admin')">
+                        <div class="demo-role">👤 แอดมิน</div>
+                        <div class="demo-pass">admin</div>
+                    </div>
+                    <div class="demo-item" onclick="fillUsername('manager')">
+                        <div class="demo-role">📊 ผู้จัดการ</div>
+                        <div class="demo-pass">manager</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="login-footer">
+                <p>© 2026 Tokaisolidtire | ใช้ภายในบริษัทเท่านั้น | พัฒนาโดย Sarawut.C</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // ============================================================
+        // Supabase config — ใส่ Project URL และ anon key ของคุณตรงนี้
+        // ============================================================
+        const SUPABASE_URL      = 'https://fuarmmweqxxhczavkvqp.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ1YXJtbXdlcXh4aGN6YXZrdnFwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgyMjgzMTcsImV4cCI6MjEwMzgwNDMxN30.n7s4gKOkCvaOSpFSf9FGmWsqi7eAzFe28c_oJWy8NSE';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // username -> email ตอนนี้ค้นหาแบบไดนามิกจากตาราง profiles ในฟังก์ชัน handleLogin()
+        // แล้ว (ไม่ hardcode อีกต่อไป) เพิ่มบัญชีใหม่ผ่านหน้า manage-staff.html ได้เลย
+        // โดยไม่ต้องแก้โค้ดตรงนี้
+
+        // หน้าที่จะไปตามสิทธิ์ (role มาจากตาราง profiles หลัง login สำเร็จ)
+        const PAGE_REDIRECT = {
+            admin: 'approve.html',
+            technician: 'approve.html',
+            manager: 'dashboard.html',
+            user: 'index.html'
+        };
+
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const icon = document.querySelector('.toggle-password');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
+        function showAlert(message, isSuccess = false) {
+            const alertDiv = document.getElementById('alertMessage');
+            const alertText = document.getElementById('alertText');
+            
+            alertDiv.style.display = 'flex';
+            alertDiv.className = isSuccess ? 'alert success' : 'alert';
+            alertText.textContent = message;
+            
+            setTimeout(() => {
+                alertDiv.style.display = 'none';
+            }, 3000);
+        }
+
+        function setLoading(isLoading) {
+            const btn = document.getElementById('loginBtn');
+            if (isLoading) {
+                btn.innerHTML = '<span class="loading"></span><span> กำลังเข้าสู่ระบบ...</span>';
+                btn.disabled = true;
+            } else {
+                btn.innerHTML = '<i class="fas fa-sign-in-alt"></i><span>เข้าสู่ระบบ</span>';
+                btn.disabled = false;
+            }
+        }
+
+        async function handleLogin(event) {
+            event.preventDefault();
+
+            const usernameOrEmail = document.getElementById('username').value.trim().toLowerCase();
+            const password = document.getElementById('password').value;
+
+            if (!usernameOrEmail || !password) {
+                showAlert('กรุณากรอกชื่อผู้ใช้และรหัสผ่าน');
+                return;
+            }
+
+            setLoading(true);
+
+            // แปลง username -> email แบบไดนามิกผ่านฟังก์ชัน get_login_email()
+            // (เผื่อกรอกเป็น email ตรงๆ อยู่แล้ว ก็ใช้ค่าที่กรอกได้เลยถ้าหา username ไม่เจอ)
+            let email = usernameOrEmail;
+            const { data: matchedEmail } = await supabaseClient.rpc('get_login_email', { p_username: usernameOrEmail });
+            if (matchedEmail) {
+                email = matchedEmail;
+            }
+
+            const { data: authData, error: authError } = await supabaseClient.auth.signInWithPassword({
+                email,
+                password
+            });
+
+            if (authError || !authData.user) {
+                setLoading(false);
+                showAlert('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
+                return;
+            }
+
+            // ดึง role จริงจากตาราง profiles
+            const { data: profile, error: profileError } = await supabaseClient
+                .from('profiles')
+                .select('role, name')
+                .eq('id', authData.user.id)
+                .maybeSingle();
+
+            if (profileError || !profile) {
+                setLoading(false);
+                showAlert('ล็อกอินสำเร็จ แต่ไม่พบข้อมูลสิทธิ์การใช้งาน (profiles) กรุณาติดต่อผู้ดูแลระบบ');
+                await supabaseClient.auth.signOut();
+                return;
+            }
+
+            showAlert(`เข้าสู่ระบบสำเร็จ กำลังนำทาง...`, true);
+
+            setTimeout(() => {
+                window.location.href = PAGE_REDIRECT[profile.role] || 'index.html';
+            }, 1000);
+        }
+
+        function fillUsername(username) {
+            document.getElementById('username').value = username;
+            document.getElementById('password').focus();
+            showAlert(`👉 กรอกรหัสผ่านของบัญชี "${username}" แล้วกด "เข้าสู่ระบบ"`, true);
+        }
+
+        function showForgotPassword(event) {
+            event.preventDefault();
+            showAlert('กรุณาติดต่อผู้ดูแลระบบที่ sarawut.c@tokaisolidtire.com', true);
+        }
+
+        // เพิ่มความปลอดภัยด้วยการป้องกันการกด Enter ซ้ำ
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && e.target.tagName !== 'BUTTON') {
+                e.preventDefault();
+                document.getElementById('loginBtn').click();
+            }
+        });
+
+        // ถ้ามี session ของ Supabase Auth ค้างอยู่แล้ว (login ไว้ก่อนหน้า) ให้ข้ามไปเลย
+        async function checkExistingSession() {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session && session.user) {
+                const { data: profile } = await supabaseClient
+                    .from('profiles')
+                    .select('role')
+                    .eq('id', session.user.id)
+                    .maybeSingle();
+                if (profile) {
+                    window.location.href = PAGE_REDIRECT[profile.role] || 'index.html';
+                }
+            }
+        }
+
+        checkExistingSession();
+    </script>
+</body>
+</html>

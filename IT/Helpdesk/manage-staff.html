@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IT Helpdesk · จัดการบัญชี</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI','Sarabun',Tahoma,Geneva,Verdana,sans-serif;}
+        :root{--primary:#2F7FB8;--primary-light:#E7F2FB;--primary-soft:#DCE9F5;--primary-bg:#F7FBFE;--white:#ffffff;--gray-50:#f8fafc;--gray-100:#f1f5f9;--gray-200:#e2e8f0;--gray-300:#cbd5e1;--gray-600:#475569;--gray-700:#334155;--gray-800:#1e293b;--success:#10b981;--warning:#f59e0b;--danger:#ef4444;--info:#3b82f6;}
+        body{background:var(--primary-bg);min-height:100vh;display:flex;font-size:14px;}
+        .sidebar{width:280px;background:var(--white);height:100vh;position:fixed;left:0;top:0;box-shadow:4px 0 20px rgba(0,45,90,0.05);overflow-y:auto;z-index:1000;border-right:1px solid var(--gray-200);}
+        .sidebar-header{padding:30px 24px;background:var(--white);border-bottom:1px solid var(--gray-200);text-align:center;}
+        .sidebar-header i{font-size:48px;color:var(--primary);margin-bottom:12px;background:var(--primary-light);padding:16px;border-radius:20px;}
+        .sidebar-header h2{font-size:20px;font-weight:600;color:var(--gray-800);margin-bottom:4px;}
+        .sidebar-header p{font-size:13px;color:var(--gray-600);}
+        .sidebar-menu{padding:20px 16px;}
+        .menu-item{display:flex;align-items:center;padding:12px 20px;color:var(--gray-600);transition:all 0.2s;cursor:pointer;text-decoration:none;border-radius:12px;margin-bottom:4px;font-weight:500;}
+        .menu-item:hover{background:var(--primary-light);color:var(--primary);}
+        .menu-item.active{background:var(--primary-light);color:var(--primary);font-weight:600;}
+        .menu-item i{width:24px;font-size:18px;margin-right:12px;}
+        .menu-item span{flex:1;}
+        .menu-badge{background:var(--primary-light);color:var(--primary);padding:4px 8px;border-radius:30px;font-size:11px;font-weight:600;}
+        .sidebar-footer{padding:20px 24px;border-top:1px solid var(--gray-200);position:absolute;bottom:0;width:100%;background:var(--white);}
+        .user-info{display:flex;align-items:center;gap:12px;}
+        .user-avatar{width:44px;height:44px;background:var(--primary-light);color:var(--primary);border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:18px;}
+        .user-details{flex:1;}
+        .user-name{font-weight:600;color:var(--gray-800);font-size:14px;}
+        .user-role{font-size:12px;color:var(--gray-600);}
+        .main-content{flex:1;margin-left:280px;padding:24px;}
+        .container{max-width:1100px;margin:0 auto;}
+        .header{background:var(--white);border-radius:20px;padding:20px 28px;margin-bottom:24px;box-shadow:0 2px 12px rgba(0,45,90,0.03);border:1px solid var(--gray-200);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+        .header h1{color:var(--gray-800);font-size:22px;font-weight:600;display:flex;align-items:center;gap:12px;}
+        .header h1 i{color:var(--primary);font-size:24px;}
+        .btn{padding:10px 20px;border:none;border-radius:12px;cursor:pointer;font-weight:500;display:flex;align-items:center;gap:8px;transition:all 0.2s;text-decoration:none;font-size:14px;}
+        .btn-refresh{background:var(--white);color:var(--gray-600);border:1px solid var(--gray-200);}
+        .btn-refresh:hover{background:var(--primary-light);color:var(--primary);border-color:var(--primary-soft);}
+        .btn-primary{background:var(--primary);color:#fff;}
+        .btn-primary:hover{background:#1e5bbf;}
+        .section-card{background:var(--white);border-radius:20px;padding:20px;border:1px solid var(--gray-200);}
+        .table-wrapper{overflow-x:auto;}
+        table{width:100%;border-collapse:collapse;}
+        th{text-align:left;padding:14px 12px;background:var(--gray-50);color:var(--gray-600);font-weight:600;font-size:13px;border-bottom:1px solid var(--gray-200);}
+        td{padding:14px 12px;border-bottom:1px solid var(--gray-200);color:var(--gray-700);font-size:13px;}
+        tr:hover td{background:var(--gray-50);}
+        .role-badge{padding:4px 12px;border-radius:30px;font-size:11px;font-weight:600;display:inline-block;}
+        .role-admin{background:#fee2e2;color:#b91c1c;}
+        .role-technician{background:#dbeafe;color:#1e40af;}
+        .role-manager{background:#f3e8ff;color:#7e22ce;}
+        .role-user{background:var(--gray-100);color:var(--gray-600);}
+        .action-buttons{display:flex;gap:6px;}
+        .action-btn{padding:6px 12px;border:none;border-radius:20px;cursor:pointer;font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:4px;transition:all 0.2s;color:white;}
+        .btn-edit{background:var(--primary);}.btn-edit:hover{background:#1e5bbf;transform:translateY(-2px);}
+        .btn-delete{background:var(--danger);}.btn-delete:hover{background:#dc2626;transform:translateY(-2px);}
+        .loading, .empty-state{text-align:center;padding:40px;color:var(--gray-600);}
+        .loading i{font-size:32px;color:var(--primary);margin-bottom:12px;}
+
+        .modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:2000;align-items:center;justify-content:center;}
+        .modal-overlay.active{display:flex;}
+        .modal-container{background:var(--white);border-radius:24px;width:90%;max-width:440px;max-height:85vh;overflow-y:auto;box-shadow:0 20px 40px rgba(0,0,0,0.1);}
+        .modal-header{padding:20px 24px;border-bottom:1px solid var(--gray-200);display:flex;justify-content:space-between;align-items:center;}
+        .modal-header h3{color:var(--gray-800);font-size:18px;font-weight:600;display:flex;align-items:center;gap:8px;}
+        .modal-header h3 i{color:var(--primary);}
+        .modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--gray-300);}.modal-close:hover{color:var(--danger);}
+        .modal-body{padding:24px;}
+        .field{margin-bottom:16px;}
+        .field label{display:block;font-size:13px;font-weight:600;color:var(--gray-700);margin-bottom:6px;}
+        .field input, .field select{width:100%;padding:10px 13px;border:1px solid var(--gray-200);border-radius:10px;font-size:14px;font-family:inherit;color:var(--gray-800);}
+        .field input:focus, .field select:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-light);}
+        .field input:disabled{background:var(--gray-50);color:var(--gray-600);}
+        .field-hint{font-size:11.5px;color:var(--gray-600);margin-top:4px;}
+        .modal-footer{padding:20px 24px;border-top:1px solid var(--gray-200);display:flex;gap:10px;justify-content:flex-end;}
+
+        .toast-container{position:fixed;top:24px;right:24px;z-index:9999;}
+        .toast{background:var(--white);border-radius:12px;padding:16px 24px;margin-bottom:12px;box-shadow:0 10px 30px rgba(0,0,0,0.1);display:flex;align-items:center;gap:12px;min-width:320px;max-width:400px;animation:slideInRight 0.3s ease;border:1px solid var(--gray-200);}
+        .toast.success{border-left:4px solid var(--success);}.toast.success i{color:var(--success);}
+        .toast.error{border-left:4px solid var(--danger);}.toast.error i{color:var(--danger);}
+        @keyframes slideInRight{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+        @keyframes slideOutRight{from{transform:translateX(0);opacity:1}to{transform:translateX(100%);opacity:0}}
+        footer{text-align:center;padding:20px;color:var(--gray-600);font-size:12px;margin-top:30px;}
+        @media(max-width:768px){.sidebar{width:0;display:none}.main-content{margin-left:0}}
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <i class="fas fa-headset"></i><h2>IT Helpdesk</h2><p>ระบบแจ้งซ่อมออนไลน์</p>
+        </div>
+        <div class="sidebar-menu">
+            <a href="dashboard.html" class="menu-item">
+                <i class="fas fa-chart-pie"></i><span>แดชบอร์ด</span><span class="menu-badge" id="menuTotal">-</span>
+            </a>
+            <a href="kpi.html" class="menu-item">
+                <i class="fas fa-bullseye"></i><span>KPI</span>
+            </a>
+            <a href="index.html" class="menu-item">
+                <i class="fas fa-plus-circle"></i><span>แจ้งปัญหา</span>
+            </a>
+            <a href="login.html" class="menu-item">
+                <i class="fas fa-clipboard-check"></i><span>รอดำเนินงาน</span>
+            </a>
+            <a href="track.html" class="menu-item">
+                <i class="fas fa-search"></i><span>ติดตามสถานะ</span>
+            </a>
+            <a href="report.html" class="menu-item">
+                <i class="fas fa-file-alt"></i><span>รายงาน</span>
+            </a>
+            <a href="manage-staff.html" class="menu-item active">
+                <i class="fas fa-user-shield"></i><span>จัดการบัญชี</span>
+            </a>
+        </div>
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <div class="user-avatar">SC</div>
+                <div class="user-details"><div class="user-name">พัฒนาระบบโดย</div><div class="user-role">Sarawut.C</div></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="container">
+            <div class="header">
+                <h1><i class="fas fa-user-shield"></i> จัดการบัญชีผู้ใช้งาน</h1>
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <span id="currentUserLabel" style="font-size:13px;color:var(--gray-600);"></span>
+                    <button class="btn btn-refresh" onclick="loadAccounts()"><i class="fas fa-sync-alt"></i></button>
+                    <button class="btn btn-primary" onclick="openAddModal()"><i class="fas fa-user-plus"></i> เพิ่มบัญชีใหม่</button>
+                    <button class="btn btn-refresh" onclick="logout()" title="ออกจากระบบ"><i class="fas fa-sign-out-alt"></i></button>
+                </div>
+            </div>
+
+            <div class="section-card">
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Username</th>
+                                <th>ชื่อ-นามสกุล</th>
+                                <th>Email</th>
+                                <th>สิทธิ์ (Role)</th>
+                                <th>สร้างเมื่อ</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="accountsBody">
+                            <tr><td colspan="6" class="loading"><i class="fas fa-spinner fa-spin"></i><br>กำลังโหลดข้อมูล...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <footer>IT Helpdesk · จัดการบัญชีผู้ใช้งาน</footer>
+        </div>
+    </div>
+
+    <!-- ============ ADD / EDIT MODAL ============ -->
+    <div class="modal-overlay" id="accountModal">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3><i class="fas fa-user-shield"></i> <span id="modalTitle">เพิ่มบัญชีใหม่</span></h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="f-id">
+
+                <div class="field">
+                    <label>Username (ใช้ตอน login)</label>
+                    <input type="text" id="f-username" placeholder="เช่น technician2" autocomplete="off">
+                </div>
+
+                <div class="field" id="f-email-wrap">
+                    <label>Email (ผูกกับบัญชี Supabase Auth)</label>
+                    <input type="email" id="f-email" placeholder="เช่น technician2@ithelpdesk.local" autocomplete="off">
+                    <div class="field-hint">ใช้โดเมนสมมติแบบเดิมได้เลย ไม่ต้องเป็นอีเมลจริง เช่น @ithelpdesk.local</div>
+                </div>
+
+                <div class="field">
+                    <label id="f-password-label">รหัสผ่าน</label>
+                    <input type="text" id="f-password" placeholder="อย่างน้อย 6 ตัวอักษร" autocomplete="off">
+                    <div class="field-hint" id="f-password-hint"></div>
+                </div>
+
+                <div class="field">
+                    <label>ชื่อ-นามสกุล</label>
+                    <input type="text" id="f-name" placeholder="เช่น สมชาย ใจดี" autocomplete="off">
+                </div>
+
+                <div class="field">
+                    <label>สิทธิ์ (Role)</label>
+                    <select id="f-role">
+                        <option value="admin">admin — จัดการทุกอย่าง + จัดการบัญชี</option>
+                        <option value="technician">technician — อนุมัติ/รับงานซ่อม</option>
+                        <option value="manager">manager — ดูแดชบอร์ดภาพรวม</option>
+                        <option value="user">user — แจ้งปัญหาทั่วไป</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-refresh" onclick="closeModal()">ยกเลิก</button>
+                <button class="btn btn-primary" id="saveBtn" onclick="saveAccount()"><i class="fas fa-save"></i> บันทึก</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        // ============================================================
+        // Supabase config
+        // ============================================================
+        const SUPABASE_URL      = 'https://fuarmmweqxxhczavkvqp.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ1YXJtbXdlcXh4aGN6YXZrdnFwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgyMjgzMTcsImV4cCI6MjEwMzgwNDMxN30.n7s4gKOkCvaOSpFSf9FGmWsqi7eAzFe28c_oJWy8NSE';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let accounts = [];
+        let editingId = null;
+        let currentSession = null;
+
+        // ============================================================
+        // Auth guard — เฉพาะ role admin เท่านั้นที่เข้าหน้านี้ได้
+        // ============================================================
+        const ALLOWED_ROLES = ['admin'];
+
+        function showAccessDenied(message) {
+            document.body.innerHTML = `
+                <div style="min-height:100vh;width:100%;display:flex;align-items:center;justify-content:center;background:var(--primary-bg,#F7FBFE);font-family:'Segoe UI','Sarabun',Tahoma,Geneva,Verdana,sans-serif;padding:20px;">
+                    <div style="background:#fff;border-radius:24px;padding:44px 36px;max-width:380px;width:100%;text-align:center;box-shadow:0 20px 40px rgba(0,0,0,0.08);border:1px solid #e2e8f0;">
+                        <div style="width:64px;height:64px;background:#fee2e2;color:#dc2626;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 20px;">
+                            <i class="fas fa-lock"></i>
+                        </div>
+                        <h2 style="color:#1e293b;font-size:19px;margin-bottom:10px;font-weight:600;">ไม่มีสิทธิ์เข้าถึงหน้านี้</h2>
+                        <p style="color:#475569;font-size:14px;margin-bottom:26px;line-height:1.6;">${message}</p>
+                        <button onclick="window.location.href='login.html'" style="background:#2F7FB8;color:#fff;border:none;padding:12px 30px;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;">
+                            <i class="fas fa-arrow-left"></i> กลับไปหน้าเข้าสู่ระบบ
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function requireAuth() {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (!session || !session.user) {
+                window.location.href = 'login.html';
+                return null;
+            }
+            const { data: profile } = await supabaseClient
+                .from('profiles')
+                .select('name, role')
+                .eq('id', session.user.id)
+                .maybeSingle();
+
+            if (!profile || !ALLOWED_ROLES.includes(profile.role)) {
+                await supabaseClient.auth.signOut();
+                showAccessDenied('หน้านี้เปิดให้เฉพาะ admin เท่านั้น');
+                return null;
+            }
+            currentSession = session;
+            return profile;
+        }
+
+        async function logout() {
+            await supabaseClient.auth.signOut();
+            window.location.href = 'login.html';
+        }
+
+        window.onload = async function() {
+            const profile = await requireAuth();
+            if (!profile) return;
+            document.getElementById('currentUserLabel').textContent = `${profile.name} (${profile.role})`;
+            loadAccounts();
+        };
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+            toast.innerHTML = `<i class="fas ${icon}" style="font-size:20px;"></i><span style="flex:1;">${message}</span><i class="fas fa-times" style="cursor:pointer;opacity:0.5;" onclick="this.parentElement.remove()"></i>`;
+            container.appendChild(toast);
+            setTimeout(() => { toast.style.animation = 'slideOutRight 0.3s ease'; setTimeout(() => toast.remove(), 300); }, 3500);
+        }
+
+        // เรียก Edge Function พร้อมแนบ token ของผู้ใช้ปัจจุบัน (ไม่ใช่ anon key)
+        // เพื่อให้ฟังก์ชันฝั่ง server รู้ว่า "ใคร" เป็นคนเรียก แล้วเช็ค role เอง
+        async function callManageStaff(payload) {
+            const res = await fetch(`${SUPABASE_URL}/functions/v1/manage-staff-accounts`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + currentSession.access_token
+                },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'เกิดข้อผิดพลาด');
+            return data;
+        }
+
+        const ROLE_LABEL = { admin: 'admin', technician: 'technician', manager: 'manager', user: 'user' };
+
+        async function loadAccounts() {
+            try {
+                const data = await callManageStaff({ action: 'list' });
+                accounts = data.accounts || [];
+                renderTable();
+            } catch (err) {
+                showToast(err.message, 'error');
+                document.getElementById('accountsBody').innerHTML =
+                    `<tr><td colspan="6" class="empty-state">โหลดข้อมูลไม่สำเร็จ: ${err.message}</td></tr>`;
+            }
+        }
+
+        function renderTable() {
+            const body = document.getElementById('accountsBody');
+            if (!accounts.length) {
+                body.innerHTML = '<tr><td colspan="6" class="empty-state">ยังไม่มีบัญชี</td></tr>';
+                return;
+            }
+            body.innerHTML = accounts.map(a => `
+                <tr>
+                    <td><strong>${a.username || '-'}</strong></td>
+                    <td>${a.name || '-'}</td>
+                    <td>${a.email || '-'}</td>
+                    <td><span class="role-badge role-${a.role}">${ROLE_LABEL[a.role] || a.role}</span></td>
+                    <td>${a.created_at ? new Date(a.created_at).toLocaleDateString('th-TH') : '-'}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="action-btn btn-edit" onclick='openEditModal(${JSON.stringify(a)})'><i class="fas fa-edit"></i> แก้ไข</button>
+                            <button class="action-btn btn-delete" onclick="deleteAccount('${a.id}', '${(a.name || a.username || '').replace(/'/g, "")}')"><i class="fas fa-trash"></i> ลบ</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function openAddModal() {
+            editingId = null;
+            document.getElementById('modalTitle').textContent = 'เพิ่มบัญชีใหม่';
+            document.getElementById('f-id').value = '';
+            document.getElementById('f-username').value = '';
+            document.getElementById('f-username').disabled = false;
+            document.getElementById('f-email').value = '';
+            document.getElementById('f-email').disabled = false;
+            document.getElementById('f-password').value = '';
+            document.getElementById('f-password-label').textContent = 'รหัสผ่าน';
+            document.getElementById('f-password-hint').textContent = '';
+            document.getElementById('f-name').value = '';
+            document.getElementById('f-role').value = 'user';
+            document.getElementById('accountModal').classList.add('active');
+        }
+
+        function openEditModal(account) {
+            editingId = account.id;
+            document.getElementById('modalTitle').textContent = 'แก้ไขบัญชี: ' + (account.name || account.username);
+            document.getElementById('f-id').value = account.id;
+            document.getElementById('f-username').value = account.username || '';
+            document.getElementById('f-username').disabled = true; // username เปลี่ยนไม่ได้หลังสร้าง (ใช้ผูก login)
+            document.getElementById('f-email').value = account.email || '';
+            document.getElementById('f-email').disabled = true; // แก้ email ต้องผ่าน Supabase Auth โดยตรง ไม่ทำในหน้านี้
+            document.getElementById('f-password').value = '';
+            document.getElementById('f-password-label').textContent = 'รหัสผ่านใหม่ (ถ้าไม่เปลี่ยนเว้นว่างไว้)';
+            document.getElementById('f-password-hint').textContent = 'เว้นว่าง = ใช้รหัสผ่านเดิม';
+            document.getElementById('f-name').value = account.name || '';
+            document.getElementById('f-role').value = account.role || 'user';
+            document.getElementById('accountModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('accountModal').classList.remove('active');
+        }
+
+        async function saveAccount() {
+            const name = document.getElementById('f-name').value.trim();
+            const role = document.getElementById('f-role').value;
+            const password = document.getElementById('f-password').value;
+            const saveBtn = document.getElementById('saveBtn');
+
+            if (!name) { showToast('กรุณากรอกชื่อ-นามสกุล', 'error'); return; }
+
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> กำลังบันทึก...';
+
+            try {
+                if (editingId) {
+                    await callManageStaff({
+                        action: 'update',
+                        id: editingId,
+                        name,
+                        role,
+                        newPassword: password || undefined
+                    });
+                    showToast('บันทึกการแก้ไขเรียบร้อย');
+                } else {
+                    const username = document.getElementById('f-username').value.trim();
+                    const email = document.getElementById('f-email').value.trim();
+                    if (!username || !email || !password) {
+                        showToast('กรุณากรอก username, email และรหัสผ่านให้ครบ', 'error');
+                        saveBtn.disabled = false;
+                        saveBtn.innerHTML = '<i class="fas fa-save"></i> บันทึก';
+                        return;
+                    }
+                    await callManageStaff({ action: 'create', username, email, password, name, role });
+                    showToast('เพิ่มบัญชีใหม่เรียบร้อย');
+                }
+                closeModal();
+                await loadAccounts();
+            } catch (err) {
+                showToast(err.message, 'error');
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = '<i class="fas fa-save"></i> บันทึก';
+            }
+        }
+
+        async function deleteAccount(id, label) {
+            if (!confirm(`ยืนยันลบบัญชี "${label}" ? การกระทำนี้ย้อนกลับไม่ได้`)) return;
+            try {
+                await callManageStaff({ action: 'delete', id });
+                showToast('ลบบัญชีเรียบร้อย');
+                await loadAccounts();
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+    </script>
+</body>
+</html>

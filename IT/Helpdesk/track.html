@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IT Helpdesk · ติดตามสถานะ</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;font-family:'Sarabun','Segoe UI',Tahoma,Geneva,Verdana,sans-serif;}
+        :root{--primary:#2F7FB8;--primary-light:#E7F2FB;--primary-soft:#DCE9F5;--primary-bg:#F7FBFE;--white:#ffffff;--gray-50:#f8fafc;--gray-200:#e2e8f0;--gray-600:#475569;--gray-700:#334155;--gray-800:#1e293b;--success:#10b981;--warning:#f59e0b;--danger:#ef4444;--info:#3b82f6;}
+        body{background:var(--primary-bg);min-height:100vh;display:flex;font-size:14px;}
+        .sidebar{width:280px;background:var(--white);height:100vh;position:fixed;left:0;top:0;box-shadow:4px 0 20px rgba(0,45,90,0.05);overflow-y:auto;z-index:1000;border-right:1px solid var(--gray-200);}
+        .sidebar-header{padding:30px 24px;background:var(--white);border-bottom:1px solid var(--gray-200);text-align:center;}
+        .sidebar-header i{font-size:48px;color:var(--primary);margin-bottom:12px;background:var(--primary-light);padding:16px;border-radius:20px;}
+        .sidebar-header h2{font-size:20px;font-weight:600;color:var(--gray-800);margin-bottom:4px;}
+        .sidebar-header p{font-size:13px;color:var(--gray-600);}
+        .sidebar-menu{padding:20px 16px;}
+        .menu-item{display:flex;align-items:center;padding:12px 20px;color:var(--gray-600);transition:all 0.2s;cursor:pointer;text-decoration:none;border-radius:12px;margin-bottom:4px;font-weight:500;}
+        .menu-item:hover{background:var(--primary-light);color:var(--primary);}
+        .menu-item.active{background:var(--primary-light);color:var(--primary);font-weight:600;}
+        .menu-item i{width:24px;font-size:18px;margin-right:12px;}.menu-item span{flex:1;}
+        .menu-badge{background:var(--primary-light);color:var(--primary);padding:4px 8px;border-radius:30px;font-size:11px;font-weight:600;}
+        .sidebar-footer{padding:20px 24px;border-top:1px solid var(--gray-200);position:absolute;bottom:0;width:100%;background:var(--white);}
+        .user-info{display:flex;align-items:center;gap:12px;}
+        .user-avatar{width:44px;height:44px;background:var(--primary-light);color:var(--primary);border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:18px;}
+        .user-details{flex:1;}.user-name{font-weight:600;color:var(--gray-800);font-size:14px;}.user-role{font-size:12px;color:var(--gray-600);}
+        .main-content{flex:1;margin-left:280px;padding:24px;}
+        .container{max-width:900px;margin:0 auto;}
+        .header{background:var(--white);border-radius:20px;padding:20px 28px;margin-bottom:24px;box-shadow:0 2px 12px rgba(0,45,90,0.03);border:1px solid var(--gray-200);display:flex;align-items:center;justify-content:space-between;}
+        .header h1{color:var(--gray-800);font-size:22px;font-weight:600;display:flex;align-items:center;gap:12px;}
+        .header h1 i{color:var(--primary);font-size:24px;}
+        .search-section{background:var(--white);border-radius:20px;padding:28px;margin-bottom:24px;box-shadow:0 2px 12px rgba(0,45,90,0.03);border:1px solid var(--gray-200);}
+        .search-title{display:flex;align-items:center;gap:8px;margin-bottom:20px;color:var(--gray-800);font-size:16px;font-weight:600;}
+        .search-title i{color:var(--primary);}
+        .search-box{display:flex;gap:12px;margin-bottom:16px;}
+        .search-box input{flex:1;padding:14px 18px;border:1px solid var(--gray-200);border-radius:12px;font-size:14px;transition:all 0.2s;font-family:'Sarabun',sans-serif;}
+        .search-box input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-light);}
+        .search-box button{padding:14px 28px;border:none;border-radius:12px;background:var(--primary);color:white;font-weight:600;font-size:14px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:all 0.2s;font-family:'Sarabun',sans-serif;}
+        .search-box button:hover{background:#1e5bbf;transform:translateY(-2px);}
+        .search-option{text-align:center;color:var(--gray-600);font-size:14px;}
+        .search-option a{color:var(--primary);text-decoration:none;font-weight:500;cursor:pointer;}
+        .result-section{background:var(--white);border-radius:20px;padding:28px;box-shadow:0 2px 12px rgba(0,45,90,0.03);border:1px solid var(--gray-200);min-height:300px;}
+        .loading{text-align:center;padding:40px;color:var(--gray-600);}
+        .loading i{font-size:40px;color:var(--primary);margin-bottom:16px;display:block;}
+        .not-found{text-align:center;padding:40px;color:var(--gray-600);}
+        .not-found i{font-size:48px;color:var(--danger);margin-bottom:16px;display:block;}
+        .not-found h3{color:var(--gray-800);margin-bottom:8px;}
+        /* Ticket card */
+        .ticket-card{background:var(--white);border:1px solid var(--gray-200);border-radius:18px;overflow:hidden;}
+        .ticket-header{background:var(--gray-50);padding:20px 24px;border-bottom:1px solid var(--gray-200);display:flex;justify-content:space-between;align-items:center;}
+        .ticket-id{font-size:20px;font-weight:700;color:var(--primary);}
+        .ticket-id span{color:var(--gray-600);font-weight:400;font-size:14px;}
+        .status-badge{padding:6px 16px;border-radius:30px;font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:6px;}
+        .status-pending{background:#fef3c7;color:#92400e;}.status-progress{background:#dbeafe;color:#1e40af;}.status-completed{background:#d1fae5;color:#065f46;}
+        .ticket-body{padding:24px;}
+        .info-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:20px;}
+        .info-item{display:flex;flex-direction:column;gap:6px;}.info-item.full{grid-column:1/-1;}
+        .info-label{color:var(--gray-600);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;display:flex;align-items:center;gap:6px;}
+        .info-label i{color:var(--primary);width:14px;font-size:12px;}
+        .info-value{color:var(--gray-800);font-size:14px;font-weight:500;background:var(--gray-50);padding:10px 14px;border-radius:10px;border:1px solid var(--gray-200);line-height:1.5;}
+        /* Progress */
+        .progress-section{margin-bottom:20px;padding:20px;background:var(--gray-50);border-radius:14px;border:1px solid var(--gray-200);}
+        .section-title{display:flex;align-items:center;gap:8px;color:var(--gray-800);font-weight:600;margin-bottom:16px;font-size:15px;}
+        .section-title i{color:var(--primary);}
+        .progress-steps{display:flex;justify-content:space-between;position:relative;margin:10px 0 16px;}
+        .progress-steps::before{content:'';position:absolute;top:20px;left:0;width:100%;height:3px;background:var(--gray-200);z-index:1;}
+        .step{position:relative;z-index:2;text-align:center;flex:1;}
+        .step-icon{width:40px;height:40px;background:var(--white);border:3px solid var(--gray-200);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;font-weight:600;color:#94a3b8;font-size:14px;}
+        .step.active .step-icon{background:var(--primary);border-color:var(--primary);color:white;}
+        .step.completed .step-icon{background:var(--success);border-color:var(--success);color:white;}
+        .step-label{font-size:12px;color:var(--gray-600);}
+        .step.active .step-label{color:var(--primary);font-weight:600;}.step.completed .step-label{color:var(--success);font-weight:600;}
+        .assignee-info{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--white);border-radius:12px;border:1px solid var(--gray-200);}
+        .assignee-avatar{width:38px;height:38px;background:var(--primary-light);color:var(--primary);border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:18px;}
+        .assignee-detail{flex:1;}.assignee-label{color:var(--gray-600);font-size:11px;font-weight:600;text-transform:uppercase;}.assignee-name{color:var(--gray-800);font-weight:600;font-size:14px;}
+
+        /* ===== DETAILS UPDATE SECTION ===== */
+        .details-update-section{margin-bottom:20px;border-radius:14px;overflow:hidden;border:1px solid #bfdbfe;}
+        .details-update-header{background:linear-gradient(135deg,#1d4ed8,#2563eb);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;}
+        .details-update-header-left{display:flex;align-items:center;gap:10px;color:white;}
+        .details-update-header-left i{font-size:18px;}
+        .details-update-header-left span{font-weight:600;font-size:15px;}
+        .details-update-badge{background:rgba(255,255,255,0.2);color:white;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;}
+        /* Read-only (ผู้แจ้ง) */
+        .details-update-readonly{padding:16px 20px;background:#eff6ff;}
+        .details-update-readonly .du-label{font-size:11px;font-weight:700;color:#1d4ed8;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+        .details-update-readonly .du-value{background:white;border:1px solid #bfdbfe;border-radius:10px;padding:12px 14px;color:var(--gray-800);font-size:14px;line-height:1.6;min-height:48px;}
+        .details-update-readonly .du-empty{color:#94a3b8;font-style:italic;}
+        /* IT Edit mode */
+        .details-update-edit{padding:16px 20px;background:#eff6ff;}
+        .du-textarea{width:100%;padding:12px 14px;border:1px solid #bfdbfe;border-radius:10px;font-size:14px;font-family:'Sarabun',sans-serif;resize:vertical;min-height:100px;line-height:1.6;color:var(--gray-800);background:white;transition:all 0.2s;margin-bottom:12px;}
+        .du-textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-light);}
+        .du-actions{display:flex;gap:10px;align-items:center;}
+        .du-btn-save{padding:10px 24px;background:var(--primary);color:white;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:'Sarabun',sans-serif;transition:all 0.2s;}
+        .du-btn-save:hover{background:#1e5bbf;transform:translateY(-1px);}
+        .du-btn-save:disabled{opacity:0.6;cursor:not-allowed;transform:none;}
+        .du-btn-toggle{padding:6px 14px;background:rgba(255,255,255,0.15);color:white;border:1px solid rgba(255,255,255,0.3);border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Sarabun',sans-serif;transition:all 0.2s;display:flex;align-items:center;gap:6px;}
+        .du-btn-toggle:hover{background:rgba(255,255,255,0.25);}
+        .du-status-msg{font-size:12px;color:var(--success);display:flex;align-items:center;gap:5px;margin-left:auto;}
+        .du-status-msg.error{color:var(--danger);}
+        .du-last-updated{font-size:11px;color:#60a5fa;margin-top:4px;}
+
+        /* Timeline */
+        .history-section{margin-bottom:20px;padding:20px;background:var(--white);border-radius:14px;border:1px solid var(--gray-200);}
+        .history-title-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+        .history-count{background:var(--primary-light);color:var(--primary);padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;}
+        .timeline{position:relative;padding-left:32px;}
+        .timeline::before{content:'';position:absolute;left:10px;top:0;bottom:0;width:2px;background:var(--gray-200);border-radius:2px;}
+        .tl-item{position:relative;margin-bottom:16px;animation:fadeUp 0.3s ease;}.tl-item:last-child{margin-bottom:0;}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+        .tl-dot{position:absolute;left:-27px;top:6px;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;color:white;border:2px solid var(--white);}
+        .dot-created{background:#6366f1;}.dot-status{background:var(--primary);}.dot-assigned{background:#f59e0b;}.dot-note{background:#10b981;}.dot-details{background:#8b5cf6;}.dot-default{background:var(--gray-600);}
+        .tl-content{background:var(--gray-50);border-radius:10px;padding:12px 14px;border:1px solid var(--gray-200);transition:all 0.2s;}
+        .tl-content:hover{border-color:var(--primary-soft);background:var(--primary-light);}
+        .tl-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+        .tl-action{font-weight:600;font-size:13px;display:flex;align-items:center;gap:5px;}
+        .ac-created{color:#6366f1;}.ac-status{color:var(--primary);}.ac-assigned{color:#d97706;}.ac-note{color:#059669;}.ac-details{color:#7c3aed;}.ac-default{color:var(--gray-600);}
+        .tl-time{font-size:11px;color:var(--gray-600);}
+        .tl-detail{font-size:12px;color:var(--gray-700);}
+        .tl-change{display:flex;align-items:center;gap:6px;margin-top:5px;flex-wrap:wrap;}
+        .from-tag{background:#fee2e2;color:#b91c1c;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500;}
+        .to-tag{background:#dcfce7;color:#166534;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500;}
+        .by-tag{margin-top:4px;font-size:11px;color:var(--gray-600);display:flex;align-items:center;gap:4px;}
+        .history-empty{text-align:center;padding:20px;color:var(--gray-600);font-size:13px;}
+        /* Ticket list */
+        .ticket-list{display:flex;flex-direction:column;gap:12px;}
+        .ticket-list-item{background:var(--white);border:1px solid var(--gray-200);border-radius:14px;padding:16px 20px;cursor:pointer;transition:all 0.2s;display:flex;justify-content:space-between;align-items:center;}
+        .ticket-list-item:hover{border-color:var(--primary);box-shadow:0 4px 12px rgba(43,110,211,0.1);}
+        .ticket-list-info h4{color:var(--gray-800);margin-bottom:4px;font-size:14px;}.ticket-list-info p{color:var(--gray-600);font-size:12px;}
+        .ticket-list-meta{display:flex;flex-direction:column;align-items:flex-end;gap:6px;}
+        /* Buttons */
+        .action-buttons{display:flex;gap:12px;margin-top:16px;}
+        .btn-back{flex:1;padding:14px;background:var(--white);color:var(--primary);border:1px solid var(--primary-soft);border-radius:12px;font-weight:600;font-size:14px;cursor:pointer;transition:all 0.2s;text-align:center;display:flex;align-items:center;justify-content:center;gap:8px;font-family:'Sarabun',sans-serif;}
+        .btn-back:hover{background:var(--primary-light);border-color:var(--primary);}
+        .btn-export-pdf{flex:1;padding:14px;background:linear-gradient(135deg,#dc2626,#b91c1c);color:white;border:none;border-radius:12px;font-weight:600;font-size:14px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 12px rgba(220,38,38,0.25);font-family:'Sarabun',sans-serif;}
+        .btn-export-pdf:hover{background:linear-gradient(135deg,#b91c1c,#991b1b);transform:translateY(-2px);}
+        .btn-export-pdf:disabled{opacity:0.6;cursor:not-allowed;transform:none;}
+        /* Modal */
+        .modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:2000;align-items:center;justify-content:center;}
+        .modal-overlay.active{display:flex;}
+        .modal-container{background:var(--white);border-radius:24px;width:90%;max-width:400px;box-shadow:0 20px 40px rgba(0,0,0,0.1);}
+        .modal-header{padding:20px 24px;border-bottom:1px solid var(--gray-200);display:flex;justify-content:space-between;align-items:center;}
+        .modal-header h3{color:var(--gray-800);font-size:18px;font-weight:600;display:flex;align-items:center;gap:8px;}
+        .modal-header h3 i{color:var(--primary);}
+        .modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:#94a3b8;}.modal-close:hover{color:var(--danger);}
+        .modal-body{padding:24px;}.modal-body p{color:var(--gray-600);margin-bottom:16px;}
+        .modal-body input{width:100%;padding:14px 16px;border:1px solid var(--gray-200);border-radius:12px;font-size:14px;transition:all 0.2s;font-family:'Sarabun',sans-serif;}
+        .modal-body input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-light);}
+        .modal-error{color:var(--danger);font-size:13px;margin-top:8px;display:none;}
+        .modal-footer{padding:20px 24px;border-top:1px solid var(--gray-200);display:flex;gap:12px;justify-content:flex-end;}
+        .modal-btn{padding:10px 24px;border:none;border-radius:30px;cursor:pointer;font-weight:600;font-size:13px;transition:all 0.2s;font-family:'Sarabun',sans-serif;}
+        .modal-btn-primary{background:var(--primary);color:white;}.modal-btn-primary:hover{background:#1e5bbf;}
+        .modal-btn-secondary{background:var(--white);color:var(--gray-600);border:1px solid var(--gray-200);}
+
+        footer{text-align:center;padding:20px;color:var(--gray-600);font-size:12px;margin-top:30px;border-top:1px solid var(--gray-200);}
+        @media(max-width:768px){.sidebar{width:0;display:none}.main-content{margin-left:0}.info-grid{grid-template-columns:1fr}.search-box{flex-direction:column}.action-buttons{flex-direction:column;}}
+
+        /* PDF Template — compact (fit 1 page) */
+        #pdfTemplate{position:fixed;left:-9999px;top:0;width:794px;height:1123px;background:#fff;font-family:'Sarabun',sans-serif;font-size:12px;color:#1e293b;z-index:-1;}
+        .pdf-wrap{padding:0;position:relative;height:1123px;display:flex;flex-direction:column;}
+        .pdf-watermark{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-30deg);font-size:60px;font-weight:700;color:rgba(43,110,211,0.04);pointer-events:none;white-space:nowrap;letter-spacing:4px;}
+        /* Header — ลด padding */
+        .pdf-header{background:linear-gradient(135deg,#2F7FB8 0%,#1a4fa8 100%);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;}
+        .pdf-header-left{display:flex;align-items:center;}
+        .pdf-logo-circle{width:40px;height:40px;background:rgba(255,255,255,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;margin-right:12px;flex-shrink:0;}
+        .pdf-logo-inner{width:30px;height:30px;background:#E7F2FB;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;color:#2F7FB8;}
+        .pdf-header-title{color:#fff;}.pdf-header-title h1{font-size:16px;font-weight:700;margin-bottom:2px;letter-spacing:1px;}.pdf-header-title p{font-size:10px;color:rgba(200,220,255,0.9);}
+        .pdf-header-right{text-align:right;}
+        .pdf-doc-label{font-size:9px;color:rgba(200,220,255,0.8);margin-bottom:2px;letter-spacing:1px;}
+        .pdf-ticket-id{font-size:16px;font-weight:700;color:#fff;margin-bottom:2px;}
+        .pdf-export-date{font-size:9px;color:rgba(200,220,255,0.8);}
+        .pdf-header-divider{height:3px;background:rgba(0,0,0,0.2);}
+        /* Status bar */
+        .pdf-status-bar{padding:7px 24px;background:#f8fafc;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;gap:10px;}
+        .pdf-status-pill{padding:3px 12px;border-radius:20px;font-size:10px;font-weight:700;display:inline-block;}
+        .pill-pending{background:#fef3c7;color:#92400e;}.pill-progress{background:#dbeafe;color:#1e40af;}.pill-done{background:#d1fae5;color:#065f46;}
+        .pdf-status-label{font-size:10px;color:#64748b;}
+        /* Body */
+        .pdf-body{padding:12px 24px 8px;flex:1;}
+        .pdf-section{margin-bottom:10px;}
+        .pdf-section-title{display:flex;align-items:center;gap:6px;background:#E7F2FB;border-left:3px solid #2F7FB8;padding:4px 10px;border-radius:0 6px 6px 0;font-size:10px;font-weight:700;color:#2F7FB8;margin-bottom:8px;}
+        /* Grid fields */
+        .pdf-grid{display:flex;gap:8px;margin-bottom:8px;}
+        .pdf-field{flex:1;}
+        .pdf-field-label{font-size:9px;font-weight:700;color:#64748b;background:#f1f5f9;padding:3px 8px;border-radius:4px 4px 0 0;border:1px solid #e2e8f0;border-bottom:none;}
+        .pdf-field-value{font-size:11px;font-weight:500;color:#1e293b;background:#fafcff;padding:5px 8px;border-radius:0 0 4px 4px;border:1px solid #e2e8f0;min-height:24px;line-height:1.4;}
+        .pdf-field-value.detail-box{min-height:38px;line-height:1.5;}
+        .pdf-field-value.update-box{min-height:38px;line-height:1.5;background:#f0fdf4;border-color:#bbf7d0;}
+        /* Progress */
+        .pdf-progress-wrap{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 16px;}
+        .pdf-progress-track{position:relative;height:10px;background:#e2e8f0;border-radius:5px;margin:10px 0 6px;}
+        .pdf-progress-fill{height:100%;border-radius:5px;}
+        .pdf-steps{display:flex;justify-content:space-around;position:relative;margin-top:6px;}
+        .pdf-step{text-align:center;flex:1;}
+        .pdf-step-dot{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 4px;font-size:11px;font-weight:700;position:relative;z-index:2;}
+        .pdf-step-dot.done{background:#10b981;color:#fff;}.pdf-step-dot.active{background:#2F7FB8;color:#fff;}.pdf-step-dot.inactive{background:#e2e8f0;color:#94a3b8;}
+        .pdf-step-lbl{font-size:9px;font-weight:600;}
+        .pdf-step-lbl.done{color:#10b981;}.pdf-step-lbl.active{color:#2F7FB8;}.pdf-step-lbl.inactive{color:#94a3b8;}
+        /* Assignee */
+        .pdf-assignee{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin-top:8px;}
+        .pdf-assignee-avatar{width:30px;height:30px;background:#E7F2FB;color:#2F7FB8;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;flex-shrink:0;}
+        .pdf-assignee-lbl{font-size:9px;color:#64748b;margin-bottom:1px;}.pdf-assignee-name{font-size:12px;font-weight:700;color:#1e293b;}
+        /* Signature */
+        .pdf-sig-row{display:flex;gap:10px;margin-top:6px;}
+        .pdf-sig-box{flex:1;background:#fafcff;border:1px solid #e2e8f0;border-radius:8px;padding:10px;text-align:center;}
+        .pdf-sig-title{font-size:9px;font-weight:600;color:#64748b;margin-bottom:18px;}
+        .pdf-sig-line{border-top:1px dashed #cbd5e1;margin:0 8px 5px;}
+        .pdf-sig-name{font-size:9px;color:#64748b;}.pdf-sig-date{font-size:8px;color:#94a3b8;margin-top:3px;}
+        /* Footer */
+        .pdf-footer{background:linear-gradient(135deg,#2F7FB8,#1a4fa8);padding:8px 24px;display:flex;align-items:center;justify-content:space-between;}
+        .pdf-footer-left{font-size:9px;color:rgba(200,220,255,0.9);}.pdf-footer-right{font-size:9px;color:rgba(200,220,255,0.9);}
+    </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+    <div class="sidebar-header"><i class="fas fa-headset"></i><h2>IT Helpdesk</h2><p>ระบบแจ้งซ่อมออนไลน์</p></div>
+    <div class="sidebar-menu">
+        <a href="dashboard.html" class="menu-item"><i class="fas fa-chart-pie"></i><span>แดชบอร์ด</span><span class="menu-badge" id="menuTotal">-</span></a>
+            <a href="kpi.html" class="menu-item">
+                <i class="fas fa-bullseye"></i><span>KPI</span>
+            </a>
+        <a href="index.html" class="menu-item"><i class="fas fa-plus-circle"></i><span>แจ้งปัญหา</span></a>
+        <a href="login.html" class="menu-item"><i class="fas fa-clipboard-check"></i><span>รอดำเนินงาน</span><span class="menu-badge" id="menuPending">-</span></a>
+        <a href="track.html" class="menu-item active"><i class="fas fa-search"></i><span>ติดตามสถานะ</span></a>
+        <a href="report.html" class="menu-item"><i class="fas fa-file-alt"></i><span>รายงาน</span></a>
+            <a href="manage-staff.html" class="menu-item">
+                <i class="fas fa-user-shield"></i><span>จัดการบัญชี</span>
+            </a>
+    </div>
+    <div class="sidebar-footer"><div class="user-info"><div class="user-avatar">SC</div><div class="user-details"><div class="user-name">พัฒนาระบบโดย</div><div class="user-role">Sarawut.C</div></div></div></div>
+</div>
+
+<div class="main-content">
+    <div class="container">
+        <div class="header"><h1><i class="fas fa-search"></i> ติดตามสถานะ</h1></div>
+
+        <div class="search-section">
+            <div class="search-title"><i class="fas fa-search"></i><span>ค้นหา Ticket</span></div>
+            <div class="search-box">
+                <input type="text" id="ticketId" placeholder="กรอก Ticket ID เช่น IT-260513-001" autocomplete="off">
+                <button onclick="searchTicket()"><i class="fas fa-search"></i> ค้นหา</button>
+            </div>
+            <div class="search-option">หรือ <a onclick="openEmployeeModal()">ค้นหาด้วยรหัสพนักงาน</a></div>
+        </div>
+
+        <div class="result-section" id="resultSection">
+            <div class="loading"><i class="fas fa-search"></i><p>กรุณากรอก Ticket ID ที่ต้องการติดตาม</p></div>
+        </div>
+
+        <footer><p>IT Helpdesk Track © 2026 | Tokaisolidtire</p><p>ใช้สำหรับภายในบริษัทเท่านั้น</p></footer>
+    </div>
+</div>
+
+<!-- Password Modal -->
+<div class="modal-overlay" id="pwModal">
+    <div class="modal-container">
+        <div class="modal-header">
+            <h3><i class="fas fa-lock"></i> ยืนยันรหัสผ่าน IT</h3>
+            <button class="modal-close" onclick="closePwModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p>กรุณากรอกรหัสผ่านเพื่อยืนยันการบันทึกรายละเอียดการซ่อม</p>
+            <input type="password" id="pwInput" placeholder="กรอกรหัสผ่าน..." autocomplete="off">
+            <div class="modal-error" id="pwError" style="display:none;"></div>
+        </div>
+        <div class="modal-footer">
+            <button class="modal-btn modal-btn-secondary" onclick="closePwModal()">ยกเลิก</button>
+            <button class="modal-btn modal-btn-primary" onclick="confirmPassword()">
+                <i class="fas fa-check"></i> ยืนยัน
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Employee Modal -->
+<div class="modal-overlay" id="employeeModal">
+    <div class="modal-container">
+        <div class="modal-header"><h3><i class="fas fa-id-card"></i> กรอกรหัสพนักงาน</h3><button class="modal-close" onclick="closeEmployeeModal()">&times;</button></div>
+        <div class="modal-body"><p>กรุณากรอกรหัสพนักงานเพื่อค้นหา Ticket ที่ท่านแจ้งไว้</p><input type="text" id="modalEmpCode" placeholder="" autocomplete="off"><div class="modal-error" id="modalError"></div></div>
+        <div class="modal-footer">
+            <button class="modal-btn modal-btn-secondary" onclick="closeEmployeeModal()">ยกเลิก</button>
+            <button class="modal-btn modal-btn-primary" onclick="submitEmployeeCode()"><i class="fas fa-search"></i> ค้นหา</button>
+        </div>
+    </div>
+</div>
+
+<!-- PDF Template -->
+<div id="pdfTemplate">
+    <div class="pdf-wrap">
+        <div class="pdf-watermark">TOKAISOLIDTIRE</div>
+        <div class="pdf-header">
+            <div class="pdf-header-left">
+                <div class="pdf-logo-circle"><div class="pdf-logo-inner">IT</div></div>
+                <div class="pdf-header-title"><h1>IT HELPDESK</h1><p>Tokaisolidtire Co., Ltd. | ระบบแจ้งซ่อมออนไลน์</p></div>
+            </div>
+            <div class="pdf-header-right">
+                <div class="pdf-doc-label">MAINTENANCE TICKET</div>
+                <div class="pdf-ticket-id" id="pdf-ticketId">-</div>
+                <div class="pdf-export-date" id="pdf-exportDate">-</div>
+            </div>
+        </div>
+        <div class="pdf-header-divider"></div>
+        <div class="pdf-status-bar">
+            <span class="pdf-status-pill" id="pdf-statusPill">-</span>
+            <span class="pdf-status-label">สถานะปัจจุบัน / Current Status</span>
+        </div>
+        <div class="pdf-body">
+            <!-- Section 1 -->
+            <div class="pdf-section">
+                <div class="pdf-section-title"><i>👤</i> ข้อมูลผู้แจ้ง / Reporter Information</div>
+                <div class="pdf-grid">
+                    <div class="pdf-field"><div class="pdf-field-label">ชื่อ-สกุล / Name</div><div class="pdf-field-value" id="pdf-name">-</div></div>
+                    <div class="pdf-field"><div class="pdf-field-label">แผนก / Department</div><div class="pdf-field-value" id="pdf-department">-</div></div>
+                </div>
+                <div class="pdf-grid">
+                    <div class="pdf-field"><div class="pdf-field-label">เบอร์โทร / Phone</div><div class="pdf-field-value" id="pdf-phone">-</div></div>
+                    <div class="pdf-field"><div class="pdf-field-label">วันที่แจ้ง / Date</div><div class="pdf-field-value" id="pdf-date">-</div></div>
+                </div>
+            </div>
+            <!-- Section 2 -->
+            <div class="pdf-section">
+                <div class="pdf-section-title"><i>🔧</i> รายละเอียดปัญหา / Issue Details</div>
+                <div class="pdf-grid">
+                    <div class="pdf-field"><div class="pdf-field-label">ประเภทปัญหา / Issue Type</div><div class="pdf-field-value" id="pdf-issueType">-</div></div>
+                    <div class="pdf-field"><div class="pdf-field-label">อุปกรณ์ / Device</div><div class="pdf-field-value" id="pdf-device">-</div></div>
+                </div>
+                <div class="pdf-grid">
+                    <div class="pdf-field"><div class="pdf-field-label">รายละเอียดปัญหา / Details</div><div class="pdf-field-value detail-box" id="pdf-details">-</div></div>
+                </div>
+            </div>
+            <!-- Section 3: detailsUpdate -->
+            <div class="pdf-section" id="pdf-section-update" style="display:none;">
+                <div class="pdf-section-title"><i>✅</i> รายละเอียดการซ่อม / Repair Details</div>
+                <div class="pdf-grid">
+                    <div class="pdf-field"><div class="pdf-field-label">รายละเอียดการซ่อม / Repair Details (IT)</div><div class="pdf-field-value update-box" id="pdf-detailsUpdate">-</div></div>
+                </div>
+            </div>
+            <!-- Section 4: Progress -->
+            <div class="pdf-section">
+                <div class="pdf-section-title"><i>📊</i> สถานะการดำเนินงาน / Progress Status</div>
+                <div class="pdf-progress-wrap">
+                    <div class="pdf-progress-track"><div class="pdf-progress-fill" id="pdf-progressFill" style="width:33%;background:#10b981;"></div></div>
+                    <div class="pdf-steps">
+                        <div class="pdf-step"><div class="pdf-step-dot done" id="pdf-step1">✓</div><div class="pdf-step-lbl done">รับเรื่อง</div></div>
+                        <div class="pdf-step"><div class="pdf-step-dot inactive" id="pdf-step2">2</div><div class="pdf-step-lbl inactive" id="pdf-step2-lbl">กำลังดำเนินการ</div></div>
+                        <div class="pdf-step"><div class="pdf-step-dot inactive" id="pdf-step3">3</div><div class="pdf-step-lbl inactive" id="pdf-step3-lbl">เสร็จสิ้น</div></div>
+                    </div>
+                    <div class="pdf-assignee">
+                        <div class="pdf-assignee-avatar">IT</div>
+                        <div><div class="pdf-assignee-lbl">ผู้รับผิดชอบ / Assigned to</div><div class="pdf-assignee-name" id="pdf-assignee">ยังไม่ระบุ</div></div>
+                    </div>
+                </div>
+            </div>
+            <!-- Section 5: Signature -->
+            <div class="pdf-section">
+                <div class="pdf-section-title"><i>✍️</i> ลายเซ็นรับทราบ / Acknowledgment</div>
+                <div class="pdf-sig-row">
+                    <div class="pdf-sig-box"><div class="pdf-sig-title">ลายเซ็นผู้แจ้ง / Reporter Signature</div><div class="pdf-sig-line"></div><div class="pdf-sig-name">( ......................................... )</div><div class="pdf-sig-date">วันที่ ........../........../..........  เวลา ...........</div></div>
+                    <div class="pdf-sig-box"><div class="pdf-sig-title">ลายเซ็นผู้รับผิดชอบ IT / IT Signature</div><div class="pdf-sig-line"></div><div class="pdf-sig-name">( ......................................... )</div><div class="pdf-sig-date">วันที่ ........../........../..........  เวลา ...........</div></div>
+                </div>
+            </div>
+        </div>
+        <div class="pdf-footer">
+            <div class="pdf-footer-left">IT Helpdesk · Tokaisolidtire Co., Ltd. · ใช้สำหรับภายในบริษัทเท่านั้น</div>
+            <div class="pdf-footer-right" id="pdf-ref">Ref: -</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ============================================================
+    // Supabase config — ใส่ Project URL และ anon key ของคุณตรงนี้
+    // ============================================================
+    const SUPABASE_URL      = 'https://fuarmmweqxxhczavkvqp.supabase.co';
+ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ1YXJtbXdlcXh4aGN6YXZrdnFwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgyMjgzMTcsImV4cCI6MjEwMzgwNDMxN30.n7s4gKOkCvaOSpFSf9FGmWsqi7eAzFe28c_oJWy8NSE';
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let allTickets   = [];
+    let currentTicket = null;
+
+    // แปลงคอลัมน์ snake_case จาก Supabase ให้เป็น shape เดิม (camelCase) ที่โค้ดส่วนที่เหลือใช้อยู่
+    function mapTicketRow(row) {
+        return {
+            timestamp: row.created_at,
+            name: row.name,
+            department: row.department,
+            issueType: row.issue_type,
+            device: row.device,
+            details: row.details,
+            phone: row.phone,
+            ticketId: row.ticket_id,
+            status: row.status,
+            assignee: row.assignee,
+            closeDate: row.close_date,
+            note: row.note,
+            computerName: row.computer_name,
+            historyCount: row.history_count,
+            lastUpdated: row.last_updated,
+            detailsUpdate: row.details_update,
+            imageUrls: row.image_urls || []
+        };
+    }
+
+    // PostgREST จำกัดสูงสุด 1000 แถวต่อคำขอ (default) — ดึงทีละหน้าจนกว่าจะครบทุก ticket
+    async function fetchAllTickets() {
+        const pageSize = 1000;
+        let from = 0;
+        let all = [];
+        while (true) {
+            const { data, error } = await supabaseClient
+                .from('tickets')
+                .select('*')
+                .order('created_at', { ascending: false })
+                .range(from, from + pageSize - 1);
+            if (error) throw error;
+            if (!data || data.length === 0) break;
+            all = all.concat(data);
+            if (data.length < pageSize) break;
+            from += pageSize;
+        }
+        return all;
+    }
+
+    window.onload = function() {
+        setTimeout(async function() {
+            try {
+                const data = await fetchAllTickets();
+                allTickets = (data || []).map(mapTicketRow);
+                document.getElementById('menuTotal').textContent   = allTickets.length;
+                document.getElementById('menuPending').textContent = allTickets.filter(x => x.status === 'รอดำเนินการ').length;
+            } catch (err) { /* เงียบไว้ ไม่ต้องแจ้งเตือน เหมือนของเดิม */ }
+        }, 200);
+    };
+
+
+
+    async function searchTicket() {
+        const id = document.getElementById('ticketId').value.trim();
+        if (!id) { showNotFound('กรุณากรอก Ticket ID'); return; }
+        if (allTickets.length > 0) {
+            const t = allTickets.find(x => x.ticketId.toUpperCase() === id.toUpperCase());
+            if (t) { showTicketInfo(t); return; }
+        }
+        showLoading();
+        try {
+            const { data, error } = await supabaseClient
+                .from('tickets')
+                .select('*')
+                .ilike('ticket_id', id)
+                .maybeSingle();
+            if (error) throw error;
+            if (data) showTicketInfo(mapTicketRow(data));
+            else showNotFound(id);
+        } catch (e) {
+            showError('เกิดข้อผิดพลาด: ' + (e.message || e));
+        }
+    }
+
+    function openEmployeeModal() {
+        document.getElementById('employeeModal').classList.add('active');
+        document.getElementById('modalEmpCode').value = '';
+        document.getElementById('modalError').style.display = 'none';
+        setTimeout(() => document.getElementById('modalEmpCode').focus(), 100);
+    }
+    function closeEmployeeModal() { document.getElementById('employeeModal').classList.remove('active'); }
+
+    async function submitEmployeeCode() {
+        const c = document.getElementById('modalEmpCode').value.trim();
+        if (!c) { const e = document.getElementById('modalError'); e.textContent = 'กรุณากรอกรหัสพนักงาน'; e.style.display = 'block'; return; }
+        closeEmployeeModal(); showLoading();
+        try {
+            const { data: emp, error: empError } = await supabaseClient
+                .from('employees')
+                .select('name')
+                .ilike('emp_code', c)
+                .maybeSingle();
+            if (empError) throw empError;
+            if (!emp) { showNotFound('รหัสพนักงาน ' + c); return; }
+
+            const { data, error } = await supabaseClient
+                .from('tickets')
+                .select('*')
+                .eq('name', emp.name)
+                .order('created_at', { ascending: false });
+            if (error) throw error;
+
+            const tickets = (data || []).map(mapTicketRow);
+            if (tickets.length > 0) showTicketList(tickets);
+            else showNotFound('รหัสพนักงาน ' + c);
+        } catch (e) {
+            showError('เกิดข้อผิดพลาด: ' + (e.message || e));
+        }
+    }
+
+    function showLoading() { document.getElementById('resultSection').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-pulse"></i><p>กำลังค้นหาข้อมูล...</p></div>'; }
+    function showError(m)  { document.getElementById('resultSection').innerHTML = `<div class="not-found"><i class="fas fa-exclamation-circle"></i><h3>เกิดข้อผิดพลาด</h3><p>${m}</p><button class="btn-back" onclick="resetSearch()"><i class="fas fa-search"></i> ค้นหาใหม่</button></div>`; }
+    function showNotFound(q){ document.getElementById('resultSection').innerHTML = `<div class="not-found"><i class="fas fa-exclamation-circle"></i><h3>ไม่พบข้อมูล</h3><p>ไม่พบ: ${q}</p><button class="btn-back" onclick="resetSearch()"><i class="fas fa-search"></i> ค้นหาใหม่</button></div>`; }
+    function resetSearch()  { document.getElementById('ticketId').value = ''; currentTicket = null; document.getElementById('resultSection').innerHTML = '<div class="loading"><i class="fas fa-search"></i><p>กรุณากรอก Ticket ID ที่ต้องการติดตาม</p></div>'; }
+
+    function formatDate(ts) {
+        if (!ts) return '-';
+        try { return new Date(ts).toLocaleDateString('th-TH', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }); }
+        catch { return '-'; }
+    }
+
+    // ==================== SHOW TICKET INFO ====================
+    // ==================== SHOW TICKET INFO ====================
+function showTicketInfo(ticket) {
+    currentTicket = ticket;
+    let sc='status-pending', si='fa-clock', s2='', s3='';
+    if (ticket.status === 'กำลังดำเนินการ') { sc='status-progress'; si='fa-spinner fa-pulse'; s2='active'; }
+    else if (ticket.status === 'เสร็จสิ้น') { sc='status-completed'; si='fa-check-circle'; s2='completed'; s3='completed'; }
+
+    const pcRow    = ticket.computerName ? `<div class="info-item"><div class="info-label"><i class="fas fa-desktop"></i> ชื่อเครื่อง</div><div class="info-value">${ticket.computerName}</div></div>` : '';
+    const closeRow = ticket.closeDate    ? `<div class="info-item"><div class="info-label"><i class="fas fa-flag-checkered"></i> วันที่เสร็จ</div><div class="info-value">${formatDate(ticket.closeDate)}</div></div>` : '';
+    const noteRow  = ticket.note        ? `<div class="info-item full"><div class="info-label"><i class="fas fa-sticky-note"></i> หมายเหตุ IT</div><div class="info-value">${ticket.note}</div></div>` : '';
+
+    // ===== รูปภาพประกอบ =====
+    let imagesHtml = '';
+    if (ticket.imageUrls && ticket.imageUrls.length > 0) {
+        imagesHtml = `<div style="margin:16px 0 12px; padding:12px; background:var(--gray-50); border-radius:12px; border:1px solid var(--gray-200);">
+            <div style="font-weight:600; color:var(--gray-700); margin-bottom:8px;"><i class="fas fa-image"></i> รูปภาพประกอบ:</div>
+            <div style="display:flex; flex-wrap:wrap; gap:10px;">`;
+        ticket.imageUrls.forEach(url => {
+            imagesHtml += `<a href="${url}" target="_blank"><img src="${url}" style="max-width:150px; max-height:150px; border-radius:8px; border:1px solid var(--gray-200); object-fit:cover;"/></a>`;
+        });
+        imagesHtml += `</div></div>`;
+    }
+
+    // ===== DETAILS UPDATE BLOCK =====
+    const duVal = ticket.detailsUpdate || '';
+    const detailsUpdateHTML = `
+    <div class="details-update-section">
+        <div class="details-update-header">
+            <div class="details-update-header-left">
+                <i class="fas fa-tools"></i>
+                <span>รายละเอียดการซ่อม</span>
+                ${duVal ? '<span class="details-update-badge"><i class="fas fa-check"></i> อัปเดตข้อมูล</span>' : '<span class="details-update-badge">ยังไม่มีข้อมูล</span>'}
+            </div>
+        </div>
+        <div class="details-update-edit">
+            <textarea class="du-textarea" id="duTextarea" placeholder="กรอกรายละเอียดการซ่อม เช่น สาเหตุ วิธีแก้ไข อะไหล่ที่ใช้...">${duVal}</textarea>
+            <div class="du-actions">
+                <button class="du-btn-save" id="duSaveBtn" onclick="promptAndSave('${ticket.ticketId}')">
+                    <i class="fas fa-save"></i> บันทึก
+                </button>
+                <span id="duStatusMsg" class="du-status-msg" style="display:none;"></span>
+            </div>
+            ${ticket.lastUpdated ? `<div class="du-last-updated"><i class="fas fa-clock"></i> อัปเดตล่าสุด: ${formatDate(ticket.lastUpdated)}</div>` : ''}
+        </div>
+    </div>`;
+
+    document.getElementById('resultSection').innerHTML = `
+    <div class="ticket-card">
+        <div class="ticket-header">
+            <div class="ticket-id"><span>Ticket ID:</span> ${ticket.ticketId}</div>
+            <span class="status-badge ${sc}"><i class="fas ${si}"></i> ${ticket.status || 'รอดำเนินการ'}</span>
+        </div>
+        <div class="ticket-body">
+            <div class="info-grid">
+                <div class="info-item"><div class="info-label"><i class="fas fa-user"></i> ผู้แจ้ง</div><div class="info-value">${ticket.name||'-'}</div></div>
+                <div class="info-item"><div class="info-label"><i class="fas fa-building"></i> แผนก</div><div class="info-value">${ticket.department||'-'}</div></div>
+                <div class="info-item"><div class="info-label"><i class="fas fa-tag"></i> ประเภทปัญหา</div><div class="info-value">${ticket.issueType||'-'}</div></div>
+                <div class="info-item"><div class="info-label"><i class="fas fa-laptop"></i> อุปกรณ์</div><div class="info-value">${ticket.device||'-'}</div></div>
+                <div class="info-item"><div class="info-label"><i class="fas fa-phone"></i> เบอร์โทร</div><div class="info-value">${ticket.phone||'-'}</div></div>
+                <div class="info-item"><div class="info-label"><i class="fas fa-calendar"></i> วันที่แจ้ง</div><div class="info-value">${formatDate(ticket.timestamp)}</div></div>
+                ${pcRow}${closeRow}
+                <div class="info-item full"><div class="info-label"><i class="fas fa-align-left"></i> รายละเอียดปัญหา</div><div class="info-value">${ticket.details||'-'}</div></div>
+                ${noteRow}
+            </div>
+
+            ${imagesHtml}
+
+            <!-- Progress -->
+            <div class="progress-section">
+                <div class="section-title"><i class="fas fa-chart-line"></i> ความคืบหน้า</div>
+                <div class="progress-steps">
+                    <div class="step completed"><div class="step-icon"><i class="fas fa-check"></i></div><div class="step-label">รับเรื่อง</div></div>
+                    <div class="step ${s2}"><div class="step-icon">${s2==='completed'?'<i class="fas fa-check"></i>':s2==='active'?'<i class="fas fa-spinner fa-pulse"></i>':'2'}</div><div class="step-label">ดำเนินการ</div></div>
+                    <div class="step ${s3}"><div class="step-icon">${s3==='completed'?'<i class="fas fa-check"></i>':'3'}</div><div class="step-label">เสร็จสิ้น</div></div>
+                </div>
+                <div class="assignee-info">
+                    <div class="assignee-avatar"><i class="fas fa-user-check"></i></div>
+                    <div class="assignee-detail"><div class="assignee-label">ผู้รับผิดชอบ</div><div class="assignee-name">${ticket.assignee||'ยังไม่ระบุ'}</div></div>
+                </div>
+            </div>
+
+            <!-- Details Update -->
+            ${detailsUpdateHTML}
+
+            <div class="action-buttons">
+                <button class="btn-back" onclick="resetSearch()"><i class="fas fa-search"></i> ค้นหาใหม่</button>
+                <button class="btn-export-pdf" id="pdfBtn" onclick="exportTicketPDF()"><i class="fas fa-file-pdf"></i> Export PDF</button>
+            </div>
+        </div>
+    </div>`;
+}
+
+    // ==================== DETAILS UPDATE FUNCTIONS ====================
+    // ✅ กดบันทึก → popup รหัสผ่าน → ถ้าถูกค่อยบันทึก
+    const IT_SAVE_PASSWORD = 'mm169Moo4';
+
+    function promptAndSave(ticketId) {
+        document.getElementById('pwModal').classList.add('active');
+        document.getElementById('pwInput').value = '';
+        document.getElementById('pwError').style.display = 'none';
+        document.getElementById('pwModal').dataset.ticketId = ticketId;
+        setTimeout(() => document.getElementById('pwInput').focus(), 100);
+    }
+
+    function closePwModal() {
+        document.getElementById('pwModal').classList.remove('active');
+    }
+
+    function confirmPassword() {
+        const pw = document.getElementById('pwInput').value;
+        const errEl = document.getElementById('pwError');
+        if (pw !== IT_SAVE_PASSWORD) {
+            errEl.textContent = 'รหัสผ่านไม่ถูกต้อง กรุณาลองใหม่';
+            errEl.style.display = 'block';
+            document.getElementById('pwInput').value = '';
+            document.getElementById('pwInput').focus();
+            return;
+        }
+        const ticketId = document.getElementById('pwModal').dataset.ticketId;
+        closePwModal();
+        saveDetailsUpdate(ticketId);
+    }
+
+    function saveDetailsUpdate(ticketId) {
+        const textarea = document.getElementById('duTextarea');
+        const btn      = document.getElementById('duSaveBtn');
+        const msg      = document.getElementById('duStatusMsg');
+        if (!textarea) return;
+
+        const val = textarea.value.trim();
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> กำลังบันทึก...';
+        if (msg) { msg.style.display = 'none'; }
+
+        (async () => {
+            try {
+                const ticket = allTickets.find(t => t.ticketId === ticketId) || currentTicket;
+                const oldVal = ticket ? (ticket.detailsUpdate || '') : '';
+
+                const { error: updateError } = await supabaseClient
+                    .from('tickets')
+                    .update({ details_update: val })
+                    .eq('ticket_id', ticketId);
+                if (updateError) throw updateError;
+
+                await supabaseClient.from('ticket_history').insert({
+                    ticket_id: ticketId,
+                    action: 'DETAILS_UPDATED',
+                    old_value: oldVal || '(ว่าง)',
+                    new_value: val,
+                    changed_by: 'IT Admin'
+                });
+
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-save"></i> บันทึก';
+
+                // อัปเดต currentTicket
+                currentTicket.detailsUpdate = val;
+                currentTicket.lastUpdated   = new Date().toString();
+                if (msg) { msg.style.display = 'flex'; msg.className = 'du-status-msg'; msg.innerHTML = '<i class="fas fa-check-circle"></i> บันทึกสำเร็จ'; }
+                setTimeout(() => { if (msg) msg.style.display = 'none'; }, 3000);
+                // อัปเดต allTickets cache
+                const idx = allTickets.findIndex(t => t.ticketId === ticketId);
+                if (idx !== -1) { allTickets[idx].detailsUpdate = val; }
+            } catch (e) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-save"></i> บันทึก';
+                if (msg) { msg.style.display = 'flex'; msg.className = 'du-status-msg error'; msg.innerHTML = '<i class="fas fa-exclamation-circle"></i> ' + (e.message || e); }
+            }
+        })();
+    }
+
+    // ==================== TICKET LIST ====================
+    function showTicketList(tickets) {
+        let html = `<h3 style="margin-bottom:20px;color:var(--gray-800);display:flex;align-items:center;gap:8px;"><i class="fas fa-list" style="color:var(--primary);"></i> พบ ${tickets.length} รายการ</h3><div class="ticket-list">`;
+        tickets.forEach(function(t) {
+            const sc = t.status==='รอดำเนินการ'?'status-pending':t.status==='กำลังดำเนินการ'?'status-progress':'status-completed';
+            const du = t.detailsUpdate ? `<span style="font-size:11px;background:#dcfce7;color:#166534;padding:2px 8px;border-radius:20px;"><i class="fas fa-tools"></i> มีรายละเอียดซ่อม</span>` : '';
+            html += `<div class="ticket-list-item" onclick='showTicketInfo(${JSON.stringify(t)})'>
+                <div class="ticket-list-info"><h4>${t.ticketId}</h4><p>${t.issueType} — ${t.department}</p></div>
+                <div class="ticket-list-meta"><span class="status-badge ${sc}">${t.status}</span>${du}</div>
+            </div>`;
+        });
+        html += `</div><button class="btn-back" onclick="resetSearch()" style="margin-top:16px;"><i class="fas fa-arrow-left"></i> กลับ</button>`;
+        document.getElementById('resultSection').innerHTML = html;
+    }
+
+    // ==================== PDF EXPORT ====================
+    async function exportTicketPDF() {
+        if (!currentTicket) return;
+        const t   = currentTicket;
+        const btn = document.getElementById('pdfBtn');
+        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> กำลังสร้าง PDF...'; }
+
+        document.getElementById('pdf-ticketId').textContent   = t.ticketId || '-';
+        document.getElementById('pdf-exportDate').textContent = 'Export: ' + new Date().toLocaleDateString('th-TH', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+        document.getElementById('pdf-name').textContent       = t.name || '-';
+        document.getElementById('pdf-department').textContent = t.department || '-';
+        document.getElementById('pdf-phone').textContent      = t.phone || '-';
+        document.getElementById('pdf-date').textContent       = formatDate(t.timestamp);
+        document.getElementById('pdf-issueType').textContent  = t.issueType || '-';
+        document.getElementById('pdf-device').textContent     = t.device || '-';
+        document.getElementById('pdf-details').textContent    = t.details || '-';
+        document.getElementById('pdf-assignee').textContent   = t.assignee || 'ยังไม่ระบุ';
+        document.getElementById('pdf-ref').textContent        = 'Ref: ' + (t.ticketId || '-');
+
+        // detailsUpdate ใน PDF
+        const duSection = document.getElementById('pdf-section-update');
+        const duEl      = document.getElementById('pdf-detailsUpdate');
+        if (t.detailsUpdate) {
+            duSection.style.display = 'block';
+            duEl.textContent = t.detailsUpdate;
+        } else {
+            duSection.style.display = 'none';
+        }
+
+        // Status pill
+        const pill = document.getElementById('pdf-statusPill');
+        pill.textContent = t.status || 'รอดำเนินการ';
+        pill.className   = 'pdf-status-pill ' + (t.status==='กำลังดำเนินการ'?'pill-progress':t.status==='เสร็จสิ้น'?'pill-done':'pill-pending');
+
+        // Progress
+        const activeStep = t.status==='เสร็จสิ้น'?3:t.status==='กำลังดำเนินการ'?2:1;
+        const fillPct    = activeStep===3?'100%':activeStep===2?'50%':'16%';
+        const fillColor  = t.status==='เสร็จสิ้น'?'#10b981':t.status==='กำลังดำเนินการ'?'#2F7FB8':'#f59e0b';
+        document.getElementById('pdf-progressFill').style.cssText = `width:${fillPct};background:${fillColor};`;
+        const s2d = document.getElementById('pdf-step2'); const s2l = document.getElementById('pdf-step2-lbl');
+        const s3d = document.getElementById('pdf-step3'); const s3l = document.getElementById('pdf-step3-lbl');
+        if (activeStep >= 2) { s2d.textContent=activeStep>2?'✓':'2'; s2d.className='pdf-step-dot '+(activeStep>2?'done':'active'); s2l.className='pdf-step-lbl '+(activeStep>2?'done':'active'); }
+        else { s2d.textContent='2'; s2d.className='pdf-step-dot inactive'; s2l.className='pdf-step-lbl inactive'; }
+        if (activeStep >= 3) { s3d.textContent='✓'; s3d.className='pdf-step-dot done'; s3l.className='pdf-step-lbl done'; }
+        else { s3d.textContent='3'; s3d.className='pdf-step-dot inactive'; s3l.className='pdf-step-lbl inactive'; }
+
+        const el = document.getElementById('pdfTemplate');
+        el.style.left = '-9999px'; el.style.display = 'block';
+        try {
+            await document.fonts.ready;
+            const canvas = await html2canvas(el, { scale:2, useCORS:true, allowTaint:true, backgroundColor:'#ffffff', logging:false, width:794 });
+            const imgData = canvas.toDataURL('image/jpeg', 0.95);
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+            const pdfW = 210; // mm A4 width
+            const pdfH = 297; // mm A4 height — บังคับให้พอดี 1 หน้าเสมอ
+            // คำนวณ content height จริง แล้ว fit ลง 297mm
+            const contentH = (canvas.height * pdfW) / canvas.width;
+            if (contentH <= 297) {
+                // เนื้อหาพอดีหรือน้อยกว่า 1 หน้า — วางตามจริง
+                pdf.addImage(imgData, 'JPEG', 0, 0, pdfW, contentH);
+            } else {
+                // เนื้อหาเกิน 1 หน้า — scale ให้พอดี 1 หน้าพอดี
+                pdf.addImage(imgData, 'JPEG', 0, 0, pdfW, pdfH);
+            }
+            pdf.save(`Ticket_${t.ticketId||'export'}.pdf`);
+        } catch(err) {
+            console.error('PDF error:', err);
+            alert('ไม่สามารถสร้าง PDF ได้: ' + err.message);
+        } finally {
+            el.style.left = '-9999px';
+            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-file-pdf"></i> Export PDF'; }
+        }
+    }
+
+    document.getElementById('ticketId').addEventListener('keypress', e => { if(e.key==='Enter') searchTicket(); });
+    document.getElementById('pwInput').addEventListener('keypress', e => { if(e.key==='Enter') confirmPassword(); });
+    document.getElementById('pwModal').addEventListener('click', function(e){ if(e.target===this) closePwModal(); });
+    document.getElementById('modalEmpCode').addEventListener('keypress', e => { if(e.key==='Enter') submitEmployeeCode(); });
+    document.getElementById('employeeModal').addEventListener('click', function(e){ if(e.target===this) closeEmployeeModal(); });
+</script>
+</body>
+</html>

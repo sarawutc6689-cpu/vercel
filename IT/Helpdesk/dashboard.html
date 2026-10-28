@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IT Helpdesk · Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI','Sarabun',Tahoma,Geneva,Verdana,sans-serif;}
+        :root{--primary:#2F7FB8;--primary-light:#E7F2FB;--primary-soft:#DCE9F5;--primary-bg:#F7FBFE;--white:#ffffff;--gray-50:#f8fafc;--gray-100:#f1f5f9;--gray-200:#e2e8f0;--gray-300:#cbd5e1;--gray-600:#475569;--gray-700:#334155;--gray-800:#1e293b;--success:#10b981;--warning:#f59e0b;--danger:#ef4444;--info:#3b82f6;}
+        body{background:var(--primary-bg);min-height:100vh;display:flex;font-size:14px;}
+
+        /* Sidebar */
+        .sidebar{width:280px;background:var(--white);height:100vh;position:fixed;left:0;top:0;box-shadow:4px 0 20px rgba(0,45,90,0.05);overflow-y:auto;z-index:1000;border-right:1px solid var(--gray-200);}
+        .sidebar-header{padding:30px 24px;background:var(--white);border-bottom:1px solid var(--gray-200);text-align:center;}
+        .sidebar-header i{font-size:48px;color:var(--primary);margin-bottom:12px;background:var(--primary-light);padding:16px;border-radius:20px;}
+        .sidebar-header h2{font-size:20px;font-weight:600;color:var(--gray-800);margin-bottom:4px;}
+        .sidebar-header p{font-size:13px;color:var(--gray-600);}
+        .sidebar-menu{padding:20px 16px;}
+        .menu-item{display:flex;align-items:center;padding:12px 20px;color:var(--gray-600);transition:all 0.2s;cursor:pointer;text-decoration:none;border-radius:12px;margin-bottom:4px;font-weight:500;}
+        .menu-item:hover{background:var(--primary-light);color:var(--primary);}
+        .menu-item.active{background:var(--primary-light);color:var(--primary);font-weight:600;}
+        .menu-item i{width:24px;font-size:18px;margin-right:12px;}
+        .menu-item span{flex:1;}
+        .menu-badge{background:var(--primary-light);color:var(--primary);padding:4px 8px;border-radius:30px;font-size:11px;font-weight:600;}
+        .sidebar-footer{padding:20px 24px;border-top:1px solid var(--gray-200);position:absolute;bottom:0;width:100%;background:var(--white);}
+        .user-info{display:flex;align-items:center;gap:12px;}
+        .user-avatar{width:44px;height:44px;background:var(--primary-light);color:var(--primary);border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:18px;}
+        .user-details{flex:1;}.user-name{font-weight:600;color:var(--gray-800);font-size:14px;}.user-role{font-size:12px;color:var(--gray-600);}
+
+        /* Main */
+        .main-content{flex:1;margin-left:280px;padding:24px;}
+        .container{max-width:1400px;margin:0 auto;}
+        .header{background:var(--white);border-radius:20px;padding:20px 28px;margin-bottom:24px;box-shadow:0 2px 12px rgba(0,45,90,0.03);border:1px solid var(--gray-200);display:flex;align-items:center;justify-content:space-between;}
+        .header h1{color:var(--gray-800);font-size:22px;font-weight:600;display:flex;align-items:center;gap:12px;}
+        .header h1 i{color:var(--primary);font-size:24px;}
+        .btn-refresh{background:var(--white);color:var(--gray-600);border:1px solid var(--gray-200);padding:10px 16px;border-radius:12px;cursor:pointer;font-size:14px;display:flex;align-items:center;gap:8px;transition:all 0.2s;}
+        .btn-refresh:hover{background:var(--primary-light);color:var(--primary);border-color:var(--primary-soft);}
+
+        /* Stats Grid */
+        .stats-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:20px;margin-bottom:24px;}
+        .stat-card{background:var(--white);border-radius:18px;padding:20px;box-shadow:0 2px 12px rgba(0,45,90,0.03);border:1px solid var(--gray-200);transition:all 0.2s;}
+        .stat-card:hover{border-color:var(--primary-soft);box-shadow:0 8px 20px rgba(43,110,211,0.08);}
+        .stat-icon{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:16px;}
+        .stat-icon.total{background:#e0e7ff;color:#4f46e5;}.stat-icon.pending{background:#fef3c7;color:#d97706;}
+        .stat-icon.progress{background:#dbeafe;color:#2563eb;}.stat-icon.completed{background:#d1fae5;color:#059669;}
+        .stat-icon.urgent{background:#fee2e2;color:#dc2626;}.stat-icon.avg{background:#f3e8ff;color:#9333ea;}
+        .stat-value{font-size:28px;font-weight:700;color:var(--gray-800);margin-bottom:4px;}
+        .stat-label{color:var(--gray-600);font-size:13px;font-weight:500;}
+
+        /* Skeleton loader */
+        .skeleton{background:linear-gradient(90deg,var(--gray-200) 25%,var(--gray-100) 50%,var(--gray-200) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:8px;color:transparent;display:inline-block;}
+        @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+        /* Charts */
+        .charts-row{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;margin-bottom:24px;}
+        .chart-card{background:var(--white);border-radius:18px;padding:20px;box-shadow:0 2px 12px rgba(0,45,90,0.03);border:1px solid var(--gray-200);}
+        .chart-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+        .chart-header h3{color:var(--gray-800);font-size:16px;font-weight:600;display:flex;align-items:center;gap:8px;}
+        .chart-header h3 i{color:var(--primary);}
+        .chart-header select{padding:6px 12px;border:1px solid var(--gray-200);border-radius:30px;font-size:13px;color:var(--gray-700);background:var(--white);}
+        .chart-container{height:280px;position:relative;}
+
+        /* Stats Row */
+        .stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:24px;}
+        .stats-card{background:var(--white);border-radius:18px;padding:20px;box-shadow:0 2px 12px rgba(0,45,90,0.03);border:1px solid var(--gray-200);}
+        .stats-header{display:flex;align-items:center;gap:8px;margin-bottom:16px;color:var(--gray-800);font-size:16px;font-weight:600;}
+        .stats-header i{color:var(--primary);}
+        .stats-list{list-style:none;}
+        .stats-item{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--gray-200);}
+        .stats-item:last-child{border-bottom:none;}
+        .stats-item .label{color:var(--gray-600);font-size:14px;}
+        .stats-item .value{font-weight:600;color:var(--gray-800);}
+        .progress-bar{width:100%;height:6px;background:var(--gray-200);border-radius:3px;margin:6px 0 10px;}
+        .progress-fill{height:100%;border-radius:3px;background:var(--primary);transition:width 0.6s ease;}
+
+        /* Recent Tickets */
+        .recent-section{background:var(--white);border-radius:18px;padding:20px;box-shadow:0 2px 12px rgba(0,45,90,0.03);border:1px solid var(--gray-200);}
+        .recent-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+        .recent-header h3{color:var(--gray-800);font-size:16px;font-weight:600;display:flex;align-items:center;gap:8px;}
+        .recent-header h3 i{color:var(--primary);}
+        .recent-header a{color:var(--primary);text-decoration:none;font-size:13px;}
+        .recent-table{width:100%;border-collapse:collapse;}
+        .recent-table th{text-align:left;padding:12px;background:var(--gray-50);color:var(--gray-600);font-weight:600;font-size:13px;border-bottom:1px solid var(--gray-200);}
+        .recent-table td{padding:12px;border-bottom:1px solid var(--gray-200);color:var(--gray-700);font-size:13px;}
+        .recent-table tr:hover td{background:var(--gray-50);}
+        .badge{padding:4px 12px;border-radius:30px;font-size:11px;font-weight:600;}
+        .badge-pending{background:#fef3c7;color:#92400e;}.badge-progress{background:#dbeafe;color:#1e40af;}.badge-completed{background:#d1fae5;color:#065f46;}
+
+        /* Refresh spin */
+        .fa-spin-on-load{animation:spin 1s linear infinite;}
+        @keyframes spin{to{transform:rotate(360deg)}}
+
+        footer{text-align:center;padding:20px;color:var(--gray-600);font-size:12px;margin-top:30px;border-top:1px solid var(--gray-200);}
+        @media(max-width:1200px){.stats-grid{grid-template-columns:repeat(3,1fr)}.charts-row{grid-template-columns:1fr}.stats-row{grid-template-columns:repeat(2,1fr)}}
+        @media(max-width:768px){.sidebar{width:0;display:none}.main-content{margin-left:0}.stats-grid{grid-template-columns:repeat(2,1fr)}.stats-row{grid-template-columns:1fr}}
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <i class="fas fa-headset"></i><h2>IT Helpdesk</h2><p>ระบบแจ้งซ่อมออนไลน์</p>
+        </div>
+        <div class="sidebar-menu">
+            <a href="dashboard.html" class="menu-item active">
+                <i class="fas fa-chart-pie"></i><span>แดชบอร์ด</span><span class="menu-badge" id="menuTotal">-</span>
+            </a>
+            <a href="kpi.html" class="menu-item">
+                <i class="fas fa-bullseye"></i><span>KPI</span>
+            </a>
+            <a href="index.html" class="menu-item">
+                <i class="fas fa-plus-circle"></i><span>แจ้งปัญหา</span>
+            </a>
+            <a href="login.html" class="menu-item">
+                <i class="fas fa-clipboard-check"></i><span>รอดำเนินงาน</span><span class="menu-badge" id="menuPending">-</span>
+            </a>
+            <a href="track.html" class="menu-item">
+                <i class="fas fa-search"></i><span>ติดตามสถานะ</span>
+            </a>
+            <a href="report.html" class="menu-item">
+                <i class="fas fa-file-alt"></i><span>รายงาน</span>
+            </a>
+            <a href="manage-staff.html" class="menu-item">
+                <i class="fas fa-user-shield"></i><span>จัดการบัญชี</span>
+            </a>
+        </div>
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <div class="user-avatar">SC</div>
+                <div class="user-details"><div class="user-name">พัฒนาระบบโดย</div><div class="user-role">Sarawut.C</div></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="container">
+            <div class="header">
+                <h1><i class="fas fa-chart-pie"></i> ภาพรวมระบบ</h1>
+                <button class="btn-refresh" onclick="loadDashboardData()" id="refreshBtn">
+                    <i class="fas fa-sync-alt" id="refreshIcon"></i> รีเฟรช
+                </button>
+            </div>
+
+            <!-- Stats Cards พร้อม Skeleton -->
+            <div class="stats-grid">
+                <div class="stat-card"><div class="stat-icon total"><i class="fas fa-ticket-alt"></i></div><div class="stat-value skeleton" id="totalTickets">&nbsp;&nbsp;&nbsp;&nbsp;</div><div class="stat-label">Ticket ทั้งหมด</div></div>
+                <div class="stat-card"><div class="stat-icon pending"><i class="fas fa-clock"></i></div><div class="stat-value skeleton" id="pendingTickets">&nbsp;&nbsp;&nbsp;&nbsp;</div><div class="stat-label">รอดำเนินการ</div></div>
+                <div class="stat-card"><div class="stat-icon progress"><i class="fas fa-spinner"></i></div><div class="stat-value skeleton" id="progressTickets">&nbsp;&nbsp;&nbsp;&nbsp;</div><div class="stat-label">กำลังดำเนินการ</div></div>
+                <div class="stat-card"><div class="stat-icon completed"><i class="fas fa-check-circle"></i></div><div class="stat-value skeleton" id="completedTickets">&nbsp;&nbsp;&nbsp;&nbsp;</div><div class="stat-label">เสร็จสิ้น</div></div>
+                <div class="stat-card"><div class="stat-icon urgent"><i class="fas fa-exclamation-triangle"></i></div><div class="stat-value skeleton" id="urgentTickets">&nbsp;&nbsp;&nbsp;&nbsp;</div><div class="stat-label">ด่วน/รอนาน</div></div>
+                <div class="stat-card"><div class="stat-icon avg"><i class="fas fa-hourglass-half"></i></div><div class="stat-value skeleton" id="avgTime">&nbsp;&nbsp;&nbsp;&nbsp;</div><div class="stat-label">เวลาเฉลี่ย (ชม.)</div></div>
+            </div>
+
+            <!-- Charts -->
+            <div class="charts-row">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3><i class="fas fa-chart-pie"></i> สถานะ Ticket</h3>
+                        <select id="statusChartType" onchange="switchStatusChart()">
+                            <option value="pie">Pie</option>
+                            <option value="doughnut">Doughnut</option>
+                        </select>
+                    </div>
+                    <div class="chart-container"><canvas id="statusChart"></canvas></div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3><i class="fas fa-chart-line"></i> สถิติรายเดือน</h3>
+                        <select id="monthlyChartType" onchange="switchMonthlyChart()">
+                            <option value="line">Line</option>
+                            <option value="bar">Bar</option>
+                        </select>
+                    </div>
+                    <div class="chart-container"><canvas id="monthlyChart"></canvas></div>
+                </div>
+            </div>
+
+            <!-- Stats Row -->
+            <div class="stats-row">
+                <div class="stats-card">
+                    <div class="stats-header"><i class="fas fa-exclamation-triangle"></i><span>ปัญหาที่พบบ่อย</span></div>
+                    <ul class="stats-list" id="topIssues"><li class="stats-item"><span class="label skeleton">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></li></ul>
+                </div>
+                <div class="stats-card">
+                    <div class="stats-header"><i class="fas fa-building"></i><span>สถิติตามแผนก</span></div>
+                    <ul class="stats-list" id="deptStats"><li class="stats-item"><span class="label skeleton">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></li></ul>
+                </div>
+                <div class="stats-card">
+                    <div class="stats-header"><i class="fas fa-users"></i><span>ผลงานเจ้าหน้าที่</span></div>
+                    <ul class="stats-list" id="assigneeStats"><li class="stats-item"><span class="label skeleton">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></li></ul>
+                </div>
+            </div>
+
+            <!-- Recent Tickets -->
+            <div class="recent-section">
+                <div class="recent-header">
+                    <h3><i class="fas fa-history"></i> Ticket ล่าสุด</h3>
+                    <a href="approve.html">ดูทั้งหมด →</a>
+                </div>
+                <table class="recent-table">
+                    <thead><tr><th>Ticket ID</th><th>วันที่</th><th>ผู้แจ้ง</th><th>แผนก</th><th>ประเภท</th><th>สถานะ</th><th>ผู้รับผิดชอบ</th></tr></thead>
+                    <tbody id="recentTickets">
+                        <tr><td colspan="7" style="text-align:center;padding:30px;color:var(--gray-600);"><i class="fas fa-spinner fa-spin" style="margin-right:8px;color:var(--primary);"></i>กำลังโหลด...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <footer><p>IT Helpdesk Dashboard © 2026 | Tokaisolidtire</p></footer>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        // Supabase config — ใส่ Project URL และ anon key ของคุณตรงนี้
+        // ============================================================
+        const SUPABASE_URL      = 'https://fuarmmweqxxhczavkvqp.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ1YXJtbXdlcXh4aGN6YXZrdnFwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgyMjgzMTcsImV4cCI6MjEwMzgwNDMxN30.n7s4gKOkCvaOSpFSf9FGmWsqi7eAzFe28c_oJWy8NSE';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let statusChart, monthlyChart;
+        let cachedData = null;
+
+        // แปลงคอลัมน์ snake_case จาก Supabase ให้เป็น shape เดิม (camelCase)
+        function mapTicketRow(row) {
+            return {
+                timestamp: row.created_at,
+                name: row.name,
+                department: row.department,
+                issueType: row.issue_type,
+                device: row.device,
+                details: row.details,
+                phone: row.phone,
+                ticketId: row.ticket_id,
+                status: row.status,
+                assignee: row.assignee,
+                closeDate: row.close_date,
+                note: row.note,
+                computerName: row.computer_name,
+                historyCount: row.history_count,
+                lastUpdated: row.last_updated,
+                detailsUpdate: row.details_update,
+                imageUrls: row.image_urls || []
+            };
+        }
+
+        // ย้าย logic การสรุปสถิติทั้งหมดจาก getDashboardData() ฝั่ง GAS มาทำที่ client แทน
+        function buildDashboardData(tickets) {
+            const summary = {
+                total: tickets.length,
+                pending: tickets.filter(t => t.status === 'รอดำเนินการ').length,
+                progress: tickets.filter(t => t.status === 'กำลังดำเนินการ').length,
+                completed: tickets.filter(t => t.status === 'เสร็จสิ้น').length,
+                urgent: tickets.filter(t => {
+                    if (t.status === 'เสร็จสิ้น' || !t.timestamp) return false;
+                    return Math.floor((new Date() - new Date(t.timestamp)) / 86400000) >= 3;
+                }).length,
+                avgTime: calculateAvgTime(tickets)
+            };
+
+            const issueCount = {}, deptCount = {}, assigneeStatsMap = {};
+            tickets.forEach(t => {
+                if (t.issueType) issueCount[t.issueType] = (issueCount[t.issueType] || 0) + 1;
+                if (t.department) deptCount[t.department] = (deptCount[t.department] || 0) + 1;
+                if (t.assignee) {
+                    if (!assigneeStatsMap[t.assignee]) assigneeStatsMap[t.assignee] = { total: 0, completed: 0 };
+                    assigneeStatsMap[t.assignee].total++;
+                    if (t.status === 'เสร็จสิ้น') assigneeStatsMap[t.assignee].completed++;
+                }
+            });
+
+            const topIssues    = Object.entries(issueCount).map(([type, count]) => ({ type, count })).sort((a, b) => b.count - a.count).slice(0, 5);
+            const deptStats    = Object.entries(deptCount).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count).slice(0, 5);
+            const assigneeList = Object.entries(assigneeStatsMap).map(([name, s]) => ({ name, ...s })).sort((a, b) => b.total - a.total).slice(0, 5);
+            const monthly       = getMonthlyStats(tickets);
+
+            return {
+                summary, topIssues, deptStats, assigneeStats: assigneeList,
+                monthlyLabels: monthly.labels, monthlyData: monthly.data,
+                recentTickets: tickets.slice(0, 10)
+            };
+        }
+
+        // หมายเหตุ: คงพฤติกรรมเดิมไว้ทุกจุด (รวมถึงจุดที่ต้นฉบับใช้ "ตอนนี้ - วันที่แจ้ง"
+        // แทนที่จะเป็น "วันที่ปิดงาน - วันที่แจ้ง" สำหรับ ticket ที่เสร็จแล้ว)
+        function calculateAvgTime(tickets) {
+            const c = tickets.filter(t => t.status === 'เสร็จสิ้น' && t.timestamp);
+            if (!c.length) return 0;
+            return Math.round(c.reduce((s, t) => s + ((new Date() - new Date(t.timestamp)) / 3600000), 0) / c.length);
+        }
+
+        function getMonthlyStats(tickets) {
+            const months = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+            const monthly = new Array(12).fill(0);
+            tickets.forEach(t => { if (t.timestamp) monthly[new Date(t.timestamp).getMonth()]++; });
+            const labels = [], data = [], cur = new Date().getMonth();
+            for (let i = 5; i >= 0; i--) { const m = (cur - i + 12) % 12; labels.push(months[m]); data.push(monthly[m]); }
+            return { labels, data };
+        }
+
+        // [FIX] render หน้าก่อน แล้วค่อย load data async
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(loadDashboardData, 100);
+        });
+
+        // PostgREST จำกัดสูงสุด 1000 แถวต่อคำขอ (default) — ดึงทีละหน้าจนกว่าจะครบทุก ticket
+        async function fetchAllTickets() {
+            const pageSize = 1000;
+            let from = 0;
+            let all = [];
+            while (true) {
+                const { data, error } = await supabaseClient
+                    .from('tickets')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .range(from, from + pageSize - 1);
+                if (error) throw error;
+                if (!data || data.length === 0) break;
+                all = all.concat(data);
+                if (data.length < pageSize) break;
+                from += pageSize;
+            }
+            return all;
+        }
+
+        async function loadDashboardData() {
+            // Spinning icon
+            const icon = document.getElementById('refreshIcon');
+            icon.classList.add('fa-spin-on-load');
+
+            try {
+                const rows = await fetchAllTickets();
+
+                const tickets = (rows || []).map(mapTicketRow);
+                const data = buildDashboardData(tickets);
+
+                icon.classList.remove('fa-spin-on-load');
+                cachedData = data;
+                updateStats(data.summary);
+                updateCharts(data);
+                updateTopIssues(data.topIssues, data.summary ? data.summary.total : 0);
+                updateDeptStats(data.deptStats);
+                updateAssigneeStats(data.assigneeStats);
+                updateRecentTickets(data.recentTickets);
+                updateMenuBadges(data.summary);
+            } catch (error) {
+                icon.classList.remove('fa-spin-on-load');
+                console.error('Dashboard error:', error);
+                showLoadError();
+            }
+        }
+
+        function showLoadError() {
+            ['totalTickets','pendingTickets','progressTickets','completedTickets','urgentTickets','avgTime'].forEach(id => {
+                const el = document.getElementById(id);
+                el.classList.remove('skeleton');
+                el.textContent = '-';
+            });
+            document.getElementById('recentTickets').innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--danger);"><i class="fas fa-exclamation-circle"></i> โหลดข้อมูลไม่สำเร็จ กดรีเฟรชเพื่อลองใหม่</td></tr>';
+        }
+
+        function updateMenuBadges(summary) {
+            if (!summary) return;
+            document.getElementById('menuTotal').textContent = summary.total || 0;
+            document.getElementById('menuPending').textContent = summary.pending || 0;
+        }
+
+        function updateStats(summary) {
+            if (!summary) return;
+            const fields = { totalTickets:'total', pendingTickets:'pending', progressTickets:'progress', completedTickets:'completed', urgentTickets:'urgent', avgTime:'avgTime' };
+            Object.entries(fields).forEach(([id, key]) => {
+                const el = document.getElementById(id);
+                el.classList.remove('skeleton');
+                el.textContent = summary[key] || 0;
+            });
+        }
+
+        function updateCharts(data) {
+            if (!data || !data.summary) return;
+
+            // Status Chart
+            const statusCtx = document.getElementById('statusChart').getContext('2d');
+            if (statusChart) statusChart.destroy();
+            statusChart = new Chart(statusCtx, {
+                type: document.getElementById('statusChartType').value,
+                data: {
+                    labels: ['รอดำเนินการ', 'กำลังดำเนินการ', 'เสร็จสิ้น'],
+                    datasets: [{ data: [data.summary.pending||0, data.summary.progress||0, data.summary.completed||0], backgroundColor: ['#f59e0b','#3b82f6','#10b981'], borderWidth: 0 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+            });
+
+            // Monthly Chart
+            const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
+            if (monthlyChart) monthlyChart.destroy();
+            monthlyChart = new Chart(monthlyCtx, {
+                type: document.getElementById('monthlyChartType').value,
+                data: {
+                    labels: data.monthlyLabels || [],
+                    datasets: [{ label: 'จำนวน Ticket', data: data.monthlyData || [], backgroundColor: 'rgba(43,110,211,0.15)', borderColor: '#2F7FB8', tension: 0.4, fill: true }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+        }
+
+        // เปลี่ยน chart type โดยไม่ต้อง reload ข้อมูล
+        function switchStatusChart() {
+            if (!cachedData) return;
+            if (statusChart) statusChart.destroy();
+            const ctx = document.getElementById('statusChart').getContext('2d');
+            statusChart = new Chart(ctx, {
+                type: document.getElementById('statusChartType').value,
+                data: {
+                    labels: ['รอดำเนินการ', 'กำลังดำเนินการ', 'เสร็จสิ้น'],
+                    datasets: [{ data: [cachedData.summary.pending||0, cachedData.summary.progress||0, cachedData.summary.completed||0], backgroundColor: ['#f59e0b','#3b82f6','#10b981'], borderWidth: 0 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+            });
+        }
+
+        function switchMonthlyChart() {
+            if (!cachedData) return;
+            if (monthlyChart) monthlyChart.destroy();
+            const ctx = document.getElementById('monthlyChart').getContext('2d');
+            monthlyChart = new Chart(ctx, {
+                type: document.getElementById('monthlyChartType').value,
+                data: {
+                    labels: cachedData.monthlyLabels || [],
+                    datasets: [{ label: 'จำนวน Ticket', data: cachedData.monthlyData || [], backgroundColor: 'rgba(43,110,211,0.15)', borderColor: '#2F7FB8', tension: 0.4, fill: true }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+        }
+
+        function updateTopIssues(issues, total) {
+            const list = document.getElementById('topIssues');
+            if (!issues || issues.length === 0) { list.innerHTML = '<li class="stats-item"><span class="label">ไม่มีข้อมูล</span></li>'; return; }
+            list.innerHTML = issues.map(issue => {
+                const pct = total > 0 ? ((issue.count / total) * 100).toFixed(1) : 0;
+                return `<li class="stats-item"><span class="label">${issue.type}</span><span class="value">${issue.count} (${pct}%)</span></li><div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>`;
+            }).join('');
+        }
+
+        function updateDeptStats(depts) {
+            const list = document.getElementById('deptStats');
+            if (!depts || depts.length === 0) { list.innerHTML = '<li class="stats-item"><span class="label">ไม่มีข้อมูล</span></li>'; return; }
+            list.innerHTML = depts.map(d => `<li class="stats-item"><span class="label">${d.name||'ไม่ระบุ'}</span><span class="value">${d.count||0}</span></li>`).join('');
+        }
+
+        function updateAssigneeStats(assignees) {
+            const list = document.getElementById('assigneeStats');
+            if (!assignees || assignees.length === 0) { list.innerHTML = '<li class="stats-item"><span class="label">ไม่มีข้อมูล</span></li>'; return; }
+            list.innerHTML = assignees.map(a => {
+                const pct = a.total > 0 ? ((a.completed / a.total) * 100).toFixed(1) : 0;
+                return `<li class="stats-item"><span class="label">${a.name||'ไม่ระบุ'}</span><span class="value">${a.completed||0}/${a.total||0}</span></li><div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:var(--success)"></div></div>`;
+            }).join('');
+        }
+
+        function updateRecentTickets(tickets) {
+            const tbody = document.getElementById('recentTickets');
+            if (!tickets || tickets.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px;">ไม่มีข้อมูล</td></tr>'; return; }
+            tbody.innerHTML = tickets.slice(0, 10).map(t => {
+                const bc = t.status==='รอดำเนินการ'?'badge-pending':t.status==='กำลังดำเนินการ'?'badge-progress':'badge-completed';
+                return `<tr><td><strong style="color:var(--primary);">${t.ticketId||'-'}</strong></td><td>${fmtDate(t.timestamp)}</td><td>${t.name||'-'}</td><td>${t.department||'-'}</td><td>${t.issueType||'-'}</td><td><span class="badge ${bc}">${t.status||'รอดำเนินการ'}</span></td><td>${t.assignee||'-'}</td></tr>`;
+            }).join('');
+        }
+
+        function fmtDate(ts) {
+            if (!ts) return '-';
+            try { return new Date(ts).toLocaleDateString('th-TH',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}); }
+            catch { return '-'; }
+        }
+    </script>
+</body>
+</html>
