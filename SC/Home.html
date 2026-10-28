@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SupplyChain & Logistic · Home</title>
+  <!-- Font Awesome (Icons) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    }
+
+    body {
+      background-color: #0b0b0b; /* ดำสนิท */
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1.5rem;
+    }
+
+    /* การ์ดหลัก — ทางการ โทนดำ-แดง */
+    .dashboard {
+      max-width: 1280px;
+      width: 100%;
+      background: #111111;
+      border-radius: 2.5rem;
+      padding: 2.5rem 2.8rem;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8), 0 0 0 1px #2a1a1a;
+      border: 1px solid #3a1e1e;
+    }
+
+    /* ส่วนหัว: โลโก้/ชื่อ + วันที่ */
+    .header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #8b1e1e;
+      padding-bottom: 1.5rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .brand h1 {
+      font-size: 2.2rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      color: #f0e6e6;
+    }
+    .brand h1 i {
+      color: #c92a2a;
+      margin-right: 12px;
+    }
+    .brand .sub {
+      font-size: 0.95rem;
+      color: #a08282;
+      letter-spacing: 2px;
+      font-weight: 300;
+      margin-top: 6px;
+      border-left: 3px solid #b22222;
+      padding-left: 14px;
+    }
+
+    .header-date {
+      background: #1f1414;
+      padding: 0.8rem 2rem;
+      border-radius: 60px;
+      border: 1px solid #691b1b;
+      color: #e0cfcf;
+      font-weight: 400;
+      font-size: 1rem;
+      box-shadow: inset 0 0 8px rgba(180, 30, 30, 0.2);
+    }
+    .header-date i {
+      color: #d43b3b;
+      margin-right: 10px;
+    }
+
+    /* ส่วนต้อนรับอย่างเป็นทางการ */
+    .greeting {
+      background: #1a1010;
+      padding: 1.2rem 2rem;
+      border-radius: 60px;
+      display: inline-block;
+      margin-bottom: 2.5rem;
+      border-left: 6px solid #b22222;
+      color: #ddd0d0;
+      font-size: 1.1rem;
+      font-weight: 400;
+      letter-spacing: 1px;
+    }
+    .greeting i {
+      color: #e63939;
+      margin-right: 10px;
+    }
+    .greeting strong {
+      color: #f0d0d0;
+      font-weight: 500;
+    }
+
+    /* กริดแผนก */
+    .dept-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2rem;
+      margin-top: 1rem;
+    }
+
+    .dept-card {
+      background: #181010;
+      border-radius: 2rem;
+      padding: 1.8rem 1.5rem 2rem;
+      border: 1px solid #3d2323;
+      box-shadow: 0 8px 0 #1f0f0f;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+    .dept-card::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 6px;
+      height: 100%;
+      background: #b22222;
+      border-radius: 0 4px 4px 0;
+    }
+    .dept-card:hover {
+      transform: translateY(-6px);
+      border-color: #a52a2a;
+      box-shadow: 0 14px 0 #1f0f0f, 0 0 0 1px #8b2a2a;
+      background: #1c1313;
+    }
+
+    .card-icon {
+      font-size: 2.6rem;
+      color: #c92a2a;
+      margin-bottom: 0.8rem;
+    }
+    .dept-card h3 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #f2e6e6;
+      letter-spacing: 0.5px;
+      margin-bottom: 0.6rem;
+    }
+    .dept-card p {
+      color: #a38989;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      margin-bottom: 1.5rem;
+      flex: 1;
+    }
+    .dept-card .btn {
+      background: transparent;
+      border: 1.5px solid #8b2a2a;
+      color: #e6d6d6;
+      padding: 0.7rem 1.2rem;
+      border-radius: 40px;
+      font-weight: 500;
+      font-size: 0.95rem;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: 0.2s;
+      margin-top: 0.4rem;
+      align-self: flex-start;
+      letter-spacing: 1px;
+    }
+    .dept-card .btn i {
+      color: #b33b3b;
+      transition: 0.2s;
+    }
+    .dept-card .btn:hover {
+      background: #8b1e1e;
+      border-color: #b22222;
+      color: #fff;
+      box-shadow: 0 0 20px rgba(180, 30, 30, 0.3);
+    }
+    .dept-card .btn:hover i {
+      color: #fff;
+    }
+
+    /* ตัวอย่างข้อมูลเพิ่มเติม (AMS) */
+    .ams-preview {
+      background: #1f1414;
+      border-radius: 16px;
+      padding: 0.8rem 1.2rem;
+      margin: 0.8rem 0 1.2rem;
+      border-left: 4px solid #b22222;
+      font-size: 0.9rem;
+      color: #bea5a5;
+    }
+    .ams-preview i {
+      color: #d43b3b;
+      width: 20px;
+    }
+    .ams-preview span {
+      color: #dac5c5;
+      font-weight: 400;
+    }
+
+    .badge-dev {
+      background: #2a1717;
+      color: #ac7a7a;
+      font-size: 0.7rem;
+      padding: 0.2rem 1rem;
+      border-radius: 30px;
+      border: 1px solid #632222;
+      margin-left: 10px;
+      letter-spacing: 0.5px;
+    }
+
+    /* footer ทางการ */
+    .footer-note {
+      margin-top: 3rem;
+      padding-top: 1.8rem;
+      border-top: 1px solid #2a1a1a;
+      color: #6d5555;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      font-size: 0.9rem;
+      letter-spacing: 0.3px;
+    }
+    .footer-note i {
+      color: #b33b3b;
+      margin: 0 6px;
+    }
+
+    /* Responsive */
+    @media (max-width: 700px) {
+      .dashboard { padding: 1.8rem; }
+      .brand h1 { font-size: 1.8rem; }
+      .header-date { padding: 0.4rem 1.2rem; font-size: 0.9rem; }
+      .dept-grid { gap: 1.5rem; }
+      .greeting { font-size: 0.95rem; padding: 0.8rem 1.5rem; }
+    }
+    @media (max-width: 480px) {
+      .header { flex-direction: column; align-items: start; gap: 0.8rem; }
+      .dept-card { padding: 1.5rem 1.2rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard">
+
+    <!-- HEADER -->
+    <div class="header">
+      <div class="brand">
+        <h1><i class="fas fa-truck"></i> SupplyChain & Logistic</h1>
+        <div class="sub"><i class="fas fa-arrow-right" style="color:#a83232; margin-right: 8px;"></i> ฝ่ายสนับสนุนโลจิสติกส์องค์กร</div>
+      </div>
+      <div class="header-date">
+        <i class="fas fa-calendar-alt"></i> วันอังคารที่ 30 มิถุนายน 2569 · <i class="far fa-clock"></i> 15:57 น.
+      </div>
+    </div>
+
+    <!-- GREETING -->
+    <div class="greeting">
+      <i class="fas fa-user-tie"></i> ยินดีต้อนรับสู่ระบบบริหารงาน <strong>Supply Chain</strong> 
+    </div>
+
+    <!-- GRID แผนก -->
+    <div class="dept-grid">
+
+      <!-- CARD 1: แผนกบริการยานยนต์ (AMS) -->
+      <div class="dept-card">
+        <div class="card-icon"><i class="fas fa-car-side"></i></div>
+        <h3>แผนกบริการยานยนต์</h3>
+        <p>ศูนย์กลางการจัดการรถยนต์ โฟล์คลิฟ รถกระเช้า และรถบรรทุก พร้อมระบบจองและปฏิทิน</p>
+        <!-- ตัวอย่าง preview จาก AMS -->
+        <div class="ams-preview">
+          <i class="fas fa-calendar-check"></i> <span>จองรถใช้งาน · ปฏิทินรถเข้า กทม.</span><br>
+          <i class="fas fa-tools" style="margin-top: 4px;"></i> <span>ระบบแจ้งซ่อม (กำลังพัฒนา)</span>
+        </div>
+        <a href="https://sarawutc6689-cpu.github.io/Mouldmate-AMS/Main.html" target="_blank" class="btn">
+          <i class="fas fa-arrow-right"></i> เข้าสู่ระบบ AMS
+        </a>
+      </div>
+
+      <!-- CARD 2: แผนกคลังพัสดุ (ST) -->
+      <div class="dept-card">
+        <div class="card-icon"><i class="fas fa-warehouse"></i></div>
+        <h3>แผนกคลังพัสดุ</h3>
+        <p>บริหารจัดการสินค้าคงคลัง วัสดุ อะไหล่ และการเบิก-จ่ายพัสดุครบวงจร</p>
+        <div style="background: #1f1414; border-radius: 16px; padding: 0.6rem 1rem; margin: 0.4rem 0 1.2rem; border-left: 4px solid #a52a2a; color: #bea5a5; font-size:0.9rem;">
+          <i class="fas fa-boxes" style="color:#d43b3b;"></i> <span>คลังกลาง · อะไหล่ · วัสดุสิ้นเปลือง</span>
+        </div>
+        <a href="https://sarawutc6689-cpu.github.io/Mouldmate-ST/Home.html" target="_blank" class="btn">
+          <i class="fas fa-arrow-right"></i> เข้าสู่ระบบคลัง
+        </a>
+      </div>
+
+      <!-- CARD 3: แผนกอื่นๆ (แสดงไว้ให้เห็นภาพรวม) -->
+      <div class="dept-card">
+        <div class="card-icon"><i class="fas fa-chart-line"></i></div>
+        <h3>โลจิสติกส์</h3>
+        <p>ติดตามสถานะการขนส่ง วางแผนเส้นทาง และบริหารความเสี่ยงในห่วงโซ่อุปทาน</p>
+        <div style="background: #1f1414; border-radius: 16px; padding: 0.6rem 1rem; margin: 0.4rem 0 1.2rem; border-left: 4px solid #a52a2a; color: #bea5a5; font-size:0.9rem;">
+          <i class="fas fa-route" style="color:#d43b3b;"></i> <span>แผนที่ความร้อน · KPIs ขนส่ง</span>
+        </div>
+        <a href="https://script.google.com/macros/s/AKfycbxSoVyc0rg7RXdPilUfHRZNuuSi8ssWsoFMr2lDwqL7DM_RjYdW0cIBRqT4tdQU2Nob/exec" target="_blank" class="btn">
+          <i class="fas fa-arrow-right"></i> เข้าสู่ระบบโลจิสติกส์
+        </a>
+        </a>
+      </div>
+
+    </div>
+
+    <!-- FOOTER ทางการ -->
+    <div class="footer-note">
+      <span><i class="fas fa-shield-alt"></i> ระบบภายในองค์กร · ข้อมูลเป็นความลับ</span>
+      <span><i class="fas fa-code"></i> SupplyChain v2.6 · <i class="fas fa-database"></i> Mouldmate Suite</span>
+    </div>
+
+  </div>
+  <!-- หมายเหตุ: ลิงก์แผนกบริการยานยนต์และคลังพัสดุ เปิดในแท็บใหม่ตามที่กำหนด -->
+</body>
+</html>

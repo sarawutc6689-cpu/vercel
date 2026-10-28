@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบรับของฝากกลับโรงงาน</title>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+        }
+
+        body {
+            background: #0b0b0b;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1.5rem;
+            background-image: radial-gradient(circle at 20% 30%, #1a0a0a 0%, #0b0b0b 80%);
+        }
+
+        /* กล่องหลัก */
+        .dashboard {
+            max-width: 1280px;
+            width: 100%;
+            background: rgba(18, 18, 18, 0.85);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            border: 1px solid #3d1a1a;
+            border-radius: 48px;
+            padding: 2.8rem 2.5rem;
+            box-shadow: 0 25px 50px -8px rgba(0, 0, 0, 0.9), 0 0 0 1px #531e1e inset;
+            transition: all 0.2s ease;
+        }
+
+        /* ส่วนหัว */
+        .header {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 3rem;
+            border-bottom: 2px solid #3a1414;
+            padding-bottom: 1.5rem;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-icon {
+            background: #b91c1c;
+            color: #0b0b0b;
+            width: 54px;
+            height: 54px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 18px;
+            font-size: 2rem;
+            box-shadow: 0 0 20px rgba(185, 28, 28, 0.5);
+        }
+
+        .logo-text {
+            font-size: 1.9rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            color: #f0ecec;
+            text-shadow: 0 2px 3px rgba(0,0,0,0.8);
+        }
+
+        .logo-text span {
+            color: #e03a3a;
+            font-weight: 300;
+        }
+
+        .header-sub {
+            color: #b0a8a8;
+            font-size: 0.95rem;
+            background: #1f1212;
+            padding: 0.5rem 1.2rem;
+            border-radius: 60px;
+            border: 1px solid #4f2626;
+            letter-spacing: 0.3px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header-sub i {
+            color: #d33;
+        }
+
+        /* คำอธิบาย */
+        .greeting {
+            margin-bottom: 2.8rem;
+        }
+
+        .greeting h1 {
+            font-size: 2.4rem;
+            font-weight: 400;
+            color: #e0d6d6;
+            letter-spacing: -0.3px;
+        }
+
+        .greeting h1 strong {
+            font-weight: 700;
+            color: #f0f0f0;
+            background: linear-gradient(145deg, #b91c1c, #e03a3a);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            padding-right: 4px;
+        }
+
+        .greeting p {
+            color: #a39090;
+            font-size: 1rem;
+            margin-top: 8px;
+            letter-spacing: 0.2px;
+            border-left: 3px solid #b91c1c;
+            padding-left: 1rem;
+        }
+
+        /* กริดปุ่ม */
+        .grid-menu {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0 1rem;
+        }
+
+        .menu-card {
+            background: #141010;
+            border: 1px solid #2c1a1a;
+            border-radius: 28px;
+            padding: 1.5rem 0.8rem;
+            text-align: center;
+            text-decoration: none;
+            color: #eae2e2;
+            transition: all 0.25s cubic-bezier(0.2, 0, 0, 1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.6rem;
+            box-shadow: 0 10px 20px -12px rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(2px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .menu-card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 28px;
+            padding: 1px;
+            background: linear-gradient(145deg, #3f1a1a, #1f0d0d);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+        }
+
+        .menu-card:hover {
+            transform: translateY(-6px) scale(1.02);
+            background: #1e1313;
+            border-color: #b91c1c;
+            box-shadow: 0 20px 30px -10px #8f1a1a40, 0 0 0 1px #b91c1c;
+        }
+
+        .menu-card:active {
+            transform: scale(0.97);
+        }
+
+        .menu-icon {
+            font-size: 2.8rem;
+            color: #d43b3b;
+            filter: drop-shadow(0 4px 6px #4f0f0f);
+            transition: 0.2s;
+        }
+
+        .menu-card:hover .menu-icon {
+            color: #f54a4a;
+            transform: scale(1.05);
+        }
+
+        .menu-title {
+            font-size: 1rem;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            color: #f0e8e8;
+            line-height: 1.3;
+        }
+
+        .menu-sub {
+            font-size: 0.7rem;
+            color: #8f7a7a;
+            letter-spacing: 0.3px;
+            background: #231616;
+            padding: 0.2rem 0.8rem;
+            border-radius: 30px;
+            border: 1px solid #3d1f1f;
+        }
+
+        /* พิเศษสำหรับปุ่มเอกสาร */
+        .menu-card.doc {
+            background: #1c0e0e;
+            border-color: #5d2525;
+        }
+
+        .menu-card.doc .menu-icon {
+            color: #e06b6b;
+        }
+
+        /* พิเศษสำหรับปุ่มติดตามพัสดุ */
+        .menu-card.tracking {
+            background: #1a0f0f;
+            border-color: #6d2a2a;
+            border-width: 1.5px;
+        }
+
+        .menu-card.tracking .menu-icon {
+            color: #f55a5a;
+        }
+
+        .menu-card.tracking .menu-sub {
+            background: #2b1818;
+            border-color: #7a2c2c;
+            color: #dbb0b0;
+        }
+
+        /* ส่วนท้าย */
+        .footer-note {
+            margin-top: 3.2rem;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            align-items: center;
+            border-top: 1px solid #2c1818;
+            padding-top: 1.5rem;
+            color: #6e5e5e;
+            font-size: 0.9rem;
+        }
+
+        .footer-note .badge {
+            background: #1f0e0e;
+            color: #bf9b9b;
+            padding: 0.3rem 1rem;
+            border-radius: 60px;
+            border: 1px solid #3d2020;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+        }
+
+        .footer-note i {
+            color: #b91c1c;
+            margin: 0 4px;
+        }
+
+        .footer-note a {
+            color: #b0a0a0;
+            text-decoration: none;
+            border-bottom: 1px dotted #4f2a2a;
+            transition: 0.2s;
+        }
+
+        .footer-note a:hover {
+            color: #f0e0e0;
+            border-bottom-color: #b91c1c;
+        }
+
+        /* Responsive */
+        @media (max-width: 700px) {
+            .dashboard {
+                padding: 1.8rem 1.2rem;
+                border-radius: 32px;
+            }
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.8rem;
+            }
+            .logo-text {
+                font-size: 1.5rem;
+            }
+            .greeting h1 {
+                font-size: 1.8rem;
+            }
+            .grid-menu {
+                grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+                gap: 1rem;
+            }
+            .menu-card {
+                padding: 1.2rem 0.5rem;
+            }
+            .menu-icon {
+                font-size: 2.2rem;
+            }
+        }
+
+        @media (max-width: 450px) {
+            .grid-menu {
+                grid-template-columns: 1fr 1fr;
+                gap: 0.8rem;
+            }
+            .menu-title {
+                font-size: 0.8rem;
+            }
+            .header-sub {
+                font-size: 0.7rem;
+                padding: 0.3rem 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+
+        <!-- HEADER -->
+        <div class="header">
+            <div class="logo-area">
+                <div class="logo-icon">
+                    <i class="fas fa-warehouse"></i>
+                </div>
+                <div class="logo-text">
+                    ระบบรับ<span>ฝาก</span>กลับ
+                </div>
+            </div>
+            <div class="header-sub">
+                <i class="fas fa-factory"></i> โรงงานอุตสาหกรรม
+                <i class="fas fa-chevron-right" style="font-size: 0.5rem; opacity: 0.6;"></i>
+                <span style="color: #dbb6b6;">ศูนย์บริการ</span>
+            </div>
+        </div>
+
+        <!-- GREETING -->
+        <div class="greeting">
+            <h1>
+                <i class="fas fa-hand-holding-heart" style="color: #b91c1c; margin-right: 10px;"></i>
+                <strong>ของฝาก</strong> กลับโรงงาน
+            </h1>
+            <p>
+                <i class="fas fa-arrow-right" style="color: #b91c1c; margin-right: 8px;"></i>
+                เลือกแผนก / หน่วยงานที่ต้องการส่งของฝากกลับ หรือติดตามพัสดุ
+            </p>
+        </div>
+
+        <!-- GRID MENU -->
+        <div class="grid-menu">
+
+            <!-- แผนกบริการยานยนต์ -->
+            <a href="https://script.google.com/macros/s/AKfycbxSoVyc0rg7RXdPilUfHRZNuuSi8ssWsoFMr2lDwqL7DM_RjYdW0cIBRqT4tdQU2Nob/exec" target="_blank" class="menu-card">
+                <div class="menu-icon"><i class="fas fa-car"></i></div>
+                <div class="menu-title">แผนกบริการยานยนต์</div>
+                <div class="menu-sub"><i class="fas fa-cogs"></i> Automotive</div>
+            </a>
+
+            <!-- ฝ่ายทรัพยากรบุคคล -->
+            <a href="https://script.google.com/macros/s/AKfycbxkhgBNVvVmSIstcXv5kSRt8gCkLxabT-zA4LHLDKJuGD2Q20X5X0LKY7gtOpxzsa1T4A/exec" target="_blank" class="menu-card">
+                <div class="menu-icon"><i class="fas fa-users"></i></div>
+                <div class="menu-title">ฝ่ายทรัพยากรบุคคล</div>
+                <div class="menu-sub"><i class="fas fa-id-badge"></i> HR</div>
+            </a>
+
+            <!-- RM-QC-ACC -->
+            <a href="https://script.google.com/macros/s/AKfycbwdT7_wnH6MGI5X--9elW1OscWUp_bOS-8gTpy_4xrUJsxYOourZStNWBGmc-QlckJk/exec" target="_blank" class="menu-card">
+                <div class="menu-icon"><i class="fas fa-clipboard-check"></i></div>
+                <div class="menu-title">RM-QC-ACC</div>
+                <div class="menu-sub"><i class="fas fa-vial"></i> ควบคุมคุณภาพ</div>
+            </a>
+
+            <!-- DD -->
+            <a href="https://script.google.com/macros/s/AKfycbxJyMmT18CIwVKSiL_5eOtKN_0a066jk0c9jSxW_CCJBa3BzRays22GMFf6JbUB08Dt/exec" target="_blank" class="menu-card">
+                <div class="menu-icon"><i class="fas fa-truck"></i></div>
+                <div class="menu-title">DD</div>
+                <div class="menu-sub"><i class="fas fa-route"></i> จัดส่ง</div>
+            </a>
+
+            <!-- SV -->
+            <a href="https://script.google.com/macros/s/AKfycbxgq3C4s5aPBS_uVINE27RDDL4bbJTnaShX8elCdZPpEreccWeImUFdcANLmw-wsl8i/exec" target="_blank" class="menu-card">
+                <div class="menu-icon"><i class="fas fa-headset"></i></div>
+                <div class="menu-title">SV</div>
+                <div class="menu-sub"><i class="fas fa-user-tie"></i> ผู้ดูแล</div>
+            </a>
+
+            <!-- อุปกรณ์ -->
+            <a href="https://script.google.com/macros/s/AKfycbyMN7H5AThiCoYQiIUOu_LYgMamfe7TOgU1wONxLXSeVcmDYKphwQt9ssck3tdwMpnz/exec" target="_blank" class="menu-card">
+                <div class="menu-icon"><i class="fas fa-microchip"></i></div>
+                <div class="menu-title">อุปกรณ์</div>
+                <div class="menu-sub"><i class="fas fa-tools"></i> เครื่องมือ</div>
+            </a>
+
+            <!-- พัสดุ -->
+            <a href="https://script.google.com/macros/s/AKfycbydwgvbl8876yuqwxEz3imjbqSSyyT3BpjLYTYgNx1KEwC0UVR5dbIbUycWZ4eFAzI9Dw/exec" target="_blank" class="menu-card">
+                <div class="menu-icon"><i class="fas fa-boxes"></i></div>
+                <div class="menu-title">พัสดุ</div>
+                <div class="menu-sub"><i class="fas fa-parcel"></i> วัสดุ</div>
+            </a>
+
+            <!-- เอกสาร (พิเศษ) -->
+            <a href="https://script.google.com/macros/s/AKfycbwKcMyz6q_WmoCfdWLjK4UtXqRccq6wPMtCpcdJaytzyDgrtd1qIicKMo_9z-zx1PK7jw/exec" target="_blank" class="menu-card doc">
+                <div class="menu-icon"><i class="fas fa-file-alt"></i></div>
+                <div class="menu-title">เอกสาร</div>
+                <div class="menu-sub"><i class="fas fa-folder-open"></i> งานธุรการ</div>
+            </a>
+
+            <!-- ติดตามพัสดุ (เพิ่มใหม่) -->
+            <a href="https://script.google.com/macros/s/AKfycbzvnlCF5T8GYXXF_FvPsKG9msEeJo2PPqok-CKFdo8xVTJiPGMLNFMSHgvDuMQQ-1IbVA/exec" target="_blank" class="menu-card tracking">
+                <div class="menu-icon"><i class="fas fa-map-pin"></i></div>
+                <div class="menu-title">ติดตามพัสดุ</div>
+                <div class="menu-sub"><i class="fas fa-shipping-fast"></i> ติดตามสถานะ</div>
+            </a>
+
+        </div>
+
+        <!-- FOOTER -->
+        <div class="footer-note">
+            <div>
+                <i class="fas fa-shield-alt"></i>
+                <span>ระบบรับของฝากกลับโรงงาน v2.0</span>
+                <span class="badge"><i class="fas fa-lock" style="color: #b91c1c;"></i> ปลอดภัย</span>
+            </div>
+            <div>
+                <i class="fas fa-clock"></i> พร้อมใช้งานตลอด 24 ชม.
+                <span style="margin: 0 10px; color: #3d2a2a;">|</span>
+                <i class="fas fa-headset"></i>
+                <a href="#"> ศูนย์ช่วยเหลือ</a>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>
