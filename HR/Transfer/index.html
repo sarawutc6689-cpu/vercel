@@ -1,1 +1,87 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ระบบโอนย้ายพนักงาน — หน้าแรก</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body data-page="home">
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <header class="topbar" id="topbar"></header>
+    <main class="content">
 
+      <div class="panel panel-pad" style="margin-bottom:18px;" id="conn-status">
+        <p style="margin:0; color:var(--color-text-muted); font-size:13.6px;">กำลังตรวจสอบการเชื่อมต่อ Supabase...</p>
+      </div>
+
+      <div class="stat-grid" id="hub-grid"></div>
+
+    </main>
+  </div>
+</div>
+
+<script src="assets/config.js"></script>
+<script src="assets/supabaseClient.js"></script>
+<script src="assets/authGuard.js"></script>
+<script src="assets/db.js"></script>
+<script src="assets/ui.js"></script>
+<script>
+renderShell('home', {
+  eyebrow: 'ภาพรวมระบบ',
+  title: 'ระบบโอนย้ายพนักงาน',
+  desc: 'เลือกเมนูด้านซ้ายเพื่อเริ่มใช้งาน หรือคลิกการ์ดด้านล่าง',
+});
+
+const cards = [
+  { href: 'request.html', title: 'คำขอยืมพนักงาน', desc: 'สร้างคำขอใหม่จากแผนกต้นทางถึงแผนกปลายทาง', icon: NAV_ITEMS[0].icon },
+  { href: 'manage-requests.html', title: 'การจัดการคำขอ', desc: 'อนุมัติหรือปฏิเสธคำขอที่ส่งเข้ามา', icon: NAV_ITEMS[1].icon },
+  { href: 'return.html', title: 'ขอคืนพนักงาน', desc: 'เรียกคืนพนักงานที่ถูกยืมตัวกลับแผนกต้นสังกัด', icon: NAV_ITEMS[2].icon },
+  { href: 'status.html', title: 'สถานะการโอนย้าย', desc: 'ภาพรวมพนักงานที่กำลังปฏิบัติงานนอกแผนก', icon: NAV_ITEMS[3].icon },
+  { href: 'history.html', title: 'ประวัติการยืม', desc: 'บันทึกการอนุมัติ ปฏิเสธ และคืนตัวทั้งหมด', icon: NAV_ITEMS[4].icon },
+  { href: 'report.html', title: 'รายงาน', desc: 'กรองข้อมูลตามช่วงวันที่/แผนก แล้ว export CSV หรือ PDF', icon: NAV_ITEMS[5].icon },
+  { href: 'guide.html', title: 'คู่มือการใช้งาน', desc: 'วิธีใช้งานแต่ละหน้าของระบบ ทีละขั้นตอน', icon: NAV_ITEMS[6].icon },
+];
+
+document.getElementById('hub-grid').outerHTML = `
+  <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap:14px;">
+    ${cards.map(c => `
+      <a href="${c.href}" class="panel panel-pad" style="text-decoration:none; color:inherit; display:block; transition:box-shadow .15s ease, transform .1s ease;" onmouseover="this.style.boxShadow='var(--shadow-md)'" onmouseout="this.style.boxShadow='var(--shadow-sm)'">
+        <div style="width:38px;height:38px;border-radius:10px;background:var(--color-accent-100);color:var(--color-accent);display:flex;align-items:center;justify-content:center;margin-bottom:12px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:19px;height:19px;">${c.icon}</svg>
+        </div>
+        <h3 style="font-size:15px;margin-bottom:4px;">${c.title}</h3>
+        <p style="margin:0;font-size:12.8px;color:var(--color-text-muted);">${c.desc}</p>
+      </a>
+    `).join('')}
+  </div>
+`;
+
+(async function init() {
+  const statusEl = document.getElementById('conn-status');
+  try {
+    await requireAuth();
+    attachLogout();
+    const [{ depts }] = await Promise.all([initLookups()]);
+    const [{ count: empCount }, onLoan] = await Promise.all([
+      sb.from('employees').select('*', { count: 'exact', head: true }),
+      db.getEmployeesOnLoan(),
+    ]);
+    statusEl.innerHTML = `<p style="margin:0; color:var(--color-accent); font-size:13.6px; font-weight:600;">
+      ✓ เชื่อมต่อ Supabase สำเร็จ — ${depts.length} แผนก · พนักงาน ${empCount ?? '-'} คน · กำลังโอนย้าย ${onLoan.length} คน
+    </p>`;
+  } catch (err) {
+    console.error(err);
+    statusEl.innerHTML = `<p style="margin:0; color:var(--color-danger); font-size:13.6px;">
+      ✕ เชื่อมต่อ Supabase ไม่สำเร็จ — ตรวจสอบ SUPABASE_URL / SUPABASE_ANON_KEY ใน <code style="font-family:var(--font-mono);">assets/config.js</code> และตรวจว่ารัน <code style="font-family:var(--font-mono);">supabase/schema.sql</code> แล้ว
+    </p>`;
+  }
+})();
+</script>
+</body>
+</html>

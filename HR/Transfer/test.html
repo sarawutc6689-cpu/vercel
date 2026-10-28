@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>การจัดการคำขอ — ระบบโอนย้ายพนักงาน</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body data-page="manage">
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <header class="topbar" id="topbar"></header>
+    <main class="content">
+
+      <div class="panel">
+        <div class="filter-bar">
+          <input class="input search" id="f-search" placeholder="ค้นหารหัสพนักงาน หรือ ชื่อ...">
+          <select class="input" id="f-status">
+            <option value="pending">รออนุมัติ</option>
+            <option value="approved">อนุมัติแล้ว</option>
+            <option value="rejected">ปฏิเสธแล้ว</option>
+            <option value="all">ทั้งหมด</option>
+          </select>
+        </div>
+        <div class="list-toolbar" style="padding:12px 20px 0;">
+          <div class="flex items-center gap-8">
+            <button type="button" class="btn btn-ghost btn-sm" id="btn-select-all">เลือกทั้งหมด</button>
+            <button type="button" class="btn btn-ghost btn-sm" id="btn-clear-select">เคลียร์</button>
+            <span class="count" id="select-count">เลือกแล้ว 0 รายการ</span>
+          </div>
+          <div class="flex gap-8">
+            <button type="button" class="btn btn-accent btn-sm" id="btn-bulk-approve" disabled>อนุมัติที่เลือก</button>
+            <button type="button" class="btn btn-danger-ghost btn-sm" id="btn-bulk-reject" disabled>ปฏิเสธที่เลือก</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th style="width:36px;"><input type="checkbox" id="check-all-rows"></th>
+                <th style="width:44px;">ลำดับ</th>
+                <th>รหัสพนักงาน</th>
+                <th>ชื่อ</th>
+                <th>จากแผนก → ไปแผนก</th>
+                <th>วันที่เริ่ม</th>
+                <th>วันที่สิ้นสุด</th>
+                <th>สถานะ</th>
+                <th style="width:190px;">การจัดการ</th>
+              </tr>
+            </thead>
+            <tbody id="req-tbody"></tbody>
+          </table>
+        </div>
+        <div id="req-empty"></div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- Modal: อนุมัติคำขอ (เลือกหน่วยงาน) -->
+<div class="modal-overlay" id="approve-modal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>อนุมัติคำขอโอนย้าย</h3>
+      <p id="approve-sub">เลือกหน่วยงานปลายทางสำหรับพนักงานที่จะเข้าไปสังกัด</p>
+    </div>
+    <div class="modal-body">
+      <div class="field mt-0">
+        <label class="field-label">หน่วยงานปลายทาง <span class="req">*</span></label>
+        <select class="input" id="approve-unit"></select>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" id="approve-cancel">ยกเลิก</button>
+      <button class="btn btn-accent" id="approve-confirm">ยืนยันอนุมัติ</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: ปฏิเสธคำขอ -->
+<div class="modal-overlay" id="reject-modal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>ปฏิเสธคำขอโอนย้าย</h3>
+      <p>โปรดระบุเหตุผลการปฏิเสธ (แสดงให้แผนกต้นทางเห็น)</p>
+    </div>
+    <div class="modal-body">
+      <div class="field mt-0">
+        <label class="field-label">เหตุผล</label>
+        <textarea class="input" id="reject-reason" placeholder="เช่น พนักงานติดภารกิจสำคัญในแผนกต้นทาง"></textarea>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" id="reject-cancel">ยกเลิก</button>
+      <button class="btn btn-danger-ghost" id="reject-confirm">ยืนยันปฏิเสธ</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: อนุมัติหลายรายการพร้อมกัน -->
+<div class="modal-overlay" id="bulk-approve-modal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>อนุมัติคำขอที่เลือก</h3>
+      <p id="bulk-approve-sub"></p>
+    </div>
+    <div class="modal-body">
+      <div class="field mt-0" id="bulk-approve-unit-field">
+        <label class="field-label">หน่วยงานปลายทาง <span class="req">*</span></label>
+        <select class="input" id="bulk-approve-unit"></select>
+      </div>
+      <div class="guide-note" id="bulk-approve-mixed-note" style="display:none; background:var(--color-warning-100); border-left-color:var(--color-warning);">
+        รายการที่เลือกมีแผนกปลายทางหลายแผนก ระบบจะอนุมัติโดยไม่ระบุหน่วยงานย่อยให้ (ไปเลือกหน่วยงานทีหลังทีละรายการได้)
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" id="bulk-approve-cancel">ยกเลิก</button>
+      <button class="btn btn-accent" id="bulk-approve-confirm">ยืนยันอนุมัติทั้งหมด</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: ปฏิเสธหลายรายการพร้อมกัน -->
+<div class="modal-overlay" id="bulk-reject-modal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>ปฏิเสธคำขอที่เลือก</h3>
+      <p id="bulk-reject-sub"></p>
+    </div>
+    <div class="modal-body">
+      <div class="field mt-0">
+        <label class="field-label">เหตุผล (ใช้ร่วมกันทุกรายการที่เลือก)</label>
+        <textarea class="input" id="bulk-reject-reason" placeholder="เช่น พนักงานติดภารกิจสำคัญในแผนกต้นทาง"></textarea>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" id="bulk-reject-cancel">ยกเลิก</button>
+      <button class="btn btn-danger-ghost" id="bulk-reject-confirm">ยืนยันปฏิเสธทั้งหมด</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/config.js"></script>
+<script src="assets/supabaseClient.js"></script>
+<script src="assets/authGuard.js"></script>
+<script src="assets/db.js"></script>
+<script src="assets/ui.js"></script>
+<script>
+renderShell('manage', {
+  eyebrow: 'อนุมัติ / ปฏิเสธ',
+  title: 'การจัดการคำขอ',
+  desc: 'ตรวจสอบและดำเนินการกับคำขอยืมตัวพนักงานที่ส่งเข้ามา',
+});
+
+let activeItem = null; // แถวที่กำลังเปิด modal เดี่ยวอยู่
+let selectedItems = new Set(); // item_id ที่เลือกไว้สำหรับ bulk action
+
+async function loadRows() {
+  const search = document.getElementById('f-search').value.trim();
+  const status = document.getElementById('f-status').value;
+  return db.getRequestItems({ status, search });
+}
+
+async function renderTable() {
+  const tbody = document.getElementById('req-tbody');
+  tbody.innerHTML = loadingRowHtml(9);
+  document.getElementById('req-empty').innerHTML = '';
+  selectedItems.clear();
+  syncSelectionUI();
+
+  let rows;
+  try {
+    rows = await loadRows();
+  } catch (err) {
+    tbody.innerHTML = '';
+    return showError(err, 'โหลดรายการคำขอไม่สำเร็จ');
+  }
+
+  const emptyEl = document.getElementById('req-empty');
+  const checkAllEl = document.getElementById('check-all-rows');
+  if (rows.length === 0) {
+    tbody.innerHTML = '';
+    checkAllEl.style.visibility = 'hidden';
+    emptyEl.innerHTML = `
+      <div class="empty-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="m9 12 2 2 4-4"/></svg>
+        <strong>ไม่พบคำขอ</strong>
+        <p>ลองเปลี่ยนคำค้นหาหรือตัวกรองสถานะ</p>
+      </div>`;
+    return;
+  }
+  emptyEl.innerHTML = '';
+  checkAllEl.style.visibility = 'visible';
+  checkAllEl.checked = false;
+
+  tbody.innerHTML = rows.map((r, i) => `
+    <tr>
+      <td>${r.item_status === 'pending' ? `<input type="checkbox" class="row-check" value="${r.item_id}">` : ''}</td>
+      <td class="cell-muted">${i + 1}</td>
+      <td class="cell-code">${r.employee_code}</td>
+      <td>${r.full_name}</td>
+      <td>${flowChipHtml(r.source_department_id, r.destination_department_id)}</td>
+      <td>${fmtDate(r.start_date)}</td>
+      <td>${fmtDate(r.end_date)}</td>
+      <td>${badgeHtml(r.item_status)}</td>
+      <td>
+        ${r.item_status === 'pending' ? `
+          <div class="flex gap-8">
+            <button class="btn btn-accent btn-sm" data-action="approve" data-item="${r.item_id}">อนุมัติ</button>
+            <button class="btn btn-danger-ghost btn-sm" data-action="reject" data-item="${r.item_id}">ปฏิเสธ</button>
+          </div>
+        ` : `<span class="cell-muted" style="font-size:12px;">${r.request_no}</span>`}
+      </td>
+    </tr>
+  `).join('');
+
+  window.__rows = rows;
+  tbody.querySelectorAll('[data-action=approve]').forEach(btn => btn.addEventListener('click', () => openApprove(btn.dataset.item)));
+  tbody.querySelectorAll('[data-action=reject]').forEach(btn => btn.addEventListener('click', () => openReject(btn.dataset.item)));
+  tbody.querySelectorAll('.row-check').forEach(cb => cb.addEventListener('change', () => {
+    cb.checked ? selectedItems.add(cb.value) : selectedItems.delete(cb.value);
+    syncSelectionUI();
+  }));
+}
+
+function syncSelectionUI() {
+  const count = selectedItems.size;
+  document.getElementById('select-count').textContent = `เลือกแล้ว ${count} รายการ`;
+  document.getElementById('btn-bulk-approve').disabled = count === 0;
+  document.getElementById('btn-bulk-reject').disabled = count === 0;
+}
+
+function selectableRows() {
+  return (window.__rows || []).filter(r => r.item_status === 'pending');
+}
+
+document.getElementById('btn-select-all').addEventListener('click', () => {
+  selectableRows().forEach(r => selectedItems.add(r.item_id));
+  document.querySelectorAll('.row-check').forEach(cb => cb.checked = true);
+  document.getElementById('check-all-rows').checked = true;
+  syncSelectionUI();
+});
+document.getElementById('btn-clear-select').addEventListener('click', () => {
+  selectedItems.clear();
+  document.querySelectorAll('.row-check').forEach(cb => cb.checked = false);
+  document.getElementById('check-all-rows').checked = false;
+  syncSelectionUI();
+});
+document.getElementById('check-all-rows').addEventListener('change', (e) => {
+  if (e.target.checked) {
+    selectableRows().forEach(r => selectedItems.add(r.item_id));
+  } else {
+    selectedItems.clear();
+  }
+  document.querySelectorAll('.row-check').forEach(cb => cb.checked = e.target.checked);
+  syncSelectionUI();
+});
+
+function findRow(itemId) { return (window.__rows || []).find(r => r.item_id === itemId); }
+
+function openApprove(itemId) {
+  const r = findRow(itemId);
+  if (!r) return;
+  activeItem = r;
+  document.getElementById('approve-sub').innerHTML = `${r.full_name} (${r.employee_code}) — ย้ายไป ${DEPT_CACHE.get(r.destination_department_id)?.name || ''}`;
+  const unitSel = document.getElementById('approve-unit');
+  const units = UNITS_BY_DEPT.get(r.destination_department_id) || [];
+  unitSel.innerHTML = units.map(u => `<option value="${u.id}">${u.name}</option>`).join('') || `<option value="">— ไม่มีหน่วยงานย่อย —</option>`;
+  document.getElementById('approve-modal').classList.add('is-open');
+}
+function openReject(itemId) {
+  const r = findRow(itemId);
+  if (!r) return;
+  activeItem = r;
+  document.getElementById('reject-reason').value = '';
+  document.getElementById('reject-modal').classList.add('is-open');
+}
+function closeModals() {
+  document.getElementById('approve-modal').classList.remove('is-open');
+  document.getElementById('reject-modal').classList.remove('is-open');
+  activeItem = null;
+}
+
+document.getElementById('approve-cancel').addEventListener('click', closeModals);
+document.getElementById('reject-cancel').addEventListener('click', closeModals);
+[document.getElementById('approve-modal'), document.getElementById('reject-modal')].forEach(ov => {
+  ov.addEventListener('click', (e) => { if (e.target === ov) closeModals(); });
+});
+
+document.getElementById('approve-confirm').addEventListener('click', async (e) => {
+  if (!activeItem) return;
+  const btn = e.currentTarget;
+  const unitId = document.getElementById('approve-unit').value || null;
+  btn.disabled = true; btn.textContent = 'กำลังบันทึก...';
+  try {
+    await db.approveItem(activeItem.item_id, unitId);
+    showToast(`อนุมัติคำขอของ ${activeItem.full_name} เรียบร้อยแล้ว`);
+    closeModals();
+    await renderTable();
+  } catch (err) {
+    showError(err, 'อนุมัติไม่สำเร็จ');
+  } finally {
+    btn.disabled = false; btn.textContent = 'ยืนยันอนุมัติ';
+  }
+});
+
+document.getElementById('reject-confirm').addEventListener('click', async (e) => {
+  if (!activeItem) return;
+  const btn = e.currentTarget;
+  const reason = document.getElementById('reject-reason').value;
+  btn.disabled = true; btn.textContent = 'กำลังบันทึก...';
+  try {
+    await db.rejectItem(activeItem.item_id, reason);
+    showToast(`ปฏิเสธคำขอของ ${activeItem.full_name} แล้ว`);
+    closeModals();
+    await renderTable();
+  } catch (err) {
+    showError(err, 'ปฏิเสธไม่สำเร็จ');
+  } finally {
+    btn.disabled = false; btn.textContent = 'ยืนยันปฏิเสธ';
+  }
+});
+
+/* ---------------- Bulk actions ---------------- */
+document.getElementById('btn-bulk-approve').addEventListener('click', () => {
+  const items = selectableRows().filter(r => selectedItems.has(r.item_id));
+  if (items.length === 0) return;
+  const destDeptIds = new Set(items.map(r => r.destination_department_id));
+  document.getElementById('bulk-approve-sub').textContent = `เลือกไว้ ${items.length} รายการ`;
+
+  const unitField = document.getElementById('bulk-approve-unit-field');
+  const mixedNote = document.getElementById('bulk-approve-mixed-note');
+  if (destDeptIds.size === 1) {
+    const deptId = [...destDeptIds][0];
+    const units = UNITS_BY_DEPT.get(deptId) || [];
+    document.getElementById('bulk-approve-unit').innerHTML =
+      units.map(u => `<option value="${u.id}">${u.name}</option>`).join('') || `<option value="">— ไม่มีหน่วยงานย่อย —</option>`;
+    unitField.style.display = '';
+    mixedNote.style.display = 'none';
+  } else {
+    unitField.style.display = 'none';
+    mixedNote.style.display = 'block';
+  }
+  document.getElementById('bulk-approve-modal').classList.add('is-open');
+});
+
+document.getElementById('btn-bulk-reject').addEventListener('click', () => {
+  const count = selectedItems.size;
+  if (count === 0) return;
+  document.getElementById('bulk-reject-sub').textContent = `เลือกไว้ ${count} รายการ`;
+  document.getElementById('bulk-reject-reason').value = '';
+  document.getElementById('bulk-reject-modal').classList.add('is-open');
+});
+
+document.getElementById('bulk-approve-cancel').addEventListener('click', () => document.getElementById('bulk-approve-modal').classList.remove('is-open'));
+document.getElementById('bulk-reject-cancel').addEventListener('click', () => document.getElementById('bulk-reject-modal').classList.remove('is-open'));
+[document.getElementById('bulk-approve-modal'), document.getElementById('bulk-reject-modal')].forEach(ov => {
+  ov.addEventListener('click', (e) => { if (e.target === ov) ov.classList.remove('is-open'); });
+});
+
+document.getElementById('bulk-approve-confirm').addEventListener('click', async (e) => {
+  const btn = e.currentTarget;
+  const items = selectableRows().filter(r => selectedItems.has(r.item_id));
+  const destDeptIds = new Set(items.map(r => r.destination_department_id));
+  const unitId = destDeptIds.size === 1 ? (document.getElementById('bulk-approve-unit').value || null) : null;
+
+  btn.disabled = true; btn.textContent = 'กำลังบันทึก...';
+  const results = await Promise.allSettled(items.map(r => db.approveItem(r.item_id, unitId)));
+  const okCount = results.filter(r => r.status === 'fulfilled').length;
+  const failCount = results.length - okCount;
+
+  document.getElementById('bulk-approve-modal').classList.remove('is-open');
+  btn.disabled = false; btn.textContent = 'ยืนยันอนุมัติทั้งหมด';
+
+  if (failCount === 0) showToast(`อนุมัติสำเร็จ ${okCount} รายการ`);
+  else showToast(`อนุมัติสำเร็จ ${okCount} รายการ ล้มเหลว ${failCount} รายการ (อาจไม่มีสิทธิ์บางรายการ)`, failCount === results.length);
+
+  await renderTable();
+});
+
+document.getElementById('bulk-reject-confirm').addEventListener('click', async (e) => {
+  const btn = e.currentTarget;
+  const reason = document.getElementById('bulk-reject-reason').value;
+  const items = selectableRows().filter(r => selectedItems.has(r.item_id));
+
+  btn.disabled = true; btn.textContent = 'กำลังบันทึก...';
+  const results = await Promise.allSettled(items.map(r => db.rejectItem(r.item_id, reason)));
+  const okCount = results.filter(r => r.status === 'fulfilled').length;
+  const failCount = results.length - okCount;
+
+  document.getElementById('bulk-reject-modal').classList.remove('is-open');
+  btn.disabled = false; btn.textContent = 'ยืนยันปฏิเสธทั้งหมด';
+
+  if (failCount === 0) showToast(`ปฏิเสธสำเร็จ ${okCount} รายการ`);
+  else showToast(`ปฏิเสธสำเร็จ ${okCount} รายการ ล้มเหลว ${failCount} รายการ (อาจไม่มีสิทธิ์บางรายการ)`, failCount === results.length);
+
+  await renderTable();
+});
+
+let searchDebounce;
+document.getElementById('f-search').addEventListener('input', () => {
+  clearTimeout(searchDebounce);
+  searchDebounce = setTimeout(renderTable, 300);
+});
+document.getElementById('f-status').addEventListener('change', renderTable);
+
+(async function init() {
+  try {
+    await requireAuth();
+    attachLogout();
+    await initLookups();
+    await renderTable();
+  } catch (err) {
+    showError(err, 'โหลดข้อมูลเริ่มต้นไม่สำเร็จ ตรวจสอบการตั้งค่า Supabase ใน assets/config.js');
+  }
+})();
+</script>
+</body>
+</html>

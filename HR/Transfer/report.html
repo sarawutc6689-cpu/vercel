@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>รายงาน — ระบบโอนย้ายพนักงาน</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body data-page="report">
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <header class="topbar" id="topbar"></header>
+    <main class="content">
+
+      <div class="stat-grid" id="stat-grid"></div>
+
+      <div class="panel">
+        <div class="filter-bar" style="border-radius: var(--radius-lg) var(--radius-lg) 0 0;">
+          <input type="date" class="input" id="f-from" title="ตั้งแต่วันที่เริ่ม">
+          <input type="date" class="input" id="f-to" title="ถึงวันที่เริ่ม">
+          <select class="input" id="f-source-dept"><option value="">ทุกแผนกต้นทาง</option></select>
+          <select class="input" id="f-dest-dept"><option value="">ทุกแผนกปลายทาง</option></select>
+          <select class="input" id="f-status">
+            <option value="all">ทุกสถานะ</option>
+            <option value="pending">รออนุมัติ</option>
+            <option value="approved">อนุมัติแล้ว</option>
+            <option value="rejected">ปฏิเสธแล้ว</option>
+            <option value="returned">คืนตัวแล้ว</option>
+          </select>
+          <div class="flex gap-8" style="margin-left:auto;">
+            <button class="btn btn-ghost btn-sm no-print" id="btn-export-csv">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M3 17v2a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-2"/></svg>
+              Export CSV
+            </button>
+            <button class="btn btn-ghost btn-sm no-print" id="btn-export-pdf">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V9Z"/><path d="M14 2v6h6"/></svg>
+              Export PDF
+            </button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th style="width:44px;">ลำดับ</th>
+                <th>รหัสพนักงาน</th>
+                <th>ชื่อ</th>
+                <th>จากแผนก → ไปแผนก</th>
+                <th>หน่วยงานที่ปฏิบัติ</th>
+                <th>วันที่เริ่ม</th>
+                <th>วันที่สิ้นสุด</th>
+                <th>สถานะ</th>
+                <th>เลขที่คำขอ</th>
+              </tr>
+            </thead>
+            <tbody id="report-tbody"></tbody>
+          </table>
+        </div>
+        <div id="report-empty"></div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script src="assets/config.js"></script>
+<script src="assets/supabaseClient.js"></script>
+<script src="assets/authGuard.js"></script>
+<script src="assets/db.js"></script>
+<script src="assets/ui.js"></script>
+<script>
+renderShell('report', {
+  eyebrow: 'สรุปข้อมูล',
+  title: 'รายงาน',
+  desc: 'กรองข้อมูลคำขอโอนย้ายพนักงานตามช่วงวันที่ แผนก และสถานะ แล้วส่งออกเป็นไฟล์ได้',
+});
+
+let currentRows = [];
+let UNIT_MAP = new Map();
+
+function unitName(id) {
+  return (id && UNIT_MAP.get(id)) || '';
+}
+
+function populateDeptFilters(depts) {
+  const opts = depts.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+  document.getElementById('f-source-dept').innerHTML += opts;
+  document.getElementById('f-dest-dept').innerHTML += opts;
+}
+
+function renderStats(rows) {
+  const count = (status) => rows.filter(r => r.item_status === status).length;
+  document.getElementById('stat-grid').innerHTML = `
+    <div class="stat-card"><div class="num">${rows.length}</div><div class="lbl">คำขอทั้งหมด (ตามตัวกรอง)</div></div>
+    <div class="stat-card warning"><div class="num">${count('pending')}</div><div class="lbl">รออนุมัติ</div></div>
+    <div class="stat-card accent"><div class="num">${count('approved')}</div><div class="lbl">อนุมัติแล้ว</div></div>
+    <div class="stat-card danger"><div class="num">${count('rejected')}</div><div class="lbl">ปฏิเสธแล้ว</div></div>
+  `;
+}
+
+function currentFilters() {
+  return {
+    fromDate: document.getElementById('f-from').value,
+    toDate: document.getElementById('f-to').value,
+    sourceDeptId: document.getElementById('f-source-dept').value,
+    destDeptId: document.getElementById('f-dest-dept').value,
+    status: document.getElementById('f-status').value,
+  };
+}
+
+async function renderTable() {
+  const tbody = document.getElementById('report-tbody');
+  tbody.innerHTML = loadingRowHtml(9);
+  document.getElementById('report-empty').innerHTML = '';
+
+  let rows;
+  try {
+    rows = await db.getReportRows(currentFilters());
+  } catch (err) {
+    tbody.innerHTML = '';
+    return showError(err, 'โหลดรายงานไม่สำเร็จ');
+  }
+
+  currentRows = rows;
+  renderStats(rows);
+
+  const emptyEl = document.getElementById('report-empty');
+  if (rows.length === 0) {
+    tbody.innerHTML = '';
+    emptyEl.innerHTML = `
+      <div class="empty-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 3v18h18"/><path d="M7 15v3M12 10v8M17 6v12"/></svg>
+        <strong>ไม่พบข้อมูลตามตัวกรองนี้</strong>
+        <p>ลองปรับช่วงวันที่ แผนก หรือสถานะ</p>
+      </div>`;
+    return;
+  }
+  emptyEl.innerHTML = '';
+
+  tbody.innerHTML = rows.map((r, i) => `
+    <tr>
+      <td class="cell-muted">${i + 1}</td>
+      <td class="cell-code">${r.employee_code}</td>
+      <td>${r.full_name}</td>
+      <td>${flowChipHtml(r.source_department_id, r.destination_department_id)}</td>
+      <td>${unitName(r.destination_unit_id) || '-'}</td>
+      <td>${fmtDate(r.start_date)}</td>
+      <td>${fmtDate(r.end_date)}</td>
+      <td>${badgeHtml(r.item_status)}</td>
+      <td class="cell-code">${r.request_no}</td>
+    </tr>
+  `).join('');
+}
+
+document.getElementById('btn-export-csv').addEventListener('click', () => {
+  if (currentRows.length === 0) return showToast('ไม่มีข้อมูลให้ export');
+  const headers = ['ลำดับ', 'รหัสพนักงาน', 'ชื่อ', 'จากแผนก', 'ไปแผนก', 'หน่วยงานที่ปฏิบัติ', 'วันที่เริ่ม', 'วันที่สิ้นสุด', 'สถานะ', 'เลขที่คำขอ'];
+  const rows = currentRows.map((r, i) => [
+    i + 1,
+    r.employee_code,
+    r.full_name,
+    DEPT_CACHE.get(r.source_department_id)?.name || '',
+    DEPT_CACHE.get(r.destination_department_id)?.name || '',
+    unitName(r.destination_unit_id),
+    r.start_date,
+    r.end_date,
+    STATUS_LABEL[r.item_status] || r.item_status,
+    r.request_no,
+  ]);
+  const today = new Date().toISOString().slice(0, 10);
+  exportCsv(`รายงานโอนย้ายพนักงาน_${today}.csv`, headers, rows);
+});
+
+document.getElementById('btn-export-pdf').addEventListener('click', () => {
+  if (currentRows.length === 0) return showToast('ไม่มีข้อมูลให้ export');
+  window.print();
+});
+
+['f-from','f-to','f-source-dept','f-dest-dept','f-status'].forEach(id => {
+  document.getElementById(id).addEventListener('change', renderTable);
+});
+
+(async function init() {
+  try {
+    await requireAuth();
+    attachLogout();
+    const { depts } = await initLookups();
+    const units = await db.getUnits();
+    UNIT_MAP = new Map(units.map(u => [u.id, u.name]));
+    populateDeptFilters(depts);
+    await renderTable();
+  } catch (err) {
+    showError(err, 'โหลดข้อมูลเริ่มต้นไม่สำเร็จ ตรวจสอบการตั้งค่า Supabase ใน assets/config.js');
+  }
+})();
+</script>
+</body>
+</html>

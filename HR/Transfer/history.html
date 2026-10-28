@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ประวัติการยืม — ระบบโอนย้ายพนักงาน</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body data-page="history">
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <header class="topbar" id="topbar"></header>
+    <main class="content">
+
+      <div class="panel">
+        <div class="filter-bar" style="border-radius: var(--radius-lg) var(--radius-lg) 0 0;">
+          <input class="input search" id="f-search" placeholder="ค้นหารหัสพนักงาน ชื่อ หรือเลขที่คำขอ...">
+          <select class="input" id="f-action">
+            <option value="">ทุกการดำเนินการ</option>
+            <option value="approved">อนุมัติ</option>
+            <option value="rejected">ปฏิเสธ</option>
+            <option value="returned">คืนตัว</option>
+          </select>
+          <input type="date" class="input" id="f-from" title="ตั้งแต่วันที่">
+          <input type="date" class="input" id="f-to" title="ถึงวันที่">
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>วันที่/เวลา</th>
+                <th>เลขที่คำขอ</th>
+                <th>พนักงาน</th>
+                <th>จากแผนก → ไปแผนก</th>
+                <th>การดำเนินการ</th>
+                <th>หมายเหตุ</th>
+              </tr>
+            </thead>
+            <tbody id="hist-tbody"></tbody>
+          </table>
+        </div>
+        <div id="hist-empty"></div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script src="assets/config.js"></script>
+<script src="assets/supabaseClient.js"></script>
+<script src="assets/authGuard.js"></script>
+<script src="assets/db.js"></script>
+<script src="assets/ui.js"></script>
+<script>
+renderShell('history', {
+  eyebrow: 'บันทึกย้อนหลัง',
+  title: 'ประวัติการยืมตัวพนักงาน',
+  desc: 'ประวัติการอนุมัติ ปฏิเสธ และคืนตัวพนักงานทั้งหมดในระบบ',
+});
+
+async function renderTable() {
+  const tbody = document.getElementById('hist-tbody');
+  tbody.innerHTML = loadingRowHtml(6);
+  document.getElementById('hist-empty').innerHTML = '';
+
+  const search = document.getElementById('f-search').value.trim();
+  const action = document.getElementById('f-action').value;
+  const from = document.getElementById('f-from').value;
+  const to = document.getElementById('f-to').value;
+
+  let rows;
+  try {
+    rows = await db.getHistory({ search, action, from, to });
+  } catch (err) {
+    tbody.innerHTML = '';
+    return showError(err, 'โหลดประวัติไม่สำเร็จ');
+  }
+
+  const emptyEl = document.getElementById('hist-empty');
+  if (rows.length === 0) {
+    tbody.innerHTML = '';
+    emptyEl.innerHTML = `
+      <div class="empty-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/></svg>
+        <strong>ไม่พบประวัติที่ตรงกับเงื่อนไข</strong>
+        <p>ลองปรับตัวกรองวันที่หรือคำค้นหา</p>
+      </div>`;
+    return;
+  }
+  emptyEl.innerHTML = '';
+
+  tbody.innerHTML = rows.map(h => `
+    <tr>
+      <td class="cell-muted" style="white-space:nowrap;">${fmtDateTime(h.created_at)}</td>
+      <td class="cell-code">${h.request_no || '-'}</td>
+      <td>${h.full_name ? `${h.full_name} <span class="cell-code">(${h.employee_code})</span>` : '-'}</td>
+      <td>${flowChipHtml(h.from_department_id, h.to_department_id)}</td>
+      <td><span class="badge ${ACTION_CLASS[h.action]}">${ACTION_LABEL[h.action]}</span></td>
+      <td class="cell-muted">${h.note || '-'}</td>
+    </tr>`
+  ).join('');
+}
+
+let debounceT;
+['f-search','f-action','f-from','f-to'].forEach(id => {
+  document.getElementById(id).addEventListener('input', () => { clearTimeout(debounceT); debounceT = setTimeout(renderTable, 300); });
+  document.getElementById(id).addEventListener('change', renderTable);
+});
+
+(async function init() {
+  try {
+    await requireAuth();
+    attachLogout();
+    await initLookups();
+    await renderTable();
+  } catch (err) {
+    showError(err, 'โหลดข้อมูลเริ่มต้นไม่สำเร็จ ตรวจสอบการตั้งค่า Supabase ใน assets/config.js');
+  }
+})();
+</script>
+</body>
+</html>

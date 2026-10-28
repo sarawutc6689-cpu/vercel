@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>จัดการพนักงาน — ระบบโอนย้ายพนักงาน</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  .unit-check-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(160px,1fr)); gap:6px; max-height:220px; overflow-y:auto; border:1px solid var(--color-border); border-radius:var(--radius-md); padding:10px; }
+  .unit-check-grid label { display:flex; align-items:center; gap:7px; font-size:12.6px; cursor:pointer; }
+</style>
+</head>
+<body data-page="admin">
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <header class="topbar" id="topbar"></header>
+    <main class="content" id="main-content">
+
+      <div id="no-access" style="display:none;">
+        <div class="panel panel-pad">
+          <div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg>
+            <strong>ไม่มีสิทธิ์เข้าถึงหน้านี้</strong>
+            <p>หน้านี้สำหรับแอดมินเท่านั้น</p>
+          </div>
+        </div>
+      </div>
+
+      <div id="admin-area" style="display:none;">
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <h3>เพิ่มพนักงานใหม่</h3>
+              <div class="hint">กรอกรหัสพนักงานที่มีอยู่แล้วเพื่อแก้ไขข้อมูล หรือรหัสใหม่เพื่อเพิ่มพนักงาน</div>
+            </div>
+          </div>
+          <div class="panel-pad">
+            <form id="employee-form">
+              <div class="field-row">
+                <div class="field">
+                  <label class="field-label">รหัสพนักงาน <span class="req">*</span></label>
+                  <input type="text" id="f-code" class="input" placeholder="เช่น 104590" required>
+                </div>
+                <div class="field">
+                  <label class="field-label">ชื่อ-นามสกุล <span class="req">*</span></label>
+                  <input type="text" id="f-name" class="input" required>
+                </div>
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label class="field-label">แผนกต้นสังกัด <span class="req">*</span></label>
+                  <select class="input" id="f-dept" required></select>
+                </div>
+                <div class="field">
+                  <label class="field-label">วันที่เริ่มงาน</label>
+                  <input type="date" id="f-hire-date" class="input">
+                  <div class="field-sub">ใส่ทันทีถ้าอยากให้สร้างบัญชีล็อกอินได้เลย (จำเป็นสำหรับสร้างบัญชี)</div>
+                </div>
+              </div>
+              <div class="flex" style="justify-content:flex-end; gap:10px;">
+                <button type="button" class="btn btn-ghost" id="btn-reset-form">ล้างฟอร์ม</button>
+                <button type="submit" class="btn btn-accent" id="btn-save-employee">บันทึก</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="filter-bar" style="border-radius: var(--radius-lg) var(--radius-lg) 0 0;">
+            <input class="input search" id="f-search" placeholder="ค้นหารหัสหรือชื่อพนักงาน...">
+          </div>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>รหัสพนักงาน</th>
+                  <th>ชื่อ</th>
+                  <th>แผนกต้นสังกัด</th>
+                  <th>สถานะ</th>
+                  <th>บัญชีล็อกอิน</th>
+                  <th>บทบาท</th>
+                  <th style="width:110px;">จัดการ</th>
+                </tr>
+              </thead>
+              <tbody id="emp-tbody"></tbody>
+            </table>
+          </div>
+          <div id="emp-empty"></div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- Modal: จัดการบทบาท + สิทธิ์แผนกเพิ่มเติม -->
+<div class="modal-overlay" id="role-modal">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-head">
+      <h3>ตั้งบทบาท / สิทธิ์อนุมัติ</h3>
+      <p id="role-modal-sub"></p>
+    </div>
+    <div class="modal-body">
+      <div class="field mt-0">
+        <label class="field-label">บทบาท</label>
+        <select class="input" id="role-select">
+          <option value="staff">พนักงาน (staff) — สร้างคำขอได้เท่านั้น</option>
+          <option value="dept_approver">ผู้อนุมัติแผนก (dept_approver)</option>
+          <option value="admin">แอดมิน (admin) — เห็น/อนุมัติได้ทุกแผนก</option>
+        </select>
+      </div>
+      <div class="field" id="approver-depts-field">
+        <label class="field-label">มอบสิทธิ์อนุมัติแผนกเพิ่มเติม (นอกจากแผนกต้นสังกัด)</label>
+        <div class="unit-check-grid" id="approver-depts-grid"></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" id="role-cancel">ยกเลิก</button>
+      <button class="btn btn-accent" id="role-save">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/config.js"></script>
+<script src="assets/supabaseClient.js"></script>
+<script src="assets/authGuard.js"></script>
+<script src="assets/db.js"></script>
+<script src="assets/ui.js"></script>
+<script>
+renderShell('admin', {
+  eyebrow: 'ผู้ดูแลระบบ',
+  title: 'จัดการพนักงาน',
+  desc: 'เพิ่ม/แก้ไขข้อมูลพนักงาน และตั้งบทบาทผู้อนุมัติ',
+});
+
+let editingCode = null; // ถ้าไม่ null = กำลังแก้ไขคนนี้อยู่ (จากปุ่มแก้ไขในตาราง)
+let allDepts = [];
+
+function populateDeptSelect() {
+  document.getElementById('f-dept').innerHTML = allDepts.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+}
+
+function resetForm() {
+  document.getElementById('employee-form').reset();
+  document.getElementById('f-code').disabled = false;
+  editingCode = null;
+}
+
+document.getElementById('btn-reset-form').addEventListener('click', resetForm);
+
+document.getElementById('employee-form').addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  const code = document.getElementById('f-code').value.trim();
+  const name = document.getElementById('f-name').value.trim();
+  const deptId = document.getElementById('f-dept').value;
+  const hireDate = document.getElementById('f-hire-date').value;
+
+  if (!code || !name || !deptId) return showToast('กรอกข้อมูลให้ครบ');
+
+  const btn = document.getElementById('btn-save-employee');
+  btn.disabled = true; btn.textContent = 'กำลังบันทึก...';
+  try {
+    await db.upsertEmployee({ employeeCode: code, fullName: name, homeDeptId: deptId, hireDate });
+    showToast(`บันทึกข้อมูล ${name} สำเร็จ`);
+    resetForm();
+    await renderTable();
+  } catch (err) {
+    showError(err, 'บันทึกไม่สำเร็จ');
+  } finally {
+    btn.disabled = false; btn.textContent = 'บันทึก';
+  }
+});
+
+async function renderTable() {
+  const tbody = document.getElementById('emp-tbody');
+  tbody.innerHTML = loadingRowHtml(7);
+  document.getElementById('emp-empty').innerHTML = '';
+
+  const search = document.getElementById('f-search').value.trim();
+  let rows;
+  try {
+    rows = await db.getEmployeeAdminList({ search });
+  } catch (err) {
+    tbody.innerHTML = '';
+    return showError(err, 'โหลดรายชื่อพนักงานไม่สำเร็จ');
+  }
+
+  const emptyEl = document.getElementById('emp-empty');
+  if (rows.length === 0) {
+    tbody.innerHTML = '';
+    emptyEl.innerHTML = `<div class="empty-state"><strong>ไม่พบพนักงาน</strong><p>ลองค้นหาด้วยคำอื่น</p></div>`;
+    return;
+  }
+  emptyEl.innerHTML = '';
+
+  const roleLabel = { staff: 'พนักงาน', dept_approver: 'ผู้อนุมัติแผนก', admin: 'แอดมิน' };
+
+  tbody.innerHTML = rows.map(r => `
+    <tr>
+      <td class="cell-code">${r.employee_code}</td>
+      <td>${r.full_name}</td>
+      <td>${deptChipHtml(r.home_department_id)}</td>
+      <td>${badgeHtml(r.status)}</td>
+      <td>${r.has_account ? '<span class="badge badge-approved">มีบัญชีแล้ว</span>' : '<span class="badge badge-normal">ยังไม่มีบัญชี</span>'}</td>
+      <td>${r.role ? roleLabel[r.role] : '-'}</td>
+      <td>
+        <div class="flex gap-8">
+          <button class="btn btn-ghost btn-sm" data-action="edit" data-code="${r.employee_code}">แก้ไข</button>
+          ${r.has_account ? `<button class="btn btn-ghost btn-sm" data-action="role" data-code="${r.employee_code}">สิทธิ์</button>` : ''}
+        </div>
+      </td>
+    </tr>
+  `).join('');
+
+  window.__rows = rows;
+  tbody.querySelectorAll('[data-action=edit]').forEach(btn => btn.addEventListener('click', () => startEdit(btn.dataset.code)));
+  tbody.querySelectorAll('[data-action=role]').forEach(btn => btn.addEventListener('click', () => openRoleModal(btn.dataset.code)));
+}
+
+function startEdit(code) {
+  const r = (window.__rows || []).find(x => x.employee_code === code);
+  if (!r) return;
+  editingCode = code;
+  document.getElementById('f-code').value = r.employee_code;
+  document.getElementById('f-code').disabled = true; // แก้รหัสพนักงานเดิมไม่ได้ กันสับสน
+  document.getElementById('f-name').value = r.full_name;
+  document.getElementById('f-dept').value = r.home_department_id;
+  document.getElementById('f-hire-date').value = r.hire_date || '';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+let activeRoleCode = null;
+function openRoleModal(code) {
+  const r = (window.__rows || []).find(x => x.employee_code === code);
+  if (!r) return;
+  activeRoleCode = code;
+  document.getElementById('role-modal-sub').textContent = `${r.full_name} (${r.employee_code})`;
+  document.getElementById('role-select').value = r.role || 'staff';
+
+  const grid = document.getElementById('approver-depts-grid');
+  grid.innerHTML = allDepts.map(d => `
+    <label>
+      <input type="checkbox" value="${d.id}" ${(r.approver_department_ids || []).includes(d.id) ? 'checked' : ''}>
+      ${d.name}
+    </label>
+  `).join('');
+
+  document.getElementById('role-modal').classList.add('is-open');
+}
+
+document.getElementById('role-cancel').addEventListener('click', () => document.getElementById('role-modal').classList.remove('is-open'));
+document.getElementById('role-modal').addEventListener('click', (e) => { if (e.target.id === 'role-modal') e.currentTarget.classList.remove('is-open'); });
+
+document.getElementById('role-save').addEventListener('click', async (e) => {
+  if (!activeRoleCode) return;
+  const btn = e.currentTarget;
+  const role = document.getElementById('role-select').value;
+  const deptIds = Array.from(document.querySelectorAll('#approver-depts-grid input:checked')).map(cb => cb.value);
+
+  btn.disabled = true; btn.textContent = 'กำลังบันทึก...';
+  try {
+    await db.setEmployeeRole(activeRoleCode, role);
+    await db.setApproverDepartments(activeRoleCode, deptIds);
+    showToast('บันทึกสิทธิ์สำเร็จ');
+    document.getElementById('role-modal').classList.remove('is-open');
+    await renderTable();
+  } catch (err) {
+    showError(err, 'บันทึกสิทธิ์ไม่สำเร็จ');
+  } finally {
+    btn.disabled = false; btn.textContent = 'บันทึก';
+  }
+});
+
+let searchDebounce;
+document.getElementById('f-search').addEventListener('input', () => {
+  clearTimeout(searchDebounce);
+  searchDebounce = setTimeout(renderTable, 300);
+});
+
+(async function init() {
+  try {
+    const profile = await requireAuth();
+    attachLogout();
+
+    if (profile.role !== 'admin') {
+      document.getElementById('no-access').style.display = '';
+      return;
+    }
+    document.getElementById('admin-area').style.display = '';
+
+    const { depts } = await initLookups();
+    allDepts = depts;
+    populateDeptSelect();
+    await renderTable();
+  } catch (err) {
+    showError(err, 'โหลดข้อมูลเริ่มต้นไม่สำเร็จ');
+  }
+})();
+</script>
+</body>
+</html>

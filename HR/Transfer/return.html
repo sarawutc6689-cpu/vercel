@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ขอคืนพนักงาน — ระบบโอนย้ายพนักงาน</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body data-page="return">
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <header class="topbar" id="topbar"></header>
+    <main class="content">
+
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <h3>พนักงานที่ถูกยืมตัวไปยังแผนกอื่น</h3>
+            <div class="hint">เลือกพนักงานที่ต้องการเรียกคืนกลับแผนกต้นสังกัด</div>
+          </div>
+          <span class="cell-muted" id="loan-count" style="font-size:12.5px;"></span>
+        </div>
+
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th style="width:36px;"><input type="checkbox" id="check-all"></th>
+                <th>รหัสพนักงาน</th>
+                <th>ชื่อ</th>
+                <th>ต้นสังกัด → ปัจจุบัน</th>
+                <th>ยืมตั้งแต่</th>
+                <th>ครบกำหนด</th>
+                <th>เลขที่คำขอ</th>
+              </tr>
+            </thead>
+            <tbody id="loan-tbody"></tbody>
+          </table>
+        </div>
+        <div id="loan-empty"></div>
+
+        <div class="panel-head" style="border-top:1px solid var(--color-border); border-bottom:none;">
+          <span class="cell-muted" id="selected-info" style="font-size:12.8px;">ยังไม่ได้เลือกพนักงาน</span>
+          <button class="btn btn-primary" id="btn-return" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 5 5v1"/></svg>
+            ขอคืนพนักงานที่เลือก
+          </button>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<div class="modal-overlay" id="return-modal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>ยืนยันการคืนตัวพนักงาน</h3>
+      <p id="return-sub"></p>
+    </div>
+    <div class="modal-body">
+      <div class="field mt-0">
+        <label class="field-label">หมายเหตุ (ถ้ามี)</label>
+        <textarea class="input" id="return-note" placeholder="เช่น คืนตัวก่อนกำหนด เนื่องจากงานเสร็จสิ้นแล้ว"></textarea>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" id="return-cancel">ยกเลิก</button>
+      <button class="btn btn-primary" id="return-confirm">ยืนยันคืนตัว</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/config.js"></script>
+<script src="assets/supabaseClient.js"></script>
+<script src="assets/authGuard.js"></script>
+<script src="assets/db.js"></script>
+<script src="assets/ui.js"></script>
+<script>
+renderShell('return', {
+  eyebrow: 'เรียกคืนพนักงาน',
+  title: 'ขอคืนพนักงาน',
+  desc: 'รายการพนักงานที่ถูกยืมตัวไปช่วยงานแผนกอื่น และยังไม่ได้คืน',
+});
+
+let selected = new Set(); // เก็บ item_id (ไม่ใช่ employee_id) เพราะ RPC ทำงานระดับรายการ
+
+async function renderLoanTable() {
+  const tbody = document.getElementById('loan-tbody');
+  tbody.innerHTML = loadingRowHtml(7);
+  document.getElementById('loan-empty').innerHTML = '';
+
+  let rows;
+  try {
+    rows = await db.getEmployeesOnLoan();
+  } catch (err) {
+    tbody.innerHTML = '';
+    return showError(err, 'โหลดรายชื่อพนักงานที่ถูกยืมไม่สำเร็จ');
+  }
+
+  document.getElementById('loan-count').textContent = `ทั้งหมด ${rows.length} คน`;
+  const emptyEl = document.getElementById('loan-empty');
+
+  if (rows.length === 0) {
+    tbody.innerHTML = '';
+    document.getElementById('check-all').style.visibility = 'hidden';
+    emptyEl.innerHTML = `
+      <div class="empty-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M9 12l2 2 4-4"/></svg>
+        <strong>ไม่มีพนักงานที่ต้องเรียกคืนในขณะนี้</strong>
+        <p>พนักงานทุกคนอยู่ในแผนกต้นสังกัดของตนเอง</p>
+      </div>`;
+    return;
+  }
+  emptyEl.innerHTML = '';
+  document.getElementById('check-all').style.visibility = 'visible';
+
+  tbody.innerHTML = rows.map(r => `
+    <tr>
+      <td><input type="checkbox" class="row-check" value="${r.item_id}"></td>
+      <td class="cell-code">${r.employee_code}</td>
+      <td>${r.full_name}</td>
+      <td>${flowChipHtml(r.home_department_id, r.current_department_id, true)}</td>
+      <td>${fmtDate(r.start_date)}</td>
+      <td>${fmtDate(r.end_date)}</td>
+      <td class="cell-muted" style="font-family:var(--font-mono); font-size:12px;">${r.request_no}</td>
+    </tr>
+  `).join('');
+
+  window.__loanRows = rows;
+  tbody.querySelectorAll('.row-check').forEach(cb => cb.addEventListener('change', () => {
+    cb.checked ? selected.add(cb.value) : selected.delete(cb.value);
+    syncSelectionUI();
+  }));
+}
+
+function syncSelectionUI() {
+  const btn = document.getElementById('btn-return');
+  const info = document.getElementById('selected-info');
+  btn.disabled = selected.size === 0;
+  info.textContent = selected.size === 0 ? 'ยังไม่ได้เลือกพนักงาน' : `เลือกแล้ว ${selected.size} คน`;
+}
+
+document.getElementById('check-all').addEventListener('change', (e) => {
+  document.querySelectorAll('.row-check').forEach(cb => {
+    cb.checked = e.target.checked;
+    e.target.checked ? selected.add(cb.value) : selected.delete(cb.value);
+  });
+  syncSelectionUI();
+});
+
+document.getElementById('btn-return').addEventListener('click', () => {
+  document.getElementById('return-sub').textContent = `ยืนยันคืนพนักงาน ${selected.size} คน กลับแผนกต้นสังกัด`;
+  document.getElementById('return-modal').classList.add('is-open');
+});
+document.getElementById('return-cancel').addEventListener('click', () => document.getElementById('return-modal').classList.remove('is-open'));
+document.getElementById('return-modal').addEventListener('click', (e) => { if (e.target.id === 'return-modal') e.currentTarget.classList.remove('is-open'); });
+
+document.getElementById('return-confirm').addEventListener('click', async (e) => {
+  const btn = e.currentTarget;
+  const note = document.getElementById('return-note').value;
+  const itemIds = Array.from(selected);
+  const names = itemIds
+    .map(id => (window.__loanRows || []).find(r => r.item_id === id)?.full_name)
+    .filter(Boolean);
+
+  btn.disabled = true; btn.textContent = 'กำลังบันทึก...';
+  try {
+    await Promise.all(itemIds.map(id => db.returnItem(id, note)));
+    document.getElementById('return-modal').classList.remove('is-open');
+    showToast(`คืนตัวพนักงานสำเร็จ: ${names.join(', ')}`);
+    selected.clear();
+    document.getElementById('check-all').checked = false;
+    syncSelectionUI();
+    await renderLoanTable();
+  } catch (err) {
+    showError(err, 'คืนตัวพนักงานไม่สำเร็จ');
+  } finally {
+    btn.disabled = false; btn.textContent = 'ยืนยันคืนตัว';
+  }
+});
+
+(async function init() {
+  try {
+    await requireAuth();
+    attachLogout();
+    await initLookups();
+    await renderLoanTable();
+  } catch (err) {
+    showError(err, 'โหลดข้อมูลเริ่มต้นไม่สำเร็จ ตรวจสอบการตั้งค่า Supabase ใน assets/config.js');
+  }
+})();
+</script>
+</body>
+</html>

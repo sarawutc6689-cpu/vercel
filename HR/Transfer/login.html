@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>เข้าสู่ระบบ — ระบบโอนย้ายพนักงาน</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  body { display:flex; align-items:center; justify-content:center; min-height:100vh; }
+  .login-card { width:100%; max-width:380px; }
+  .login-brand { text-align:center; margin-bottom:22px; }
+  .login-brand .mark { width:48px; height:48px; border-radius:12px; background:linear-gradient(135deg, var(--color-accent), #12C79E); display:flex; align-items:center; justify-content:center; margin:0 auto 12px; font-family:var(--font-display); font-weight:700; color:#072620; font-size:19px; }
+</style>
+</head>
+<body>
+  <div class="login-card">
+    <div class="login-brand">
+      <div class="mark">TS</div>
+      <h1 style="font-size:18px;">ระบบโอนย้ายพนักงาน</h1>
+      <p style="color:var(--color-text-muted); font-size:12.8px; margin-top:2px;">เข้าสู่ระบบด้วยรหัสพนักงาน</p>
+    </div>
+    <div class="panel panel-pad">
+      <form id="login-form">
+        <div class="field">
+          <label class="field-label">รหัสพนักงาน <span class="req">*</span></label>
+          <input type="text" id="employee-code" class="input" placeholder="" required autocomplete="username">
+        </div>
+        <div class="field">
+          <label class="field-label">รหัสผ่าน (วันที่เริ่มงาน) <span class="req">*</span></label>
+          <input type="password" id="password" class="input" placeholder="DDMMYYYY" required autocomplete="current-password">
+          <div class="field-sub">รหัสผ่านเริ่มต้นคือวันที่เริ่มงานของคุณไม่มีขีดคั่น</div>
+        </div>
+        <button type="submit" class="btn btn-accent" id="btn-login" style="width:100%; justify-content:center; margin-top:6px;">เข้าสู่ระบบ</button>
+      </form>
+    </div>
+  </div>
+
+<script src="assets/config.js"></script>
+<script src="assets/supabaseClient.js"></script>
+<script>
+const EMAIL_DOMAIN = 'transfer.local';
+
+// ถ้าล็อกอินอยู่แล้ว ข้ามไปหน้าแรกเลย
+sb.auth.getSession().then(({ data }) => {
+  if (data.session) window.location.href = 'index.html';
+});
+
+document.getElementById('login-form').addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  const code = document.getElementById('employee-code').value.trim();
+  const password = document.getElementById('password').value.trim();
+  const btn = document.getElementById('btn-login');
+
+  if (!code || !password) return;
+
+  btn.disabled = true; btn.textContent = 'กำลังเข้าสู่ระบบ...';
+  const email = `${code.toLowerCase()}@${EMAIL_DOMAIN}`;
+
+  const { error } = await sb.auth.signInWithPassword({ email, password });
+
+  if (error) {
+    btn.disabled = false; btn.textContent = 'เข้าสู่ระบบ';
+    let toast = document.querySelector('.toast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg><span class="toast-msg"></span>`;
+      document.body.appendChild(toast);
+    }
+    toast.style.background = 'var(--color-danger)';
+    toast.querySelector('.toast-msg').textContent = 'รหัสพนักงานหรือรหัสผ่านไม่ถูกต้อง';
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3200);
+    return;
+  }
+
+  window.location.href = 'index.html';
+});
+</script>
+</body>
+</html>

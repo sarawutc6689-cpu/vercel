@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>สถานะการโอนย้าย — ระบบโอนย้ายพนักงาน</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body data-page="status">
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <header class="topbar" id="topbar"></header>
+    <main class="content">
+
+      <div class="stat-grid" id="stat-grid"></div>
+
+      <div class="panel">
+        <div class="filter-bar" style="border-radius: var(--radius-lg) var(--radius-lg) 0 0;">
+          <input class="input search" id="f-search" placeholder="ค้นหารหัสพนักงาน หรือ ชื่อ...">
+          <select class="input" id="f-dept">
+            <option value="">ทุกแผนกต้นสังกัด</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>รหัสพนักงาน</th>
+                <th>ชื่อ</th>
+                <th>ต้นสังกัด → ปัจจุบัน</th>
+                <th>หน่วยงานปัจจุบัน</th>
+                <th>วันที่เริ่ม</th>
+                <th>ครบกำหนด</th>
+                <th>สถานะกำหนดเวลา</th>
+              </tr>
+            </thead>
+            <tbody id="status-tbody"></tbody>
+          </table>
+        </div>
+        <div id="status-empty"></div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script src="assets/config.js"></script>
+<script src="assets/supabaseClient.js"></script>
+<script src="assets/authGuard.js"></script>
+<script src="assets/db.js"></script>
+<script src="assets/ui.js"></script>
+<script>
+renderShell('status', {
+  eyebrow: 'ภาพรวมล่าสุด',
+  title: 'สถานะพนักงานที่กำลังโอนย้าย',
+  desc: 'ดูภาพรวมพนักงานทั้งหมดที่กำลังปฏิบัติงานนอกแผนกต้นสังกัด',
+});
+
+let allRows = [];
+
+function renderStats(rows) {
+  const deptsInvolved = new Set(rows.map(r => r.current_department_id)).size;
+  const sourceDeptsInvolved = new Set(rows.map(r => r.home_department_id)).size;
+
+  document.getElementById('stat-grid').innerHTML = `
+    <div class="stat-card"><div class="num">${rows.length}</div><div class="lbl">กำลังโอนย้ายทั้งหมด</div></div>
+    <div class="stat-card accent"><div class="num">${deptsInvolved}</div><div class="lbl">แผนกปลายทางที่เกี่ยวข้อง</div></div>
+    <div class="stat-card accent"><div class="num">${sourceDeptsInvolved}</div><div class="lbl">แผนกต้นสังกัดที่เกี่ยวข้อง</div></div>
+  `;
+}
+
+function applyFiltersAndRender() {
+  const search = document.getElementById('f-search').value.trim().toLowerCase();
+  const deptFilter = document.getElementById('f-dept').value;
+
+  const rows = allRows.filter(r => {
+    const matchDept = !deptFilter || r.home_department_id === deptFilter;
+    const text = (r.employee_code + ' ' + r.full_name).toLowerCase();
+    const matchSearch = !search || text.includes(search);
+    return matchDept && matchSearch;
+  });
+
+  const tbody = document.getElementById('status-tbody');
+  const emptyEl = document.getElementById('status-empty');
+
+  if (rows.length === 0) {
+    tbody.innerHTML = '';
+    emptyEl.innerHTML = `
+      <div class="empty-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+        <strong>ไม่มีพนักงานที่ตรงกับเงื่อนไข</strong>
+        <p>ลองเปลี่ยนคำค้นหาหรือแผนกที่กรอง</p>
+      </div>`;
+    return;
+  }
+  emptyEl.innerHTML = '';
+
+  tbody.innerHTML = rows.map(r => `
+    <tr>
+      <td class="cell-code">${r.employee_code}</td>
+      <td>${r.full_name}</td>
+      <td>${flowChipHtml(r.home_department_id, r.current_department_id, true)}</td>
+      <td class="cell-muted">${unitName(r.current_unit_id)}</td>
+      <td>${fmtDate(r.start_date)}</td>
+      <td>${fmtDate(r.end_date)}</td>
+      <td>${dueBadgeHtml(r.end_date)}</td>
+    </tr>
+  `).join('');
+}
+
+async function loadData() {
+  const tbody = document.getElementById('status-tbody');
+  tbody.innerHTML = loadingRowHtml(7);
+  try {
+    allRows = await db.getEmployeesOnLoan();
+  } catch (err) {
+    tbody.innerHTML = '';
+    return showError(err, 'โหลดข้อมูลสถานะไม่สำเร็จ');
+  }
+  renderStats(allRows);
+  applyFiltersAndRender();
+}
+
+document.getElementById('f-search').addEventListener('input', applyFiltersAndRender);
+document.getElementById('f-dept').addEventListener('change', applyFiltersAndRender);
+
+(async function init() {
+  try {
+    await requireAuth();
+    attachLogout();
+    const { depts } = await initLookups();
+    document.getElementById('f-dept').innerHTML += depts.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+    await loadData();
+  } catch (err) {
+    showError(err, 'โหลดข้อมูลเริ่มต้นไม่สำเร็จ ตรวจสอบการตั้งค่า Supabase ใน assets/config.js');
+  }
+})();
+</script>
+</body>
+</html>

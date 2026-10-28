@@ -1,0 +1,55 @@
+unit_code,dept_code,name
+204-6,CL,Product Complaint / Claim
+910-1,UT,พาวเวอร์แพลนท์-บอยเลอร์
+910-2,UT,พาวเวอร์แพลนท์-ยูทิลิตี้
+208-0,MD,Mold Prodction/Repair
+208-1,MD,Mold Prodction/Repair / CNC
+211-1-3,MAPM,ซ่อมบำรุง PM
+912-1,RD,R&D Compound & Components Process / น.RM/Compound Lab Test
+912-2,RD,R&D Compound & Components Process / น.Compounder Mixin
+912-3,RD,R&D Compound & Components Process / น.Components Line Proc
+919-1,DD,R&D Product Design & Development / น.Plant Technical Servi
+919-2,DD,R&D Product Design & Development / น.Field & CAE
+919-3,DD,R&D Product Design & Development / น.Product Structure Des
+920,BL,Building Department
+SF06-3,QAFST,QA Outgoing
+204-1,QA,ตรวจสอบคุณภาพวัตถุดิบ
+204-5,QA,ตรวจสอบคุณภาพการผสมยาง
+210-1,MD,Mold Prodction/Repair / ผลิตปลอกเหล็ก
+215-1,PD2,ผลิตยางต้น-ผลิตล้อยาง PU (พ่นปลอกเหล็ก)
+208-2,MD,Mold Prodction/Repair / ผลิตแม่พิมพ์
+916,HR,ทรัพยากรบุคคลและธุรการ/ความปลอดภัย
+903-1,HR,ทรัพยากรบุคคลและธุรการ/การบุุคคล
+204-4-1,QAPD,ตรวจสอบคุุณภาพยางตัน
+211-1-1,MACH,ซ่อมบำรุง CM (เครื่องกล)
+211-1-2,MAEL,ซ่อมบำรุง CM (ไฟฟ้า)
+SF06-1,QCFST,ควบคุุมคุณภาพยางตีนตะขาบ
+102,PD1,ผสมยาง-เตรียมวัตถุดิบ
+103,PD1,ผสมยาง-ผสมยาง
+201-1,PD2,ผลิตยางตัน-สร้างยางตัน
+202-1,PD2,ผลิตยางตัน-อบยางตัน
+203,PD2,ผลิตยางตัน-ผลิตล้อยาง PU
+209,PD2,ผลิตยางตัน-ปฏิบัติการแม่พิมพ์
+212-1,PD2,ผลิตยางตัน-ตัดแต่ง/ซ่อมยางตัน
+214-1,PD2,ผลิตยางตัน-ตัดแต่ง/ซ่อมยางตัน(ขูดโครง)
+SF07,FST,ผลิตยางตีนตะขาบ-เตรียมเมทัลพีส
+SF08,FST,ผลิตยางตีนตะขาบ-เตรียมชิ้นส่วน
+SF09,FST,ผลิตยางตีนตะขาบ-เตรียมลวดฉาบ
+SF10,FST,ผลิตยางตีนตะขาบ-อบยาง
+SF15,FST,ผลิตยางตีนตะขาบ-ปฏิบัติการแม่พิมพ์
+204-2,CAL,สอบเทียบ
+204-3-1,QCPD,ควบคุมคุณภาพยางตัน
+101-1-1,MAT,คลังวัตถุดิบ
+202,PD,ผลิต
+206-1,WH,คลังสินค้า
+211-2,MAST,ระบบและงานเทคนิควิศวกรรม
+904-1,PN,วางแผนการผลิต
+905-1,ST,คลังพัสดุ
+908,AMS,บริการยานยนต์
+915-1,PJ,โครงการ
+917-1,AU,Automation
+902,ISO,บริหารระบบคุณภาพ
+906,ACC,การเงินและบัญชี
+909,IN,ขายในประเทศ
+914,IT,เทคโนโลยีสารสนเทศ
+SF06-2,QAFST,ตรวจสอบคุณภาพยางตีนตะขาบ

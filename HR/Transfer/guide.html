@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>คู่มือการใช้งาน — ระบบโอนย้ายพนักงาน</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  .guide-toc { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+  .guide-toc a {
+    font-size: 12.6px; padding: 7px 13px; border-radius: 999px;
+    background: var(--color-surface); border: 1px solid var(--color-border);
+    color: var(--color-text); text-decoration: none; font-weight: 600;
+  }
+  .guide-toc a:hover { background: var(--color-accent-100); border-color: var(--color-accent); color: var(--color-accent); }
+  .guide-section { scroll-margin-top: 16px; }
+  .guide-section h3 { font-size: 16.5px; display:flex; align-items:center; gap:10px; }
+  .guide-section .step-num {
+    width: 26px; height: 26px; border-radius: 50%; background: var(--color-primary);
+    color: #fff; display: flex; align-items: center; justify-content: center;
+    font-size: 12.5px; font-weight: 700; flex-shrink: 0;
+  }
+  .guide-list { margin: 10px 0 0; padding-left: 20px; }
+  .guide-list li { margin-bottom: 7px; font-size: 13.4px; line-height: 1.6; }
+  .guide-note {
+    background: var(--color-accent-100); border-left: 3px solid var(--color-accent);
+    padding: 10px 14px; border-radius: 6px; font-size: 12.8px; margin-top: 12px;
+  }
+  .guide-warn {
+    background: var(--color-warning-100); border-left: 3px solid var(--color-warning);
+    padding: 10px 14px; border-radius: 6px; font-size: 12.8px; margin-top: 12px;
+  }
+  .kbd {
+    font-family: var(--font-mono); background: var(--color-surface-sunken);
+    border: 1px solid var(--color-border-strong); border-radius: 4px;
+    padding: 1px 6px; font-size: 12px;
+  }
+</style>
+</head>
+<body data-page="guide">
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <header class="topbar" id="topbar"></header>
+    <main class="content">
+
+      <div class="guide-toc">
+        <a href="#login">เข้าสู่ระบบ</a>
+        <a href="#request">คำขอยืมพนักงาน</a>
+        <a href="#manage">การจัดการคำขอ</a>
+        <a href="#return">ขอคืนพนักงาน</a>
+        <a href="#status">สถานะการโอนย้าย</a>
+        <a href="#history">ประวัติการยืม</a>
+        <a href="#report">รายงาน</a>
+        <a href="#faq">คำถามที่พบบ่อย</a>
+      </div>
+
+      <div class="panel panel-pad guide-section" id="login">
+        <h3><span class="step-num">1</span>เข้าสู่ระบบ</h3>
+        <ol class="guide-list">
+          <li><strong>รหัสพนักงาน:</strong> ใช้รหัสพนักงานของคุณ (ไม่ต้องใส่คำนำหน้าใดๆ)</li>
+          <li><strong>รหัสผ่าน:</strong> วันที่เริ่มงานของคุณ รูปแบบ <span class="kbd">วว/ดด/ปปปป</span> (ปี พ.ศ.) ติดกันไม่มีขีดคั่น
+            เช่น เริ่มงานวันที่ 26 มีนาคม 2558 → รหัสผ่านคือ <span class="kbd">26032558</span></li>
+        </ol>
+        <div class="guide-note">ระบบจะจำการเข้าสู่ระบบไว้ ไม่ต้อง login ใหม่ทุกครั้งที่เปิดเว็บ จนกว่าจะกด "ออกจากระบบ"</div>
+      </div>
+
+      <div class="panel panel-pad guide-section" id="request">
+        <h3><span class="step-num">2</span>คำขอยืมพนักงาน</h3>
+        <p style="font-size:13.4px; color:var(--color-text-muted); margin-top:4px;">ใช้เมื่อต้องการส่งพนักงานจากแผนกตัวเองไปช่วยงานแผนกอื่นชั่วคราว</p>
+        <ol class="guide-list">
+          <li>ระบบจะแสดงเฉพาะพนักงานในแผนกของคุณเองที่สถานะปกติ (ไม่รวมคนที่กำลังถูกยืมตัวอยู่แล้ว)</li>
+          <li>เลือกพนักงานที่ต้องการส่ง ใช้ปุ่ม <strong>"เลือกทั้งหมด"</strong> หรือ <strong>"เคลียร์"</strong> ได้ถ้าต้องเลือกหลายคน</li>
+          <li>เลือก <strong>แผนกปลายทาง</strong> ที่จะรับพนักงานไป</li>
+          <li>ระบุ <strong>วันที่เริ่ม</strong> และ <strong>วันที่สิ้นสุด</strong> ที่ต้องการยืมตัว</li>
+          <li>กรอกหมายเหตุ (ถ้ามี) แล้วกด <strong>"ส่งคำขอ"</strong></li>
+        </ol>
+        <div class="guide-note">คำขอจะถูกส่งไปรออนุมัติจากแผนกปลายทาง สถานะพนักงานจะเปลี่ยนเป็น "รอดำเนินการ" จนกว่าจะมีการอนุมัติหรือปฏิเสธ</div>
+      </div>
+
+      <div class="panel panel-pad guide-section" id="manage">
+        <h3><span class="step-num">3</span>การจัดการคำขอ</h3>
+        <p style="font-size:13.4px; color:var(--color-text-muted); margin-top:4px;">สำหรับผู้มีสิทธิ์อนุมัติของแผนกปลายทาง ใช้พิจารณาคำขอที่ส่งเข้ามา</p>
+        <ol class="guide-list">
+          <li>ตารางแสดงคำขอทั้งหมดที่เกี่ยวข้องกับแผนกคุณ ค้นหา/กรองตามสถานะได้ด้านบนตาราง</li>
+          <li>กด <strong>"อนุมัติ"</strong> — ระบบจะให้เลือก "หน่วยงาน" ย่อยภายในแผนกที่พนักงานจะไปสังกัด แล้วยืนยัน</li>
+          <li>กด <strong>"ปฏิเสธ"</strong> — ใส่เหตุผลได้ (ไม่บังคับ) แล้วยืนยัน พนักงานจะกลับสถานะปกติทันที</li>
+        </ol>
+        <div class="guide-warn">คุณจะอนุมัติ/ปฏิเสธได้เฉพาะคำขอที่ส่งมาหาแผนกของคุณเองเท่านั้น ถ้าไม่มีสิทธิ์ ระบบจะแจ้งเตือนและไม่ดำเนินการให้</div>
+      </div>
+
+      <div class="panel panel-pad guide-section" id="return">
+        <h3><span class="step-num">4</span>ขอคืนพนักงาน</h3>
+        <p style="font-size:13.4px; color:var(--color-text-muted); margin-top:4px;">เรียกพนักงานที่ถูกยืมตัวอยู่กลับแผนกต้นสังกัด</p>
+        <ol class="guide-list">
+          <li>ตารางแสดงพนักงานทั้งหมดที่กำลังถูกยืมตัวอยู่ ณ ปัจจุบัน</li>
+          <li>เลือกพนักงานที่ต้องการเรียกคืน (เลือกได้หลายคนพร้อมกัน ใช้ช่องติ๊กหัวตารางเพื่อเลือกทั้งหมด)</li>
+          <li>กด <strong>"ขอคืนพนักงานที่เลือก"</strong> ใส่หมายเหตุ (ถ้ามี) แล้วยืนยัน</li>
+        </ol>
+        <div class="guide-note">พนักงานจะกลับสู่สถานะปกติทันที และย้ายกลับไปสังกัดแผนกต้นทางเหมือนเดิม</div>
+      </div>
+
+      <div class="panel panel-pad guide-section" id="status">
+        <h3><span class="step-num">5</span>สถานะการโอนย้าย</h3>
+        <p style="font-size:13.4px; color:var(--color-text-muted); margin-top:4px;">ภาพรวมพนักงานทั้งหมดที่กำลังปฏิบัติงานนอกแผนกต้นสังกัดอยู่ตอนนี้</p>
+        <ol class="guide-list">
+          <li>การ์ดด้านบนสรุปจำนวนรวม, ใกล้ครบกำหนด (เหลือ ≤3 วัน), และเกินกำหนดคืนแล้ว</li>
+          <li>ค้นหาด้วยชื่อ/รหัสพนักงาน หรือกรองตามแผนกต้นสังกัดได้</li>
+          <li>ป้ายสีในคอลัมน์ขวาสุดบอกสถานะกำหนดเวลา: <span class="badge badge-approved">ปกติ</span> <span class="badge badge-pending">ใกล้ครบกำหนด</span> <span class="badge badge-rejected">เกินกำหนด</span></li>
+        </ol>
+      </div>
+
+      <div class="panel panel-pad guide-section" id="history">
+        <h3><span class="step-num">6</span>ประวัติการยืม</h3>
+        <p style="font-size:13.4px; color:var(--color-text-muted); margin-top:4px;">บันทึกการอนุมัติ ปฏิเสธ และคืนตัวทั้งหมดของแผนกที่คุณเกี่ยวข้อง</p>
+        <ol class="guide-list">
+          <li>ค้นหาด้วยรหัส/ชื่อพนักงาน หรือเลขที่คำขอได้</li>
+          <li>กรองตามประเภทการดำเนินการ (อนุมัติ/ปฏิเสธ/คืนตัว) และช่วงวันที่ได้</li>
+        </ol>
+      </div>
+
+      <div class="panel panel-pad guide-section" id="report">
+        <h3><span class="step-num">7</span>รายงาน</h3>
+        <p style="font-size:13.4px; color:var(--color-text-muted); margin-top:4px;">สรุปข้อมูลตามเงื่อนไขที่กำหนด พร้อมส่งออกเป็นไฟล์</p>
+        <ol class="guide-list">
+          <li>กรองตามช่วงวันที่เริ่ม แผนกต้นทาง/ปลายทาง และสถานะได้พร้อมกัน</li>
+          <li>การ์ดด้านบนสรุปจำนวนตามตัวกรองที่เลือกอยู่</li>
+          <li><strong>Export CSV</strong> — ดาวน์โหลดไฟล์เปิดด้วย Excel ได้ทันที</li>
+          <li><strong>Export PDF</strong> — เปิดหน้าต่างพิมพ์ของเบราว์เซอร์ เลือกปลายทางเป็น "บันทึกเป็น PDF" (Save as PDF)</li>
+        </ol>
+      </div>
+
+      <div class="panel panel-pad guide-section" id="faq">
+        <h3><span class="step-num">?</span>คำถามที่พบบ่อย</h3>
+        <ol class="guide-list">
+          <li><strong>ลืมรหัสผ่าน / เข้าระบบไม่ได้:</strong> ติดต่อผู้ดูแลระบบ (แอดมิน) เพื่อขอรีเซ็ตให้ ระบบยังไม่มีฟังก์ชันเปลี่ยนรหัสผ่านด้วยตัวเอง</li>
+          <li><strong>ขึ้น "รหัสพนักงานหรือรหัสผ่านไม่ถูกต้อง":</strong> ตรวจสอบว่าใส่รหัสผ่านเป็นวันเริ่มงานถูกต้อง รูปแบบ วว/ดด/ปปปป ปี พ.ศ. ติดกันไม่มีขีดคั่น</li>
+          <li><strong>กดอนุมัติแล้วขึ้น error "ไม่มีสิทธิ์":</strong> บัญชีของคุณยังไม่ได้รับสิทธิ์อนุมัติของแผนกนั้น ติดต่อแอดมินเพื่อขอสิทธิ์</li>
+          <li><strong>ไม่เห็นพนักงานที่ต้องการในหน้าคำขอยืม:</strong> พนักงานคนนั้นอาจกำลังถูกยืมตัวอยู่แล้ว หรือมีคำขออื่นค้างอยู่ ตรวจสอบที่หน้า "สถานะการโอนย้าย"</li>
+        </ol>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script src="assets/config.js"></script>
+<script src="assets/supabaseClient.js"></script>
+<script src="assets/authGuard.js"></script>
+<script src="assets/db.js"></script>
+<script src="assets/ui.js"></script>
+<script>
+renderShell('guide', {
+  eyebrow: 'ช่วยเหลือ',
+  title: 'คู่มือการใช้งาน',
+  desc: 'วิธีใช้งานแต่ละหน้าของระบบโอนย้ายพนักงาน',
+});
+
+(async function init() {
+  try {
+    await requireAuth();
+    attachLogout();
+  } catch (err) {
+    // requireAuth เด้งไป login.html ให้อัตโนมัติอยู่แล้วถ้าไม่ได้ล็อกอิน
+  }
+})();
+</script>
+</body>
+</html>

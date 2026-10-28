@@ -1,0 +1,9 @@
+{
+  "name": "transfer-system-auth-setup",
+  "private": true,
+  "version": "1.0.0",
+  "description": "สคริปต์ตั้งค่าเริ่มต้นสำหรับ Auth ของระบบโอนย้ายพนักงาน (รันครั้งเดียวจากเครื่องตัวเอง)",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0"
+  }
+}

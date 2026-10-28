@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>คำขอยืมพนักงาน — ระบบโอนย้ายพนักงาน</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body data-page="request">
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <header class="topbar" id="topbar"></header>
+    <main class="content">
+
+      <form id="request-form">
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <h3>1. แผนกต้นทาง — ผู้ส่ง</h3>
+              <div class="hint">เลือกแผนกและพนักงานที่ต้องการส่งไปช่วยงาน</div>
+            </div>
+          </div>
+          <div class="panel-pad">
+            <div class="field" style="max-width:360px;">
+              <label class="field-label">แผนกของคุณ <span class="req">*</span></label>
+              <select id="source-dept" class="input" required></select>
+            </div>
+
+            <div class="field">
+              <label class="field-label">เลือกพนักงาน <span class="req">*</span></label>
+              <input type="text" id="employee-search" class="input" placeholder="ค้นหารหัสหรือชื่อพนักงาน..." style="margin-bottom:9px;">
+              <div class="list-toolbar">
+                <span class="count" id="select-count">เลือกแล้ว 0 คน</span>
+                <div class="flex gap-8">
+                  <button type="button" class="btn btn-ghost btn-sm" id="btn-select-all">เลือกทั้งหมด</button>
+                  <button type="button" class="btn btn-ghost btn-sm" id="btn-clear">เคลียร์</button>
+                </div>
+              </div>
+              <div class="check-list" id="employee-list"></div>
+              <div class="field-sub">แสดงเฉพาะพนักงานสถานะปกติ (ไม่รวมผู้ที่กำลังถูกยืมตัวอยู่)</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <h3>2. แผนกปลายทาง</h3>
+              <div class="hint">ระบุแผนกที่จะรับพนักงานและช่วงเวลาที่ต้องการยืมตัว</div>
+            </div>
+          </div>
+          <div class="panel-pad">
+            <div class="field" style="max-width:360px;">
+              <label class="field-label">แผนกที่ส่ง</label>
+              <div id="source-preview" class="flex items-center" style="min-height:38px;color:var(--color-text-muted);font-size:13.3px;">ยังไม่ได้เลือกแผนกต้นทาง</div>
+            </div>
+
+            <div class="field" style="max-width:360px;">
+              <label class="field-label">แผนกปลายทาง <span class="req">*</span></label>
+              <select id="dest-dept" class="input" required></select>
+              <div class="field-sub">เลือก "หน่วยงาน" ภายในแผนกปลายทางได้ตอนอนุมัติคำขอ</div>
+            </div>
+
+            <div class="field-row">
+              <div class="field">
+                <label class="field-label">วันที่เริ่ม <span class="req">*</span></label>
+                <input type="date" id="start-date" class="input" required>
+              </div>
+              <div class="field">
+                <label class="field-label">วันที่สิ้นสุด <span class="req">*</span></label>
+                <input type="date" id="end-date" class="input" required>
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="field-label">หมายเหตุ</label>
+              <textarea id="note" class="input" placeholder="เช่น เหตุผลการยืมตัว / งานที่รับผิดชอบระหว่างโอนย้าย"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center" style="justify-content:flex-end; gap:10px; margin-top:6px;">
+          <button type="button" class="btn btn-ghost" id="btn-reset">ล้างแบบฟอร์ม</button>
+          <button type="submit" class="btn btn-accent" id="btn-submit">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7Z"/></svg>
+            ส่งคำขอ
+          </button>
+        </div>
+      </form>
+
+    </main>
+  </div>
+</div>
+
+<script src="assets/config.js"></script>
+<script src="assets/supabaseClient.js"></script>
+<script src="assets/authGuard.js"></script>
+<script src="assets/db.js"></script>
+<script src="assets/ui.js"></script>
+<script>
+renderShell('request', {
+  eyebrow: 'สร้างคำขอ',
+  title: 'คำขอยืมพนักงาน',
+  desc: 'กรอกข้อมูลแผนกต้นทาง ปลายทาง และเลือกพนักงานที่ต้องการโอนย้าย',
+});
+
+let selectedEmployees = new Set();
+
+function populateDeptSelects(depts) {
+  const opts = `<option value="">— เลือกแผนก —</option>` + depts.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+  document.getElementById('source-dept').innerHTML = opts;
+  document.getElementById('dest-dept').innerHTML = opts;
+}
+
+async function renderEmployeeList() {
+  const deptId = document.getElementById('source-dept').value;
+  const listEl = document.getElementById('employee-list');
+  const searchEl = document.getElementById('employee-search');
+  searchEl.value = '';
+  selectedEmployees.clear();
+  updateSelectCount();
+
+  if (!deptId) {
+    listEl.innerHTML = `<div class="empty-state" style="padding:32px 16px;"><p>เลือกแผนกต้นทางก่อน เพื่อแสดงรายชื่อพนักงาน</p></div>`;
+    document.getElementById('source-preview').innerHTML = 'ยังไม่ได้เลือกแผนกต้นทาง';
+    return;
+  }
+
+  document.getElementById('source-preview').innerHTML = deptChipHtml(deptId);
+  listEl.innerHTML = `<div style="padding:24px 16px; text-align:center; color:var(--color-text-muted); font-size:12.8px;">กำลังโหลดรายชื่อพนักงาน...</div>`;
+
+  let emps;
+  try {
+    emps = await db.getAvailableEmployees(deptId);
+  } catch (err) {
+    listEl.innerHTML = '';
+    return showError(err, 'โหลดรายชื่อพนักงานไม่สำเร็จ');
+  }
+
+  if (emps.length === 0) {
+    listEl.innerHTML = `<div class="empty-state" style="padding:32px 16px;"><strong>ไม่มีพนักงานที่พร้อมโอนย้าย</strong><p>พนักงานทั้งหมดในแผนกนี้กำลังถูกยืมตัวหรือรอดำเนินการอยู่</p></div>`;
+    return;
+  }
+
+  listEl.innerHTML = emps.map(e => `
+    <label class="check-row" data-id="${e.id}" data-search="${(e.full_name + ' ' + e.employee_code).toLowerCase()}">
+      <input type="checkbox" value="${e.id}">
+      <div class="who"><strong>${e.full_name}</strong><span>${e.employee_code}</span></div>
+    </label>
+  `).join('');
+
+  listEl.querySelectorAll('input[type=checkbox]').forEach(cb => {
+    cb.addEventListener('change', () => {
+      const row = cb.closest('.check-row');
+      if (cb.checked) { selectedEmployees.add(cb.value); row.classList.add('is-checked'); }
+      else { selectedEmployees.delete(cb.value); row.classList.remove('is-checked'); }
+      updateSelectCount();
+    });
+  });
+}
+
+function filterEmployeeList() {
+  const term = document.getElementById('employee-search').value.trim().toLowerCase();
+  const rows = document.querySelectorAll('#employee-list .check-row');
+  let visibleCount = 0;
+  rows.forEach(row => {
+    const match = !term || row.dataset.search.includes(term);
+    row.style.display = match ? '' : 'none';
+    if (match) visibleCount++;
+  });
+  const listEl = document.getElementById('employee-list');
+  let noMatchEl = listEl.querySelector('.no-match-msg');
+  if (term && visibleCount === 0) {
+    if (!noMatchEl) {
+      noMatchEl = document.createElement('div');
+      noMatchEl.className = 'no-match-msg';
+      noMatchEl.style.cssText = 'padding:20px 16px; text-align:center; color:var(--color-text-muted); font-size:12.8px;';
+      noMatchEl.textContent = 'ไม่พบพนักงานที่ตรงกับคำค้นหา';
+      listEl.appendChild(noMatchEl);
+    }
+  } else if (noMatchEl) {
+    noMatchEl.remove();
+  }
+}
+document.getElementById('employee-search').addEventListener('input', filterEmployeeList);
+
+function updateSelectCount() {
+  document.getElementById('select-count').textContent = `เลือกแล้ว ${selectedEmployees.size} คน`;
+}
+
+document.getElementById('source-dept').addEventListener('change', renderEmployeeList);
+
+document.getElementById('btn-select-all').addEventListener('click', () => {
+  document.querySelectorAll('#employee-list .check-row').forEach(row => {
+    if (row.style.display === 'none') return; // ข้ามแถวที่ถูกซ่อนไว้จากการค้นหา
+    const cb = row.querySelector('input[type=checkbox]');
+    cb.checked = true; row.classList.add('is-checked'); selectedEmployees.add(cb.value);
+  });
+  updateSelectCount();
+});
+document.getElementById('btn-clear').addEventListener('click', () => {
+  document.querySelectorAll('#employee-list input[type=checkbox]').forEach(cb => {
+    cb.checked = false; cb.closest('.check-row').classList.remove('is-checked');
+  });
+  selectedEmployees.clear();
+  updateSelectCount();
+});
+
+document.getElementById('btn-reset').addEventListener('click', () => {
+  document.getElementById('request-form').reset();
+  document.getElementById('dest-dept').value = '';
+  renderEmployeeList();
+});
+
+document.getElementById('request-form').addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  const sourceDept = document.getElementById('source-dept').value;
+  const destDept = document.getElementById('dest-dept').value;
+  const startDate = document.getElementById('start-date').value;
+  const endDate = document.getElementById('end-date').value;
+  const note = document.getElementById('note').value;
+
+  if (!sourceDept) return showToast('กรุณาเลือกแผนกต้นทาง');
+  if (selectedEmployees.size === 0) return showToast('กรุณาเลือกพนักงานอย่างน้อย 1 คน');
+  if (!destDept) return showToast('กรุณาเลือกแผนกปลายทาง');
+  if (!startDate || !endDate) return showToast('กรุณาระบุวันที่เริ่มและสิ้นสุด');
+  if (endDate < startDate) return showToast('วันที่สิ้นสุดต้องไม่ก่อนวันที่เริ่ม');
+  if (sourceDept === destDept) return showToast('แผนกต้นทางและปลายทางต้องไม่ใช่แผนกเดียวกัน');
+
+  const btn = document.getElementById('btn-submit');
+  btn.disabled = true; btn.textContent = 'กำลังส่งคำขอ...';
+  try {
+    await db.createTransferRequest({
+      sourceDeptId: sourceDept, destDeptId: destDept,
+      startDate, endDate, note,
+      employeeIds: Array.from(selectedEmployees),
+    });
+    showToast(`ส่งคำขอสำเร็จ — พนักงาน ${selectedEmployees.size} คน รอการอนุมัติ`);
+    document.getElementById('request-form').reset();
+    document.getElementById('dest-dept').value = '';
+    await renderEmployeeList();
+  } catch (err) {
+    showError(err, 'ส่งคำขอไม่สำเร็จ');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7Z"/></svg> ส่งคำขอ`;
+  }
+});
+
+(async function init() {
+  try {
+    await requireAuth();
+    attachLogout();
+    const { depts } = await initLookups();
+    populateDeptSelects(depts);
+    await renderEmployeeList();
+  } catch (err) {
+    showError(err, 'โหลดข้อมูลเริ่มต้นไม่สำเร็จ ตรวจสอบการตั้งค่า Supabase ใน assets/config.js');
+  }
+})();
+</script>
+</body>
+</html>
