@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HR Mouldmate - ระบบจัดการทรัพยากรบุคคล</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --accent: #1abc9c;
+            --light: #ecf0f1;
+            --dark: #2c3e50;
+            --success: #2ecc71;
+            --warning: #f39c12;
+            --danger: #e74c3c;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: var(--dark);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(to right, var(--secondary), var(--accent));
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .logo-icon {
+            background: var(--primary);
+            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            color: #7f8c8d;
+            margin-bottom: 20px;
+        }
+        
+        .datetime {
+            background: var(--light);
+            padding: 10px 20px;
+            border-radius: 50px;
+            display: inline-block;
+            font-weight: 600;
+            color: var(--primary);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+        }
+        
+        .card-header {
+            padding: 25px 25px 15px;
+            border-bottom: 1px solid #f1f1f1;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .card-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            color: white;
+        }
+        
+        .icon-meeting {
+            background: linear-gradient(to right, #3498db, #2980b9);
+        }
+        
+        .icon-car {
+            background: linear-gradient(to right, #1abc9c, #16a085);
+        }
+        
+        .icon-search {
+            background: linear-gradient(to right, #9b59b6, #8e44ad);
+        }
+        
+        .icon-ot {
+            background: linear-gradient(to right, #f39c12, #e67e22);
+        }
+        
+        .icon-register {
+            background: linear-gradient(to right, #2ecc71, #27ae60);
+        }
+        
+        .icon-permission {
+            background: linear-gradient(to right, #e74c3c, #c0392b);
+        }
+        
+        .icon-leave {
+            background: linear-gradient(to right, #3498db, #2980b9);
+        }
+        
+        .icon-hr {
+            background: linear-gradient(to right, #34495e, #2c3e50);
+        }
+
+        .icon-check {
+            background: linear-gradient(to right, #34495e, #2c3e50);
+        }
+
+        .card-title {
+            font-size: 1.4rem;
+            color: var(--primary);
+            font-weight: 700;
+        }
+        
+        .card-body {
+            padding: 20px 25px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .card-description {
+            color: #7f8c8d;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            flex-grow: 1;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 25px;
+            background: var(--secondary);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            text-align: center;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        
+        .btn:hover {
+            background: var(--primary);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn i {
+            margin-right: 8px;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 25px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            color: #7f8c8d;
+            font-size: 0.95rem;
+        }
+        
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 15px;
+        }
+        
+        .footer-links a {
+            color: var(--secondary);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        
+        .footer-links a:hover {
+            color: var(--primary);
+            text-decoration: underline;
+        }
+        
+        .card-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background: #e8f4fc;
+            color: var(--secondary);
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-top: 10px;
+            margin-bottom: 15px;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .card-header {
+                flex-direction: column;
+                text-align: center;
+                gap: 10px;
+            }
+        }
+
+        /* ===== Modal ===== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-box {
+            background: white;
+            border-radius: 15px;
+            padding: 35px 30px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
+            position: relative;
+        }
+
+        .modal-box::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 5px;
+            background: linear-gradient(to right, #34495e, #2c3e50);
+            border-radius: 15px 15px 0 0;
+        }
+
+        .modal-icon {
+            width: 65px; height: 65px;
+            background: linear-gradient(to right, #34495e, #2c3e50);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 28px; color: white;
+            margin: 0 auto 20px;
+        }
+
+        .modal-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .modal-subtitle {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            margin-bottom: 25px;
+        }
+
+        .modal-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            text-align: center;
+            letter-spacing: 2px;
+            outline: none;
+            transition: border-color 0.3s;
+            margin-bottom: 10px;
+        }
+
+        .modal-input:focus {
+            border-color: var(--secondary);
+        }
+
+        .modal-input.error {
+            border-color: var(--danger);
+            animation: shake 0.3s ease;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
+        }
+
+        .modal-error {
+            color: var(--danger);
+            font-size: 0.85rem;
+            margin-bottom: 15px;
+            min-height: 20px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .btn-cancel {
+            background: #ecf0f1;
+            color: var(--dark);
+        }
+
+        .btn-cancel:hover {
+            background: #bdc3c7;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div>
+                    <h1>HR Mouldmate</h1>
+                    <div class="subtitle">ระบบจัดการทรัพยากรบุคคลแบบครบวงจร</div>
+                </div>
+            </div>
+            <div class="datetime" id="datetime"></div>
+        </header>
+        
+        <main class="main-content">
+            <!-- จองห้องประชุม -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon icon-meeting">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <div class="card-title">จองห้องประชุม</div>
+                </div>
+                <div class="card-body">
+                    <p class="card-description">จองห้องประชุมสำหรับการประชุมภายในบริษัท สามารถตรวจสอบตารางการใช้งานห้องประชุมและจองล่วงหน้าได้</p>
+                    <a href="https://sarawutc6689-cpu.github.io/Mouldmate-HR/Reservation/index.html" target="_blank" class="btn">
+                        <i class="fas fa-external-link-alt"></i> เข้าดู
+                    </a>
+                    <a href="https://drive.google.com/file/d/1hE_Z3edd-rHbhGF-Hyr1VwWscrkn7znw/view?usp=sharing" target="_blank" class="btn">
+                        <i class="fas fa-external-link-alt"></i> คู่มือการใช้
+                    </a>
+                </div>
+            </div>
+        
+            <!-- ขอโอที -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon icon-ot">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="card-title">ขอโอที (OT)</div>
+                </div>
+                <div class="card-body">
+                    <p class="card-description">ส่งคำขอทำงานล่วงเวลา (Overtime) เพื่อบันทึกเวลาการทำงานและคำนวณค่าล่วงหน้า</p>
+                    <a href="https://sarawutc6689-cpu.github.io/Mouldmate-HR/OT/main.html" target="_blank" class="btn">
+                        <i class="fas fa-external-link-alt"></i> เข้าดู
+                    </a>
+                </div>
+            </div>
+            
+            <!-- เฉพาะเจ้าหน้าฝ่ายทรัพยากรบุคคล -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon icon-hr">
+                        <i class="fas fa-user-tie"></i>
+                    </div>
+                    <div class="card-title">เฉพาะเจ้าหน้าฝ่ายทรัพยากรบุคคล</div>
+                </div>
+                <div class="card-body">
+                    <p class="card-description">ระบบสำหรับเจ้าหน้าที่ฝ่ายทรัพยากรบุคคลในการจัดการข้อมูลพนักงาน ตรวจสอบรายงาน และบริหารงานบุคคล</p>
+                    <div class="card-badge">สำหรับ HR เท่านั้น</div>
+                    <button onclick="openHRModal()" class="btn">
+                        <i class="fas fa-external-link-alt"></i> เข้าดู
+                    </button>
+                </div>
+            </div>
+
+           
+            
+            
+
+            <!-- FaceLogin -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon icon-register">
+                        <i class="fas fa-user-clock"></i>
+                    </div>
+                    <div class="card-title">ลงเวลานอกสถานที่</div>
+                </div>
+                <div class="card-body">
+                    <p class="card-description">ลงเวลาทำงานนอกสถานที่</p>
+                    <a href="https://sarawutc6689-cpu.github.io/FaceLogin/index.html" target="_blank" class="btn">
+                        <i class="fas fa-external-link-alt"></i> เข้าดู
+                    </a>
+                </div>
+            </div>
+
+            
+             <!-- Transfer Staff -->
+             <div class="card">
+                <div class="card-header">
+                    <div class="card-icon icon-ot">
+                        <i class="fas fa-arrow-right-arrow-left"></i> 
+                    </div>
+                    <div class="card-title">ระบบการยืมพนักงานปฏิบัติงาน</div>
+                </div>
+                <div class="card-body">
+                    <p class="card-description">ส่งคำขอโอนย้ายพนักงานระหว่างแผนก</p>
+                    <a href="https://sarawutc6689-cpu.github.io/Mouldmate-HR/Transfer/login.html" target="_blank" class="btn">
+                        <i class="fas fa-external-link-alt"></i> เข้าดู
+                    </a>
+                </div>
+            </div>
+
+
+             <!-- Form Request -->
+             <div class="card">
+                <div class="card-header">
+                    <div class="card-icon icon-ot">
+                        <i class="fas fa-file-lines"></i> 
+                    </div>
+                    <div class="card-title">แบบฟอร์มขอหนังสือรับรอง</div>
+                </div>
+                <div class="card-body">
+                    <p class="card-description">ขอหนังสือรับรองการทำงาน ขอหนังสือรับรองเงินเดือน ขอหนังสือผ่านงาน และสลิปเงินเดือน</p>
+                    <a href="https://sarawutc6689-cpu.github.io/Mouldmate-HR/Form/landing.html" target="_blank" class="btn">
+                        <i class="fas fa-external-link-alt"></i> เข้าดู
+                    </a>
+                </div>
+            </div>
+
+
+
+
+
+
+            
+        </main>
+        
+        <footer class="footer">
+            <p>ระบบจัดการทรัพยากรบุคคล - © 2026 HR Mouldmate</p>
+            <p>ออกแบบเพื่อให้พนักงานใช้งานได้สะดวกและมีประสิทธิภาพ</p>
+            <span>พัฒนาระบบโดย Sarawut.C</span>
+            <div class="footer-links">
+                <a href="mailto:hr@tokaisolidtire.com">ติดต่อฝ่ายทรัพยากรบุคคล</a>
+            </div>
+        </footer>
+    </div>
+
+    <!-- HR Modal -->
+    <div class="modal-overlay" id="hrModal">
+        <div class="modal-box">
+            <div class="modal-icon">
+                <i class="fas fa-lock"></i>
+            </div>
+            <div class="modal-title">เข้าสู่ระบบ HR</div>
+            <div class="modal-subtitle">กรุณาใส่รหัสผ่านเพื่อเข้าใช้งาน<br>เฉพาะเจ้าหน้าที่ฝ่ายทรัพยากรบุคคลเท่านั้น</div>
+            <input 
+                type="password" 
+                class="modal-input" 
+                id="hrPassword" 
+                placeholder="กรอกรหัสผ่าน"
+                onkeydown="if(event.key==='Enter') checkHRPassword()"
+            >
+            <div class="modal-error" id="hrError"></div>
+            <div class="modal-buttons">
+                <button class="btn btn-cancel" onclick="closeHRModal()">
+                    <i class="fas fa-times"></i> ยกเลิก
+                </button>
+                <button class="btn" onclick="checkHRPassword()">
+                    <i class="fas fa-unlock"></i> เข้าสู่ระบบ
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // อัพเดตวันที่และเวลา
+        function updateDateTime() {
+            const now = new Date();
+            const options = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            };
+            const thaiDateTime = now.toLocaleDateString('th-TH', options);
+            document.getElementById('datetime').textContent = thaiDateTime;
+        }
+
+        // อัพเดตทุกวินาที
+        updateDateTime();
+        setInterval(updateDateTime, 1000);
+
+        // เพิ่มเอฟเฟกต์เมื่อโหลดหน้าเว็บ
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.card');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, 100 * index);
+            });
+        });
+
+        // ===== HR Modal Functions =====
+        function openHRModal() {
+            document.getElementById('hrModal').classList.add('active');
+            document.getElementById('hrPassword').value = '';
+            document.getElementById('hrError').textContent = '';
+            document.getElementById('hrPassword').classList.remove('error');
+            setTimeout(() => document.getElementById('hrPassword').focus(), 100);
+        }
+
+        function closeHRModal() {
+            document.getElementById('hrModal').classList.remove('active');
+        }
+
+        function checkHRPassword() {
+            const input = document.getElementById('hrPassword');
+            const error = document.getElementById('hrError');
+            
+            if (input.value === 'mm169Moo4') {
+                closeHRModal();
+                window.open('https://sarawutc6689-cpu.github.io/Mouldmate-HR/hr-only.html', '_blank');
+            } else {
+                input.classList.add('error');
+                error.textContent = '❌ รหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง';
+                input.value = '';
+                setTimeout(() => input.classList.remove('error'), 500);
+            }
+        }
+
+        // ปิด modal เมื่อคลิกพื้นหลัง
+        document.getElementById('hrModal').addEventListener('click', function(e) {
+            if (e.target === this) closeHRModal();
+        });
+    </script>
+</body>
+</html>

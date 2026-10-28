@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ปฏิทินการจองห้องประชุม</title>
+    
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- FullCalendar CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet">
+    
+    <style>
+        /* CSS เดิมทั้งหมด */
+    </style>
+</head>
+<body>
+    <!-- Loading -->
+    <div class="loading-overlay" id="loading">
+        <div class="spinner"></div>
+        <div>กำลังโหลดข้อมูล...</div>
+    </div>
+
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>
+                <i class="fas fa-calendar-alt" style="margin-right: 10px;"></i>
+                ปฏิทินการจองห้องประชุม
+            </h1>
+            <div class="nav-buttons">
+                <button class="nav-btn nav-btn-primary" onclick="refreshCalendar()">
+                    <i class="fas fa-sync-alt"></i>
+                    รีเฟรช
+                </button>
+            </div>
+        </div>
+
+        <!-- Filter Section -->
+        <div class="filter-section">
+            <div class="filter-group">
+                <label><i class="fas fa-door-open"></i> เลือกห้องประชุม</label>
+                <select id="roomFilter">
+                    <option value="all">ทั้งหมด</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label><i class="fas fa-calendar"></i> มุมมองปฏิทิน</label>
+                <select id="viewFilter">
+                    <option value="dayGridMonth">รายเดือน</option>
+                    <option value="timeGridWeek">รายสัปดาห์</option>
+                    <option value="timeGridDay">รายวัน</option>
+                </select>
+            </div>
+            <button class="filter-btn" onclick="applyFilters()">
+                <i class="fas fa-filter"></i>
+                กรองข้อมูล
+            </button>
+        </div>
+
+        <!-- Calendar -->
+        <div class="calendar-section">
+            <div id="calendar"></div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal" id="bookingModal">
+        <div class="modal-content">
+            <h3><i class="fas fa-info-circle"></i> รายละเอียดการจอง</h3>
+            <div id="bookingDetails"></div>
+            <button class="modal-btn" onclick="closeModal()">ปิด</button>
+        </div>
+    </div>
+
+    <!-- FullCalendar JS -->
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+    
+    <script>
+        // กำหนด URL ของ Google Apps Script
+        const API_URL = 'https://script.google.com/macros/s/AKfycbxM4_Zt5rsfjj0VPgZwtNhaymrEnAFJsJzIfvK8YJ6k3ECDziHMAl8VhgaBr6k96tfHow/exec';
+        
+        let calendar = null;
+        let currentRooms = [];
+        let allBookings = [];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Calendar page loaded');
+            loadRoomsAndBookings();
+        });
+
+        // Loading functions
+        function showLoading() {
+            document.getElementById('loading').classList.add('active');
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').classList.remove('active');
+        }
+
+        // ฟังก์ชันเรียก API
+        async function callApi(action, params = {}) {
+            try {
+                let url = API_URL + '?action=' + action;
+                
+                // เพิ่ม parameters
+                Object.keys(params).forEach(key => {
+                    url += '&' + key + '=' + encodeURIComponent(params[key]);
+                });
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('API Error:', error);
+                throw error;
+            }
+        }
+
+        async function callPostApi(action, data) {
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: action,
+                        ...data
+                    })
+                });
+                
+                // เนื่องจาก no-cors ไม่สามารถอ่าน response ได้
+                return { success: true };
+            } catch (error) {
+                console.error('API Error:', error);
+                throw error;
+            }
+        }
+
+        // Load both rooms and bookings
+        async function loadRoomsAndBookings() {
+            showLoading();
+            console.log('Loading rooms and bookings...');
+            
+            try {
+                // Load rooms
+                const rooms = await callApi('getRooms');
+                console.log('Rooms loaded:', rooms);
+                currentRooms = rooms || [];
+                
+                // Populate room filter
+                const select = document.getElementById('roomFilter');
+                select.innerHTML = '<option value="all">ทั้งหมด</option>';
+                
+                if (rooms && rooms.length > 0) {
+                    rooms.forEach(room => {
+                        const option = document.createElement('option');
+                        option.value = room.id;
+                        option.textContent = room.name;
+                        select.appendChild(option);
+                    });
+                }
+                
+                // Load bookings
+                const bookings = await callApi('getAllBookings');
+                console.log('Bookings loaded:', bookings);
+                allBookings = bookings || [];
+                
+                initCalendar();
+                hideLoading();
+                
+            } catch (error) {
+                console.error('Error loading data:', error);
+                alert('ไม่สามารถโหลดข้อมูลได้');
+                hideLoading();
+            }
+        }
+
+        // Initialize calendar
+        function initCalendar() {
+            console.log('Initializing calendar...');
+            const calendarEl = document.getElementById('calendar');
+            
+            if (!calendarEl) {
+                console.error('Calendar element not found');
+                return;
+            }
+
+            if (calendar) {
+                calendar.destroy();
+            }
+
+            const roomFilter = document.getElementById('roomFilter').value;
+            const viewFilter = document.getElementById('viewFilter').value;
+
+            let filteredBookings = allBookings || [];
+            if (roomFilter !== 'all' && filteredBookings.length > 0) {
+                filteredBookings = filteredBookings.filter(b => b.roomId === roomFilter);
+            }
+
+            const events = filteredBookings.map(booking => {
+                let startDateTime = '';
+                let endDateTime = '';
+                
+                try {
+                    if (booking.date && booking.startTime && booking.endTime) {
+                        startDateTime = booking.date + 'T' + booking.startTime + ':00';
+                        endDateTime = booking.date + 'T' + booking.endTime + ':00';
+                        
+                        const testDate = new Date(startDateTime);
+                        if (isNaN(testDate.getTime())) {
+                            return null;
+                        }
+                    } else {
+                        return null;
+                    }
+                } catch (e) {
+                    return null;
+                }
+                
+                let color = '#667eea';
+                if (currentRooms && currentRooms.length > 0) {
+                    const roomIndex = currentRooms.findIndex(r => r.id === booking.roomId);
+                    const colors = ['#667eea', '#48bb78', '#ed8936', '#9f7aea', '#f56565'];
+                    color = colors[roomIndex % colors.length] || '#667eea';
+                }
+
+                return {
+                    id: booking.id,
+                    title: `${booking.roomName} - ${booking.bookerName}`,
+                    start: startDateTime,
+                    end: endDateTime,
+                    backgroundColor: color,
+                    borderColor: color,
+                    textColor: 'white',
+                    extendedProps: {
+                        roomName: booking.roomName,
+                        bookerName: booking.bookerName,
+                        department: booking.department || '-',
+                        agenda: booking.agenda || '-',
+                        startTime: booking.startTime,
+                        endTime: booking.endTime
+                    }
+                };
+            }).filter(event => event !== null);
+
+            try {
+                calendar = new FullCalendar.Calendar(calendarEl, {
+                    initialView: viewFilter,
+                    headerToolbar: {
+                        left: 'prev,next today',
+                        center: 'title',
+                        right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                    },
+                    locale: 'th',
+                    events: events,
+                    eventClick: function(info) {
+                        showBookingDetails(info.event.extendedProps);
+                    },
+                    height: 650,
+                    slotMinTime: '08:00:00',
+                    slotMaxTime: '18:00:00',
+                    allDaySlot: false,
+                    slotLabelFormat: {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: false
+                    },
+                    eventTimeFormat: {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: false
+                    },
+                    noEventsContent: 'ไม่พบการจองในช่วงเวลาที่เลือก'
+                });
+
+                calendar.render();
+                console.log('Calendar rendered successfully');
+                
+            } catch (error) {
+                console.error('Error rendering calendar:', error);
+            }
+        }
+
+        // Apply filters
+        function applyFilters() {
+            initCalendar();
+        }
+
+        // Refresh calendar
+        function refreshCalendar() {
+            loadRoomsAndBookings();
+        }
+
+        // Show booking details
+        function showBookingDetails(props) {
+            const modal = document.getElementById('bookingModal');
+            const details = document.getElementById('bookingDetails');
+            
+            details.innerHTML = `
+                <div class="booking-detail-item">
+                    <div class="booking-detail-label">ห้องประชุม:</div>
+                    <div class="booking-detail-value">${props.roomName}</div>
+                </div>
+                <div class="booking-detail-item">
+                    <div class="booking-detail-label">ผู้จอง:</div>
+                    <div class="booking-detail-value">${props.bookerName}</div>
+                </div>
+                <div class="booking-detail-item">
+                    <div class="booking-detail-label">แผนก:</div>
+                    <div class="booking-detail-value">${props.department}</div>
+                </div>
+                <div class="booking-detail-item">
+                    <div class="booking-detail-label">เวลา:</div>
+                    <div class="booking-detail-value">${props.startTime} - ${props.endTime} น.</div>
+                </div>
+                <div class="booking-detail-item">
+                    <div class="booking-detail-label">วัตถุประสงค์:</div>
+                    <div class="booking-detail-value">${props.agenda}</div>
+                </div>
+            `;
+            
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('bookingModal').classList.remove('active');
+        }
+
+        // Add event listeners for filters
+        document.getElementById('roomFilter').addEventListener('change', applyFilters);
+        document.getElementById('viewFilter').addEventListener('change', applyFilters);
+    </script>
+</body>
+</html>

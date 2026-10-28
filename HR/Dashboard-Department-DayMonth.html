@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HR Dashboard — รายงานเวลาทำงาน</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f0f4f8;--surface:#fff;--surface2:#f8fafc;
+  --border:#e2e8f0;--border2:#cbd5e1;
+  --primary:#1e40af;--primary-light:#dbeafe;--primary-mid:#3b82f6;
+  --accent:#0ea5e9;--success:#059669;--success-light:#d1fae5;
+  --warning:#d97706;--warning-light:#fef3c7;
+  --danger:#dc2626;
+  --ot:#7c3aed;--ot-light:#ede9fe;
+  --text:#0f172a;--text2:#475569;--text3:#94a3b8;
+  --r:10px;--rl:14px;--sh:0 1px 3px rgba(0,0,0,.08)
+}
+body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);font-size:14px;min-height:100vh}
+
+.hdr{background:var(--primary);color:#fff;padding:0 24px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 10px rgba(30,64,175,.35)}
+.hdr-l{display:flex;align-items:center;gap:12px}
+.hdr-ic{width:36px;height:36px;border-radius:9px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:18px}
+.hdr-t{font-size:16px;font-weight:700}
+.hdr-s{font-size:11px;opacity:.7;margin-top:1px}
+.upd-badge{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:6px;padding:4px 10px;font-size:11px}
+
+.wrap{max-width:1500px;margin:0 auto;padding:18px 22px}
+
+/* DEPT TABS */
+.dept-scroll{overflow-x:auto;margin-bottom:16px;padding-bottom:2px}
+.dept-scroll::-webkit-scrollbar{height:3px}
+.dept-scroll::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+.dept-tabs{display:flex;gap:5px;width:max-content}
+.dept-tab{padding:6px 15px;border:1px solid var(--border2);border-radius:20px;background:var(--surface);cursor:pointer;font-family:'Sarabun',sans-serif;font-size:12px;font-weight:500;color:var(--text2);white-space:nowrap;transition:all .15s}
+.dept-tab:hover{border-color:var(--primary-mid);color:var(--primary);background:var(--primary-light)}
+.dept-tab.active{background:var(--primary);border-color:var(--primary);color:#fff}
+
+/* CONTROLS */
+.ctrl{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:13px 18px;margin-bottom:16px;display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;box-shadow:var(--sh)}
+.cg{display:flex;flex-direction:column;gap:4px}
+.cg label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text2)}
+.cg select,.cg input{border:1px solid var(--border2);border-radius:7px;padding:7px 11px;font-family:'Sarabun',sans-serif;font-size:13px;color:var(--text);background:var(--surface);outline:none;transition:border-color .2s;min-width:145px}
+.cg select:focus,.cg input:focus{border-color:var(--primary-mid);box-shadow:0 0 0 3px rgba(59,130,246,.12)}
+.period-tabs{display:flex}
+.pt{padding:7px 15px;border:1px solid var(--border2);background:var(--surface);cursor:pointer;font-family:'Sarabun',sans-serif;font-size:13px;color:var(--text2);transition:all .15s;font-weight:500}
+.pt:first-child{border-radius:7px 0 0 7px}
+.pt:last-child{border-radius:0 7px 7px 0}
+.pt:not(:first-child){border-left:none}
+.pt.active{background:var(--primary);border-color:var(--primary);color:#fff}
+.pt:hover:not(.active){background:var(--primary-light);color:var(--primary)}
+.btn-ref{padding:7px 16px;background:var(--primary);color:#fff;border:none;border-radius:7px;cursor:pointer;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:600;display:flex;align-items:center;gap:5px;transition:background .2s;margin-left:auto}
+.btn-ref:hover{background:#1d4ed8}
+
+/* STAT CARDS */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:11px;margin-bottom:16px}
+.sc{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:15px 17px;box-shadow:var(--sh);position:relative;overflow:hidden}
+.sc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.sc.blue::before{background:var(--primary-mid)}.sc.green::before{background:var(--success)}.sc.amber::before{background:var(--warning)}.sc.purple::before{background:var(--ot)}.sc.sky::before{background:var(--accent)}
+.sc-ic{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;margin-bottom:8px}
+.sc-ic.blue{background:var(--primary-light)}.sc-ic.green{background:var(--success-light)}.sc-ic.amber{background:var(--warning-light)}.sc-ic.purple{background:var(--ot-light)}.sc-ic.sky{background:#e0f2fe}
+.sc-val{font-size:24px;font-weight:700;line-height:1;margin-bottom:3px}
+.sc-lbl{font-size:11px;color:var(--text2);font-weight:500}
+
+/* TWO COL */
+
+/* CHART */
+
+/* TABLE */
+.tbl-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);box-shadow:var(--sh);overflow:hidden}
+.tbl-hdr{padding:13px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:9px;background:var(--surface2)}
+.tbl-title{font-size:13px;font-weight:700;display:flex;align-items:center;gap:7px}
+.cnt-badge{background:var(--primary-light);color:var(--primary);border-radius:20px;padding:2px 9px;font-size:11px;font-weight:700}
+.srch{border:1px solid var(--border2);border-radius:7px;padding:6px 11px;font-family:'Sarabun',sans-serif;font-size:13px;outline:none;width:180px;transition:border-color .2s}
+.srch:focus{border-color:var(--primary-mid);box-shadow:0 0 0 3px rgba(59,130,246,.12)}
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+thead th{background:var(--surface2);padding:9px 12px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text2);border-bottom:1px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none}
+thead th:hover{color:var(--primary)}
+tbody tr{border-bottom:1px solid var(--border);transition:background .1s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:#f8faff}
+tbody td{padding:9px 12px;font-size:13px;vertical-align:middle}
+.emp-id{font-family:monospace;font-size:11px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:2px 6px;color:var(--text2);white-space:nowrap}
+.emp-name{font-weight:600}
+.tc{font-size:12px;color:var(--text2);white-space:nowrap}
+.h-work{font-weight:600;color:var(--primary);font-size:13px}
+.h-ot{font-weight:700;color:var(--ot)}
+.h-month{font-weight:700;color:var(--success)}
+.note-chip{background:#f1f5f9;border-radius:4px;padding:2px 7px;font-size:11px;color:var(--text2);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block}
+.no-data{text-align:center;padding:56px 20px;color:var(--text3)}
+.no-data-ic{font-size:36px;margin-bottom:8px}
+
+/* PAGINATION */
+.pgn{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-top:1px solid var(--border);background:var(--surface2)}
+.pgn-info{font-size:11px;color:var(--text2)}
+.pgn-btns{display:flex;gap:3px}
+.pgn-btn{padding:4px 9px;border:1px solid var(--border2);border-radius:5px;background:var(--surface);cursor:pointer;font-family:'Sarabun',sans-serif;font-size:11px;color:var(--text2);transition:all .15s}
+.pgn-btn:hover:not(:disabled):not(.active){background:var(--primary-light);color:var(--primary);border-color:var(--primary-mid)}
+.pgn-btn.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.pgn-btn:disabled{opacity:.35;cursor:not-allowed}
+
+/* LOADING */
+.lov{display:none;position:fixed;inset:0;background:rgba(240,244,248,.9);z-index:999;align-items:center;justify-content:center;flex-direction:column;gap:12px}
+.lov.show{display:flex}
+.spin{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.lov-txt{color:var(--text2);font-size:13px;font-weight:500}
+
+/* ERROR */
+.err{background:#fff5f5;border:1px solid #fed7d7;border-radius:var(--rl);padding:14px 18px;color:var(--danger);margin-bottom:14px;display:none;font-size:13px;line-height:1.7}
+.err.show{display:block}
+</style>
+</head>
+<body>
+
+<div class="lov" id="lov">
+  <div class="spin"></div>
+  <div class="lov-txt" id="lovTxt">กำลังโหลดข้อมูล...</div>
+</div>
+
+<div class="hdr">
+  <div class="hdr-l">
+    <div class="hdr-ic">📊</div>
+    <div>
+      <div class="hdr-t">HR Dashboard — รายงานเวลาทำงาน</div>
+      <div class="hdr-s">ติดตามชั่วโมงทำงานรายแผนก</div>
+    </div>
+  </div>
+  <div class="upd-badge" id="updBadge">—</div>
+</div>
+
+<div class="wrap">
+  <div class="err" id="errBox"></div>
+
+  <!-- CONTROLS -->
+  <div class="ctrl">
+    <div class="cg">
+      <label>แผนก</label>
+      <select id="deptSelect" onchange="selDept(this.value)"></select>
+    </div>
+    <div class="cg">
+      <label>ช่วงเวลา</label>
+      <div class="period-tabs">
+        <button class="pt active" onclick="setPeriod('day')">รายวัน</button>
+        <button class="pt" onclick="setPeriod('month')">รายเดือน</button>
+        <button class="pt" onclick="setPeriod('year')">รายปี</button>
+      </div>
+    </div>
+    <div class="cg" id="grpDay">
+      <label>วันที่</label>
+      <input type="date" id="inDay" onchange="applyFilters()">
+    </div>
+    <div class="cg" id="grpMonth" style="display:none">
+      <label>เดือน</label>
+      <input type="month" id="inMonth" onchange="applyFilters()">
+    </div>
+    <div class="cg" id="grpYear" style="display:none">
+      <label>ปี</label>
+      <select id="inYear" onchange="applyFilters()"></select>
+    </div>
+    <div style="display:flex;gap:7px;margin-left:auto">
+      <button class="btn-ref" onclick="reloadCurrent()">🔄 รีเฟรช</button>
+      <button class="btn-ref" style="background:#059669" onclick="exportCSV()">⬇️ CSV</button>
+      <button class="btn-ref" style="background:#dc2626" onclick="exportPDF()">🖨️ PDF</button>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stat-grid">
+    <div class="sc blue"><div class="sc-ic blue">👥</div><div class="sc-val" id="stEmp">—</div><div class="sc-lbl">จำนวนพนักงาน</div></div>
+    <div class="sc green"><div class="sc-ic green">⏱</div><div class="sc-val" id="stHrs">—</div><div class="sc-lbl">รวมชั่วโมงทำงาน</div></div>
+    <div class="sc amber"><div class="sc-ic amber">📈</div><div class="sc-val" id="stAvg">—</div><div class="sc-lbl">เฉลี่ยชม./คน</div></div>
+  </div>
+
+  <!-- CHARTS -->
+
+
+  <!-- TABLE -->
+  <div class="tbl-card">
+    <div class="tbl-hdr">
+      <div class="tbl-title">
+        📋 รายละเอียดการทำงาน
+        <span class="cnt-badge" id="rowCnt">0 รายการ</span>
+      </div>
+      <input class="srch" type="text" placeholder="🔍 ค้นหา ชื่อ / รหัส" id="srch" oninput="applyFilters()">
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th onclick="sortBy('date')">วันที่ ↕</th>
+            <th onclick="sortBy('empId')">รหัสพนักงาน ↕</th>
+            <th onclick="sortBy('name')">ชื่อ - นามสกุล ↕</th>
+            <th onclick="sortBy('start')">เวลาเริ่ม ↕</th>
+            <th onclick="sortBy('end')">เวลาสิ้นสุด ↕</th>
+            <th onclick="sortBy('workHrs')">ชม.ทำงาน (วัน) ↕</th>
+            <th onclick="sortBy('monthWork')">ชม.รวม/เดือน ↕</th>
+            <th>หมายเหตุ</th>
+          </tr>
+        </thead>
+        <tbody id="tbody">
+          <tr><td colspan="8" class="no-data">
+            <div class="no-data-ic">🏢</div>
+            <div>กำลังโหลดข้อมูล...</div>
+          </td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="pgn" id="pgn" style="display:none">
+      <div class="pgn-info" id="pgnInfo"></div>
+      <div class="pgn-btns" id="pgnBtns"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SHEET_ID = '1_cXJYLMwzK_a7krK-viLutKigmsXwVFcLlCNhiRIa0M';
+const SHEETS = ['AMS','FG','FST','HQ','MA','MAT&ST','Mould','PD1','PD2','Place','PN','Quality','RD Compound','RD Product Design'];
+// Col indices (0-based): A=0,B=1,C=2,D=3,E=4,F=5,G=6,H=7
+const C = {date:0,empId:1,name:2,start:3,end:4,workHrs:5,otHrs:6,note:7};
+const PAGE_SZ = 30;
+
+let cache = {};
+let dept = SHEETS[0];
+let period = 'day';
+let sCol = 'date', sAsc = false;
+let page = 1;
+let filtered = [];
+
+window.onload = async () => {
+  initDefaults();
+  buildTabs();
+  await loadSheet(dept);
+  applyFilters();
+};
+
+function initDefaults() {
+  const n = new Date();
+  const y = n.getFullYear(), m = String(n.getMonth()+1).padStart(2,'0'), d = String(n.getDate()).padStart(2,'0');
+  document.getElementById('inDay').value = `${y}-${m}-${d}`;
+  document.getElementById('inMonth').value = `${y}-${m}`;
+  const sel = document.getElementById('inYear');
+  for (let yr=y; yr>=y-4; yr--) {
+    const o = document.createElement('option');
+    o.value=yr; o.textContent=`${yr} (พ.ศ. ${yr+543})`; if(yr===y)o.selected=true;
+    sel.appendChild(o);
+  }
+}
+
+function buildTabs() {
+  const sel = document.getElementById("deptSelect");
+  const all = document.createElement("option");
+  all.value = "__ALL__"; all.textContent = "🏢 ทุกแผนก";
+  sel.appendChild(all);
+  SHEETS.forEach(n => {
+    const o = document.createElement("option");
+    o.value = n; o.textContent = n;
+    if (n === dept) o.selected = true;
+    sel.appendChild(o);
+  });
+}
+
+async function selDept(n) {
+  dept = n;
+  if (n === '__ALL__') {
+    // Load all sheets not yet cached
+    for (const s of SHEETS) {
+      if (!cache[s]) await loadSheet(s);
+    }
+  } else {
+    if (!cache[n]) await loadSheet(n);
+  }
+  applyFilters();
+}
+
+async function reloadCurrent() {
+  if (dept === '__ALL__') {
+    SHEETS.forEach(s => delete cache[s]);
+    for (const s of SHEETS) await loadSheet(s);
+  } else {
+    delete cache[dept];
+    await loadSheet(dept);
+  }
+  applyFilters();
+}
+
+async function loadSheet(name) {
+  showLov(`กำลังโหลด "${name}"...`);
+  hideErr();
+  try {
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(name)}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('HTTP '+res.status);
+    const txt = await res.text();
+    const m = txt.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/);
+    if (!m) throw new Error('รูปแบบข้อมูลผิดพลาด');
+    const json = JSON.parse(m[1]);
+    cache[name] = parseSheet(json);
+    document.getElementById('updBadge').textContent = 'อัปเดต '+new Date().toLocaleTimeString('th-TH');
+  } catch(e) {
+    showErr(`โหลด "${name}" ไม่สำเร็จ: ${e.message}<br><b>แก้ไข:</b> ไปที่ Google Sheet → แชร์ → เปลี่ยนเป็น "ทุกคนที่มีลิงก์สามารถดู" → บันทึก`);
+    cache[name] = [];
+  }
+  hideLov();
+}
+
+function parseSheet(json) {
+  const rows = json.table?.rows || [];
+  const out = [];
+
+  rows.forEach(row => {
+    if (!row.c) return;
+    const g = (i) => { const c=row.c[i]; if(!c||c.v===null||c.v===undefined) return ''; return c.f||String(c.v); };
+    const rv = (i) => row.c?.[i]?.v ?? null;
+
+    // Parse date
+    let dateObj = null;
+    const dv = rv(C.date);
+    if (dv !== null) {
+      const dm = String(dv).match(/Date\((\d+),(\d+),(\d+)/);
+      if (dm) dateObj = new Date(+dm[1],+dm[2],+dm[3]);
+    }
+    if (!dateObj || isNaN(dateObj)) dateObj = parseDate(g(C.date));
+    if (!dateObj || isNaN(dateObj)) return;
+
+    const empId   = g(C.empId).trim();
+    const name    = g(C.name).trim();
+    const start   = g(C.start).trim();
+    const end     = g(C.end).trim();
+    const note    = g(C.note).trim();
+
+    // Col F: รวมจำนวนชั่วโมงทำงาน
+    let workHrs = parseFloat(g(C.workHrs).replace(/[^\d.]/g,''));
+    if (isNaN(workHrs)) workHrs = calcHrs(start, end);
+
+    // Col G: รวมชั่วโมงโอที
+    let otHrs = parseFloat(g(C.otHrs).replace(/[^\d.]/g,''));
+    if (isNaN(otHrs)) otHrs = 0;
+
+    if (!empId && !name) return;
+
+    out.push({ date:dateObj, dateStr:fmtDate(dateObj), empId, name, start, end, workHrs, otHrs, note });
+  });
+
+  // Monthly totals per employee (same month+year)
+  const mW={}, mO={};
+  out.forEach(r => {
+    const k = `${r.empId}|${r.date.getFullYear()}|${r.date.getMonth()}`;
+    mW[k] = (mW[k]||0) + r.workHrs;
+    mO[k] = (mO[k]||0) + r.otHrs;
+  });
+  out.forEach(r => {
+    const k = `${r.empId}|${r.date.getFullYear()}|${r.date.getMonth()}`;
+    r.monthWork = mW[k]||0;
+  });
+
+  return out;
+}
+
+function parseDate(s) {
+  if (!s) return null;
+  let m;
+  // d/m/yyyy or d-m-yyyy
+  m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+  if (m) return new Date(+m[3],+m[2]-1,+m[1]);
+  // yyyy-mm-dd
+  m = s.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/);
+  if (m) return new Date(+m[1],+m[2]-1,+m[3]);
+  const d = new Date(s);
+  return isNaN(d) ? null : d;
+}
+
+function calcHrs(s,e) {
+  const p = v => { const m=v.match(/(\d+):(\d+)/); return m?+m[1]*60+(+m[2]):null; };
+  const sm=p(s),em=p(e);
+  if(sm===null||em===null) return 0;
+  const d=em-sm; return d>0?Math.round(d/60*100)/100:0;
+}
+
+function fmtDate(d) {
+  if(!d||isNaN(d)) return '—';
+  return d.toLocaleDateString('th-TH',{day:'2-digit',month:'2-digit',year:'numeric'});
+}
+
+function setPeriod(p) {
+  period = p;
+  document.querySelectorAll('.pt').forEach((t,i)=>t.classList.toggle('active',['day','month','year'][i]===p));
+  document.getElementById('grpDay').style.display   = p==='day'  ?'':'none';
+  document.getElementById('grpMonth').style.display = p==='month'?'':'none';
+  document.getElementById('grpYear').style.display  = p==='year' ?'':'none';
+  applyFilters();
+}
+
+function applyFilters() {
+  let rows = dept === '__ALL__'
+    ? SHEETS.flatMap(s => cache[s] || [])
+    : cache[dept] || [];
+
+  if (period==='day') {
+    const v=document.getElementById('inDay').value;
+    if(v){const[y,mo,d]=v.split('-').map(Number);rows=rows.filter(r=>r.date.getFullYear()===y&&r.date.getMonth()===mo-1&&r.date.getDate()===d);}
+  } else if (period==='month') {
+    const v=document.getElementById('inMonth').value;
+    if(v){const[y,mo]=v.split('-').map(Number);rows=rows.filter(r=>r.date.getFullYear()===y&&r.date.getMonth()===mo-1);}
+  } else {
+    const y=+document.getElementById('inYear').value;
+    rows=rows.filter(r=>r.date.getFullYear()===y);
+  }
+
+  const q=document.getElementById('srch').value.trim().toLowerCase();
+  if(q) rows=rows.filter(r=>r.empId.toLowerCase().includes(q)||r.name.toLowerCase().includes(q));
+
+  rows=[...rows].sort((a,b)=>{
+    let va=a[sCol],vb=b[sCol];
+    if(va instanceof Date) return sAsc?va-vb:vb-va;
+    if(typeof va==='number') return sAsc?va-vb:vb-va;
+    return sAsc?String(va).localeCompare(String(vb),'th'):String(vb).localeCompare(String(va),'th');
+  });
+
+  filtered=rows; page=1;
+  renderStats(rows);
+  renderTable();
+}
+
+function renderStats(rows) {
+  const emps=new Set(rows.map(r=>r.empId));
+  const totW=rows.reduce((s,r)=>s+r.workHrs,0);
+  const avg=emps.size?totW/emps.size:0;
+
+
+  document.getElementById('stEmp').textContent=emps.size;
+  document.getElementById('stHrs').textContent=totW.toFixed(1);
+  document.getElementById('stAvg').textContent=avg.toFixed(1);
+}
+
+function renderTable() {
+  const tbody=document.getElementById('tbody');
+  document.getElementById('rowCnt').textContent=`${filtered.length.toLocaleString()} รายการ`;
+
+  if(!filtered.length){
+    tbody.innerHTML=`<tr><td colspan="8" class="no-data"><div class="no-data-ic">📭</div><div>ไม่พบข้อมูลในช่วงที่เลือก</div></td></tr>`;
+    document.getElementById('pgn').style.display='none';
+    return;
+  }
+
+  const tot=Math.ceil(filtered.length/PAGE_SZ);
+  if(page>tot)page=tot;
+  const s=(page-1)*PAGE_SZ;
+  const pr=filtered.slice(s,s+PAGE_SZ);
+
+  tbody.innerHTML=pr.map(r=>`
+    <tr>
+      <td><span class="tc">${r.dateStr}</span></td>
+      <td><span class="emp-id">${esc(r.empId)}</span></td>
+      <td><span class="emp-name">${esc(r.name)}</span></td>
+      <td><span class="tc">${esc(r.start)||'—'}</span></td>
+      <td><span class="tc">${esc(r.end)||'—'}</span></td>
+      <td><span class="h-work">${r.workHrs.toFixed(2)} ชม.</span></td>
+      <td><span class="h-month">${r.monthWork.toFixed(1)} ชม.</span></td>
+      <td>${r.note?`<span class="note-chip" title="${esc(r.note)}">${esc(r.note)}</span>`:'<span style="color:var(--text3)">—</span>'}</td>
+    </tr>`).join('');
+
+  renderPgn(tot);
+}
+
+function renderPgn(tot) {
+  const pgn=document.getElementById('pgn');
+  if(tot<=1){pgn.style.display='none';return;}
+  pgn.style.display='flex';
+  const s=(page-1)*PAGE_SZ+1,e=Math.min(page*PAGE_SZ,filtered.length);
+  document.getElementById('pgnInfo').textContent=`แสดง ${s}–${e} จาก ${filtered.length.toLocaleString()} รายการ`;
+  let h=`<button class="pgn-btn" onclick="goPage(${page-1})" ${page===1?'disabled':''}>◀</button>`;
+  let s2=Math.max(1,page-2),e2=Math.min(tot,page+2);
+  if(s2>1)h+=`<button class="pgn-btn" onclick="goPage(1)">1</button>`;
+  if(s2>2)h+=`<span style="padding:0 3px;color:var(--text3)">…</span>`;
+  for(let i=s2;i<=e2;i++)h+=`<button class="pgn-btn${i===page?' active':''}" onclick="goPage(${i})">${i}</button>`;
+  if(e2<tot-1)h+=`<span style="padding:0 3px;color:var(--text3)">…</span>`;
+  if(e2<tot)h+=`<button class="pgn-btn" onclick="goPage(${tot})">${tot}</button>`;
+  h+=`<button class="pgn-btn" onclick="goPage(${page+1})" ${page===tot?'disabled':''}>▶</button>`;
+  document.getElementById('pgnBtns').innerHTML=h;
+}
+
+function goPage(p) {
+  const tot=Math.ceil(filtered.length/PAGE_SZ);
+  if(p<1||p>tot)return;
+  page=p; renderTable();
+}
+
+function sortBy(col) {
+  if(sCol===col)sAsc=!sAsc;else{sCol=col;sAsc=true;}
+  applyFilters();
+}
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function showLov(t){document.getElementById('lovTxt').textContent=t;document.getElementById('lov').classList.add('show')}
+function hideLov(){document.getElementById('lov').classList.remove('show')}
+function showErr(m){const el=document.getElementById('errBox');el.innerHTML='⚠️ '+m;el.classList.add('show')}
+function hideErr(){document.getElementById('errBox').classList.remove('show')}
+
+// ===== EXPORT CSV =====
+function exportCSV() {
+  if (!filtered.length) { alert('ไม่มีข้อมูลสำหรับ Export'); return; }
+  const BOM = '\uFEFF';
+  const headers = ['วันที่','รหัสพนักงาน','ชื่อ-นามสกุล','เวลาเริ่ม','เวลาสิ้นสุด','ชม.ทำงาน(วัน)','ชม.รวม/เดือน','หมายเหตุ'];
+  const rows = filtered.map(r => [
+    r.dateStr, r.empId, r.name, r.start, r.end,
+    r.workHrs.toFixed(2), r.monthWork.toFixed(1), r.note
+  ].map(v => '"' + String(v||'').replace(/"/g,'""') + '"').join(','));
+  const csv = BOM + [headers.join(','), ...rows].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const deptName = document.getElementById('deptSelect').value;
+  a.href = url;
+  a.download = 'HR_' + deptName + '_' + new Date().toLocaleDateString('th-TH').replace(/\//g,'-') + '.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ===== EXPORT PDF =====
+function exportPDF() {
+  if (!filtered.length) { alert('ไม่มีข้อมูลสำหรับ Export'); return; }
+  const deptName = document.getElementById('deptSelect').value;
+  const dateLabel = period==='day'   ? document.getElementById('inDay').value
+                  : period==='month' ? document.getElementById('inMonth').value
+                  : document.getElementById('inYear').value;
+  const empCount = new Set(filtered.map(r => r.empId)).size;
+  const totW = filtered.reduce((s,r) => s+r.workHrs, 0);
+  const rows = filtered.map(r =>
+    '<tr><td>' + r.dateStr + '</td><td>' + r.empId + '</td><td>' + r.name +
+    '</td><td>' + (r.start||'—') + '</td><td>' + (r.end||'—') +
+    '</td><td style="text-align:center">' + r.workHrs.toFixed(2) +
+    '</td><td style="text-align:center">' + r.monthWork.toFixed(1) +
+    '</td><td>' + (r.note||'—') + '</td></tr>'
+  ).join('');
+  const html = '<!DOCTYPE html><html><head><meta charset="UTF-8">' +
+    '<title>HR Report - ' + deptName + '</title>' +
+    '<style>' +
+    'body{font-family:sans-serif;font-size:11px;padding:24px;color:#111}' +
+    'h2{font-size:15px;margin-bottom:2px;color:#1e40af}' +
+    '.meta{font-size:10px;color:#555;margin-bottom:14px;display:flex;gap:20px}' +
+    '.meta span{background:#f1f5f9;padding:3px 8px;border-radius:4px}' +
+    'table{width:100%;border-collapse:collapse}' +
+    'th{background:#1e40af;color:#fff;padding:7px 9px;text-align:left;font-size:10px;letter-spacing:.04em}' +
+    'td{padding:6px 9px;border-bottom:1px solid #e2e8f0;font-size:10px}' +
+    'tr:nth-child(even) td{background:#f8fafc}' +
+    '.footer{margin-top:14px;font-size:9px;color:#aaa;text-align:right}' +
+    '@media print{body{padding:10px}}' +
+    '</style></head><body>' +
+    '<h2>รายงานเวลาทำงาน — แผนก ' + deptName + '</h2>' +
+    '<div class="meta">' +
+    '<span>ช่วงเวลา: ' + dateLabel + '</span>' +
+    '<span>พนักงาน: ' + empCount + ' คน</span>' +
+    '<span>รายการ: ' + filtered.length + '</span>' +
+    '<span>รวมชม.: ' + totW.toFixed(1) + ' ชม.</span>' +
+    '</div>' +
+    '<table><thead><tr>' +
+    '<th>วันที่</th><th>รหัสพนักงาน</th><th>ชื่อ-นามสกุล</th>' +
+    '<th>เวลาเริ่ม</th><th>เวลาสิ้นสุด</th><th>ชม.(วัน)</th><th>ชม.รวม/เดือน</th><th>หมายเหตุ</th>' +
+    '</tr></thead><tbody>' + rows + '</tbody></table>' +
+    '<div class="footer">พิมพ์เมื่อ: ' + new Date().toLocaleString('th-TH') + '</div>' +
+    '<script>window.onload=function(){window.print();}<\/script>' +
+    '</body></html>';
+  const win = window.open('', '_blank');
+  win.document.write(html);
+  win.document.close();
+}
+
+</script>
+</body>
+</html>

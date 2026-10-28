@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HR Department</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --primary-dark: #3a56d4;
+            --secondary: #7209b7;
+            --accent: #f72585;
+            --success: #4cc9f0;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --gray: #6c757d;
+            --light-gray: #e9ecef;
+            --border-radius: 12px;
+            --shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: #fafafa;
+            color: var(--dark);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 25px 0;
+            margin-bottom: 40px;
+            border-radius: 0 0 20px 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-icon {
+            font-size: 2.2rem;
+            color: white;
+            background: rgba(255, 255, 255, 0.15);
+            width: 60px;
+            height: 60px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .logo-text h1 {
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+        }
+
+        .logo-text p {
+            font-size: 0.95rem;
+            opacity: 0.9;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 10px 18px;
+            border-radius: 50px;
+            backdrop-filter: blur(10px);
+        }
+
+        .user-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: white;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        /* Main Content */
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+
+        @media (max-width: 900px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .section-title {
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            font-size: 1.5rem;
+            color: var(--dark);
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title i {
+            color: var(--primary);
+        }
+
+        /* Cards */
+        .card {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 28px;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            border: 1px solid rgba(0, 0, 0, 0.03);
+            margin-bottom: 25px;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        }
+
+        /* HR Section */
+        .hr-login-card {
+            text-align: center;
+            padding: 40px 30px;
+            background: linear-gradient(135deg, #f8f9ff 0%, #f0f3ff 100%);
+            border-left: 4px solid var(--primary);
+        }
+
+        .hr-icon {
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 20px;
+            background: rgba(67, 97, 238, 0.1);
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+        }
+
+        .hr-login-title {
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            font-size: 1.6rem;
+            color: var(--dark);
+            margin-bottom: 12px;
+        }
+
+        .hr-login-desc {
+            color: var(--gray);
+            margin-bottom: 30px;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.5;
+        }
+
+        .login-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 14px 32px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 1rem;
+            transition: var(--transition);
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(67, 97, 238, 0.25);
+        }
+
+        .login-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(67, 97, 238, 0.35);
+            color: white;
+        }
+
+        .hr-features {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px;
+            background: var(--light);
+            border-radius: 10px;
+            transition: var(--transition);
+        }
+
+        .feature-item:hover {
+            background: rgba(67, 97, 238, 0.05);
+            transform: translateX(5px);
+        }
+
+        .feature-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: rgba(67, 97, 238, 0.1);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+
+        .feature-text {
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        /* Knowledge Section */
+        .news-list {
+            list-style: none;
+        }
+
+        .news-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            padding: 18px 0;
+            border-bottom: 1px solid var(--light-gray);
+            transition: var(--transition);
+        }
+
+        .news-item:hover {
+            padding-left: 5px;
+        }
+
+        .news-item:last-child {
+            border-bottom: none;
+        }
+
+        .news-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+
+        .tech-news .news-icon {
+            background: rgba(76, 201, 240, 0.1);
+            color: var(--success);
+        }
+
+        .hr-news .news-icon {
+            background: rgba(114, 9, 183, 0.1);
+            color: var(--secondary);
+        }
+
+        .health-news .news-icon {
+            background: rgba(247, 37, 133, 0.1);
+            color: var(--accent);
+        }
+
+        .news-content {
+            flex-grow: 1;
+        }
+
+        .news-title {
+            font-weight: 500;
+            margin-bottom: 5px;
+            font-size: 1rem;
+        }
+
+        .news-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 8px;
+        }
+
+        .news-date {
+            font-size: 0.85rem;
+            color: var(--gray);
+        }
+
+        .news-tag {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .tech-tag {
+            background: rgba(76, 201, 240, 0.15);
+            color: #0d8abc;
+        }
+
+        .hr-tag {
+            background: rgba(114, 9, 183, 0.15);
+            color: var(--secondary);
+        }
+
+        .health-tag {
+            background: rgba(247, 37, 133, 0.15);
+            color: var(--accent);
+        }
+
+        .view-all {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 20px;
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: var(--transition);
+        }
+
+        .view-all:hover {
+            gap: 12px;
+        }
+
+        /* Knowledge Tips */
+        .knowledge-tip {
+            background: linear-gradient(135deg, #fff8f8 0%, #fff0f5 100%);
+            border-left: 4px solid var(--accent);
+            padding: 25px;
+        }
+
+        .tip-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .tip-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: rgba(247, 37, 133, 0.1);
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+        }
+
+        .tip-title {
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            font-size: 1.3rem;
+            color: var(--dark);
+        }
+
+        .tip-content {
+            color: var(--gray);
+            margin-bottom: 15px;
+        }
+
+        .tip-list {
+            list-style: none;
+            margin: 15px 0;
+        }
+
+        .tip-list li {
+            padding: 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .tip-list li i {
+            color: var(--accent);
+            font-size: 0.9rem;
+        }
+
+        /* Learning Resources */
+        .resources-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .resource-item {
+            text-align: center;
+            padding: 20px 15px;
+            background: var(--light);
+            border-radius: 10px;
+            transition: var(--transition);
+        }
+
+        .resource-item:hover {
+            background: white;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            transform: translateY(-3px);
+        }
+
+        .resource-icon {
+            font-size: 1.8rem;
+            color: var(--primary);
+            margin-bottom: 12px;
+        }
+
+        .resource-name {
+            font-weight: 500;
+            font-size: 0.95rem;
+            margin-bottom: 5px;
+        }
+
+        .resource-desc {
+            font-size: 0.8rem;
+            color: var(--gray);
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 25px 0;
+            margin-top: 40px;
+            color: var(--gray);
+            border-top: 1px solid var(--light-gray);
+            font-size: 0.9rem;
+        }
+
+        .footer-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .footer-info {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 20px;
+        }
+
+        .footer-links a {
+            color: var(--gray);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .footer-links a:hover {
+            color: var(--primary);
+        }
+
+        .current-date {
+            color: var(--primary);
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <div class="logo-icon">
+                        <i class="fas fa-briefcase"></i>
+                    </div>
+                    <div class="logo-text">
+                        <h1>HR & Knowledge Hub</h1>
+                        <p>ศูนย์กลางระบบงานบุคคลและแหล่งความรู้</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="main-content">
+            <!-- ส่วนงานบุคคล -->
+            <section>
+                <h2 class="section-title"><i class="fas fa-users"></i>ระบบงานบุคคล</h2>
+                
+                <div class="card hr-login-card">
+                    <div class="hr-icon">
+                        <i class="fas fa-user-lock"></i>
+                    </div>
+                    <h2 class="hr-login-title">HR Management System</h2>
+                    <p class="hr-login-desc">
+                        เข้าถึงระบบจัดการทรัพยากรบุคคลที่ทันสมัย 
+                        สำหรับจัดการข้อมูลพนักงาน การลางาน และข้อมูลส่วนตัว
+                    </p>
+                    <a href="https://sarawutc6689-cpu.github.io/Mouldmate-Login/Index_HR.html" class="login-btn" target="_blank">
+                        <i class="fas fa-sign-in-alt"></i>เข้าสู่ระบบ HR
+                    </a>
+                    
+                    <div class="hr-features">
+                        <div class="feature-item">
+                            <div class="feature-icon">
+                                <i class="fas fa-calendar-alt"></i>
+                            </div>
+                            <div class="feature-text">จัดการการลางาน</div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">
+                                <i class="fas fa-building"></i>
+                            </div>
+                            <div class="feature-text">ขอออกนอกบริษัท</div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">
+                                <i class="fas fa-coins"></i>
+                            </div>
+                            <div class="feature-text">ขอโอที</div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">
+                                <i class="fas fa-handshake"></i>
+                            </div>
+                            <div class="feature-text">จองห้องประชุม</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3 style="font-family: 'Inter', sans-serif; font-weight: 600; margin-bottom: 15px; font-size: 1.2rem;">
+                        <i class="fas fa-info-circle" style="color: var(--primary); margin-right: 8px;"></i>
+                        ข้อมูลระบบ
+                    </h3>
+                    <p style="color: var(--gray); margin-bottom: 20px;">
+                        ระบบเปิดให้บริการทุกวัน 24 ชั่วโมง 
+                        สำหรับปัญหาการใช้สามารถติดต่อได้ที่ ฝ่ายทรัพยากรบุคคลและธุรการ
+                    </p>
+                    
+                    <div style="background: var(--light); padding: 15px; border-radius: 10px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                            <span style="font-size: 0.9rem;">เวลาทำการฝ่ายบุคคล:</span>
+                            <span style="font-weight: 500;">08:00 - 17:00 น.</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="font-size: 0.9rem;">โทรศัพท์ติดต่อ:</span>
+                            <span style="font-weight: 500;">036-281-300 </span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- ส่วนข่าวสารและเกร็ดความรู้ -->
+            <section>
+                <h2 class="section-title"><i class="fas fa-lightbulb"></i>ข่าวสารและความรู้</h2>
+                
+                <div class="card">
+                    <h3 style="font-family: 'Inter', sans-serif; font-weight: 600; margin-bottom: 20px; font-size: 1.2rem;">
+                        <i class="fas fa-newspaper" style="color: var(--primary); margin-right: 8px;"></i>
+                        ข่าวสารล่าสุด
+                    </h3>
+                    
+                    <ul class="news-list">
+                        <li class="news-item tech-news">
+                            <div class="news-icon">
+                                <i class="fas fa-child"></i>
+                            </div>
+                            <div class="news-content">
+                                <div class="news-title">งานกิจกรรมวันเด็ก ประจำปี 2569 </div>
+                                <div class="news-meta">
+                                    <span class="news-date">10 มกราคม 2569</span>
+                                    <span class="news-tag hr-tag">บุคคล</span>
+                                </div>
+                            </div>
+                        </li>
+                        
+                        <li class="news-item hr-news">
+                            <div class="news-icon">
+                                <i class="fas fa-home-office"></i>
+                            </div>
+                            <div class="news-content">
+                                <div class="news-title">อัพเดทนโยบายการทำงานแบบ Hybrid รอบใหม่</div>
+                                <div class="news-meta">
+                                    <span class="news-date">22 มิ.ย. 2569</span>
+                                    <span class="news-tag hr-tag">บุคคล</span>
+                                </div>
+                            </div>
+                        </li>
+                        
+                        <li class="news-item health-news">
+                            <div class="news-icon">
+                                <i class="fas fa-eye"></i>
+                            </div>
+                            <div class="news-content">
+                                <div class="news-title">วิธีดูแลสุขภาพตาจากการทำงานหน้าจอนานๆ</div>
+                                <div class="news-meta">
+                                    <span class="news-date">18 มิ.ย. 2569</span>
+                                    <span class="news-tag health-tag">สุขภาพ</span>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                    
+                    <a href="#" class="view-all">
+                        ดูข่าวสารทั้งหมด <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+                
+                <div class="card">
+                    <h3 style="font-family: 'Inter', sans-serif; font-weight: 600; margin-bottom: 20px; font-size: 1.2rem;">
+                        <i class="fas fa-graduation-cap" style="color: var(--primary); margin-right: 8px;"></i>
+                        แหล่งเรียนรู้แนะนำ
+                    </h3>
+                    
+                    <div class="resources-grid">
+                        <div class="resource-item">
+                            <div class="resource-icon">
+                                <i class="fab fa-coursera"></i>
+                            </div>
+                            <div class="resource-name">Coursera</div>
+                            <div class="resource-desc">คอร์สธุรกิจและเทคโนโลยี</div>
+                        </div>
+                        
+                        <div class="resource-item">
+                            <div class="resource-icon">
+                                <i class="fab fa-linkedin"></i>
+                            </div>
+                            <div class="resource-name">LinkedIn Learning</div>
+                            <div class="resource-desc">พัฒนาทักษะอาชีพ</div>
+                        </div>
+                        
+                        <div class="resource-item">
+                            <div class="resource-icon">
+                                <i class="fas fa-book-open"></i>
+                            </div>
+                            <div class="resource-name">FutureLearn</div>
+                            <div class="resource-desc">คอร์สจากมหาวิทยาลัย</div>
+                        </div>
+                    </div>
+                    
+                    <p style="margin-top: 20px; font-size: 0.85rem; color: var(--gray); text-align: center;">
+                        <i class="fas fa-info-circle" style="color: var(--primary); margin-right: 5px;"></i>
+                        บริษัทส่งเสริมการเรียนรู้
+                    </p>
+                </div>
+            </section>
+        </div>
+        
+        <footer>
+            <div class="footer-info">
+                <div>HR & Knowledge Hub | ศูนย์กลางข้อมูลสำหรับพนักงาน</div>
+                <div class="current-date" id="current-date"></div>
+            </div>
+            
+            <div class="footer-links">
+                <a href="#">นโยบายความเป็นส่วนตัว</a>
+                <a href="#">ข้อกำหนดการใช้งาน</a>
+                <a href="mailto:hr@tokaisolidtire.com">ติดต่อเรา</a>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // อัพเดทวันที่ปัจจุบัน
+            const today = new Date();
+            const options = { day: 'numeric', month: 'long', year: 'numeric' };
+            const todayString = today.toLocaleDateString('th-TH', options);
+            document.getElementById('current-date').textContent = todayString;
+            
+            // เอฟเฟกต์การโหลดข่าวสาร
+            const newsItems = document.querySelectorAll('.news-item');
+            newsItems.forEach((item, index) => {
+                item.style.opacity = '0';
+                item.style.transform = 'translateY(10px)';
+                
+                setTimeout(() => {
+                    item.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+                    item.style.opacity = '1';
+                    item.style.transform = 'translateY(0)';
+                }, 100 * index);
+            });
+            
+            // เอฟเฟกต์การ hover บน resource items
+            const resourceItems = document.querySelectorAll('.resource-item');
+            resourceItems.forEach(item => {
+                item.addEventListener('mouseenter', function() {
+                    const icon = this.querySelector('.resource-icon');
+                    icon.style.transform = 'scale(1.1)';
+                });
+                
+                item.addEventListener('mouseleave', function() {
+                    const icon = this.querySelector('.resource-icon');
+                    icon.style.transform = 'scale(1)';
+                });
+            });
+        });
+    </script>
+</body>
+</html>

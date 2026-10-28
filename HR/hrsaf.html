@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mouldmate - ระบบบริหารองค์กร</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary: #1a2a3a;
+            --hr-gradient: linear-gradient(135deg, #2c3e50, #3498db);
+            --safety-gradient: linear-gradient(135deg, #1a3a3a, #27ae60);
+            --light-bg: #f4f7fc;
+            --card-shadow: 0 15px 40px rgba(0, 0, 0, 0.08);
+            --transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        body {
+            min-height: 100vh;
+            background: var(--light-bg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
+            background-image: radial-gradient(circle at 10% 20%, rgba(52, 152, 219, 0.03) 0%, transparent 50%),
+                              radial-gradient(circle at 90% 80%, rgba(39, 174, 96, 0.03) 0%, transparent 50%);
+        }
+
+        .container {
+            max-width: 1100px;
+            width: 100%;
+        }
+
+        /* Header */
+        .main-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .main-header .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+
+        .main-header .logo-icon {
+            width: 75px;
+            height: 75px;
+            background: linear-gradient(145deg, var(--primary), #2c3e50);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 34px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .main-header h1 {
+            font-size: 2.8rem;
+            font-weight: 700;
+            color: var(--primary);
+            letter-spacing: -0.5px;
+        }
+
+        .main-header .sub-headline {
+            font-size: 1.2rem;
+            color: #5a6a7a;
+            font-weight: 300;
+            letter-spacing: 2px;
+            margin-top: 5px;
+        }
+
+        .header-divider {
+            width: 80px;
+            height: 4px;
+            background: linear-gradient(to right, #3498db, #27ae60);
+            margin: 15px auto 0;
+            border-radius: 4px;
+        }
+
+        /* Department Grid */
+        .dept-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 35px;
+            margin-top: 20px;
+        }
+
+        .dept-card {
+            background: white;
+            border-radius: 28px;
+            padding: 40px 30px 35px;
+            box-shadow: var(--card-shadow);
+            transition: var(--transition);
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(2px);
+        }
+
+        .dept-card:hover {
+            transform: translateY(-15px);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.12);
+        }
+
+        .dept-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+        }
+
+        /* HR Card */
+        .dept-hr::before {
+            background: linear-gradient(to right, #2c3e50, #3498db);
+        }
+
+        .dept-hr .dept-icon {
+            background: var(--hr-gradient);
+            box-shadow: 0 12px 30px rgba(52, 152, 219, 0.25);
+        }
+
+        .dept-hr:hover .dept-icon {
+            transform: scale(1.05) rotate(-3deg);
+        }
+
+        /* Safety Card */
+        .dept-safety::before {
+            background: linear-gradient(to right, #1a3a3a, #27ae60);
+        }
+
+        .dept-safety .dept-icon {
+            background: var(--safety-gradient);
+            box-shadow: 0 12px 30px rgba(39, 174, 96, 0.25);
+        }
+
+        .dept-safety:hover .dept-icon {
+            transform: scale(1.05) rotate(3deg);
+        }
+
+        .dept-icon {
+            width: 100px;
+            height: 100px;
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 42px;
+            color: white;
+            margin-bottom: 25px;
+            transition: var(--transition);
+        }
+
+        .dept-card h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 12px;
+        }
+
+        .dept-card .dept-desc {
+            color: #5a6a7a;
+            line-height: 1.7;
+            font-size: 1rem;
+            margin-bottom: 20px;
+            max-width: 280px;
+        }
+
+        .dept-badge {
+            display: inline-block;
+            padding: 8px 22px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+            background: #eef2f7;
+            color: #2c3e50;
+            margin-top: 10px;
+            transition: var(--transition);
+        }
+
+        .dept-hr .dept-badge {
+            background: #e8f0fe;
+            color: #2c3e50;
+        }
+
+        .dept-safety .dept-badge {
+            background: #e8f5ee;
+            color: #1a5e3a;
+        }
+
+        .dept-card .enter-btn {
+            margin-top: 20px;
+            padding: 14px 35px;
+            border-radius: 60px;
+            font-weight: 600;
+            font-size: 1rem;
+            border: none;
+            background: #eef2f7;
+            color: var(--primary);
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            width: auto;
+        }
+
+        .dept-hr .enter-btn {
+            background: #2c3e50;
+            color: white;
+        }
+
+        .dept-hr .enter-btn:hover {
+            background: #1a2a3a;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(44, 62, 80, 0.3);
+        }
+
+        .dept-safety .enter-btn {
+            background: #1a3a3a;
+            color: white;
+        }
+
+        .dept-safety .enter-btn:hover {
+            background: #0f2a2a;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(26, 58, 58, 0.3);
+        }
+
+        .enter-btn i {
+            font-size: 0.9rem;
+            transition: var(--transition);
+        }
+
+        .dept-card:hover .enter-btn i {
+            transform: translateX(5px);
+        }
+
+        /* Feature Tags */
+        .feature-tags {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px 12px;
+            margin: 12px 0 5px;
+        }
+
+        .feature-tags span {
+            font-size: 0.75rem;
+            background: #f0f4f8;
+            padding: 4px 14px;
+            border-radius: 50px;
+            color: #3d4e5e;
+            font-weight: 500;
+        }
+
+        .dept-safety .feature-tags span {
+            background: #eaf5ef;
+            color: #1d6b42;
+        }
+
+        .dept-hr .feature-tags span {
+            background: #e3edf7;
+            color: #1f4a7a;
+        }
+
+        /* Footer */
+        .main-footer {
+            text-align: center;
+            margin-top: 70px;
+            color: #8a9aa8;
+            font-size: 0.9rem;
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+            padding-top: 30px;
+        }
+
+        .main-footer .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+
+        .main-footer .footer-links a {
+            color: #5a7a8a;
+            text-decoration: none;
+            transition: var(--transition);
+            font-weight: 500;
+        }
+
+        .main-footer .footer-links a:hover {
+            color: var(--primary);
+        }
+
+        /* Responsive */
+        @media (max-width: 720px) {
+            .main-header h1 {
+                font-size: 2.1rem;
+            }
+            .dept-grid {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+            .dept-card {
+                padding: 30px 20px;
+            }
+            .dept-icon {
+                width: 80px;
+                height: 80px;
+                font-size: 34px;
+                border-radius: 25px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="main-header">
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-cubes"></i>
+                </div>
+                <div>
+                    <h1>Mouldmate</h1>
+                    <div class="sub-headline">ระบบบริหารทรัพยากรและความปลอดภัย</div>
+                </div>
+            </div>
+            <div class="header-divider"></div>
+        </header>
+
+        <!-- Department Selection -->
+        <div class="dept-grid">
+            <!-- HR Department -->
+            <a href="https://sarawutc6689-cpu.github.io/Mouldmate-HR/hr-p3.html" target="_blank" class="dept-card dept-hr">
+                <div class="dept-icon">
+                    <i class="fas fa-users-cog"></i>
+                </div>
+                <h2>แผนกบุคคล</h2>
+                <p class="dept-desc">
+                    บริหารจัดการทรัพยากรบุคคล ตั้งแต่การจองห้องประชุม การขอโอที ไปจนถึงการยืมพนักงาน
+                </p>
+                <div class="feature-tags">
+                    <span><i class="far fa-calendar-alt"></i> จองห้องประชุม</span>
+                    <span><i class="far fa-clock"></i> ขอโอที</span>
+                    <span><i class="fas fa-user-friends"></i> ยืมพนักงาน</span>
+                </div>
+                <div class="dept-badge">
+                    <i class="fas fa-user-tie"></i> สำหรับพนักงานทุกคน
+                </div>
+                <div class="enter-btn">
+                    เข้าสู่แผนกบุคคล <i class="fas fa-arrow-right"></i>
+                </div>
+            </a>
+
+            <!-- Safety Department -->
+            <a href="https://sarawutc6689-cpu.github.io/Mouldmate-Safety/Home.html" target="_blank" class="dept-card dept-safety">
+                <div class="dept-icon">
+                    <i class="fas fa-hard-hat"></i>
+                </div>
+                <h2>แผนกความปลอดภัย</h2>
+                <p class="dept-desc">
+                    จัดการด้านความปลอดภัย อาชีวอนามัย ตั้งแต่การแจ้งอุบัติเหตุ ไปจนถึงการขอใบอนุญาตทำงาน
+                </p>
+                <div class="feature-tags">
+                    <span><i class="fas fa-exclamation-triangle"></i> แจ้งอุบัติเหตุ</span>
+                    <span><i class="fas fa-clipboard-list"></i> ประเมินความเสี่ยง</span>
+                    <span><i class="fas fa-file-signature"></i> ใบอนุญาตทำงาน</span>
+                </div>
+                <div class="dept-badge">
+                    <i class="fas fa-shield-alt"></i> เพื่อความปลอดภัยของทุกคน
+                </div>
+                <div class="enter-btn">
+                    เข้าสู่แผนกความปลอดภัย <i class="fas fa-arrow-right"></i>
+                </div>
+            </a>
+        </div>
+
+        <!-- Footer -->
+        <footer class="main-footer">
+            <p>ระบบ Mouldmate - รวมศูนย์บริหารงานบุคคลและความปลอดภัย</p>
+            <div class="footer-links">
+                <a href="mailto:hr@tokaisolidtire.com"><i class="fas fa-envelope"></i> ฝ่ายบุคคล</a>
+                <a href="mailto:safety@tokaisolidtire.com"><i class="fas fa-shield-alt"></i> ฝ่ายความปลอดภัย</a>
+                <a href="#"><i class="fas fa-phone"></i> สายด่วนฉุกเฉิน</a>
+            </div>
+            <p style="margin-top: 20px; font-size: 0.8rem; color: #aab8c5;">
+                © 2026 Mouldmate · ออกแบบและพัฒนาโดย Sarawut.C
+            </p>
+        </footer>
+    </div>
+</body>
+</html>
