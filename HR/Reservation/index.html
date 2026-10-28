@@ -1,1 +1,1906 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบจองห้องประชุม</title>
+    
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background: #f0f5fa;
+            min-height: 100vh;
+            color: #1e293b;
+        }
+
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar - โทนฟ้าอ่อน */
+        .sidebar {
+            width: 280px;
+            background: white;
+            box-shadow: 2px 0 15px rgba(0, 70, 150, 0.08);
+            position: fixed;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 30px 20px;
+            background: linear-gradient(135deg, #1e4b8a, #2563eb);
+            color: white;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .sidebar-header h2 {
+            font-size: 22px;
+            font-weight: 600;
+            margin-top: 10px;
+            letter-spacing: 0.5px;
+        }
+
+        .sidebar-header i {
+            font-size: 40px;
+            opacity: 0.9;
+        }
+
+        .nav-menu {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px 0;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 25px;
+            color: #475569;
+            text-decoration: none;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+            font-weight: 500;
+        }
+
+        .nav-item:hover {
+            background: #f0f7ff;
+            border-left-color: #2563eb;
+            color: #1e4b8a;
+        }
+
+        .nav-item.active {
+            background: #e8f0fe;
+            border-left-color: #2563eb;
+            color: #1e4b8a;
+            font-weight: 600;
+        }
+
+        .nav-item i {
+            width: 24px;
+            font-size: 18px;
+            color: #4b7bb8;
+        }
+
+        .nav-item.active i {
+            color: #2563eb;
+        }
+
+        .nav-item span {
+            font-size: 15px;
+        }
+
+        .nav-divider {
+            height: 1px;
+            background: #e2e8f0;
+            margin: 10px 20px;
+        }
+
+        /* Sidebar Footer */
+        .sidebar-footer {
+            padding: 15px 20px;
+            border-top: 1px solid #e2e8f0;
+            background: white;
+            flex-shrink: 0;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1e4b8a, #2563eb);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 16px;
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.2);
+        }
+
+        .user-details {
+            flex: 1;
+        }
+
+        .user-name {
+            font-size: 11px;
+            color: #64748b;
+            margin-bottom: 2px;
+            letter-spacing: 0.3px;
+        }
+
+        .user-role {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            padding: 20px;
+        }
+
+        /* Header */
+        .header {
+            background: white;
+            border-radius: 16px;
+            padding: 20px 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0, 70, 150, 0.06);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid rgba(37, 99, 235, 0.1);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .header h1 i {
+            color: #2563eb;
+            margin-right: 8px;
+        }
+
+        .date-display {
+            background: #f8fafc;
+            padding: 8px 18px;
+            border-radius: 40px;
+            font-weight: 500;
+            color: #1e4b8a;
+            border: 1px solid #dbeafe;
+            font-size: 14px;
+        }
+
+        /* Loading */
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .spinner {
+            width: 45px;
+            height: 45px;
+            border: 4px solid #e2e8f0;
+            border-top-color: #2563eb;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 15px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 18px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 10px rgba(0, 70, 150, 0.04);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 1px solid #eef2f6;
+            transition: all 0.2s;
+        }
+
+        .stat-card:hover {
+            box-shadow: 0 8px 16px rgba(37, 99, 235, 0.08);
+            border-color: #bdd3ff;
+        }
+
+        .stat-info h3 {
+            font-size: 13px;
+            font-weight: 500;
+            color: #64748b;
+            margin-bottom: 5px;
+            letter-spacing: 0.3px;
+        }
+
+        .stat-number {
+            font-size: 30px;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+        }
+
+        .stat-icon.primary { background: linear-gradient(135deg, #2563eb, #1e4b8a); }
+        .stat-icon.success { background: linear-gradient(135deg, #059669, #047857); }
+        .stat-icon.warning { background: linear-gradient(135deg, #d97706, #b45309); }
+        .stat-icon.info { background: linear-gradient(135deg, #0891b2, #0e7490); }
+
+        /* Main Content Grid */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 20px;
+        }
+
+        /* Rooms Section */
+        .rooms-section {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 70, 150, 0.04);
+            border: 1px solid #eef2f6;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #eef2f6;
+        }
+
+        .section-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .section-header h2 i {
+            color: #2563eb;
+            margin-right: 8px;
+        }
+
+        .date-picker {
+            padding: 8px 14px;
+            border: 1px solid #d1d9e6;
+            border-radius: 8px;
+            font-family: 'Sarabun', sans-serif;
+            font-size: 13px;
+            cursor: pointer;
+            background: #f9fcff;
+            color: #1e293b;
+        }
+
+        .date-picker:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+        }
+
+        .rooms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+        }
+
+        .room-card {
+            background: white;
+            border: 1px solid #e6edf5;
+            border-radius: 14px;
+            padding: 18px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+        }
+
+        .room-card:hover {
+            border-color: #2563eb;
+            box-shadow: 0 8px 16px rgba(37, 99, 235, 0.08);
+            transform: translateY(-2px);
+        }
+
+        .room-card.selected {
+            border-color: #2563eb;
+            background: #f5f9ff;
+            border-width: 1.5px;
+        }
+
+        .room-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .room-name {
+            font-size: 17px;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .room-capacity {
+            background: #eef2ff;
+            color: #2563eb;
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .room-capacity i {
+            font-size: 11px;
+        }
+
+        .room-facilities {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .facility-icon {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 20px;
+            font-size: 12px;
+            color: #475569;
+        }
+
+        .facility-icon i {
+            color: #2563eb;
+            font-size: 11px;
+        }
+
+        /* Booking Sidebar */
+        .booking-sidebar {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 70, 150, 0.04);
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+            border: 1px solid #eef2f6;
+        }
+
+        .booking-sidebar h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 18px;
+            color: #1e293b;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eef2f6;
+        }
+
+        .booking-sidebar h3 i {
+            color: #2563eb;
+            margin-right: 8px;
+        }
+
+        .selected-room-info {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 18px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .selected-room-name {
+            font-weight: 600;
+            color: #2563eb;
+            font-size: 15px;
+            margin-bottom: 6px;
+        }
+
+        .selected-room-detail {
+            font-size: 13px;
+            color: #64748b;
+            line-height: 1.5;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: #475569;
+            margin-bottom: 6px;
+        }
+
+        .form-group label i {
+            color: #2563eb;
+            width: 18px;
+            margin-right: 4px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #d1d9e6;
+            border-radius: 10px;
+            font-family: 'Sarabun', sans-serif;
+            font-size: 14px;
+            transition: all 0.2s;
+            background: #f9fcff;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+            background: white;
+        }
+
+        .form-group input[readonly] {
+            background: #f1f5f9;
+            border-color: #e2e8f0;
+            color: #334155;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            font-family: 'Sarabun', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #2563eb, #1e4b8a);
+            color: white;
+            box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 18px rgba(37, 99, 235, 0.3);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: #94a3b8;
+            box-shadow: none;
+        }
+
+        /* Tooltip wrapper */
+        .submit-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        .submit-tooltip {
+            display: none;
+            position: absolute;
+            bottom: calc(100% + 10px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1e293b;
+            color: white;
+            border-radius: 10px;
+            padding: 12px 14px;
+            font-size: 13px;
+            width: 260px;
+            z-index: 9999;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            pointer-events: none;
+        }
+
+        .submit-tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-top-color: #1e293b;
+        }
+
+        .submit-tooltip-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #f87171;
+            font-size: 13px;
+        }
+
+        .submit-tooltip-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 0;
+            color: #e2e8f0;
+            font-size: 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .submit-tooltip-item:last-child {
+            border-bottom: none;
+        }
+
+        .submit-wrapper:hover .submit-tooltip {
+            display: block;
+        }
+
+        .btn-outline {
+            background: white;
+            border: 1px solid #d1d9e6;
+            color: #475569;
+        }
+
+        .btn-outline:hover {
+            border-color: #2563eb;
+            color: #2563eb;
+            background: #f5f9ff;
+        }
+
+        /* Search Result */
+        .search-result {
+            position: absolute;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            max-height: 250px;
+            overflow-y: auto;
+            width: 100%;
+            z-index: 1000;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+            margin-top: 4px;
+        }
+
+        .search-result-item {
+            padding: 10px 14px;
+            cursor: pointer;
+            border-bottom: 1px solid #f1f5f9;
+            transition: all 0.2s;
+        }
+
+        .search-result-item:hover {
+            background: #f5f9ff;
+        }
+
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+
+        .search-result-item .user-name {
+            font-weight: 600;
+            color: #1e293b;
+            font-size: 14px;
+        }
+
+        .search-result-item .user-details {
+            font-size: 11px;
+            color: #64748b;
+            margin-top: 2px;
+        }
+
+        .user-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            background: #e6f0ff;
+            color: #2563eb;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 600;
+            margin-left: 6px;
+        }
+
+        /* My Bookings */
+        .my-bookings {
+            margin-top: 25px;
+            padding-top: 18px;
+            border-top: 1px solid #eef2f6;
+        }
+
+        .my-bookings h4 {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 12px;
+        }
+
+        .my-bookings h4 i {
+            color: #2563eb;
+            margin-right: 6px;
+        }
+
+        .booking-item {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 12px;
+            border-left: 3px solid #2563eb;
+            transition: all 0.2s;
+            border: 1px solid #eef2f6;
+        }
+
+        .booking-item:hover {
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.06);
+        }
+
+        .booking-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .booking-room {
+            font-weight: 600;
+            color: #1e293b;
+            font-size: 14px;
+        }
+
+        .booking-status {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 30px;
+            font-weight: 600;
+        }
+
+        .booking-status.upcoming {
+            background: #dbeafe;
+            color: #1e4b8a;
+        }
+
+        .booking-status.past {
+            background: #e2e8f0;
+            color: #475569;
+        }
+
+        .booking-datetime {
+            font-size: 12px;
+            color: #64748b;
+            margin-bottom: 4px;
+        }
+
+        .booking-agenda {
+            font-size: 12px;
+            color: #334155;
+            margin-bottom: 8px;
+        }
+
+        .booking-actions {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .cancel-booking-btn {
+            background: none;
+            border: none;
+            color: #dc2626;
+            font-size: 12px;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .cancel-booking-btn:hover {
+            background: #fee2e2;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 28px;
+            max-width: 380px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-icon {
+            font-size: 50px;
+            margin-bottom: 16px;
+        }
+
+        .modal-icon.success { color: #059669; }
+        .modal-icon.error { color: #dc2626; }
+
+        .modal-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+
+        .modal-message {
+            color: #64748b;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .modal-btn {
+            padding: 10px 28px;
+            background: linear-gradient(135deg, #2563eb, #1e4b8a);
+            color: white;
+            border: none;
+            border-radius: 40px;
+            font-weight: 600;
+            font-family: 'Sarabun', sans-serif;
+            cursor: pointer;
+            border: none;
+            font-size: 14px;
+        }
+
+        .modal-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(37, 99, 235, 0.2);
+        }
+
+        /* Validation Modal */
+        .modal-validation .modal-content {
+            max-width: 420px;
+            text-align: left;
+        }
+
+        .modal-validation .modal-icon {
+            text-align: center;
+        }
+
+        .modal-validation .modal-title {
+            text-align: center;
+        }
+
+        .validation-list {
+            background: #fff5f5;
+            border: 1px solid #fecaca;
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-bottom: 20px;
+        }
+
+        .validation-list p {
+            font-size: 13px;
+            color: #64748b;
+            margin-bottom: 10px;
+        }
+
+        .validation-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid #fee2e2;
+            font-size: 14px;
+            color: #dc2626;
+        }
+
+        .validation-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .validation-item i {
+            font-size: 14px;
+            flex-shrink: 0;
+            color: #dc2626;
+        }
+
+        .modal-validation .modal-btn {
+            display: block;
+            width: 100%;
+            text-align: center;
+        }
+
+        /* Empty State */
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 50px 20px;
+            background: #f9fcff;
+            border-radius: 16px;
+            border: 1px dashed #bdd3ff;
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            color: #94a3b8;
+            margin-bottom: 12px;
+        }
+
+        .empty-state h3 {
+            font-size: 16px;
+            color: #475569;
+            font-weight: 500;
+            margin-bottom: 6px;
+        }
+
+        .empty-state p {
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 80px;
+            }
+            
+            .sidebar-header h2,
+            .nav-item span,
+            .user-details {
+                display: none;
+            }
+            
+            .main-content {
+                margin-left: 80px;
+            }
+            
+            .nav-item {
+                justify-content: center;
+                padding: 15px;
+            }
+            
+            .nav-item i {
+                width: auto;
+                font-size: 22px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 12px;
+                text-align: center;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Page Transition Loading */
+        .page-loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: #f0f5fa;
+            z-index: 99999;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+        }
+        .page-loading-overlay.active {
+            display: flex;
+        }
+        .page-loading-logo {
+            width: 64px; height: 64px;
+            background: linear-gradient(135deg, #1e4b8a, #2563eb);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            color: white;
+            animation: pulse-logo 1.2s ease-in-out infinite;
+        }
+        @keyframes pulse-logo {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(37,99,235,0.3); }
+            50% { transform: scale(1.08); box-shadow: 0 0 0 12px rgba(37,99,235,0); }
+        }
+        .page-loading-bar {
+            width: 180px;
+            height: 4px;
+            background: #e2e8f0;
+            border-radius: 999px;
+            overflow: hidden;
+        }
+        .page-loading-bar-fill {
+            height: 100%;
+            width: 40%;
+            background: linear-gradient(90deg, #2563eb, #1e4b8a);
+            border-radius: 999px;
+            animation: loading-slide 1s ease-in-out infinite;
+        }
+        @keyframes loading-slide {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(350%); }
+        }
+        .page-loading-text {
+            font-size: 14px;
+            color: #64748b;
+            font-family: 'Sarabun', sans-serif;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+    <script src="supabase-api.js"></script>
+    <script src="ui-dialog.js"></script>
+</head>
+<body>
+    <!-- Page Transition Overlay -->
+    <div class="page-loading-overlay" id="pageLoadingOverlay">
+        <div class="page-loading-logo">
+            <i class="fas fa-calendar-alt"></i>
+        </div>
+        <div class="page-loading-bar">
+            <div class="page-loading-bar-fill"></div>
+        </div>
+        <div class="page-loading-text">กำลังโหลด...</div>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading-overlay" id="loading">
+        <div class="spinner"></div>
+        <div>กำลังโหลดข้อมูล...</div>
+    </div>
+
+    <div class="app-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <i class="fas fa-calendar-alt"></i>
+                <h2>Meeting Room</h2>
+            </div>
+            
+            <div class="nav-menu">
+                <a href="dashboard.html" class="nav-item" id="nav-dashboard">
+                    <i class="fas fa-chart-pie"></i>
+                    <span>ภาพรวม</span>
+                </a>
+                <a href="index.html" class="nav-item" id="nav-index">
+                    <i class="fas fa-door-open"></i>
+                    <span>จองห้องประชุม</span>
+                </a>
+                <a href="calendar.html" class="nav-item" id="nav-calendar">
+                    <i class="fas fa-calendar"></i>
+                    <span>ปฏิทิน</span>
+                </a>
+                
+                <div class="nav-divider"></div>
+                
+                <a href="cancellations.html" class="nav-item" id="nav-cancellations">
+                    <i class="fas fa-times-circle"></i>
+                    <span>รายการยกเลิก</span>
+                </a>
+                <a href="report.html" class="nav-item" id="nav-report">
+                    <i class="fas fa-file-alt"></i>
+                    <span>รายงาน</span>
+                </a>
+            </div>
+
+            <!-- Sidebar Footer -->
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar">SC</div>
+                    <div class="user-details">
+                        <div class="user-name">พัฒนาโดย</div>
+                        <div class="user-role">Sarawut.C</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+            <div class="header">
+                <h1>
+                    <i class="fas fa-door-open"></i>
+                    จองห้องประชุม
+                </h1>
+                <div class="date-display" id="currentDate"></div>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-info">
+                        <h3>ห้องประชุมทั้งหมด</h3>
+                        <div class="stat-number" id="totalRooms">0</div>
+                    </div>
+                    <div class="stat-icon primary">
+                        <i class="fas fa-door-open"></i>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-info">
+                        <h3>จองวันนี้</h3>
+                        <div class="stat-number" id="todayBookings">0</div>
+                    </div>
+                    <div class="stat-icon success">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-info">
+                        <h3>การจองทั้งหมด</h3>
+                        <div class="stat-number" id="totalBookings">0</div>
+                    </div>
+                    <div class="stat-icon warning">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-info">
+                        <h3>กำลังจะมาถึง</h3>
+                        <div class="stat-number" id="upcomingBookings">0</div>
+                    </div>
+                    <div class="stat-icon info">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Grid -->
+            <div class="content-grid">
+                <!-- Rooms Section -->
+                <div class="rooms-section">
+                    <div class="section-header">
+                        <h2>
+                            <i class="fas fa-door-open"></i>
+                            เลือกห้องประชุม
+                        </h2>
+                        <input type="date" id="bookingDate" class="date-picker">
+                    </div>
+                    <div class="rooms-grid" id="roomsGrid">
+                        <!-- Rooms will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- My Bookings -->
+                    <div class="my-bookings">
+                        <h4>
+                            <i class="fas fa-history"></i>
+                            การจองของฉัน
+                        </h4>
+                        <div id="myBookingsList">
+                            <p style="color: #64748b; text-align: center; font-size: 13px;">กรุณาค้นหาพนักงานก่อน</p>
+                        </div>
+                    </div>
+
+
+                <!-- Booking Form -->
+                <div class="booking-sidebar">
+                    <h3>
+                        <i class="fas fa-pen"></i>
+                        จองห้องประชุม
+                    </h3>
+                    
+                    <div class="selected-room-info" id="selectedRoomInfo">
+                        <div class="selected-room-name">ยังไม่ได้เลือกห้อง</div>
+                        <div class="selected-room-detail">กรุณาเลือกห้องประชุมที่ต้องการจอง</div>
+                    </div>
+
+                    <form id="bookingForm" onsubmit="event.preventDefault(); submitBooking();">
+                        <!-- ค้นหาพนักงาน -->
+                        <div class="form-group">
+                            <label>
+                                <i class="fas fa-id-card"></i>
+                                ค้นหาพนักงาน
+                            </label>
+                            <div style="display: flex; gap: 8px;">
+                                <input type="text" id="userCode" placeholder="ระบุรหัสพนักงาน" style="flex: 1;" 
+                                       onkeyup="searchUser(this.value)" autocomplete="off">
+                                <button type="button" class="btn btn-outline" onclick="searchUser(document.getElementById('userCode').value)" 
+                                        style="width: auto; padding: 10px 18px;">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                            <div id="userSearchResult" style="display: none;"></div>
+                        </div>
+
+                        <!-- ข้อมูลผู้ใช้ -->
+                        <div id="userInfo" style="display: none;">
+                            <div class="form-group">
+                                <label><i class="fas fa-user"></i> ชื่อ-นามสกุล</label>
+                                <input type="text" id="bookerName" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label><i class="fas fa-building"></i> ส่วนงาน</label>
+                                <input type="text" id="userSection" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label><i class="fas fa-sitemap"></i> แผนก</label>
+                                <input type="text" id="department" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label><i class="fas fa-briefcase"></i> ตำแหน่ง</label>
+                                <input type="text" id="userPosition" readonly>
+                            </div>
+                        </div>
+
+                        <!-- เลือกช่วงเวลา -->
+                        <div class="form-group">
+                            <label><i class="fas fa-clock"></i> เวลาที่ต้องการจอง</label>
+                            <div style="display: flex; gap: 8px;">
+                                <select id="startTime" class="form-control" required style="flex: 1;"></select>
+                                <select id="endTime" class="form-control" required style="flex: 1;"></select>
+                            </div>
+                        </div>
+
+                        <!-- จำนวนผู้เข้าร่วม -->
+                        <div class="form-group">
+                            <label>
+                                <i class="fas fa-users"></i>
+                                จำนวนผู้เข้าร่วม (คน)
+                            </label>
+                            <input type="number" id="participants" class="form-control" min="1" max="100" value="1" required>
+                        </div>
+
+                        <!-- ต้องการน้ำเปล่า -->
+                        <div class="form-group">
+                            <label>
+                                <i class="fas fa-water"></i>
+                                ต้องการน้ำเปล่า
+                            </label>
+                            <div style="display: flex; gap: 20px; margin-top: 5px;">
+                                <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                                    <input type="radio" name="needWater" value="yes" checked style="width: 16px;"> 
+                                    <span>ใช่</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                                    <input type="radio" name="needWater" value="no" style="width: 16px;"> 
+                                    <span>ไม่ใช่</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- หมายเหตุ -->
+                        <div class="form-group">
+                            <label>
+                                <i class="fas fa-comment"></i>
+                                หมายเหตุ (เพิ่มเติม)
+                            </label>
+                            <textarea id="notes" rows="2" placeholder="ระบุความต้องการเพิ่มเติม (ถ้ามี)"></textarea>
+                        </div>
+
+                        <!-- วัตถุประสงค์ -->
+                        <div class="form-group">
+                            <label><i class="fas fa-clipboard"></i> วัตถุประสงค์</label>
+                            <textarea id="agenda" rows="3" placeholder="ระบุวัตถุประสงค์การใช้งาน" required></textarea>
+                        </div>
+
+                        <input type="hidden" id="userCodeHidden">
+
+                        <div class="submit-wrapper">
+                            <button type="submit" class="btn btn-primary" id="submitBtn" disabled style="width:100%;">
+                                <i class="fas fa-check"></i> ยืนยันการจอง
+                            </button>
+                            <div class="submit-tooltip" id="submitTooltip">
+                                <div class="submit-tooltip-title">⚠️ กรุณากรอกข้อมูลให้ครบ</div>
+                                <div id="tooltipItems"></div>
+                            </div>
+                        </div>
+                    </form>
+
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal" id="resultModal">
+        <div class="modal-content">
+            <div class="modal-icon success" id="modalIcon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="modal-title" id="modalTitle">สำเร็จ</div>
+            <div class="modal-message" id="modalMessage">ดำเนินการเรียบร้อย</div>
+            <button class="modal-btn" onclick="closeModal()">ตกลง</button>
+        </div>
+    </div>
+
+    <!-- Validation Modal -->
+    <div class="modal modal-validation" id="validationModal">
+        <div class="modal-content">
+            <div class="modal-icon error" style="text-align:center;">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="modal-title">กรุณากรอกข้อมูลให้ครบถ้วน</div>
+            <div class="validation-list">
+                <p>ยังขาดข้อมูลในส่วนต่อไปนี้:</p>
+                <div id="validationItems"></div>
+            </div>
+            <button class="modal-btn" onclick="closeValidationModal()">ตกลง รับทราบ</button>
+        </div>
+    </div>
+
+    <script>
+        // ==================== เวลาแบบ 24 ชั่วโมง (เลือกทุก 15 นาที) ====================
+        (function fillTimeSelects() {
+            const STEP = 15; // นาที: เปลี่ยนเป็น 5 หรือ 30 ได้
+            ['startTime', 'endTime'].forEach(function(id) {
+                const sel = document.getElementById(id);
+                let html = '<option value="">--:--</option>';
+                for (let m = 0; m < 24 * 60; m += STEP) {
+                    const t = String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
+                    html += '<option value="' + t + '">' + t + '</option>';
+                }
+                sel.innerHTML = html;
+            });
+        })();
+
+        // ==================== ตัวแปร Global ====================
+        let currentRooms = [];
+        let currentBookings = [];
+        let selectedRoom = null;
+        let selectedUser = null;
+        let users = [];
+
+        // ==================== Sidebar Active Menu ====================
+        function setActiveMenu() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const page = urlParams.get('page') || 'index';
+            
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            if (page === 'dashboard') {
+                document.getElementById('nav-dashboard').classList.add('active');
+            } else if (page === 'calendar') {
+                document.getElementById('nav-calendar').classList.add('active');
+            } else if (page === 'cancellations') {
+                document.getElementById('nav-cancellations').classList.add('active');
+            } else {
+                document.getElementById('nav-index').classList.add('active');
+            }
+        }
+
+        // ==================== Initialization ====================
+        document.addEventListener('DOMContentLoaded', function() {
+            setActiveMenu();
+            
+            const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' });
+            document.getElementById('bookingDate').value = today;
+            
+            const thaiDate = new Date().toLocaleDateString('th-TH', { timeZone: 'Asia/Bangkok', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            document.getElementById('currentDate').textContent = thaiDate;
+            
+            loadDashboard();
+            loadRooms();
+            loadUsers();
+            loadBookings(today);
+            
+            const lastUserCode = localStorage.getItem('lastUserCode');
+            if (lastUserCode) {
+                document.getElementById('userCode').value = lastUserCode;
+                setTimeout(() => {
+                    searchUser(lastUserCode);
+                }, 500);
+            }
+
+            document.getElementById('startTime').addEventListener('change', checkBookingReady);
+            document.getElementById('endTime').addEventListener('change', checkBookingReady);
+            document.getElementById('participants').addEventListener('input', checkBookingReady);
+            document.getElementById('agenda').addEventListener('input', checkBookingReady);
+        });
+
+        document.getElementById('bookingDate').addEventListener('change', function(e) {
+            loadBookings(e.target.value);
+        });
+
+        document.addEventListener('click', function(event) {
+            const searchResult = document.getElementById('userSearchResult');
+            const userCode = document.getElementById('userCode');
+            
+            if (event.target !== userCode && !searchResult?.contains(event.target)) {
+                searchResult.style.display = 'none';
+            }
+        });
+
+        function showLoading() {
+            document.getElementById('loading').classList.add('active');
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').classList.remove('active');
+        }
+
+        function loadDashboard() {
+            google.script.run
+                .withSuccessHandler(updateStats)
+                .getDashboardStats();
+        }
+
+        function updateStats(stats) {
+            document.getElementById('totalRooms').textContent = stats.totalRooms || 0;
+            document.getElementById('todayBookings').textContent = stats.todayBookings || 0;
+            document.getElementById('totalBookings').textContent = stats.totalBookings || 0;
+            document.getElementById('upcomingBookings').textContent = stats.upcomingBookings || 0;
+        }
+
+        function loadRooms() {
+            showLoading();
+            google.script.run
+                .withSuccessHandler(function(rooms) {
+                    currentRooms = rooms;
+                    if (rooms?.length > 0) {
+                        displayRooms(rooms);
+                    } else {
+                        displayEmptyRooms();
+                    }
+                    hideLoading();
+                })
+                .withFailureHandler(function(error) {
+                    console.error('Error loading rooms:', error);
+                    displayError('ไม่สามารถโหลดข้อมูลห้องประชุมได้');
+                    hideLoading();
+                })
+                .getRooms();
+        }
+
+        function displayRooms(rooms) {
+            const grid = document.getElementById('roomsGrid');
+            grid.innerHTML = '';
+            rooms.forEach(room => {
+                const card = createRoomCard(room);
+                grid.appendChild(card);
+            });
+        }
+
+        function createRoomCard(room) {
+            const card = document.createElement('div');
+            card.className = `room-card ${selectedRoom?.id === room.id ? 'selected' : ''}`;
+            card.setAttribute('data-room-id', room.id);
+            card.onclick = () => selectRoom(room);
+            
+            const facilities = room.facilities ? room.facilities.split(',').map(f => f.trim()) : [];
+            let facilitiesHtml = '';
+            
+            facilities.forEach(facility => {
+                let icon = 'fa-check-circle';
+                if (facility.includes('โปรเจคเตอร์')) icon = 'fa-video';
+                else if (facility.includes('ไวท์บอร์ด')) icon = 'fa-chalkboard';
+                else if (facility.includes('จอทีวี')) icon = 'fa-tv';
+                else if (facility.includes('ระบบเสียง')) icon = 'fa-volume-up';
+                
+                facilitiesHtml += `
+                    <span class="facility-icon">
+                        <i class="fas ${icon}"></i> ${facility}
+                    </span>
+                `;
+            });
+            
+            card.innerHTML = `
+                <div class="room-header">
+                    <div class="room-name">${room.name}</div>
+                    <div class="room-capacity">
+                        <i class="fas fa-users"></i> ${room.capacity}
+                    </div>
+                </div>
+                <div class="room-facilities">
+                    ${facilitiesHtml || '<span class="facility-icon">ไม่มีสิ่งอำนวยความสะดวก</span>'}
+                </div>
+            `;
+            
+            return card;
+        }
+
+        function displayEmptyRooms() {
+            document.getElementById('roomsGrid').innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-door-open"></i>
+                    <h3>ไม่พบข้อมูลห้องประชุม</h3>
+                    <p>กรุณาเพิ่มข้อมูลห้องประชุมใน Google Sheet</p>
+                </div>
+            `;
+        }
+
+        function displayError(message) {
+            document.getElementById('roomsGrid').innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-exclamation-triangle" style="color: #dc2626;"></i>
+                    <h3>เกิดข้อผิดพลาด</h3>
+                    <p>${message}</p>
+                </div>
+            `;
+        }
+
+        function loadUsers() {
+            google.script.run
+                .withSuccessHandler(function(userList) {
+                    users = userList;
+                })
+                .getUsers();
+        }
+
+        function searchUser(query) {
+            const resultDiv = document.getElementById('userSearchResult');
+            
+            if (!query || query.length < 2) {
+                resultDiv.style.display = 'none';
+                return;
+            }
+
+            const matchedUsers = users.filter(u => 
+                u.code.toLowerCase().includes(query.toLowerCase())
+            );
+
+            if (matchedUsers.length > 0) {
+                let html = '<div class="search-result">';
+                matchedUsers.slice(0, 5).forEach(user => {
+                    html += `
+                        <div class="search-result-item" onclick="selectUser('${user.code}')">
+                            <div>
+                                <span class="user-name">${user.name}</span>
+                                <span class="user-badge">${user.code}</span>
+                            </div>
+                            <div class="user-details">
+                                ${user.department} | ${user.position}
+                            </div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                resultDiv.innerHTML = html;
+                resultDiv.style.display = 'block';
+            } else {
+                resultDiv.innerHTML = '<div class="search-result"><div class="search-result-item">ไม่พบข้อมูลพนักงาน</div></div>';
+                resultDiv.style.display = 'block';
+            }
+        }
+
+        function selectUser(userCode) {
+            const user = users.find(u => u.code === userCode);
+            if (user) {
+                selectedUser = user;
+                document.getElementById('userInfo').style.display = 'block';
+                document.getElementById('bookerName').value = user.name;
+                document.getElementById('userSection').value = user.section;
+                document.getElementById('department').value = user.department;
+                document.getElementById('userPosition').value = user.position;
+                document.getElementById('userCodeHidden').value = user.code;
+                document.getElementById('userSearchResult').style.display = 'none';
+                document.getElementById('userCode').value = user.code;
+                localStorage.setItem('lastUserCode', user.code);
+                
+                loadMyBookings(user.name);
+                checkBookingReady();
+            }
+        }
+
+        function loadBookings(date) {
+            google.script.run
+                .withSuccessHandler(function(bookings) {
+                    currentBookings = bookings;
+                })
+                .getBookings(date);
+        }
+
+        function selectRoom(room) {
+            selectedRoom = room;
+            document.getElementById('selectedRoomInfo').innerHTML = `
+                <div class="selected-room-name">
+                    <i class="fas fa-door-open"></i> ${room.name}
+                </div>
+                <div class="selected-room-detail">
+                    <div><i class="fas fa-users"></i> รองรับ ${room.capacity} คน</div>
+                    <div><i class="fas fa-wifi"></i> ${room.facilities || 'ไม่มีสิ่งอำนวยความสะดวก'}</div>
+                </div>
+            `;
+            
+            document.getElementById('participants').max = room.capacity;
+            
+            document.querySelectorAll('.room-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            event.currentTarget.classList.add('selected');
+            checkBookingReady();
+        }
+
+        function checkBookingReady() {
+            const hasRoom = selectedRoom !== null;
+            const hasUser = selectedUser !== null;
+            const hasStartTime = document.getElementById('startTime').value !== '';
+            const hasEndTime = document.getElementById('endTime').value !== '';
+            const participants = document.getElementById('participants').value;
+            const validParticipants = participants && parseInt(participants) > 0;
+            const hasAgenda = document.getElementById('agenda').value.trim() !== '';
+            const hasWater = document.querySelector('input[name="needWater"]:checked') !== null;
+
+            const isReady = hasRoom && hasUser && hasStartTime && hasEndTime && validParticipants && hasAgenda && hasWater;
+
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = !isReady;
+            btn.style.opacity = isReady ? '1' : '0.5';
+            btn.style.cursor = isReady ? 'pointer' : 'not-allowed';
+
+            // Update tooltip items
+            const missing = [];
+            if (!hasRoom)           missing.push({ icon: '🚪', text: 'ยังไม่ได้เลือกห้องประชุม' });
+            if (!hasUser)           missing.push({ icon: '🪪', text: 'ยังไม่ได้เลือกพนักงาน' });
+            if (!hasStartTime || !hasEndTime) missing.push({ icon: '🕐', text: 'ยังไม่ได้ระบุเวลา' });
+            if (!validParticipants) missing.push({ icon: '👥', text: 'ยังไม่ได้ระบุจำนวนผู้เข้าร่วม' });
+            if (!hasAgenda)         missing.push({ icon: '📋', text: 'ยังไม่ได้ระบุวัตถุประสงค์' });
+
+            const tooltipItems = document.getElementById('tooltipItems');
+            const tooltip = document.getElementById('submitTooltip');
+            if (!isReady && tooltipItems) {
+                tooltipItems.innerHTML = missing.map(m =>
+                    `<div class="submit-tooltip-item"><span>${m.icon}</span><span>${m.text}</span></div>`
+                ).join('');
+                tooltip.style.display = '';
+            } else if (tooltip) {
+                tooltip.style.display = 'none';
+            }
+        }
+
+        function isTimeOverlap(start1, end1, start2, end2) {
+            function toMinutes(time) {
+                const [hours, minutes] = time.split(':').map(Number);
+                return hours * 60 + minutes;
+            }
+            const s1 = toMinutes(start1);
+            const e1 = toMinutes(end1);
+            const s2 = toMinutes(start2);
+            const e2 = toMinutes(end2);
+            return (s1 < e2 && e1 > s2);
+        }
+
+        function showValidationModal(errors) {
+            const items = document.getElementById('validationItems');
+            const icons = {
+                'room': 'fa-door-open',
+                'user': 'fa-id-card',
+                'time': 'fa-clock',
+                'timeOrder': 'fa-clock',
+                'participants': 'fa-users',
+                'water': 'fa-water',
+                'agenda': 'fa-clipboard'
+            };
+            items.innerHTML = errors.map(e => `
+                <div class="validation-item">
+                    <i class="fas ${icons[e.type] || 'fa-exclamation-circle'}"></i>
+                    <span>${e.message}</span>
+                </div>
+            `).join('');
+            document.getElementById('validationModal').classList.add('active');
+        }
+
+        function closeValidationModal() {
+            document.getElementById('validationModal').classList.remove('active');
+        }
+
+        function submitBooking() {
+            const errors = [];
+
+            if (!selectedRoom) {
+                errors.push({ type: 'room', message: 'ยังไม่ได้เลือกห้องประชุม' });
+            }
+
+            if (!selectedUser) {
+                errors.push({ type: 'user', message: 'ยังไม่ได้ค้นหาหรือเลือกพนักงาน' });
+            }
+
+            const startTime = document.getElementById('startTime').value;
+            const endTime = document.getElementById('endTime').value;
+
+            if (!startTime || !endTime) {
+                errors.push({ type: 'time', message: 'ยังไม่ได้ระบุเวลาเริ่มและเวลาสิ้นสุด' });
+            } else if (startTime >= endTime) {
+                errors.push({ type: 'timeOrder', message: 'เวลาเริ่มต้องน้อยกว่าเวลาสิ้นสุด' });
+            }
+
+            const participants = document.getElementById('participants').value;
+            if (!participants || parseInt(participants) < 1) {
+                errors.push({ type: 'participants', message: 'ยังไม่ได้ระบุจำนวนผู้เข้าร่วม' });
+            } else if (selectedRoom && parseInt(participants) > selectedRoom.capacity) {
+                errors.push({ type: 'participants', message: `จำนวนเกินความจุห้อง (สูงสุด ${selectedRoom.capacity} คน)` });
+            }
+
+            const needWater = document.querySelector('input[name="needWater"]:checked');
+            if (!needWater) {
+                errors.push({ type: 'water', message: 'ยังไม่ได้เลือกว่าต้องการน้ำเปล่าหรือไม่' });
+            }
+
+            const agenda = document.getElementById('agenda').value.trim();
+            if (!agenda) {
+                errors.push({ type: 'agenda', message: 'ยังไม่ได้ระบุวัตถุประสงค์' });
+            }
+
+            if (errors.length > 0) {
+                showValidationModal(errors);
+                return;
+            }
+
+            const bookingDate = document.getElementById('bookingDate').value;
+            const notes = document.getElementById('notes').value;
+
+            const duplicateBookings = currentBookings.filter(booking =>
+                booking.roomId == selectedRoom.id &&
+                booking.date === bookingDate &&
+                isTimeOverlap(startTime, endTime, booking.startTime, booking.endTime)
+            );
+
+            if (duplicateBookings.length > 0) {
+                let message = 'ไม่สามารถจองได้เนื่องจากมีการจองในช่วงเวลานี้แล้ว:\n\n';
+                duplicateBookings.forEach(booking => {
+                    message += `- ${booking.startTime} - ${booking.endTime} โดย ${booking.bookerName}\n`;
+                });
+                showModal('error', 'จองซ้ำ', message);
+                return;
+            }
+
+            const bookingData = {
+                roomId: selectedRoom.id,
+                roomName: selectedRoom.name,
+                date: bookingDate,
+                startTime: startTime,
+                endTime: endTime,
+                bookerName: selectedUser.name,
+                department: selectedUser.department,
+                agenda: agenda,
+                userCode: selectedUser.code,
+                userSection: selectedUser.section,
+                userPosition: selectedUser.position,
+                participants: participants,
+                needWater: needWater.value === 'yes',
+                notes: notes
+            };
+
+            showLoading();
+
+            google.script.run
+                .withSuccessHandler(function(result) {
+                    hideLoading();
+                    if (result.success) {
+                        showModal('success', 'สำเร็จ', result.message);
+
+                        document.getElementById('startTime').value = '';
+                        document.getElementById('endTime').value = '';
+                        document.getElementById('agenda').value = '';
+                        document.getElementById('participants').value = '1';
+                        document.getElementById('notes').value = '';
+                        document.querySelector('input[name="needWater"][value="yes"]').checked = true;
+
+                        loadBookings(bookingDate);
+                        loadDashboard();
+
+                        if (selectedUser) {
+                            loadMyBookings(selectedUser.name);
+                        }
+
+                        selectedRoom = null;
+                        document.getElementById('selectedRoomInfo').innerHTML = `
+                            <div class="selected-room-name">ยังไม่ได้เลือกห้อง</div>
+                            <div class="selected-room-detail">กรุณาเลือกห้องประชุมที่ต้องการจอง</div>
+                        `;
+                        document.getElementById('submitBtn').disabled = true;
+                        document.querySelectorAll('.room-card').forEach(card => card.classList.remove('selected'));
+                    } else {
+                        showModal('error', 'ผิดพลาด', result.message);
+                    }
+                })
+                .createBooking(bookingData);
+        }
+
+        function loadMyBookings(userName) {
+            if (!userName) return;
+            
+            google.script.run
+                .withSuccessHandler(displayMyBookings)
+                .withFailureHandler(function(error) {
+                    console.error('Error loading my bookings:', error);
+                    document.getElementById('myBookingsList').innerHTML = 
+                        '<p style="color: #64748b; text-align: center;">ไม่สามารถโหลดข้อมูลได้</p>';
+                })
+                .getMyBookings(userName);
+        }
+
+        function displayMyBookings(bookings) {
+            const container = document.getElementById('myBookingsList');
+            
+            if (!bookings || bookings.length === 0) {
+                container.innerHTML = '<p style="color: #64748b; text-align: center;">ไม่พบรายการจอง</p>';
+                return;
+            }
+            
+            let html = '';
+            bookings.forEach(booking => {
+                html += `
+                    <div class="booking-item" data-booking-id="${booking.id}">
+                        <div class="booking-header">
+                            <span class="booking-room">${booking.roomName}</span>
+                            <span class="booking-status ${booking.status}">
+                                ${booking.status === 'upcoming' ? 'กำลังจะมาถึง' : 'ผ่านแล้ว'}
+                            </span>
+                        </div>
+                        <div class="booking-datetime">
+                            <i class="fas fa-calendar"></i> ${booking.date} 
+                            <i class="fas fa-clock"></i> ${booking.startTime} - ${booking.endTime} น.
+                        </div>
+                        <div class="booking-agenda">
+                            <i class="fas fa-clipboard"></i> ${booking.agenda}
+                        </div>
+                        ${booking.status === 'upcoming' ? 
+                            `<div class="booking-actions">
+                                <button class="cancel-booking-btn" onclick="cancelBooking('${booking.id}')">
+                                    <i class="fas fa-times"></i> ยกเลิก
+                                </button>
+                            </div>` : ''}
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        async function cancelBooking(bookingId) {
+            if (await uiDialog.confirm('ต้องการยกเลิกการจองนี้ใช่หรือไม่?', {danger:true, okText:'ยกเลิกการจอง', cancelText:'ไม่ยกเลิก'})) {
+                showLoading();
+                
+                google.script.run
+                    .withSuccessHandler(function(result) {
+                        hideLoading();
+                        
+                        if (result.success) {
+                            showModal('success', 'สำเร็จ', result.message);
+                            
+                            const date = document.getElementById('bookingDate').value;
+                            loadBookings(date);
+                            loadDashboard();
+                            
+                            if (selectedUser) {
+                                loadMyBookings(selectedUser.name);
+                            }
+                        } else {
+                            showModal('error', 'ผิดพลาด', result.message);
+                        }
+                    })
+                    .withFailureHandler(function(error) {
+                        hideLoading();
+                        showModal('error', 'ผิดพลาด', 'เกิดข้อผิดพลาด: ' + error);
+                    })
+                    .cancelBooking(bookingId, selectedUser ? selectedUser.code : null);
+            }
+        }
+
+        function showModal(type, title, message) {
+            const modal = document.getElementById('resultModal');
+            const icon = document.getElementById('modalIcon');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalMessage = document.getElementById('modalMessage');
+            
+            icon.className = `modal-icon ${type}`;
+            icon.innerHTML = type === 'success' ? 
+                '<i class="fas fa-check-circle"></i>' : 
+                '<i class="fas fa-times-circle"></i>';
+            
+            modalTitle.textContent = title;
+            modalMessage.textContent = message;
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('resultModal').classList.remove('active');
+        }
+
+        setInterval(function() {
+            const date = document.getElementById('bookingDate').value;
+            loadBookings(date);
+            loadDashboard();
+        }, 300000);
+
+        // Page transition loading
+        document.querySelectorAll('.nav-item').forEach(function(link) {
+            link.addEventListener('click', function(e) {
+                const href = this.getAttribute('href');
+                if (href && href !== '#') {
+                    e.preventDefault();
+                    document.getElementById('pageLoadingOverlay').classList.add('active');
+                    setTimeout(function() {
+                        window.location.href = href;
+                    }, 100);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

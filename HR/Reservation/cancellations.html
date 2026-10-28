@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>รายการยกเลิกการจอง</title>
+    
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background: #f0f5fa;
+            min-height: 100vh;
+            color: #1e293b;
+        }
+
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar - โทนฟ้าอ่อน */
+        .sidebar {
+            width: 280px;
+            background: white;
+            box-shadow: 2px 0 15px rgba(0, 70, 150, 0.08);
+            position: fixed;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 30px 20px;
+            background: linear-gradient(135deg, #1e4b8a, #2563eb);
+            color: white;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .sidebar-header h2 {
+            font-size: 22px;
+            font-weight: 600;
+            margin-top: 10px;
+            letter-spacing: 0.5px;
+        }
+
+        .sidebar-header i {
+            font-size: 40px;
+            opacity: 0.9;
+        }
+
+        .nav-menu {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px 0;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 25px;
+            color: #475569;
+            text-decoration: none;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+            font-weight: 500;
+        }
+
+        .nav-item:hover {
+            background: #f0f7ff;
+            border-left-color: #2563eb;
+            color: #1e4b8a;
+        }
+
+        .nav-item.active {
+            background: #e8f0fe;
+            border-left-color: #2563eb;
+            color: #1e4b8a;
+            font-weight: 600;
+        }
+
+        .nav-item i {
+            width: 24px;
+            font-size: 18px;
+            color: #4b7bb8;
+        }
+
+        .nav-item.active i {
+            color: #2563eb;
+        }
+
+        .nav-item span {
+            font-size: 15px;
+        }
+
+        .nav-divider {
+            height: 1px;
+            background: #e2e8f0;
+            margin: 10px 20px;
+        }
+
+        /* Sidebar Footer */
+        .sidebar-footer {
+            padding: 15px 20px;
+            border-top: 1px solid #e2e8f0;
+            background: white;
+            flex-shrink: 0;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1e4b8a, #2563eb);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 16px;
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.2);
+        }
+
+        .user-details {
+            flex: 1;
+        }
+
+        .user-name {
+            font-size: 11px;
+            color: #64748b;
+            margin-bottom: 2px;
+            letter-spacing: 0.3px;
+        }
+
+        .user-role {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            padding: 20px;
+        }
+
+        /* Header */
+        .header {
+            background: white;
+            border-radius: 16px;
+            padding: 20px 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0, 70, 150, 0.06);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid rgba(37, 99, 235, 0.1);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .header h1 i {
+            color: #dc2626;
+            margin-right: 8px;
+        }
+
+        .date-display {
+            background: #f8fafc;
+            padding: 8px 18px;
+            border-radius: 40px;
+            font-weight: 500;
+            color: #1e4b8a;
+            border: 1px solid #dbeafe;
+            font-size: 14px;
+        }
+
+        /* Filter Section */
+        .filter-section {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 10px rgba(0, 70, 150, 0.04);
+            display: flex;
+            gap: 20px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+            border: 1px solid #eef2f6;
+        }
+
+        .filter-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .filter-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: #475569;
+            margin-bottom: 6px;
+        }
+
+        .filter-group label i {
+            color: #2563eb;
+            margin-right: 4px;
+        }
+
+        .filter-group input,
+        .filter-group select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #d1d9e6;
+            border-radius: 10px;
+            font-family: 'Sarabun', sans-serif;
+            font-size: 14px;
+            transition: all 0.2s;
+            background: #f9fcff;
+        }
+
+        .filter-group input:focus,
+        .filter-group select:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+            background: white;
+        }
+
+        .filter-btn {
+            padding: 10px 24px;
+            background: linear-gradient(135deg, #2563eb, #1e4b8a);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-family: 'Sarabun', sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            height: 44px;
+            box-shadow: 0 4px 8px rgba(37, 99, 235, 0.15);
+        }
+
+        .filter-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(37, 99, 235, 0.2);
+        }
+
+        /* Cancellations Table */
+        .table-section {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 10px rgba(0, 70, 150, 0.04);
+            margin-bottom: 20px;
+            border: 1px solid #eef2f6;
+        }
+
+        .table-section h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .table-section h3 i {
+            color: #dc2626;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            text-align: left;
+            padding: 12px 10px;
+            background: #f8fafc;
+            color: #475569;
+            font-weight: 600;
+            font-size: 13px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        td {
+            padding: 10px;
+            border-bottom: 1px solid #eef2f6;
+            color: #1e293b;
+            font-size: 13px;
+        }
+
+        tr:hover td {
+            background: #f0f7ff;
+        }
+
+        .badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge.cancelled {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        /* Statistics Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+            margin-top: 10px;
+        }
+
+        .stat-card {
+            background: #f8fafc;
+            padding: 18px;
+            border-radius: 12px;
+            border: 1px solid #eef2f6;
+        }
+
+        .stat-card .stat-label {
+            font-size: 13px;
+            color: #64748b;
+            margin-bottom: 6px;
+        }
+
+        .stat-card .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .stat-card .stat-value.small {
+            font-size: 18px;
+        }
+
+        .stat-card .stat-value i {
+            color: #2563eb;
+            margin-right: 6px;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            background: #f9fcff;
+            border-radius: 16px;
+            border: 1px dashed #bdd3ff;
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            color: #94a3b8;
+            margin-bottom: 12px;
+        }
+
+        .empty-state h3 {
+            font-size: 16px;
+            color: #475569;
+            font-weight: 500;
+            margin-bottom: 6px;
+        }
+
+        .empty-state p {
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        /* Loading */
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .spinner {
+            width: 45px;
+            height: 45px;
+            border: 4px solid #e2e8f0;
+            border-top-color: #2563eb;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 15px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 28px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-icon {
+            font-size: 50px;
+            margin-bottom: 16px;
+        }
+
+        .modal-icon.success { color: #059669; }
+        .modal-icon.error { color: #dc2626; }
+
+        .modal-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+
+        .modal-message {
+            color: #64748b;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .modal-btn {
+            padding: 10px 28px;
+            background: linear-gradient(135deg, #2563eb, #1e4b8a);
+            color: white;
+            border: none;
+            border-radius: 40px;
+            font-weight: 600;
+            font-family: 'Sarabun', sans-serif;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .modal-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(37, 99, 235, 0.2);
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 80px;
+            }
+            
+            .sidebar-header h2,
+            .nav-item span,
+            .user-details {
+                display: none;
+            }
+            
+            .main-content {
+                margin-left: 80px;
+            }
+            
+            .nav-item {
+                justify-content: center;
+                padding: 15px;
+            }
+            
+            .nav-item i {
+                width: auto;
+                font-size: 22px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 12px;
+                text-align: center;
+            }
+            
+            .filter-section {
+                flex-direction: column;
+            }
+            
+            .filter-btn {
+                width: 100%;
+            }
+        }
+
+        /* Page Transition Loading */
+        .page-loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: #f0f5fa;
+            z-index: 99999;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+        }
+        .page-loading-overlay.active {
+            display: flex;
+        }
+        .page-loading-logo {
+            width: 64px; height: 64px;
+            background: linear-gradient(135deg, #1e4b8a, #2563eb);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            color: white;
+            animation: pulse-logo 1.2s ease-in-out infinite;
+        }
+        @keyframes pulse-logo {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(37,99,235,0.3); }
+            50% { transform: scale(1.08); box-shadow: 0 0 0 12px rgba(37,99,235,0); }
+        }
+        .page-loading-bar {
+            width: 180px;
+            height: 4px;
+            background: #e2e8f0;
+            border-radius: 999px;
+            overflow: hidden;
+        }
+        .page-loading-bar-fill {
+            height: 100%;
+            width: 40%;
+            background: linear-gradient(90deg, #2563eb, #1e4b8a);
+            border-radius: 999px;
+            animation: loading-slide 1s ease-in-out infinite;
+        }
+        @keyframes loading-slide {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(350%); }
+        }
+        .page-loading-text {
+            font-size: 14px;
+            color: #64748b;
+            font-family: 'Sarabun', sans-serif;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+    <script src="supabase-api.js"></script>
+</head>
+<body>
+    <!-- Page Transition Overlay -->
+    <div class="page-loading-overlay" id="pageLoadingOverlay">
+        <div class="page-loading-logo">
+            <i class="fas fa-calendar-alt"></i>
+        </div>
+        <div class="page-loading-bar">
+            <div class="page-loading-bar-fill"></div>
+        </div>
+        <div class="page-loading-text">กำลังโหลด...</div>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading-overlay" id="loading">
+        <div class="spinner"></div>
+        <div>กำลังโหลดข้อมูล...</div>
+    </div>
+
+    <div class="app-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <i class="fas fa-calendar-alt"></i>
+                <h2>Meeting Room</h2>
+            </div>
+            
+            <div class="nav-menu">
+                <a href="dashboard.html" class="nav-item" id="nav-dashboard">
+                    <i class="fas fa-chart-pie"></i>
+                    <span>ภาพรวม</span>
+                </a>
+                <a href="index.html" class="nav-item" id="nav-index">
+                    <i class="fas fa-door-open"></i>
+                    <span>จองห้องประชุม</span>
+                </a>
+                <a href="calendar.html" class="nav-item" id="nav-calendar">
+                    <i class="fas fa-calendar"></i>
+                    <span>ปฏิทิน</span>
+                </a>
+                
+                <div class="nav-divider"></div>
+                
+                <a href="cancellations.html" class="nav-item" id="nav-cancellations">
+                    <i class="fas fa-times-circle"></i>
+                    <span>รายการยกเลิก</span>
+                </a>
+                <a href="report.html" class="nav-item" id="nav-report">
+                    <i class="fas fa-file-alt"></i>
+                    <span>รายงาน</span>
+                </a>
+            </div>
+
+
+            <!-- Sidebar Footer -->
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar">SC</div>
+                    <div class="user-details">
+                        <div class="user-name">พัฒนาโดย</div>
+                        <div class="user-role">Sarawut.C</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+            <div class="header">
+                <h1>
+                    <i class="fas fa-times-circle"></i>
+                    รายการยกเลิกการจอง
+                </h1>
+                <div class="date-display" id="currentDate"></div>
+            </div>
+
+            <!-- Filter Section -->
+            <div class="filter-section">
+                <div class="filter-group">
+                    <label><i class="fas fa-calendar-start"></i> วันที่เริ่มต้น</label>
+                    <input type="date" id="startDate">
+                </div>
+                <div class="filter-group">
+                    <label><i class="fas fa-calendar-end"></i> วันที่สิ้นสุด</label>
+                    <input type="date" id="endDate">
+                </div>
+                <div class="filter-group">
+                    <label><i class="fas fa-door-open"></i> ห้องประชุม</label>
+                    <select id="roomFilter">
+                        <option value="all">ทั้งหมด</option>
+                    </select>
+                </div>
+                <button class="filter-btn" onclick="applyFilter()">
+                    <i class="fas fa-filter"></i> กรองข้อมูล
+                </button>
+            </div>
+
+            <!-- Cancelled Bookings Table -->
+            <div class="table-section">
+                <h3><i class="fas fa-times-circle"></i> รายการที่ยกเลิกแล้ว</h3>
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>วันที่จอง</th>
+                                <th>ห้องประชุม</th>
+                                <th>ผู้จอง</th>
+                                <th>แผนก</th>
+                                <th>เวลา</th>
+                                <th>วันที่ยกเลิก</th>
+                                <th>สถานะ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cancelledTableBody">
+                            <tr>
+                                <td colspan="7" style="text-align: center; color: #64748b; padding: 30px;">กำลังโหลดข้อมูล...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Statistics -->
+            <div class="table-section">
+                <h3><i class="fas fa-chart-pie"></i> สถิติการยกเลิก</h3>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">จำนวนครั้งที่ยกเลิก</div>
+                        <div class="stat-value" id="totalCancelled">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">ห้องที่ถูกยกเลิกบ่อยสุด</div>
+                        <div class="stat-value small" id="topCancelledRoom">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">ผู้จองที่ยกเลิกบ่อยสุด</div>
+                        <div class="stat-value small" id="topCancelledUser">-</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal" id="resultModal">
+        <div class="modal-content">
+            <div class="modal-icon success" id="modalIcon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="modal-title" id="modalTitle">สำเร็จ</div>
+            <div class="modal-message" id="modalMessage">ดำเนินการเรียบร้อย</div>
+            <button class="modal-btn" onclick="closeModal()">ตกลง</button>
+        </div>
+    </div>
+
+    <script>
+        let allCancelled = [];
+        let rooms = [];
+
+        // Set active menu
+        function setActiveMenu() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const page = urlParams.get('page') || 'cancellations';
+            
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            if (page === 'dashboard') {
+                document.getElementById('nav-dashboard').classList.add('active');
+            } else if (page === 'calendar') {
+                document.getElementById('nav-calendar').classList.add('active');
+            } else if (page === 'cancellations') {
+                document.getElementById('nav-cancellations').classList.add('active');
+            } else {
+                document.getElementById('nav-index').classList.add('active');
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            setActiveMenu();
+            
+            const thaiDate = new Date().toLocaleDateString('th-TH', { timeZone: 'Asia/Bangkok', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            document.getElementById('currentDate').textContent = thaiDate;
+            
+            // Set default dates (last 30 days)
+            const today = new Date();
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(today.getDate() - 30);
+            
+            document.getElementById('startDate').value = thirtyDaysAgo.toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' });
+            document.getElementById('endDate').value = today.toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' });
+            
+            loadData();
+        });
+
+        function showLoading() {
+            document.getElementById('loading').classList.add('active');
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').classList.remove('active');
+        }
+
+        function loadData() {
+            showLoading();
+            
+            Promise.all([
+                loadRooms(),
+                loadCancelledBookings()
+            ]).then(() => {
+                applyFilter();
+                hideLoading();
+            }).catch(error => {
+                console.error('Error loading data:', error);
+                hideLoading();
+            });
+        }
+
+        function loadRooms() {
+            return new Promise((resolve, reject) => {
+                google.script.run
+                    .withSuccessHandler(function(result) {
+                        rooms = result || [];
+                        const select = document.getElementById('roomFilter');
+                        select.innerHTML = '<option value="all">ทั้งหมด</option>';
+                        rooms.forEach(room => {
+                            const option = document.createElement('option');
+                            option.value = room.id;
+                            option.textContent = room.name;
+                            select.appendChild(option);
+                        });
+                        resolve();
+                    })
+                    .withFailureHandler(function(error) {
+                        console.error('Error loading rooms:', error);
+                        rooms = [];
+                        reject(error);
+                    })
+                    .getRooms();
+            });
+        }
+
+        function loadCancelledBookings() {
+            return new Promise((resolve, reject) => {
+                google.script.run
+                    .withSuccessHandler(function(result) {
+                        allCancelled = result || [];
+                        console.log('Cancelled bookings:', allCancelled.length);
+                        resolve();
+                    })
+                    .withFailureHandler(function(error) {
+                        console.error('Error loading cancelled bookings:', error);
+                        allCancelled = [];
+                        reject(error);
+                    })
+                    .getAllCancelledBookings();
+            });
+        }
+
+        function applyFilter() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            const roomFilter = document.getElementById('roomFilter').value;
+            
+            let filtered = allCancelled.filter(booking => {
+                const dateMatch = booking.date >= startDate && booking.date <= endDate;
+                const roomMatch = roomFilter === 'all' || booking.roomId === roomFilter;
+                return dateMatch && roomMatch;
+            });
+            
+            displayCancelled(filtered);
+            updateStatistics(filtered);
+        }
+
+        function displayCancelled(bookings) {
+            const tbody = document.getElementById('cancelledTableBody');
+            
+            if (bookings.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #64748b; padding: 30px;">ไม่พบรายการยกเลิก</td></tr>';
+                return;
+            }
+            
+            let html = '';
+            bookings.forEach(booking => {
+                html += `
+                    <tr>
+                        <td>${booking.date}</td>
+                        <td>${booking.roomName}</td>
+                        <td>${booking.bookerName}</td>
+                        <td>${booking.department || '-'}</td>
+                        <td>${booking.startTime} - ${booking.endTime}</td>
+                        <td>${booking.cancelledDate || '-'}</td>
+                        <td><span class="badge cancelled">ยกเลิกแล้ว</span></td>
+                    </tr>
+                `;
+            });
+            
+            tbody.innerHTML = html;
+        }
+
+        function updateStatistics(bookings) {
+            document.getElementById('totalCancelled').textContent = bookings.length;
+            
+            // ห้องที่ถูกยกเลิกบ่อยสุด
+            const roomCounts = {};
+            bookings.forEach(b => {
+                roomCounts[b.roomName] = (roomCounts[b.roomName] || 0) + 1;
+            });
+            
+            let topRoom = { name: '-', count: 0 };
+            for (let [name, count] of Object.entries(roomCounts)) {
+                if (count > topRoom.count) {
+                    topRoom = { name, count };
+                }
+            }
+            document.getElementById('topCancelledRoom').textContent = topRoom.name;
+            
+            // ผู้จองที่ยกเลิกบ่อยสุด
+            const userCounts = {};
+            bookings.forEach(b => {
+                userCounts[b.bookerName] = (userCounts[b.bookerName] || 0) + 1;
+            });
+            
+            let topUser = { name: '-', count: 0 };
+            for (let [name, count] of Object.entries(userCounts)) {
+                if (count > topUser.count) {
+                    topUser = { name, count };
+                }
+            }
+            document.getElementById('topCancelledUser').textContent = topUser.name;
+        }
+
+        function showModal(type, title, message) {
+            const modal = document.getElementById('resultModal');
+            const icon = document.getElementById('modalIcon');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalMessage = document.getElementById('modalMessage');
+            
+            icon.className = `modal-icon ${type}`;
+            icon.innerHTML = type === 'success' ? 
+                '<i class="fas fa-check-circle"></i>' : 
+                '<i class="fas fa-times-circle"></i>';
+            
+            modalTitle.textContent = title;
+            modalMessage.textContent = message;
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('resultModal').classList.remove('active');
+        }
+
+        // Page transition loading
+        document.querySelectorAll('.nav-item').forEach(function(link) {
+            link.addEventListener('click', function(e) {
+                const href = this.getAttribute('href');
+                if (href && href !== '#') {
+                    e.preventDefault();
+                    document.getElementById('pageLoadingOverlay').classList.add('active');
+                    setTimeout(function() {
+                        window.location.href = href;
+                    }, 100);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

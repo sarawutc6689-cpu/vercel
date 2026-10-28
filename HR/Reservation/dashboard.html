@@ -1,0 +1,1253 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard การจองห้องประชุม</title>
+    
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background: #f0f5fa;
+            min-height: 100vh;
+            color: #1e293b;
+        }
+
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar - โทนฟ้าอ่อน */
+        .sidebar {
+            width: 280px;
+            background: white;
+            box-shadow: 2px 0 15px rgba(0, 70, 150, 0.08);
+            position: fixed;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 30px 20px;
+            background: linear-gradient(135deg, #1e4b8a, #2563eb);
+            color: white;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .sidebar-header h2 {
+            font-size: 22px;
+            font-weight: 600;
+            margin-top: 10px;
+            letter-spacing: 0.5px;
+        }
+
+        .sidebar-header i {
+            font-size: 40px;
+            opacity: 0.9;
+        }
+
+        .nav-menu {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px 0;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 25px;
+            color: #475569;
+            text-decoration: none;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+            font-weight: 500;
+        }
+
+        .nav-item:hover {
+            background: #f0f7ff;
+            border-left-color: #2563eb;
+            color: #1e4b8a;
+        }
+
+        .nav-item.active {
+            background: #e8f0fe;
+            border-left-color: #2563eb;
+            color: #1e4b8a;
+            font-weight: 600;
+        }
+
+        .nav-item i {
+            width: 24px;
+            font-size: 18px;
+            color: #4b7bb8;
+        }
+
+        .nav-item.active i {
+            color: #2563eb;
+        }
+
+        .nav-item span {
+            font-size: 15px;
+        }
+
+        .nav-divider {
+            height: 1px;
+            background: #e2e8f0;
+            margin: 10px 20px;
+        }
+
+        /* Sidebar Footer */
+        .sidebar-footer {
+            padding: 15px 20px;
+            border-top: 1px solid #e2e8f0;
+            background: white;
+            flex-shrink: 0;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1e4b8a, #2563eb);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 16px;
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.2);
+        }
+
+        .user-details {
+            flex: 1;
+        }
+
+        .user-name {
+            font-size: 11px;
+            color: #64748b;
+            margin-bottom: 2px;
+            letter-spacing: 0.3px;
+        }
+
+        .user-role {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            padding: 20px;
+        }
+
+        /* Header */
+        .header {
+            background: white;
+            border-radius: 16px;
+            padding: 20px 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0, 70, 150, 0.06);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid rgba(37, 99, 235, 0.1);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .header h1 i {
+            color: #2563eb;
+            margin-right: 8px;
+        }
+
+        .date-display {
+            background: #f8fafc;
+            padding: 8px 18px;
+            border-radius: 40px;
+            font-weight: 500;
+            color: #1e4b8a;
+            border: 1px solid #dbeafe;
+            font-size: 14px;
+        }
+
+        /* Date Filter */
+        .date-filter {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 10px rgba(0, 70, 150, 0.04);
+            display: flex;
+            gap: 20px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+            border: 1px solid #eef2f6;
+        }
+
+        .filter-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .filter-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: #475569;
+            margin-bottom: 6px;
+        }
+
+        .filter-group label i {
+            color: #2563eb;
+            margin-right: 4px;
+        }
+
+        .filter-group input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #d1d9e6;
+            border-radius: 10px;
+            font-family: 'Sarabun', sans-serif;
+            font-size: 14px;
+            transition: all 0.2s;
+            background: #f9fcff;
+        }
+
+        .filter-group input:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+            background: white;
+        }
+
+        .filter-btn {
+            padding: 10px 24px;
+            background: linear-gradient(135deg, #2563eb, #1e4b8a);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-family: 'Sarabun', sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            height: 44px;
+            box-shadow: 0 4px 8px rgba(37, 99, 235, 0.15);
+        }
+
+        .filter-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(37, 99, 235, 0.2);
+        }
+
+        .filter-btn.refresh {
+            background: linear-gradient(135deg, #059669, #047857);
+            box-shadow: 0 4px 8px rgba(5, 150, 105, 0.15);
+        }
+
+        .filter-btn.refresh:hover {
+            box-shadow: 0 8px 16px rgba(5, 150, 105, 0.2);
+        }
+
+        /* KPI Cards */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 18px;
+            margin-bottom: 20px;
+        }
+
+        .kpi-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 10px rgba(0, 70, 150, 0.04);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 1px solid #eef2f6;
+            transition: all 0.2s;
+        }
+
+        .kpi-card:hover {
+            box-shadow: 0 8px 16px rgba(37, 99, 235, 0.08);
+            border-color: #bdd3ff;
+        }
+
+        .kpi-info h3 {
+            font-size: 13px;
+            font-weight: 500;
+            color: #64748b;
+            margin-bottom: 5px;
+            letter-spacing: 0.3px;
+        }
+
+        .kpi-number {
+            font-size: 30px;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .kpi-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+        }
+
+        .kpi-icon.primary { background: linear-gradient(135deg, #2563eb, #1e4b8a); }
+        .kpi-icon.success { background: linear-gradient(135deg, #059669, #047857); }
+        .kpi-icon.warning { background: linear-gradient(135deg, #d97706, #b45309); }
+        .kpi-icon.info { background: linear-gradient(135deg, #0891b2, #0e7490); }
+        .kpi-icon.purple { background: linear-gradient(135deg, #7c3aed, #6d28d9); }
+
+        /* Charts Grid */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 18px;
+            margin-bottom: 20px;
+        }
+
+        .chart-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 10px rgba(0, 70, 150, 0.04);
+            border: 1px solid #eef2f6;
+        }
+
+        .chart-card h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .chart-card h3 i {
+            color: #2563eb;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 280px;
+            width: 100%;
+        }
+
+        /* Top Users Table */
+        .table-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 10px rgba(0, 70, 150, 0.04);
+            margin-bottom: 20px;
+            border: 1px solid #eef2f6;
+        }
+
+        .table-card h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .table-card h3 i {
+            color: #2563eb;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            text-align: left;
+            padding: 12px 10px;
+            background: #f8fafc;
+            color: #475569;
+            font-weight: 600;
+            font-size: 13px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        td {
+            padding: 10px;
+            border-bottom: 1px solid #eef2f6;
+            color: #1e293b;
+            font-size: 13px;
+        }
+
+        tr:hover td {
+            background: #f0f7ff;
+        }
+
+        .badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge.primary {
+            background: #e6f0ff;
+            color: #2563eb;
+        }
+
+        /* Loading */
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .spinner {
+            width: 45px;
+            height: 45px;
+            border: 4px solid #e2e8f0;
+            border-top-color: #2563eb;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 15px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 80px;
+            }
+            
+            .sidebar-header h2,
+            .nav-item span,
+            .user-details {
+                display: none;
+            }
+            
+            .main-content {
+                margin-left: 80px;
+            }
+            
+            .nav-item {
+                justify-content: center;
+                padding: 15px;
+            }
+            
+            .nav-item i {
+                width: auto;
+                font-size: 22px;
+            }
+            
+            .kpi-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 12px;
+                text-align: center;
+            }
+            
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .date-filter {
+                flex-direction: column;
+            }
+            
+            .filter-btn {
+                width: 100%;
+            }
+        }
+
+        /* Page Transition Loading */
+        .page-loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: #f0f5fa;
+            z-index: 99999;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+        }
+        .page-loading-overlay.active {
+            display: flex;
+        }
+        .page-loading-logo {
+            width: 64px; height: 64px;
+            background: linear-gradient(135deg, #1e4b8a, #2563eb);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            color: white;
+            animation: pulse-logo 1.2s ease-in-out infinite;
+        }
+        @keyframes pulse-logo {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(37,99,235,0.3); }
+            50% { transform: scale(1.08); box-shadow: 0 0 0 12px rgba(37,99,235,0); }
+        }
+        .page-loading-bar {
+            width: 180px;
+            height: 4px;
+            background: #e2e8f0;
+            border-radius: 999px;
+            overflow: hidden;
+        }
+        .page-loading-bar-fill {
+            height: 100%;
+            width: 40%;
+            background: linear-gradient(90deg, #2563eb, #1e4b8a);
+            border-radius: 999px;
+            animation: loading-slide 1s ease-in-out infinite;
+        }
+        @keyframes loading-slide {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(350%); }
+        }
+        .page-loading-text {
+            font-size: 14px;
+            color: #64748b;
+            font-family: 'Sarabun', sans-serif;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+    <script src="supabase-api.js"></script>
+    <script src="ui-dialog.js"></script>
+</head>
+<body>
+    <!-- Page Transition Overlay -->
+    <div class="page-loading-overlay" id="pageLoadingOverlay">
+        <div class="page-loading-logo">
+            <i class="fas fa-calendar-alt"></i>
+        </div>
+        <div class="page-loading-bar">
+            <div class="page-loading-bar-fill"></div>
+        </div>
+        <div class="page-loading-text">กำลังโหลด...</div>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading-overlay" id="loading">
+        <div class="spinner"></div>
+        <div>กำลังโหลดข้อมูล...</div>
+    </div>
+
+    <div class="app-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <i class="fas fa-calendar-alt"></i>
+                <h2>Meeting Room</h2>
+            </div>
+            
+            <div class="nav-menu">
+                <a href="dashboard.html" class="nav-item" id="nav-dashboard">
+                    <i class="fas fa-chart-pie"></i>
+                    <span>ภาพรวม</span>
+                </a>
+                <a href="index.html" class="nav-item" id="nav-index">
+                    <i class="fas fa-door-open"></i>
+                    <span>จองห้องประชุม</span>
+                </a>
+                <a href="calendar.html" class="nav-item" id="nav-calendar">
+                    <i class="fas fa-calendar"></i>
+                    <span>ปฏิทิน</span>
+                </a>
+                
+                <div class="nav-divider"></div>
+                
+                <a href="cancellations.html" class="nav-item" id="nav-cancellations">
+                    <i class="fas fa-times-circle"></i>
+                    <span>รายการยกเลิก</span>
+                </a>
+                <a href="report.html" class="nav-item" id="nav-report">
+                    <i class="fas fa-file-alt"></i>
+                    <span>รายงาน</span>
+                </a>
+            </div>
+
+
+            <!-- Sidebar Footer -->
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar">SC</div>
+                    <div class="user-details">
+                        <div class="user-name">พัฒนาโดย</div>
+                        <div class="user-role">Sarawut.C</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+            <div class="header">
+                <h1>
+                    <i class="fas fa-chart-pie"></i>
+                    ภาพรวมการจองห้องประชุม
+                </h1>
+                <div class="date-display" id="currentDate"></div>
+            </div>
+
+            <!-- Date Filter -->
+            <div class="date-filter">
+                <div class="filter-group">
+                    <label><i class="fas fa-calendar-start"></i> วันที่เริ่มต้น</label>
+                    <input type="date" id="startDate">
+                </div>
+                <div class="filter-group">
+                    <label><i class="fas fa-calendar-end"></i> วันที่สิ้นสุด</label>
+                    <input type="date" id="endDate">
+                </div>
+                <button class="filter-btn" onclick="applyDateFilter()">
+                    <i class="fas fa-filter"></i> แสดงข้อมูล
+                </button>
+                <button class="filter-btn refresh" onclick="refreshDashboard()">
+                    <i class="fas fa-sync-alt"></i> รีเฟรช
+                </button>
+            </div>
+
+            <!-- KPI Cards -->
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-info">
+                        <h3>การจองทั้งหมด</h3>
+                        <div class="kpi-number" id="totalBookings">0</div>
+                    </div>
+                    <div class="kpi-icon primary">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-info">
+                        <h3>ห้องยอดนิยม</h3>
+                        <div class="kpi-number" id="topRoom" style="font-size: 18px;">-</div>
+                    </div>
+                    <div class="kpi-icon success">
+                        <i class="fas fa-door-open"></i>
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-info">
+                        <h3>ผู้จองสูงสุด</h3>
+                        <div class="kpi-number" id="topUser" style="font-size: 18px;">-</div>
+                    </div>
+                    <div class="kpi-icon warning">
+                        <i class="fas fa-user-tie"></i>
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-info">
+                        <h3>แผนกยอดนิยม</h3>
+                        <div class="kpi-number" id="topDept" style="font-size: 18px;">-</div>
+                    </div>
+                    <div class="kpi-icon info">
+                        <i class="fas fa-building"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="charts-grid">
+                <!-- การจองรายวัน -->
+                <div class="chart-card">
+                    <h3><i class="fas fa-chart-line"></i> การจองรายวัน</h3>
+                    <div class="chart-container">
+                        <canvas id="dailyChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- ห้องประชุมยอดนิยม -->
+                <div class="chart-card">
+                    <h3><i class="fas fa-chart-bar"></i> ห้องประชุมยอดนิยม</h3>
+                    <div class="chart-container">
+                        <canvas id="roomChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- การจองตามแผนก -->
+                <div class="chart-card">
+                    <h3><i class="fas fa-chart-pie"></i> การจองตามแผนก</h3>
+                    <div class="chart-container">
+                        <canvas id="deptChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- ช่วงเวลายอดนิยม -->
+                <div class="chart-card">
+                    <h3><i class="fas fa-clock"></i> ช่วงเวลายอดนิยม</h3>
+                    <div class="chart-container">
+                        <canvas id="timeChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top Users Table -->
+            <div class="table-card">
+                <h3><i class="fas fa-trophy"></i> ผู้จองสูงสุด 10 อันดับ</h3>
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>อันดับ</th>
+                                <th>รหัสพนักงาน</th>
+                                <th>ชื่อ-นามสกุล</th>
+                                <th>แผนก</th>
+                                <th>จำนวนครั้ง</th>
+                                <th>สัดส่วน</th>
+                            </tr>
+                        </thead>
+                        <tbody id="topUsersTable">
+                            <tr>
+                                <td colspan="6" style="text-align: center; color: #64748b;">กำลังโหลดข้อมูล...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    let dailyChart, roomChart, deptChart, timeChart;
+    let allBookings = [];
+    let rooms = [];
+
+    // Set active menu based on URL
+    function setActiveMenu() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const page = urlParams.get('page') || 'dashboard';
+        
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        
+        if (page === 'dashboard') {
+            document.getElementById('nav-dashboard').classList.add('active');
+        } else if (page === 'calendar') {
+            document.getElementById('nav-calendar').classList.add('active');
+        } else if (page === 'cancellations') {
+            document.getElementById('nav-cancellations').classList.add('active');
+        } else {
+            document.getElementById('nav-index').classList.add('active');
+        }
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+        setActiveMenu();
+        
+        // Format Thai date
+        const thaiDate = new Date().toLocaleDateString('th-TH', { timeZone: 'Asia/Bangkok', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+        });
+        document.getElementById('currentDate').textContent = thaiDate;
+        
+        console.log('Dashboard loaded');
+        
+        // Set default dates (last 30 days)
+        const today = new Date();
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(today.getDate() - 30);
+        
+        document.getElementById('startDate').value = thirtyDaysAgo.toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' });
+        document.getElementById('endDate').value = today.toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' });
+        
+        loadData();
+    });
+
+    // Loading
+    function showLoading() {
+        document.getElementById('loading').classList.add('active');
+    }
+
+    function hideLoading() {
+        document.getElementById('loading').classList.remove('active');
+    }
+
+    // Load data from Google Apps Script
+    function loadData() {
+        showLoading();
+        
+        Promise.all([
+            loadRooms(),
+            loadAllBookings()
+        ]).then(() => {
+            applyDateFilter();
+            hideLoading();
+        }).catch(error => {
+            console.error('Error loading data:', error);
+            hideLoading();
+            uiDialog.alert('ไม่สามารถโหลดข้อมูลได้ กรุณาลองอีกครั้ง', 'error');
+        });
+    }
+
+    function loadRooms() {
+        return new Promise((resolve, reject) => {
+            google.script.run
+                .withSuccessHandler(function(result) {
+                    rooms = result || [];
+                    console.log('Rooms loaded:', rooms.length);
+                    resolve();
+                })
+                .withFailureHandler(function(error) {
+                    console.error('Error loading rooms:', error);
+                    rooms = [];
+                    reject(error);
+                })
+                .getRooms();
+        });
+    }
+
+    function loadAllBookings() {
+        return new Promise((resolve, reject) => {
+            google.script.run
+                .withSuccessHandler(function(result) {
+                    allBookings = result || [];
+                    console.log('Bookings loaded:', allBookings.length);
+                    resolve();
+                })
+                .withFailureHandler(function(error) {
+                    console.error('Error loading bookings:', error);
+                    allBookings = [];
+                    reject(error);
+                })
+                .getAllBookings();
+        });
+    }
+
+    // Apply date filter
+    function applyDateFilter() {
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+        
+        if (!startDate || !endDate) {
+            uiDialog.alert('กรุณาเลือกวันที่เริ่มต้นและสิ้นสุด', 'warn');
+            return;
+        }
+        
+        console.log('Filtering from', startDate, 'to', endDate);
+        
+        // Filter bookings by date range
+        const filteredBookings = allBookings.filter(booking => {
+            return booking.date >= startDate && booking.date <= endDate;
+        });
+        
+        console.log('Filtered bookings:', filteredBookings.length);
+        
+        // Update KPIs
+        updateKPIs(filteredBookings);
+        
+        // Update charts
+        updateDailyChart(filteredBookings, startDate, endDate);
+        updateRoomChart(filteredBookings);
+        updateDeptChart(filteredBookings);
+        updateTimeChart(filteredBookings);
+        
+        // Update table
+        updateTopUsersTable(filteredBookings);
+    }
+
+    // Update KPIs
+    function updateKPIs(bookings) {
+        // Total bookings
+        document.getElementById('totalBookings').textContent = bookings.length;
+        
+        // Top room
+        const roomCounts = {};
+        bookings.forEach(b => {
+            roomCounts[b.roomName] = (roomCounts[b.roomName] || 0) + 1;
+        });
+        
+        let topRoom = { name: '-', count: 0 };
+        for (let [name, count] of Object.entries(roomCounts)) {
+            if (count > topRoom.count) {
+                topRoom = { name, count };
+            }
+        }
+        document.getElementById('topRoom').textContent = topRoom.name;
+        
+        // Top user
+        const userCounts = {};
+        bookings.forEach(b => {
+            userCounts[b.bookerName] = (userCounts[b.bookerName] || 0) + 1;
+        });
+        
+        let topUser = { name: '-', count: 0 };
+        for (let [name, count] of Object.entries(userCounts)) {
+            if (count > topUser.count) {
+                topUser = { name, count };
+            }
+        }
+        document.getElementById('topUser').textContent = topUser.name;
+        
+        // Top department
+        const deptCounts = {};
+        bookings.forEach(b => {
+            deptCounts[b.department] = (deptCounts[b.department] || 0) + 1;
+        });
+        
+        let topDept = { name: '-', count: 0 };
+        for (let [name, count] of Object.entries(deptCounts)) {
+            if (count > topDept.count) {
+                topDept = { name, count };
+            }
+        }
+        document.getElementById('topDept').textContent = topDept.name;
+    }
+
+    // Update daily chart
+    function updateDailyChart(bookings, startDate, endDate) {
+        const ctx = document.getElementById('dailyChart').getContext('2d');
+        
+        // Generate date range
+        const dates = [];
+        const currentDate = new Date(startDate);
+        const lastDate = new Date(endDate);
+        
+        while (currentDate <= lastDate) {
+            dates.push(currentDate.toISOString().split('T')[0]);
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
+        
+        // Count bookings per date
+        const counts = dates.map(date => 
+            bookings.filter(b => b.date === date).length
+        );
+        
+        if (dailyChart) dailyChart.destroy();
+        
+        dailyChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: dates.map(d => {
+                    const [year, month, day] = d.split('-');
+                    return `${day}/${month}`;
+                }),
+                datasets: [{
+                    label: 'จำนวนการจอง',
+                    data: counts,
+                    borderColor: '#2563eb',
+                    backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1,
+                            precision: 0
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Update room chart
+    function updateRoomChart(bookings) {
+        const ctx = document.getElementById('roomChart').getContext('2d');
+        
+        // Count by room
+        const roomCounts = {};
+        bookings.forEach(b => {
+            roomCounts[b.roomName] = (roomCounts[b.roomName] || 0) + 1;
+        });
+        
+        // Sort and get top 5
+        const sortedRooms = Object.entries(roomCounts)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 5);
+        
+        if (roomChart) roomChart.destroy();
+        
+        roomChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: sortedRooms.map(r => r[0]),
+                datasets: [{
+                    label: 'จำนวนครั้งที่จอง',
+                    data: sortedRooms.map(r => r[1]),
+                    backgroundColor: [
+                        '#2563eb',
+                        '#059669',
+                        '#d97706',
+                        '#7c3aed',
+                        '#db2777'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1,
+                            precision: 0
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Update department chart
+    function updateDeptChart(bookings) {
+        const ctx = document.getElementById('deptChart').getContext('2d');
+        
+        // Count by department
+        const deptCounts = {};
+        bookings.forEach(b => {
+            deptCounts[b.department] = (deptCounts[b.department] || 0) + 1;
+        });
+        
+        // Sort and get top 5
+        const sortedDepts = Object.entries(deptCounts)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 5);
+        
+        if (deptChart) deptChart.destroy();
+        
+        deptChart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: sortedDepts.map(d => d[0]),
+                datasets: [{
+                    data: sortedDepts.map(d => d[1]),
+                    backgroundColor: [
+                        '#2563eb',
+                        '#059669',
+                        '#d97706',
+                        '#7c3aed',
+                        '#db2777'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            font: {
+                                family: 'Sarabun',
+                                size: 11
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Update time chart
+    function updateTimeChart(bookings) {
+        const ctx = document.getElementById('timeChart').getContext('2d');
+        
+        // Count by time slot
+        const timeSlots = [
+            '09:00-10:00',
+            '10:00-11:00',
+            '11:00-12:00',
+            '13:00-14:00',
+            '14:00-15:00',
+            '15:00-16:00'
+        ];
+        
+        const timeCounts = {
+            '09:00-10:00': 0,
+            '10:00-11:00': 0,
+            '11:00-12:00': 0,
+            '13:00-14:00': 0,
+            '14:00-15:00': 0,
+            '15:00-16:00': 0
+        };
+        
+        bookings.forEach(b => {
+            const slot = `${b.startTime}-${b.endTime}`;
+            if (timeCounts.hasOwnProperty(slot)) {
+                timeCounts[slot]++;
+            }
+        });
+        
+        if (timeChart) timeChart.destroy();
+        
+        timeChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: timeSlots,
+                datasets: [{
+                    label: 'จำนวนการจอง',
+                    data: timeSlots.map(slot => timeCounts[slot] || 0),
+                    backgroundColor: '#7c3aed'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1,
+                            precision: 0
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Update top users table
+    function updateTopUsersTable(bookings) {
+        // Count by user
+        const userCounts = {};
+        bookings.forEach(b => {
+            const key = `${b.userCode}|${b.bookerName}|${b.department}`;
+            userCounts[key] = (userCounts[key] || 0) + 1;
+        });
+        
+        // Sort and get top 10
+        const sortedUsers = Object.entries(userCounts)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 10);
+        
+        const totalBookings = bookings.length;
+        
+        let html = '';
+        sortedUsers.forEach(([key, count], index) => {
+            const [code, name, dept] = key.split('|');
+            const percentage = totalBookings > 0 ? ((count / totalBookings) * 100).toFixed(1) : '0';
+            
+            html += `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td><span class="badge primary">${code || '-'}</span></td>
+                    <td>${name || '-'}</td>
+                    <td>${dept || '-'}</td>
+                    <td><strong>${count}</strong> ครั้ง</td>
+                    <td>${percentage}%</td>
+                </tr>
+            `;
+        });
+        
+        if (sortedUsers.length === 0) {
+            html = '<tr><td colspan="6" style="text-align: center; color: #64748b;">ไม่พบข้อมูลการจอง</td></tr>';
+        }
+        
+        document.getElementById('topUsersTable').innerHTML = html;
+    }
+
+    // Refresh dashboard
+    function refreshDashboard() {
+        loadData();
+    }
+
+        // Page transition loading
+        document.querySelectorAll('.nav-item').forEach(function(link) {
+            link.addEventListener('click', function(e) {
+                const href = this.getAttribute('href');
+                if (href && href !== '#') {
+                    e.preventDefault();
+                    document.getElementById('pageLoadingOverlay').classList.add('active');
+                    setTimeout(function() {
+                        window.location.href = href;
+                    }, 100);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
