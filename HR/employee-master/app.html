@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>จัดการพนักงาน — Employee Master</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* ----- ธีมสุภาพฟ้าขาว ----- */
+  :root {
+    --color-bg: #f4f9fe;
+    --color-surface: #ffffff;
+    --color-surface-subtle: #f0f6fc;
+    --color-primary: #2a7de1;
+    --color-primary-50: #e9f0fe;
+    --color-primary-100: #d0e2fc;
+    --color-primary-600: #1a5fb0;
+    --color-primary-700: #124a8a;
+    --color-text: #1e293b;
+    --color-text-secondary: #2c3e50;
+    --color-text-muted: #6b7a8f;
+    --color-border: #dce7f3;
+    --color-danger: #e53e3e;
+    --color-accent: #2a7de1;
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+    --shadow-card: 0 4px 16px rgba(42, 125, 225, 0.08);
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: 'IBM Plex Sans Thai', system-ui, -apple-system, sans-serif;
+    background: var(--color-bg);
+    color: var(--color-text);
+    padding: 24px;
+    line-height: 1.5;
+  }
+
+  .app-shell {
+    max-width: 1280px;
+    margin: 0 auto;
+  }
+
+  .main {
+    width: 100%;
+  }
+
+  /* Topbar */
+  .topbar {
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    padding: 24px 28px;
+    margin-bottom: 24px;
+    box-shadow: var(--shadow-card);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    border-left: 5px solid var(--color-primary);
+  }
+
+  .topbar h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--color-primary-700);
+    letter-spacing: -0.3px;
+    margin: 2px 0 4px;
+  }
+
+  .topbar-eyebrow {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--color-primary-600);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .topbar p {
+    color: var(--color-text-muted);
+    font-size: 15px;
+    margin-top: 4px;
+  }
+
+  /* Panels */
+  .panel {
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    margin-bottom: 24px;
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+  }
+
+  .panel-head {
+    padding: 18px 24px;
+    background: var(--color-surface-subtle);
+    border-bottom: 1px solid var(--color-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .panel-head h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--color-primary-700);
+  }
+
+  .hint {
+    font-size: 13px;
+    color: var(--color-text-muted);
+    font-weight: 400;
+    margin-top: 2px;
+  }
+
+  .panel-pad {
+    padding: 24px;
+  }
+
+  /* Form */
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px 20px;
+    margin-bottom: 16px;
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .field-label {
+    font-weight: 500;
+    font-size: 14px;
+    color: var(--color-text-secondary);
+  }
+
+  .req {
+    color: var(--color-danger);
+    font-weight: 600;
+  }
+
+  .input {
+    padding: 10px 14px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    font-family: inherit;
+    font-size: 15px;
+    background: var(--color-surface);
+    transition: 0.2s ease;
+    color: var(--color-text);
+    width: 100%;
+  }
+
+  .input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(42, 125, 225, 0.2);
+  }
+
+  .input::placeholder {
+    color: #a0b3cc;
+  }
+
+  select.input {
+    appearance: auto;
+    background: var(--color-surface);
+    cursor: pointer;
+  }
+
+  .field-sub {
+    font-size: 12px;
+    color: var(--color-text-muted);
+    min-height: 18px;
+  }
+
+  /* Buttons */
+  .flex {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 9px 20px;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 15px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: 0.2s ease;
+    text-decoration: none;
+    background: transparent;
+  }
+
+  .btn-accent {
+    background: var(--color-primary);
+    color: white;
+    box-shadow: 0 2px 8px rgba(42, 125, 225, 0.25);
+  }
+  .btn-accent:hover {
+    background: var(--color-primary-600);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(42, 125, 225, 0.3);
+  }
+
+  .btn-ghost {
+    color: var(--color-text-muted);
+    background: transparent;
+    border: 1px solid var(--color-border);
+  }
+  .btn-ghost:hover {
+    background: var(--color-surface-subtle);
+    border-color: #b8cde0;
+  }
+
+  .btn-sm {
+    padding: 5px 14px;
+    font-size: 13px;
+    border-radius: 20px;
+    background: var(--color-primary-50);
+    color: var(--color-primary-700);
+    border: 1px solid transparent;
+  }
+  .btn-sm:hover {
+    background: var(--color-primary-100);
+    border-color: var(--color-primary);
+  }
+
+  /* Filter */
+  .filter-bar {
+    padding: 16px 20px;
+    background: var(--color-surface-subtle);
+    border-bottom: 1px solid var(--color-border);
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .search {
+    max-width: 340px;
+    background: white;
+  }
+
+  /* Table */
+  .table-wrap {
+    overflow-x: auto;
+    padding: 0 4px 4px 4px;
+  }
+
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+
+  .data-table th {
+    text-align: left;
+    padding: 14px 16px;
+    font-weight: 600;
+    color: var(--color-primary-700);
+    background: var(--color-surface-subtle);
+    border-bottom: 2px solid var(--color-border);
+    font-size: 13px;
+    letter-spacing: 0.3px;
+  }
+
+  .data-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--color-border);
+    color: var(--color-text);
+    vertical-align: middle;
+  }
+
+  .data-table tr:hover td {
+    background: #f6faff;
+  }
+
+  .cell-code {
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 500;
+    color: var(--color-primary-700);
+    font-size: 14px;
+  }
+
+  .cell-muted {
+    color: var(--color-text-muted);
+  }
+
+  /* Empty */
+  #emp-empty .empty-state {
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--color-text-muted);
+    background: var(--color-surface-subtle);
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  }
+  #emp-empty .empty-state strong {
+    display: block;
+    font-size: 18px;
+    color: var(--color-text-secondary);
+    margin-bottom: 4px;
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--color-primary);
+    color: white;
+    padding: 14px 28px;
+    border-radius: 40px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 500;
+    font-size: 15px;
+    opacity: 0;
+    transition: 0.3s ease;
+    pointer-events: none;
+    z-index: 999;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  .toast svg {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+  }
+
+  /* Responsive */
+  @media (max-width: 720px) {
+    body { padding: 12px; }
+    .topbar { padding: 18px; flex-direction: column; gap: 8px; }
+    .topbar div:last-child { text-align: left; width: 100%; }
+    .field-row { grid-template-columns: 1fr; gap: 12px; }
+    .panel-pad { padding: 16px; }
+    .data-table th, .data-table td { padding: 10px 12px; font-size: 13px; }
+    .search { max-width: 100%; }
+  }
+
+  /* Misc */
+  .text-right { text-align: right; }
+  .mt-8 { margin-top: 8px; }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div class="app-shell">
+  <div class="main" style="width:100%;">
+    <header class="topbar">
+      <div>
+        <div class="topbar-eyebrow">ฐานข้อมูลกลาง</div>
+        <h1>Employee Master</h1>
+        <p>เพิ่ม/แก้ไขพนักงานที่นี่ที่เดียว ระบบอื่นที่เชื่อมต่อจะอัปเดตให้อัตโนมัติ</p>
+      </div>
+      <div style="text-align:right; font-size:13px; color:var(--color-text-muted);">
+        <span id="user-email" style="font-weight:500; color:var(--color-primary-700);"></span><br>
+        <a href="#" id="btn-logout" style="color:var(--color-primary-600); text-decoration:underline; font-weight:500;">ออกจากระบบ</a>
+      </div>
+    </header>
+    <main class="content">
+
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <h3>เพิ่ม/แก้ไขพนักงาน</h3>
+            <div class="hint">กรอกรหัสพนักงานที่มีอยู่แล้วเพื่อแก้ไข หรือรหัสใหม่เพื่อเพิ่ม — บันทึกแล้วจะส่งไปอัปเดตทุกระบบที่เชื่อมต่อทันที</div>
+          </div>
+        </div>
+        <div class="panel-pad">
+          <form id="employee-form">
+            <div class="field-row">
+              <div class="field">
+                <label class="field-label">รหัสพนักงาน <span class="req">*</span></label>
+                <input type="text" id="f-code" class="input" required>
+              </div>
+              <div class="field">
+                <label class="field-label">ชื่อ-นามสกุล <span class="req">*</span></label>
+                <input type="text" id="f-name" class="input" required>
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label class="field-label">ฝ่าย</label>
+                <input type="text" id="f-section" class="input" placeholder="เช่น ผลิต, วิศวกรรม">
+                <div class="field-sub"></div>
+              </div>
+              <div class="field">
+                <label class="field-label">แผนก <span class="req">*</span></label>
+                <select class="input" id="f-dept" required></select>
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label class="field-label">ตำแหน่ง</label>
+                <input type="text" id="f-position" class="input" placeholder="เช่น หัวหน้างาน, พนักงานฝ่ายผลิต">
+                <div class="field-sub"></div>
+              </div>
+              <div class="field">
+                <label class="field-label">วันที่เริ่มงาน</label>
+                <input type="date" id="f-hire-date" class="input">
+                <div class="field-sub"></div>
+              </div>
+            </div>
+            <div class="flex" style="justify-content:flex-end; gap:10px;">
+              <button type="button" class="btn btn-ghost" id="btn-reset-form">ล้างฟอร์ม</button>
+              <button type="submit" class="btn btn-accent" id="btn-save">บันทึก</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="filter-bar" style="border-radius: var(--radius-lg) var(--radius-lg) 0 0;">
+          <input class="input search" id="f-search" placeholder="ค้นหารหัสหรือชื่อพนักงาน...">
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>รหัสพนักงาน</th>
+                <th>ชื่อ</th>
+                <th>ฝ่าย</th>
+                <th>แผนก</th>
+                <th>ตำแหน่ง</th>
+                <th>วันที่เริ่มงาน</th>
+                <th style="width:80px;">จัดการ</th>
+              </tr>
+            </thead>
+            <tbody id="emp-tbody"></tbody>
+          </table>
+        </div>
+        <div id="emp-empty"></div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script src="assets/config.js"></script>
+<script src="assets/supabaseClient.js"></script>
+<script>
+let allDepts = [];
+
+function showToast(message, isError) {
+  let toast = document.querySelector('.toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg><span class="toast-msg"></span>`;
+    document.body.appendChild(toast);
+  }
+  toast.style.background = isError ? 'var(--color-danger)' : 'var(--color-primary)';
+  toast.querySelector('.toast-msg').textContent = message;
+  toast.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => toast.classList.remove('show'), 3200);
+}
+
+async function requireAuth() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { window.location.href = 'login.html'; throw new Error('redirect'); }
+  document.getElementById('user-email').textContent = session.user.email;
+}
+document.getElementById('btn-logout').addEventListener('click', async (e) => {
+  e.preventDefault();
+  await sb.auth.signOut();
+  window.location.href = 'login.html';
+});
+
+function populateDeptSelect() {
+  document.getElementById('f-dept').innerHTML = allDepts.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+}
+
+function resetForm() {
+  document.getElementById('employee-form').reset();
+  document.getElementById('f-code').disabled = false;
+}
+document.getElementById('btn-reset-form').addEventListener('click', resetForm);
+
+document.getElementById('employee-form').addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  const code = document.getElementById('f-code').value.trim();
+  const name = document.getElementById('f-name').value.trim();
+  const deptId = document.getElementById('f-dept').value;
+  const hireDate = document.getElementById('f-hire-date').value || null;
+  const section = document.getElementById('f-section').value.trim() || null;
+  const position = document.getElementById('f-position').value.trim() || null;
+
+  if (!code || !name || !deptId) return showToast('กรอกข้อมูลให้ครบ', true);
+
+  const btn = document.getElementById('btn-save');
+  btn.disabled = true; btn.textContent = 'กำลังบันทึก...';
+  try {
+    const { error } = await sb.from('employees').upsert({
+      employee_code: code, full_name: name, department_id: deptId,
+      hire_date: hireDate, section, position,
+    }, { onConflict: 'employee_code' });
+    if (error) throw error;
+    showToast(`บันทึก ${name} สำเร็จ — กำลังส่งไปยังระบบที่เชื่อมต่อ`);
+    resetForm();
+    await renderTable();
+  } catch (err) {
+    console.error(err);
+    showToast('บันทึกไม่สำเร็จ: ' + err.message, true);
+  } finally {
+    btn.disabled = false; btn.textContent = 'บันทึก';
+  }
+});
+
+async function renderTable() {
+  const tbody = document.getElementById('emp-tbody');
+  tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:32px; color:var(--color-text-muted);">กำลังโหลด...</td></tr>`;
+  const search = document.getElementById('f-search').value.trim();
+
+  let query = sb.from('employees').select('*, departments(name)').order('employee_code');
+  if (search) query = query.or(`employee_code.ilike.%${search}%,full_name.ilike.%${search}%`);
+  const { data, error } = await query.limit(500);
+
+  const emptyEl = document.getElementById('emp-empty');
+  if (error) {
+    tbody.innerHTML = '';
+    emptyEl.innerHTML = `<div class="empty-state"><strong>โหลดไม่สำเร็จ</strong><p>${error.message}</p></div>`;
+    return;
+  }
+  if (!data || data.length === 0) {
+    tbody.innerHTML = '';
+    emptyEl.innerHTML = `<div class="empty-state"><strong>ยังไม่มีพนักงาน</strong><p>เริ่มเพิ่มพนักงานคนแรกได้จากฟอร์มด้านบน</p></div>`;
+    return;
+  }
+  emptyEl.innerHTML = '';
+
+  window.__rows = data;
+  tbody.innerHTML = data.map(r => `
+    <tr>
+      <td class="cell-code">${r.employee_code}</td>
+      <td>${r.full_name}</td>
+      <td class="cell-muted">${r.section || '-'}</td>
+      <td>${r.departments?.name || '-'}</td>
+      <td class="cell-muted">${r.position || '-'}</td>
+      <td class="cell-muted">${r.hire_date || '-'}</td>
+      <td><button class="btn btn-sm" data-code="${r.employee_code}">แก้ไข</button></td>
+    </tr>
+  `).join('');
+
+  tbody.querySelectorAll('button[data-code]').forEach(btn => {
+    btn.addEventListener('click', () => startEdit(btn.dataset.code));
+  });
+}
+
+function startEdit(code) {
+  const r = (window.__rows || []).find(x => x.employee_code === code);
+  if (!r) return;
+  document.getElementById('f-code').value = r.employee_code;
+  document.getElementById('f-code').disabled = true;
+  document.getElementById('f-name').value = r.full_name;
+  document.getElementById('f-dept').value = r.department_id;
+  document.getElementById('f-hire-date').value = r.hire_date || '';
+  document.getElementById('f-section').value = r.section || '';
+  document.getElementById('f-position').value = r.position || '';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+let searchDebounce;
+document.getElementById('f-search').addEventListener('input', () => {
+  clearTimeout(searchDebounce);
+  searchDebounce = setTimeout(renderTable, 300);
+});
+
+(async function init() {
+  try {
+    await requireAuth();
+    const { data: depts, error } = await sb.from('departments').select('*').order('name');
+    if (error) throw error;
+    allDepts = depts;
+    populateDeptSelect();
+    await renderTable();
+  } catch (err) {
+    if (err.message !== 'redirect') {
+      console.error(err);
+      showToast('โหลดข้อมูลเริ่มต้นไม่สำเร็จ: ' + err.message, true);
+    }
+  }
+})();
+</script>
+</body>
+</html>
