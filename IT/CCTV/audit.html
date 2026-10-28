@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>บันทึกการใช้งานระบบ (Audit Log)</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<style>
+:root {
+  --bg:#F4F7FC; --card:#FFFFFF; --line:#E2EAF1; --text:#1A2C3E; --muted:#6B8CAA; --navy:#1E3A5F; --blue:#1E5A7E;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg:#0F1A26; --card:#16222F; --line:#2A3A4B; --text:#E4ECF4; --muted:#8FA8C0; --navy:#9CC3E6; --blue:#6FB0DC; }
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:var(--bg); color:var(--text); font-family:'Inter','IBM Plex Sans Thai',system-ui,sans-serif; font-size:14px; line-height:1.5; min-height:100vh; }
+.header { background:var(--card); border-bottom:1px solid var(--line); padding:0 28px; height:64px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; }
+.title { font-size:17px; font-weight:700; color:var(--navy); display:flex; align-items:center; gap:10px; }
+.hdr-right { display:flex; align-items:center; gap:12px; font-size:12px; color:var(--muted); }
+.btn { border:1px solid var(--line); background:var(--card); color:var(--text); border-radius:8px; padding:7px 14px; font-family:inherit; font-size:13px; font-weight:600; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; gap:6px; }
+.btn:hover { background:var(--bg); }
+.btn-primary { background:var(--blue); border-color:var(--blue); color:#fff; }
+.btn-primary:hover { background:var(--blue); opacity:.9; }
+.btn:disabled { opacity:.55; cursor:default; }
+.main { max-width:1280px; margin:0 auto; padding:24px 28px 48px; }
+.filters { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px 18px; display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end; margin-bottom:18px; }
+.f { display:flex; flex-direction:column; gap:4px; }
+.f label { font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; }
+.f input, .f select { border:1px solid var(--line); background:var(--bg); color:var(--text); border-radius:8px; padding:7px 10px; font-family:inherit; font-size:13px; min-width:150px; }
+.summary { font-size:12px; color:var(--muted); margin-bottom:10px; }
+.table-wrap { background:var(--card); border:1px solid var(--line); border-radius:14px; overflow-x:auto; }
+table { width:100%; border-collapse:collapse; font-size:13px; min-width:900px; }
+th { text-align:left; padding:11px 14px; background:var(--bg); border-bottom:1px solid var(--line); font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; }
+td { padding:10px 14px; border-bottom:1px solid var(--line); vertical-align:top; }
+tr:last-child td { border-bottom:none; }
+.time { white-space:nowrap; color:var(--muted); font-size:12px; }
+.badge { display:inline-block; padding:3px 10px; border-radius:30px; font-size:11px; font-weight:600; white-space:nowrap; }
+.b-LOGIN { background:#E1F5EE; color:#1F6E55; }
+.b-LOGOUT { background:#EEF3F9; color:#5F7C9A; }
+.b-RESUME { background:#E3F1FB; color:#2C6E9E; }
+.b-SAVE_CHECK { background:#E6E9FA; color:#3A4A9E; }
+.b-FIX_STATUS { background:#FFF1E0; color:#C97D2E; }
+.b-FIX_TIME { background:#FFF4DC; color:#A86A0B; }
+.arrow { color:var(--muted); }
+.muted { color:var(--muted); font-size:12px; }
+.empty { padding:48px 20px; text-align:center; color:var(--muted); }
+.more { text-align:center; margin-top:14px; }
+.login { position:fixed; inset:0; background:var(--bg); z-index:500; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:16px; overflow-y:auto; }
+.login-footer { text-align:center; color:var(--muted); font-size:12px; margin-top:22px; line-height:1.6; }
+.login.hide { display:none; }
+.box { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:28px; width:360px; max-width:100%; }
+.box h2 { font-size:16px; color:var(--navy); margin-bottom:16px; }
+.box input { width:100%; border:1px solid var(--line); background:var(--bg); color:var(--text); border-radius:10px; padding:10px 12px; font-family:inherit; font-size:14px; margin-bottom:12px; }
+.err { color:#C34A4A; font-size:12px; font-weight:600; min-height:18px; margin-bottom:8px; }
+.denied { display:none; padding:60px 20px; text-align:center; color:var(--muted); }
+#content { display:none; }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="title">📋 บันทึกการใช้งานระบบ <span class="muted">(Audit Log)</span></div>
+  <div class="hdr-right">
+    <span id="userEmail"></span>
+    <a class="btn" href="index.html">← กลับหน้าตรวจสอบ</a>
+    <button class="btn" onclick="doLogout()">ออกจากระบบ</button>
+  </div>
+</header>
+
+<div class="login" id="loginScreen">
+  <div class="box">
+    <h2>🔐 เข้าสู่ระบบ (เฉพาะผู้ดูแล)</h2>
+    <input id="loginEmail" type="email" placeholder="กรุณากรอกอีเมลของคุณ" autocomplete="username">
+    <input id="loginPwd" type="password" placeholder="กรุณากรอกวันเริ่มงาน" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+    <div class="err" id="loginErr"></div>
+    <button class="btn btn-primary" id="btnLogin" style="width:100%;justify-content:center" onclick="doLogin()">เข้าสู่ระบบ</button>
+  </div>
+  <div class="login-footer">
+    <p>ระบบตรวจสอบกล้องวงจรปิดประจำวัน © 2026 | พัฒนาโดย Sarawut.C</p>
+    <p>สำหรับใช้ภายในองค์กรเท่านั้น</p>
+  </div>
+</div>
+
+<div class="denied" id="denied">🚫 บัญชีนี้ไม่มีสิทธิ์ดู Audit Log<br><span class="muted">ต้องเป็นผู้ดูแลที่อยู่ในตาราง admins</span></div>
+
+<div class="main" id="content">
+  <div class="filters">
+    <div class="f"><label>ตั้งแต่วันที่</label><input type="date" id="fFrom"></div>
+    <div class="f"><label>ถึงวันที่</label><input type="date" id="fTo"></div>
+    <div class="f"><label>ผู้ใช้ (อีเมล)</label><input type="text" id="fUser" placeholder="พิมพ์บางส่วนของอีเมล"></div>
+    <div class="f"><label>การกระทำ</label>
+      <select id="fAction">
+        <option value="">ทั้งหมด</option>
+        <option value="LOGIN">🔓 เข้าสู่ระบบ</option>
+        <option value="RESUME">🔄 เปิดระบบ (เซสชันเดิม)</option>
+        <option value="LOGOUT">🚪 ออกจากระบบ</option>
+        <option value="SAVE_CHECK">💾 บันทึกการตรวจ</option>
+        <option value="FIX_STATUS">🔧 เปลี่ยนสถานะแก้ไข</option>
+        <option value="FIX_TIME">🕒 แก้เวลาแก้ไข</option>
+      </select>
+    </div>
+    <button class="btn btn-primary" onclick="search()">🔍 ค้นหา</button>
+    <button class="btn" id="btnCsv" onclick="exportCsv()">📄 Export CSV</button>
+  </div>
+
+  <div class="summary" id="summary"></div>
+  <div class="table-wrap" id="tableWrap"><div class="empty">กำลังโหลด...</div></div>
+  <div class="more" id="moreWrap"></div>
+</div>
+
+<script>
+/* ── ตั้งค่า Supabase (ค่าเดียวกับ index.html) ── */
+var SUPABASE_URL      = 'https://ynoigndgewkqywrqeihr.supabase.co';
+var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlub2lnbmRnZXdrcXl3cnFlaWhyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI4MjA0ODksImV4cCI6MjEwODM5NjQ4OX0.7FEWwWtJUtVAdTKFuI6o7vmHUPIBJ71a-d03CMcZJIY';
+var sb  = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+var BKK = 'Asia/Bangkok';
+var PAGE = 500;
+var rows = [], offset = 0, hasMore = false, _uid = null;
+
+var ACTION_LABEL = {
+  LOGIN:'🔓 เข้าสู่ระบบ', RESUME:'🔄 เปิดระบบ (เซสชันเดิม)', LOGOUT:'🚪 ออกจากระบบ', SAVE_CHECK:'💾 บันทึกการตรวจ',
+  FIX_STATUS:'🔧 เปลี่ยนสถานะแก้ไข', FIX_TIME:'🕒 แก้เวลาแก้ไข'
+};
+
+function esc(s){
+  return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function fmtDT(iso){
+  if(!iso) return '–';
+  var o = {};
+  new Intl.DateTimeFormat('en-GB',{timeZone:BKK,year:'numeric',month:'2-digit',day:'2-digit',
+    hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'})
+    .formatToParts(new Date(iso)).forEach(function(p){ o[p.type]=p.value; });
+  return o.day+'/'+o.month+'/'+o.year+' '+o.hour+':'+o.minute+':'+o.second;
+}
+function dayRange(ymd){
+  var s = new Date(ymd+'T00:00:00+07:00');
+  return [s.toISOString(), new Date(s.getTime()+86400000).toISOString()];
+}
+function bkkDate(offsetDays){
+  return new Intl.DateTimeFormat('en-CA',{timeZone:BKK}).format(new Date(Date.now()+offsetDays*86400000));
+}
+document.getElementById('fFrom').value = bkkDate(-7);
+document.getElementById('fTo').value   = bkkDate(0);
+
+/* ── Auth ── */
+sb.auth.getSession().then(function(r){ onSession(r.data.session); });
+sb.auth.onAuthStateChange(function(ev, session){ setTimeout(function(){ onSession(session); }, 0); });
+
+/* บันทึก RESUME 1 ครั้งต่อแท็บ เมื่อเปิดระบบด้วยเซสชันเดิม (ไม่ได้กรอกรหัสผ่าน) */
+function logResumeOnce(){
+  try{
+    if(sessionStorage.getItem('cctv_log')) return;
+    sessionStorage.setItem('cctv_log','1');
+  }catch(e){ return; }
+  sb.rpc('log_event', {p_action:'RESUME'}).then(function(){}, function(){});
+}
+
+async function onSession(session){
+  var login = document.getElementById('loginScreen');
+  if(!session){
+    _uid = null;
+    login.classList.remove('hide');
+    document.getElementById('content').style.display = 'none';
+    document.getElementById('denied').style.display  = 'none';
+    return;
+  }
+  login.classList.add('hide');
+  document.getElementById('userEmail').textContent = session.user.email || '';
+  if(_uid === session.user.id) return;
+  _uid = session.user.id;
+  logResumeOnce();
+  var r = await sb.rpc('is_admin');
+  if(r.error || !r.data){
+    document.getElementById('denied').style.display  = 'block';
+    document.getElementById('content').style.display = 'none';
+    return;
+  }
+  document.getElementById('denied').style.display  = 'none';
+  document.getElementById('content').style.display = 'block';
+  search();
+}
+
+async function doLogin(){
+  var email = document.getElementById('loginEmail').value.trim();
+  var pwd   = document.getElementById('loginPwd').value;
+  var err   = document.getElementById('loginErr');
+  var btn   = document.getElementById('btnLogin');
+  if(!email || !pwd){ err.textContent = '⚠️ กรุณากรอกอีเมลและรหัสผ่าน'; return; }
+  btn.disabled = true; err.textContent = '';
+  var r = await sb.auth.signInWithPassword({email:email, password:pwd});
+  btn.disabled = false;
+  if(r.error){ err.textContent = '❌ อีเมลหรือรหัสผ่านไม่ถูกต้อง'; return; }
+  document.getElementById('loginPwd').value = '';
+  try{ sessionStorage.setItem('cctv_log','1'); }catch(e){}
+  try { await sb.rpc('log_event', {p_action:'LOGIN'}); } catch(e) {}
+}
+async function doLogout(){
+  try { await sb.rpc('log_event', {p_action:'LOGOUT'}); } catch(e) {}
+  try{ sessionStorage.removeItem('cctv_log'); }catch(e){}
+  sb.auth.signOut();
+}
+
+/* ── ค้นหา ── */
+function buildQuery(){
+  var q = sb.from('audit_log').select('*')
+    .order('at',{ascending:false}).order('id',{ascending:false});
+  var f = document.getElementById('fFrom').value;
+  var t = document.getElementById('fTo').value;
+  var u = document.getElementById('fUser').value.trim();
+  var a = document.getElementById('fAction').value;
+  if(f) q = q.gte('at', dayRange(f)[0]);
+  if(t) q = q.lt('at',  dayRange(t)[1]);
+  if(u) q = q.ilike('user_email', '%'+u+'%');
+  if(a) q = q.eq('action', a);
+  return q;
+}
+
+async function search(){
+  rows = []; offset = 0;
+  document.getElementById('tableWrap').innerHTML = '<div class="empty">กำลังโหลด...</div>';
+  await loadPage();
+}
+async function loadPage(){
+  var r = await buildQuery().range(offset, offset+PAGE-1);
+  if(r.error){
+    document.getElementById('tableWrap').innerHTML = '<div class="empty" style="color:#C34A4A">❌ '+esc(r.error.message)+'</div>';
+    return;
+  }
+  rows = rows.concat(r.data);
+  hasMore = r.data.length === PAGE;
+  offset += r.data.length;
+  render();
+}
+
+function describe(r){
+  var o = r.old_value || {}, n = r.new_value || {};
+  if(r.action === 'FIX_STATUS')
+    return esc(o.fix_status||'–')+' <span class="arrow">→</span> <b>'+esc(n.fix_status||'–')+'</b>'
+      + '<div class="muted">เวลาแก้ไข: '+esc(fmtDT(n.fix_at))+'</div>';
+  if(r.action === 'FIX_TIME')
+    return esc(fmtDT(o.fix_at))+' <span class="arrow">→</span> <b>'+esc(fmtDT(n.fix_at))+'</b>';
+  return esc(r.detail || '');
+}
+function describeText(r){
+  var o = r.old_value || {}, n = r.new_value || {};
+  if(r.action === 'FIX_STATUS') return (o.fix_status||'-')+' -> '+(n.fix_status||'-')+' (เวลา '+fmtDT(n.fix_at)+')';
+  if(r.action === 'FIX_TIME')   return fmtDT(o.fix_at)+' -> '+fmtDT(n.fix_at);
+  return r.detail || '';
+}
+
+function render(){
+  document.getElementById('summary').textContent = 'แสดง '+rows.length+' รายการ'+(hasMore?' (มีรายการเก่ากว่านี้อีก)':'');
+  if(!rows.length){
+    document.getElementById('tableWrap').innerHTML = '<div class="empty">📭 ไม่พบรายการตามเงื่อนไข</div>';
+    document.getElementById('moreWrap').innerHTML = '';
+    return;
+  }
+  var h = '<table><thead><tr><th>วัน/เวลา</th><th>ผู้ใช้</th><th>การกระทำ</th><th>กล้อง</th><th>รายละเอียด</th><th>IP</th></tr></thead><tbody>';
+  rows.forEach(function(r){
+    h += '<tr>'
+      + '<td class="time">'+esc(fmtDT(r.at))+'</td>'
+      + '<td>'+esc(r.user_email||'ระบบ')+(r.session_id?'<div class="muted">เซสชัน …'+esc(String(r.session_id).slice(-6))+'</div>':'')+'</td>'
+      + '<td><span class="badge b-'+esc(r.action)+'">'+esc(ACTION_LABEL[r.action]||r.action)+'</span></td>'
+      + '<td>'+esc(r.target||'–')+'</td>'
+      + '<td>'+describe(r)+'</td>'
+      + '<td class="muted">'+esc(r.ip||'–')+'</td>'
+      + '</tr>';
+  });
+  h += '</tbody></table>';
+  document.getElementById('tableWrap').innerHTML = h;
+  document.getElementById('moreWrap').innerHTML = hasMore
+    ? '<button class="btn" onclick="loadPage()">โหลดเพิ่ม</button>' : '';
+}
+
+/* ── Export CSV (ตามตัวกรองที่เลือก ดึงครบทุกหน้า) ── */
+async function exportCsv(){
+  var btn = document.getElementById('btnCsv');
+  btn.disabled = true;
+  var all = [], from = 0, STEP = 1000;
+  while(true){
+    var r = await buildQuery().range(from, from+STEP-1);
+    if(r.error){ alert('Export ล้มเหลว: '+r.error.message); btn.disabled = false; return; }
+    all = all.concat(r.data);
+    if(r.data.length < STEP) break;
+    from += STEP;
+  }
+  btn.disabled = false;
+  if(!all.length){ alert('ไม่มีข้อมูลให้ Export'); return; }
+  function q(v){ return '"'+String(v==null?'':v).replace(/"/g,'""')+'"'; }
+  var csv = '\uFEFF' + ['วัน/เวลา','ผู้ใช้','เซสชัน','การกระทำ','กล้อง','รายละเอียด','IP'].map(q).join(',') + '\r\n';
+  all.forEach(function(r){
+    csv += [fmtDT(r.at), r.user_email||'ระบบ', r.session_id?String(r.session_id).slice(-6):'', ACTION_LABEL[r.action]||r.action, r.target||'', describeText(r), r.ip||''].map(q).join(',') + '\r\n';
+  });
+  var url = URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));
+  var a = document.createElement('a');
+  a.href = url; a.download = 'CCTV_AuditLog_'+bkkDate(0)+'.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+</script>
+</body>
+</html>
