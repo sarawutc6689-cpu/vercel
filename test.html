@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>TokaiSolidtire System - ระบบบริหารจัดการองค์กร</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme:dark;
+  --void:#050506; --glass:rgba(14,14,17,.78);
+  --red:#e8141f; --red-hot:#ff3144; --red-deep:#5a0a10;
+  --text:#f4f2ef; --muted:#9a9aa2; --line:rgba(255,255,255,.1);
+  --n-urgent:#ff3144; --n-info:#3aa7ff; --n-warning:#ffb020; --n-success:#2fd47a;
+  --font:'Chakra Petch','Kanit',sans-serif; --mono:'IBM Plex Mono',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{font-family:var(--font);background:var(--void);color:var(--text);line-height:1.6;min-height:100vh;overflow-x:hidden;position:relative;padding-bottom:env(safe-area-inset-bottom,0px)}
+h1,h2,h3,h4{font-weight:600}
+.container{max-width:1200px;margin:0 auto;padding:0 20px;position:relative;z-index:10}
+
+/* background fx */
+.fx{position:fixed;inset:0;pointer-events:none;z-index:0}
+.glow{background:radial-gradient(700px 700px at 85% 15%,rgba(232,20,31,.2),transparent 62%),radial-gradient(600px 500px at 5% 90%,rgba(232,20,31,.1),transparent 65%)}
+.aurora{inset:auto;right:-20%;top:-10%;width:90vmin;height:90vmin;border-radius:50%;filter:blur(60px);opacity:.55;
+  background:conic-gradient(from 0deg,transparent,rgba(232,20,31,.35),transparent 30%,rgba(255,49,68,.25),transparent 62%);animation:spin 16s linear infinite}
+#net{width:100%;height:100%;z-index:1;opacity:.8}
+.grid{background-image:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);background-size:64px 64px;mask-image:radial-gradient(circle at 60% 20%,#000,transparent 75%)}
+.scan{z-index:50;opacity:.45;background:repeating-linear-gradient(0deg,rgba(255,255,255,.025) 0 1px,transparent 1px 3px);mix-blend-mode:overlay}
+.scan::after{content:"";position:absolute;left:0;right:0;height:140px;top:-140px;background:linear-gradient(180deg,transparent,rgba(255,49,68,.07),transparent);animation:scan 7s linear infinite}
+@keyframes scan{to{transform:translateY(120vh)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes up{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+@keyframes blink{50%{opacity:.25}}
+
+/* header */
+header{position:relative;z-index:10;padding:calc(18px + env(safe-area-inset-top,0px)) 0 18px;margin-bottom:34px;background:var(--glass);backdrop-filter:blur(10px);border-bottom:1px solid rgba(255,49,68,.35);box-shadow:0 8px 40px -16px rgba(232,20,31,.5)}
+header::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:linear-gradient(90deg,transparent,var(--red-hot),transparent);box-shadow:0 0 14px var(--red-hot)}
+.header-row{display:flex;align-items:center;gap:20px}
+.logo-container{display:flex;align-items:center;gap:14px;flex-shrink:0}
+.logo-image{width:54px;height:54px;border-radius:50%;background:#0a0a0c;border:1.5px solid var(--red-hot);display:flex;align-items:center;justify-content:center;overflow:hidden;padding:6px;box-shadow:0 0 18px rgba(255,49,68,.5)}
+.logo-image img{width:100%;height:100%;object-fit:contain}
+.logo-text h1{font-size:1.35rem;letter-spacing:.04em;text-transform:uppercase}
+.logo-text p{font-family:var(--mono);font-size:.62rem;letter-spacing:.2em;color:var(--red-hot);text-shadow:0 0 12px rgba(255,49,68,.6)}
+.search-container{flex:1;position:relative;min-width:0}
+.search-bar{width:100%;padding:12px 20px 12px 46px;background:rgba(5,5,6,.7);border:1px solid var(--line);border-left:2px solid var(--red);color:var(--text);font:400 .98rem var(--font);transition:.25s;clip-path:polygon(0 0,calc(100% - 12px) 0,100% 12px,100% 100%,0 100%)}
+.search-bar::placeholder{color:#5d5d65}
+.search-bar:focus{outline:none;border-color:var(--red-hot);box-shadow:0 0 0 1px var(--red-hot),0 0 24px -4px rgba(255,49,68,.6)}
+.search-icon{position:absolute;left:18px;top:50%;transform:translateY(-50%);color:var(--red-hot);font-size:1rem;z-index:2}
+.user-badge{display:flex;align-items:center;gap:10px;padding:8px 18px 8px 14px;background:rgba(232,20,31,.08);border:1px solid rgba(255,49,68,.4);white-space:nowrap;flex-shrink:0;clip-path:polygon(10px 0,100% 0,calc(100% - 10px) 100%,0 100%);transition:.25s}
+.user-badge:hover{background:rgba(232,20,31,.18)}
+.user-badge i{color:var(--red-hot)}
+.user-badge-info{line-height:1.25}
+.user-greeting{font-family:var(--mono);font-size:.58rem;letter-spacing:.16em;color:var(--muted);display:block}
+.user-name{font-size:.95rem;font-weight:600;display:block}
+
+/* notice board */
+.notice-board-container{position:relative;background:var(--glass);backdrop-filter:blur(8px);border:1px solid var(--line);padding:22px;margin-bottom:34px;animation:up .7s both;
+  clip-path:polygon(0 0,calc(100% - 22px) 0,100% 22px,100% 100%,22px 100%,0 calc(100% - 22px));box-shadow:0 0 50px -14px rgba(232,20,31,.35)}
+.notice-board-container::before{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:linear-gradient(90deg,var(--red-hot),transparent 70%);box-shadow:0 0 12px var(--red-hot)}
+.notice-board-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding-bottom:15px;border-bottom:1px solid var(--line)}
+.notice-board-title{display:flex;align-items:center;gap:12px}
+.notice-board-title h3{font-size:1.3rem}
+.notice-board-icon{background:linear-gradient(135deg,var(--red-hot),var(--red-deep));width:40px;height:40px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);box-shadow:0 0 16px rgba(255,49,68,.6)}
+.count{font-family:var(--mono);font-size:.8rem;padding:2px 10px;border:1px solid var(--red-hot);color:var(--red-hot);background:rgba(232,20,31,.1)}
+.notice-board-btn{background:transparent;color:var(--text);border:1px solid var(--line);padding:8px 16px;font:500 .85rem var(--font);letter-spacing:.04em;cursor:pointer;transition:.25s;display:flex;align-items:center;gap:6px;clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%)}
+.notice-board-btn:hover{border-color:var(--red-hot);color:var(--red-hot);background:rgba(232,20,31,.1)}
+.notice-board-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px}
+.notice-card{background:rgba(255,255,255,.03);padding:18px;border:1px solid var(--line);border-left:3px solid var(--n-info);transition:.3s;position:relative}
+.notice-card:hover{transform:translateY(-4px);background:rgba(255,255,255,.055);box-shadow:0 10px 30px -12px var(--c,var(--n-info))}
+.notice-card.urgent{--c:var(--n-urgent);border-left-color:var(--n-urgent);animation:urgentPulse 2.4s ease-in-out infinite}
+.notice-card.warning{--c:var(--n-warning);border-left-color:var(--n-warning)}
+.notice-card.success{--c:var(--n-success);border-left-color:var(--n-success)}
+.notice-card.info{--c:var(--n-info);border-left-color:var(--n-info)}
+@keyframes urgentPulse{50%{box-shadow:0 0 24px -4px rgba(255,49,68,.55)}}
+.notice-card-header{display:flex;justify-content:space-between;margin-bottom:12px}
+.notice-card-type{font-family:var(--mono);font-size:.64rem;letter-spacing:.14em;padding:3px 10px;font-weight:500;border:1px solid currentColor}
+.notice-card-type.info{color:var(--n-info)}.notice-card-type.urgent{color:var(--n-urgent);background:rgba(255,49,68,.12)}
+.notice-card-type.warning{color:var(--n-warning)}.notice-card-type.success{color:var(--n-success)}
+.notice-card-icon{margin-right:10px;font-size:1.05rem;margin-top:4px}
+.notice-card-icon.info{color:var(--n-info)}.notice-card-icon.urgent{color:var(--n-urgent)}.notice-card-icon.warning{color:var(--n-warning)}.notice-card-icon.success{color:var(--n-success)}
+.notice-card p{color:var(--muted);font-size:.92rem;font-weight:300}
+.empty-notices{grid-column:1/-1;text-align:center;padding:40px 20px;color:var(--muted)}
+.empty-notices i{font-size:3rem;margin-bottom:15px;color:#333}
+
+/* main */
+.main-title{text-align:center;margin-bottom:30px;animation:up .7s .1s both}
+.eyebrow{display:inline-flex;align-items:center;gap:.7rem;font-family:var(--mono);font-size:.68rem;letter-spacing:.28em;color:var(--muted);margin-bottom:.7rem}
+.eyebrow i{width:30px;height:2px;background:var(--red);box-shadow:0 0 10px var(--red-hot)}
+.main-title h2{font-size:clamp(1.6rem,4vw,2.4rem);text-transform:uppercase;margin-bottom:8px;background:linear-gradient(180deg,#fff 25%,var(--red-hot) 130%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.main-title p{color:var(--muted);max-width:600px;margin:0 auto;font-weight:300}
+.departments-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:24px;margin-bottom:50px}
+.department-card{position:relative;background:var(--glass);backdrop-filter:blur(8px);padding:24px;border:1px solid var(--line);cursor:pointer;height:100%;display:flex;flex-direction:column;transition:.3s;animation:up .7s both;
+  clip-path:polygon(0 0,calc(100% - 20px) 0,100% 20px,100% 100%,0 100%)}
+.department-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,var(--red-hot),var(--red-deep));box-shadow:0 0 12px var(--red-hot)}
+.department-card::after{content:"";position:absolute;inset:0;background:radial-gradient(260px 160px at var(--mx,50%) var(--my,0%),rgba(255,49,68,.16),transparent 70%);opacity:0;transition:opacity .3s;pointer-events:none}
+.department-card:hover{transform:translateY(-6px);border-color:rgba(255,49,68,.55);box-shadow:0 16px 40px -14px rgba(232,20,31,.6)}
+.department-card:hover::after{opacity:1}
+.card-header{display:flex;align-items:center;margin-bottom:18px}
+.card-icon{width:58px;height:58px;display:flex;align-items:center;justify-content:center;margin-right:15px;font-size:1.6rem;color:#fff;flex-shrink:0;background:linear-gradient(135deg,var(--red-hot),var(--red-deep));clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);filter:drop-shadow(0 0 10px rgba(255,49,68,.55))}
+.card-title h3{font-size:1.12rem;margin-bottom:4px;line-height:1.3}
+.card-title p{font-size:.85rem;color:var(--muted);font-weight:300}
+.card-description{margin-bottom:20px;flex-grow:1;color:var(--muted);font-size:.9rem;font-weight:300}
+.card-footer{display:flex;justify-content:space-between;align-items:center;margin-top:auto}
+.visit-btn{position:relative;overflow:hidden;background:linear-gradient(100deg,var(--red),var(--red-hot));color:#fff;border:none;padding:10px 20px;font:500 .88rem var(--font);letter-spacing:.06em;cursor:pointer;display:flex;align-items:center;gap:8px;clip-path:polygon(10px 0,100% 0,calc(100% - 10px) 100%,0 100%);transition:.25s}
+.visit-btn::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.5) 50%,transparent 65%);transform:translateX(-120%);transition:transform .6s}
+.department-card:hover .visit-btn::after{transform:translateX(120%)}
+.visit-btn:focus-visible{outline:2px solid #fff;outline-offset:3px}
+.external-link{color:var(--red-hot);font-size:1.1rem;transition:.25s}.external-link:hover{color:#fff;text-shadow:0 0 12px var(--red-hot)}
+.no-results{text-align:center;padding:40px;grid-column:1/-1;color:var(--muted)}
+.no-results i{font-size:3rem;margin-bottom:15px;color:#333}
+
+footer{position:relative;z-index:10;background:var(--glass);backdrop-filter:blur(8px);padding:26px 0;margin-top:30px;border-top:1px solid rgba(255,49,68,.3);text-align:center;color:var(--muted)}
+.footer-content{display:flex;flex-direction:column;align-items:center;gap:12px;font-size:.85rem}
+.footer-logo-container{display:flex;align-items:center;gap:10px}
+.footer-logo{font-weight:700;color:var(--text);letter-spacing:.1em;text-transform:uppercase}
+.footer-logo-img{width:38px;height:38px}.footer-logo-img img{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 0 8px rgba(232,20,31,.5))}
+footer span{font-family:var(--mono);font-size:.62rem;letter-spacing:.14em;color:#5d6068}
+
+@media(max-width:768px){
+  .header-row{flex-wrap:wrap}.logo-container{flex:1 1 100%;justify-content:center}
+  .search-container{flex:1 1 100%;order:3}.user-badge{align-self:center}
+  .notice-board-grid{grid-template-columns:1fr}.departments-grid{grid-template-columns:1fr;gap:18px}
+  .notice-board-header{flex-direction:column;gap:14px;align-items:flex-start}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+<div class="fx glow"></div>
+<div class="fx aurora"></div>
+<div class="fx grid"></div>
+<canvas id="net" class="fx"></canvas>
+<div class="fx scan"></div>
+
+<header>
+  <div class="container">
+    <div class="header-row">
+      <div class="logo-container">
+        <div class="logo-image">
+          <img src="https://mouldmate.vercel.app/logo/logotokai.png" alt="TokaiSolidTire Logo" onerror="this.onerror=null;this.style.display='none';">
+        </div>
+        <div class="logo-text">
+          <h1>TokaiSolidTire System</h1>
+          <p>// ระบบบริหารจัดการองค์กร</p>
+        </div>
+      </div>
+      <div class="search-container">
+        <i class="fas fa-search search-icon"></i>
+        <input type="text" class="search-bar" id="searchInput" placeholder="ค้นหาแผนก...">
+      </div>
+      <div class="user-badge">
+        <i class="fas fa-user"></i>
+        <div class="user-badge-info">
+          <span class="user-greeting">ยินดีต้อนรับ</span>
+          <span class="user-name" id="userNameDisplay">กำลังโหลด...</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="container">
+  <div class="notice-board-container">
+    <div class="notice-board-header">
+      <div class="notice-board-title">
+        <div class="notice-board-icon"><i class="fas fa-bullhorn"></i></div>
+        <h3>กระดานประกาศองค์กร</h3>
+        <span id="noticeCount" class="count">0</span>
+      </div>
+      <div class="notice-board-controls">
+        <button class="notice-board-btn" id="toggleNoticesBtn"><i class="fas fa-chevron-down"></i> ซ่อนประกาศ</button>
+      </div>
+    </div>
+    <div class="notice-board-grid" id="noticeBoard"></div>
+  </div>
+
+  <div class="main-title">
+    <div class="eyebrow"><i></i><span>DEPARTMENTS</span><i></i></div>
+    <h2>แผนกในระบบ TokaiSolidTire</h2>
+    <p>เข้าถึงระบบงานของแผนกต่างๆ ได้จากลิงก์ด้านล่างนี้</p>
+  </div>
+
+  <div class="departments-grid" id="departmentsGrid"></div>
+</main>
+
+<footer>
+  <div class="container footer-content">
+    <div class="footer-logo-container">
+      <div class="footer-logo-img">
+        <img src="https://sarawutc6689-cpu.github.io/Mouldmate-HR/logotokai.png" alt="TokaiSolidTire Logo" onerror="this.onerror=null;this.style.display='none';">
+      </div>
+      <div class="footer-logo">TokaiSolidTire System</div>
+    </div>
+    <p>© 2026 ระบบบริหารจัดการองค์กรครบวงจร | ออกแบบเพื่อความสะดวกและประสิทธิภาพ</p>
+    <span>DEVELOPED BY SARAWUT.C</span>
+  </div>
+</footer>
+
+<script>
+  const SHEET_ID = '1xadpjbQOM4DlpcAjQNuIgdVzLFdPI32xnGCRDMHZylw';
+
+  function loadUserName() {
+    const name = localStorage.getItem('userName') || '';
+    document.getElementById('userNameDisplay').textContent = name || 'ไม่พบข้อมูล';
+  }
+
+  const departments = [
+    { id:1, name:"แผนกซ่อมบำรุงและไฟฟ้า",description:"ดูแลการซ่อมบำรุงอุปกรณ์ เครื่องจักร และระบบไฟฟ้าทั้งภายในและภายนอกองค์กร", url:"https://sites.google.com/view/mouldmatema",icon:"fas fa-tools",       iconClass:"maintenance" },
+    { id:2, name:"แผนกเทคโนโลยีสารสนเทศ",description:"จัดการระบบไอที ดูแลเครือข่าย พัฒนาซอฟต์แวร์ และให้การสนับสนุนด้านเทคโนโลยี",url:"https://mouldmate.vercel.app/IT/Home.html",icon:"fas fa-laptop-code", iconClass:"it" },
+    { id:3, name:"ฝ่ายทรัพยากรบุคคลและธุรการ",description:"บริหารงานบุคคล ดูแลสวัสดิการ พัฒนาบุคลากร และงานธุรการทั่วไป",url:"https://mouldmate.vercel.app/HR/Main.html",icon:"fas fa-users",iconClass:"hr" },
+    { id:4, name:"ฝ่ายซัพพลายเชนและโลจิสติก",description:"รับ-ส่งพัสดุเข้าโรงงาน",url:"https://mouldmate.vercel.app/SC/Home.html",icon:"fas fa-pallet",iconClass:"supplychain" },
+    { id:5, name:"ฝ่ายบัญชีและการเงิน", description:"ค้นหารหัสทรัพย์สิน เบิกเงินส่วนย่อย", url:"https://sarawutc6689-cpu.github.io/Mouldmate-Acc/Home.html", icon:"fas fa-file-invoice-dollar", iconClass:"accounting" }
+  ];
+
+  const announcements = [
+    { id:1, title:"ระบบอัปเดตล่าสุด",                      content:"เพิ่มความเร็วในการเข้าถึงข้อมูล 30% และเพิ่มฟังก์ชันการทำงานใหม่",                                                                                   type:"info",    icon:"fas fa-rocket" },
+    { id:2, title:"นโยบายความปลอดภัยใหม่",                 content:"โปรดเปลี่ยนรหัสผ่านทุก 90 วันเพื่อความปลอดภัยของข้อมูลองค์กร",                                                                                         type:"warning", icon:"fas fa-shield-alt" },
+    { id:3, title:"ระบบแจ้งปัญหาผ่านช่องทางใหม่",          content:"แจ้งปัญหาได้ตลอด 24 ชม. ผ่านระบบออนไลน์และแอปพลิเคชันมือถือ",                                                                                           type:"success", icon:"fas fa-robot" },
+    { id:4, title:"ซ่อมบำรุงระบบ Helpdesk ประจำเดือน",    content:"วันที่ 25 ของทุกเดือน เวลา 20:00-00:00 น. ระบบอาจหยุดให้บริการชั่วคราว",                                                                                  type:"warning", icon:"fas fa-tools" },
+    { id:5, title:"รายงานประสิทธิภาพองค์กร",               content:"ประสิทธิภาพองค์กรเพิ่มขึ้น 10% ในเดือนที่ผ่านมา",                                                                                                           type:"success", icon:"fas fa-chart-line" },
+    { id:6, title:"ประกาศด่วน! ระบบ Helpdesk สำรองข้อมูล",content:"จะมีทดสอบระบบการสำรองข้อมูลทั้งหมดในวันที่ 31 มกราคม 2026 เวลา 21:00 น. อาจส่งผลกระทบต่อการใช้งาน",                                                         type:"urgent",  icon:"fas fa-exclamation-triangle" }
+  ];
+
+  function getTypeLabel(type) {
+    return { info:'ข้อมูล', urgent:'ด่วน', warning:'เตือน', success:'สำเร็จ' }[type] || type;
+  }
+
+  function createNoticeCard(n) {
+    return `
+      <div class="notice-card ${n.type}">
+        <div class="notice-card-header">
+          <span class="notice-card-type ${n.type}">${getTypeLabel(n.type)}</span>
+        </div>
+        <div class="notice-card-content">
+          <div style="display:flex;align-items:flex-start;margin-bottom:10px;">
+            <i class="${n.icon} notice-card-icon ${n.type}"></i>
+            <h4 style="margin:0;font-size:1.05rem;">${n.title}</h4>
+          </div>
+          <p style="margin-left:30px;">${n.content}</p>
+        </div>
+      </div>`;
+  }
+
+  function renderNotices(arr) {
+    document.getElementById('noticeCount').textContent = arr.length;
+    const board = document.getElementById('noticeBoard');
+    if (!arr.length) {
+      board.innerHTML = `<div class="empty-notices"><i class="far fa-bell-slash"></i><h3>ไม่มีประกาศในขณะนี้</h3><p>เมื่อมีประกาศใหม่จะปรากฏที่นี่</p></div>`;
+      return;
+    }
+    const order = { urgent:0, warning:1, info:2, success:3 };
+    board.innerHTML = [...arr].sort((a,b) => order[a.type] - order[b.type]).map(createNoticeCard).join('');
+  }
+
+  function createDepartmentCard(dept, i) {
+    return `
+      <div class="department-card" data-dept-id="${dept.id}" style="animation-delay:${.1 + i*.08}s">
+        <div class="card-header">
+          <div class="card-icon ${dept.iconClass}"><i class="${dept.icon}"></i></div>
+          <div class="card-title">
+            <h3>${dept.name}</h3>
+            <p>${dept.description}</p>
+          </div>
+        </div>
+        <div class="card-description">เข้าสู่ระบบงานของแผนกเพื่อบริหารจัดการงานด้าน${dept.name.split(' ')[0]}</div>
+        <div class="card-footer">
+          <button class="visit-btn" onclick="window.open('${dept.url}','_blank')">
+            <i class="fas fa-external-link-alt"></i> เข้าสู่ระบบ
+          </button>
+          <a href="${dept.url}" target="_blank" class="external-link"><i class="fas fa-external-link-alt"></i></a>
+        </div>
+      </div>`;
+  }
+
+  function renderDepartments(arr) {
+    const grid = document.getElementById('departmentsGrid');
+    if (!arr.length) {
+      grid.innerHTML = `<div class="no-results"><i class="fas fa-search"></i><h3>ไม่พบแผนกที่คุณค้นหา</h3><p>ลองค้นหาด้วยคำอื่นหรือดูแผนกทั้งหมด</p></div>`;
+      return;
+    }
+    grid.innerHTML = arr.map(createDepartmentCard).join('');
+  }
+
+  function searchDepartments() {
+    const q = document.getElementById('searchInput').value.toLowerCase();
+    renderDepartments(q ? departments.filter(d => d.name.toLowerCase().includes(q) || d.description.toLowerCase().includes(q)) : departments);
+  }
+
+  function toggleNoticesVisibility() {
+    const board = document.getElementById('noticeBoard');
+    const btn   = document.getElementById('toggleNoticesBtn');
+    const hidden = board.style.display === 'none';
+    board.style.display = hidden ? 'grid' : 'none';
+    btn.innerHTML = hidden
+      ? '<i class="fas fa-chevron-down"></i> ซ่อนประกาศ'
+      : '<i class="fas fa-chevron-up"></i> แสดงประกาศ';
+  }
+
+  function init() {
+    loadUserName();
+    renderNotices(announcements);
+    renderDepartments(departments);
+    document.getElementById('searchInput').addEventListener('input', searchDepartments);
+    document.getElementById('searchInput').addEventListener('keyup', e => { if (e.key === 'Enter') searchDepartments(); });
+    document.getElementById('toggleNoticesBtn').addEventListener('click', toggleNoticesVisibility);
+    // spotlight glow follows pointer inside each department card
+    document.getElementById('departmentsGrid').addEventListener('pointermove', function(e){
+      const c = e.target.closest('.department-card'); if(!c) return;
+      const r = c.getBoundingClientRect();
+      c.style.setProperty('--mx', (e.clientX - r.left) + 'px');
+      c.style.setProperty('--my', (e.clientY - r.top) + 'px');
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', init);
+
+  /* particle network background (visual only) */
+  (function(){
+    var cv=document.getElementById('net'),x=cv.getContext('2d'),P=[],W,H,M={x:-999,y:-999},
+        rm=matchMedia('(prefers-reduced-motion:reduce)').matches;
+    function rs(){W=cv.width=innerWidth;H=cv.height=innerHeight;}rs();addEventListener('resize',rs);
+    addEventListener('pointermove',function(e){M.x=e.clientX;M.y=e.clientY;});
+    for(var j=0;j<Math.min(80,innerWidth/14);j++)P.push({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.5,vy:(Math.random()-.5)*.5});
+    function d(){x.clearRect(0,0,W,H);
+      P.forEach(function(p,a){p.x+=p.vx;p.y+=p.vy;if(p.x<0||p.x>W)p.vx*=-1;if(p.y<0||p.y>H)p.vy*=-1;
+        x.fillStyle='rgba(255,49,68,.85)';x.fillRect(p.x,p.y,2,2);
+        for(var b=a+1;b<P.length;b++){var q=P[b],dx=p.x-q.x,dy=p.y-q.y,dd=dx*dx+dy*dy;
+          if(dd<14000){x.strokeStyle='rgba(232,20,31,'+(.28*(1-dd/14000))+')';x.beginPath();x.moveTo(p.x,p.y);x.lineTo(q.x,q.y);x.stroke();}}
+        var mx=p.x-M.x,my=p.y-M.y,md=mx*mx+my*my;
+        if(md<30000){x.strokeStyle='rgba(255,255,255,'+(.45*(1-md/30000))+')';x.beginPath();x.moveTo(p.x,p.y);x.lineTo(M.x,M.y);x.stroke();}});
+      if(!rm)requestAnimationFrame(d);}
+    d();
+  })();
+</script>
+</body>
+</html>
