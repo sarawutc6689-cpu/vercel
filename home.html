@@ -1,486 +1,525 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TokaiSolidtire System - ระบบบริหารจัดการองค์กร</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&family=Sarabun:wght@300;400;500&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary-blue: #1a73e8;
-            --dark-blue: #0d47a1;
-            --light-blue: #e8f0fe;
-            --gray-bg: #f5f7fa;
-            --text-dark: #202124;
-            --text-light: #5f6368;
-            --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-            --card-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.12);
-            --border-radius: 12px;
-            --transition: all 0.3s ease;
-            --notice-urgent: #ff5252;
-            --notice-info: #2196f3;
-            --notice-warning: #ff9800;
-            --notice-success: #4caf50;
-        }
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>MOULDMATE · TOKAI TIRE &amp; TRACK</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Orbitron:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<style>
+  :root{
+    --void:       #050507;
+    --carbon:     #0d0d11;
+    --carbon-lt:  #16161c;
+    --steel:      #2a2a32;
+    --steel-lt:   #5a5a68;
+    --tread-red:  #e01e2b;
+    --red-glow:   #ff2d3f;
+    --red-neon:   #ff0040;
+    --red-dim:    #7a0f18;
+    --paper:      #f5f4f2;
+    --paper-dim:  #9a9aa8;
+    --cyan:       #00e5ff;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--void);
+    color:var(--paper);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    overflow-x:hidden;
+    position:relative;
+  }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+  /* ── AMBIENT BACKGROUND ── */
+  .bg-void{position:fixed;inset:0;z-index:0;background:radial-gradient(circle at 50% 50%, #0a0a10 0%, #050507 100%);}
+  .bg-glow{
+    position:fixed;inset:0;z-index:0;pointer-events:none;
+    background:
+      radial-gradient(800px 800px at 78% 38%, rgba(224,30,43,0.28), transparent 60%),
+      radial-gradient(600px 600px at 15% 85%, rgba(224,30,43,0.14), transparent 65%);
+    animation:glowPulse 6s ease-in-out infinite;
+  }
+  @keyframes glowPulse{
+    0%,100%{opacity:.7;}
+    50%{opacity:1;}
+  }
+  .bg-blue{
+    position:fixed; inset:0; z-index:0; pointer-events:none;
+    background:
+      radial-gradient(700px 700px at 15% 25%, rgba(0,229,255,0.16), transparent 60%),
+      radial-gradient(500px 500px at 85% 80%, rgba(0,229,255,0.10), transparent 65%);
+    animation:bluePulse 5s ease-in-out infinite;
+  }
+  @keyframes bluePulse{
+    0%,100%{opacity:.3;}
+    50%{opacity:1;}
+  }
+  .bg-grid{
+    position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.5;
+    background-image:
+      linear-gradient(rgba(224,30,43,.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(224,30,43,.06) 1px, transparent 1px);
+    background-size:48px 48px;
+    mask-image:radial-gradient(circle at 60% 45%, black 0%, transparent 75%);
+  }
+  /* scanline overlay */
+  .bg-scanlines{
+    position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.08;
+    background:repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,0,64,.4) 3px);
+    animation:scanMove 8s linear infinite;
+  }
+  @keyframes scanMove{ from{transform:translateY(0);} to{transform:translateY(4px);} }
 
-        body {
-            font-family: 'Sarabun', sans-serif;
-            background-color: var(--gray-bg);
-            color: var(--text-dark);
-            line-height: 1.6;
-        }
+  /* tread-pattern strip drifting along bottom */
+  .bg-tread{
+    position:fixed; left:-10%; bottom:-40px; width:120%; height:160px;
+    z-index:0; pointer-events:none; opacity:.7;
+  }
+  .bg-tread svg{width:200%;height:100%;animation:treadDrift 30s linear infinite;}
+  @keyframes treadDrift{ from{transform:translateX(0);} to{transform:translateX(-50%);} }
 
-        h1, h2, h3, h4 { font-family: 'Kanit', sans-serif; font-weight: 500; }
+  /* ── TOP BAR ── */
+  .topbar{
+    position:relative; z-index:10;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:1.4rem 5%;
+    border-bottom:1px solid rgba(224,30,43,.25);
+    background:rgba(5,5,7,.6);
+    backdrop-filter:blur(12px);
+  }
+  .brand{display:flex;align-items:center;gap:.9rem;}
+  .brand img{height:42px;width:auto;display:block;filter:drop-shadow(0 0 18px rgba(224,30,43,.6));}
+  .brand-text{display:flex;flex-direction:column;line-height:1.15;}
+  .brand-text b{
+    font-family:'Orbitron',sans-serif;font-weight:800;font-size:1.05rem;
+    letter-spacing:.12em; color:var(--paper);
+    text-shadow:0 0 14px rgba(224,30,43,.5);
+  }
+  .brand-text span{
+    font-family:'IBM Plex Mono',monospace; font-size:.6rem;
+    letter-spacing:.22em; color:var(--tread-red); text-transform:uppercase;
+  }
+  .status-pill{
+    display:flex; align-items:center; gap:.6rem;
+    font-family:'IBM Plex Mono',monospace; font-size:.68rem;
+    letter-spacing:.12em; color:var(--paper-dim);
+    border:1px solid rgba(224,30,43,.4);
+    border-radius:4px; padding:.5rem 1rem .5rem .8rem;
+    background:rgba(224,30,43,.06);
+    box-shadow:inset 0 0 12px rgba(224,30,43,.1), 0 0 20px rgba(224,30,43,.12);
+  }
+  .dot-live{
+    width:6px;height:6px;border-radius:50%;background:var(--red-glow);
+    box-shadow:0 0 10px 3px rgba(255,45,63,.85);
+    animation:pulseDot 1.5s ease-in-out infinite;
+  }
+  @keyframes pulseDot{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.3;transform:scale(.8);}}
+  #clock{color:var(--paper); text-shadow:0 0 8px rgba(224,30,43,.6);}
 
-        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+  /* ── NEWS TICKER ── */
+  .ticker{
+    position:relative; z-index:10;
+    display:flex; align-items:center;
+    background:linear-gradient(90deg, rgba(224,30,43,.12), rgba(13,13,17,.9) 20%);
+    border-bottom:1px solid rgba(224,30,43,.35);
+    overflow:hidden;
+    height:40px;
+    box-shadow:0 4px 24px rgba(224,30,43,.15);
+  }
+  .ticker-tag{
+    flex:none;
+    display:flex; align-items:center; gap:.5rem;
+    height:100%;
+    padding:0 1.3rem;
+    background:linear-gradient(135deg, var(--tread-red), #b01020);
+    font-family:'Orbitron',sans-serif;
+    font-size:.64rem; font-weight:700; letter-spacing:.18em;
+    color:#fff; text-transform:uppercase;
+    clip-path:polygon(0 0,100% 0,88% 100%,0% 100%);
+    padding-right:2rem;
+    box-shadow:0 0 24px rgba(224,30,43,.5);
+  }
+  .ticker-tag .dot-live{margin-right:.15rem;background:#fff;box-shadow:0 0 10px #fff;}
+  .ticker-track-wrap{
+    flex:1; overflow:hidden; height:100%; position:relative;
+    mask-image:linear-gradient(90deg, transparent 0, black 3%, black 97%, transparent 100%);
+  }
+  .ticker-track{
+    display:flex; align-items:center; gap:0;
+    white-space:nowrap; height:100%;
+    animation:tickerScroll 32s linear infinite;
+    width:max-content;
+  }
+  .ticker-track:hover{animation-play-state:paused;}
+  @keyframes tickerScroll{
+    from{transform:translateX(0);}
+    to{transform:translateX(-50%);}
+  }
+  .ticker-item{
+    display:inline-flex; align-items:center; gap:.6rem;
+    padding:0 2.2rem;
+    font-family:'Inter',sans-serif; font-size:.78rem; font-weight:300;
+    color:var(--paper-dim); letter-spacing:.01em;
+  }
+  .ticker-item b{color:var(--paper); font-weight:500; text-shadow:0 0 8px rgba(224,30,43,.4);}
+  .ticker-sep{color:var(--tread-red); font-size:.7rem; text-shadow:0 0 10px var(--red-glow);}
+  @media(max-width:520px){
+    .ticker-tag span.tag-label{display:none;}
+    .ticker-tag{padding:0 .8rem 0 .8rem;}
+  }
 
-        /* Header */
-        header {
-            background: linear-gradient(135deg, var(--primary-blue), var(--dark-blue));
-            color: white;
-            padding: 20px 0;
-            border-bottom-left-radius: 20px;
-            border-bottom-right-radius: 20px;
-            box-shadow: 0 4px 12px rgba(13, 71, 161, 0.2);
-            margin-bottom: 40px;
-        }
+  /* ── MAIN LAYOUT ── */
+  .main{
+    position:relative; z-index:10;
+    display:grid; grid-template-columns:1.05fr .95fr;
+    align-items:center; gap:2rem;
+    min-height:calc(100vh - 88px);
+    padding:2rem 5% 3rem;
+  }
 
-        /* แถวเดียว: logo | search | user badge */
-        .header-row {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
+  /* ── LEFT: TEXT ── */
+  .eyebrow{
+    display:flex; align-items:center; gap:.7rem;
+    margin-bottom:1.6rem;
+    animation:riseIn .7s ease both;
+  }
+  .eyebrow .bar{width:32px;height:2px;background:var(--tread-red);box-shadow:0 0 12px var(--red-glow);}
+  .eyebrow span{
+    font-family:'IBM Plex Mono',monospace; font-size:.68rem;
+    letter-spacing:.28em; text-transform:uppercase; color:var(--paper-dim);
+  }
 
-        .logo-container {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            flex-shrink: 0;
-        }
+  h1{
+    font-family:'Orbitron',sans-serif; font-weight:900;
+    font-size:4rem; line-height:1.05; letter-spacing:-.01em;
+    text-transform:uppercase; color:var(--paper);
+    margin-bottom:1.4rem;
+    animation:riseIn .7s .08s both;
+    text-shadow:0 0 30px rgba(224,30,43,.35);
+  }
+  h1 .accent{
+    color:var(--tread-red);
+    text-shadow:0 0 20px var(--red-glow), 0 0 40px rgba(224,30,43,.6);
+  }
 
-        .logo-image {
-            width: 56px; height: 56px;
-            border-radius: 50%;
-            background: white;
-            display: flex; align-items: center; justify-content: center;
-            overflow: hidden; padding: 5px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
+  .subhead{
+    font-size:1rem; line-height:1.85; font-weight:300;
+    color:var(--paper-dim); max-width:460px;
+    margin-bottom:2.3rem;
+    animation:riseIn .7s .14s both;
+  }
 
-        .logo-image img { width: 100%; height: 100%; object-fit: contain; }
-        .logo-text h1 { font-size: 1.6rem; margin-bottom: 3px; }
-        .logo-text p { font-size: 0.85rem; opacity: 0.9; }
+  .btn-row{display:flex; gap:1rem; flex-wrap:wrap; margin-bottom:2.6rem; animation:riseIn .7s .2s both;}
+  .btn{
+    display:inline-flex; align-items:center; gap:.6rem;
+    padding:1rem 2rem;
+    font-family:'Orbitron',sans-serif; font-size:.8rem; font-weight:600; letter-spacing:.08em;
+    text-transform:uppercase;
+    text-decoration:none; border-radius:4px;
+    transition:all .3s ease;
+    position:relative;
+    overflow:hidden;
+  }
+  .btn::before{
+    content:'';
+    position:absolute; top:0; left:-100%; width:100%; height:100%;
+    background:linear-gradient(90deg, transparent, rgba(255,255,255,.25), transparent);
+    transition:left .6s ease;
+  }
+  .btn:hover::before{left:100%;}
+  .btn-primary{
+    background:linear-gradient(135deg, var(--tread-red), #a80e1a);
+    color:#fff; border:1px solid var(--red-glow);
+    box-shadow:0 0 20px rgba(224,30,43,.4), inset 0 0 20px rgba(255,255,255,.1);
+  }
+  .btn-primary:hover{
+    box-shadow:0 0 35px rgba(224,30,43,.8), inset 0 0 30px rgba(255,255,255,.15);
+    transform:translateY(-2px);
+  }
+  .btn-ghost{
+    background:transparent; color:var(--paper); border:1px solid rgba(224,30,43,.5);
+    box-shadow:inset 0 0 20px rgba(224,30,43,.06);
+  }
+  .btn-ghost:hover{
+    border-color:var(--red-glow); color:#fff; transform:translateY(-2px);
+    box-shadow:0 0 30px rgba(224,30,43,.4), inset 0 0 20px rgba(224,30,43,.15);
+  }
+  .btn:focus-visible{outline:2px solid var(--red-glow); outline-offset:3px;}
 
-        /* Search ตรงกลาง ยืดเต็มพื้นที่ที่เหลือ */
-        .search-container {
-            flex: 1;
-            position: relative;
-            min-width: 0;
-        }
+  .meta-strip{
+    display:flex; flex-direction:column; gap:.65rem;
+    padding-top:1.6rem; border-top:1px solid rgba(224,30,43,.2);
+    max-width:440px;
+    animation:riseIn .7s .26s both;
+  }
+  .meta-item{
+    display:flex; align-items:center; gap:.7rem;
+    font-size:.8rem; color:var(--paper-dim); font-weight:300;
+  }
+  .meta-item .ico{
+    width:18px; text-align:center; color:var(--tread-red); font-size:.9rem;
+    text-shadow:0 0 10px var(--red-glow);
+  }
 
-        .search-bar {
-            width: 100%;
-            padding: 12px 20px 12px 46px;
-            border: none;
-            border-radius: 50px;
-            font-size: 1rem;
-            font-family: 'Sarabun', sans-serif;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            transition: var(--transition);
-        }
+  /* ── RIGHT: HUD GRAPHIC ── */
+  .hud-wrap{
+    position:relative; display:flex; align-items:center; justify-content:center;
+    animation:riseIn .9s .18s both;
+  }
+  .hud-frame{
+    position:relative; width:min(92%, 480px); aspect-ratio:1/1;
+    filter:drop-shadow(0 0 40px rgba(224,30,43,.3));
+  }
+  .corner{
+    position:absolute; width:30px; height:30px; border:2px solid var(--tread-red);
+    box-shadow:0 0 12px rgba(224,30,43,.6);
+  }
+  .corner.tl{top:-8px;left:-8px;border-right:none;border-bottom:none;}
+  .corner.tr{top:-8px;right:-8px;border-left:none;border-bottom:none;}
+  .corner.bl{bottom:-8px;left:-8px;border-right:none;border-top:none;}
+  .corner.br{bottom:-8px;right:-8px;border-left:none;border-top:none;}
 
-        .search-bar:focus { outline: none; box-shadow: 0 6px 16px rgba(0,0,0,0.15); }
+  .hud-svg{width:100%;height:100%;display:block;}
+  .ring-outer{animation:spin 40s linear infinite;transform-origin:250px 250px;}
+  .ring-sweep{animation:spin 5s linear infinite;transform-origin:250px 250px;}
+  .ring-inner{animation:spinReverse 25s linear infinite;transform-origin:250px 250px;}
+  @keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+  @keyframes spinReverse{from{transform:rotate(360deg);}to{transform:rotate(0deg);}}
 
-        .search-icon {
-            position: absolute;
-            left: 18px; top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-light);
-            font-size: 1.1rem;
-        }
+  .hud-label{
+    font-family:'IBM Plex Mono',monospace; font-size:.62rem; letter-spacing:.14em;
+    fill:var(--paper-dim); text-transform:uppercase;
+  }
+  .hud-label-red{fill:var(--red-glow); filter:drop-shadow(0 0 6px rgba(255,45,63,.8));}
 
-        /* User Badge */
-        .user-badge {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: rgba(255,255,255,0.15);
-            border: 1.5px solid rgba(255,255,255,0.3);
-            padding: 8px 16px;
-            border-radius: 50px;
-            backdrop-filter: blur(4px);
-            transition: var(--transition);
-            white-space: nowrap;
-            flex-shrink: 0;
-        }
+  /* ── ANIM ── */
+  @keyframes riseIn{ from{opacity:0;transform:translateY(20px);} to{opacity:1;transform:translateY(0);} }
 
-        .user-badge:hover { background: rgba(255,255,255,0.22); }
-        .user-badge i { font-size: 0.9rem; opacity: 0.85; }
-        .user-badge-info { line-height: 1.3; }
-        .user-greeting { font-size: 0.72rem; opacity: 0.8; display: block; }
-        .user-name { font-size: 0.95rem; font-weight: 500; font-family: 'Kanit', sans-serif; display: block; }
+  /* ── FOOTER CREDIT ── */
+  .credit{
+    position:relative; z-index:10; text-align:center;
+    font-family:'IBM Plex Mono',monospace; font-size:.62rem; letter-spacing:.18em;
+    color:var(--steel-lt); text-transform:uppercase;
+    padding:1.4rem 5% 1.8rem;
+    border-top:1px solid rgba(224,30,43,.15);
+    background:rgba(5,5,7,.6);
+    backdrop-filter:blur(8px);
+  }
 
-        /* Notice Board */
-        .notice-board-container {
-            background: white;
-            border-radius: var(--border-radius);
-            padding: 20px;
-            margin-bottom: 30px;
-            box-shadow: var(--card-shadow);
-            border-top: 5px solid var(--primary-blue);
-        }
+  /* ── RESPONSIVE ── */
+  @media(max-width:980px){
+    .main{grid-template-columns:1fr; padding-top:1rem;}
+    .hud-wrap{order:-1; margin-bottom:1rem;}
+    .hud-frame{width:min(70%,340px);}
+    h1{font-size:2.8rem;}
+  }
+  @media(max-width:520px){
+    h1{font-size:2rem;}
+    .btn-row{flex-direction:column; align-items:stretch;}
+    .btn{justify-content:center;}
+    .topbar{padding:1.1rem 6%;}
+    .status-pill span#clock{display:none;}
+  }
 
-        .notice-board-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid #eee;
-        }
-
-        .notice-board-title { display: flex; align-items: center; gap: 10px; }
-        .notice-board-title h3 { font-size: 1.4rem; color: var(--text-dark); }
-
-        .notice-board-icon {
-            background-color: var(--primary-blue);
-            color: white;
-            width: 40px; height: 40px;
-            border-radius: 8px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1.2rem;
-        }
-
-        .notice-board-btn {
-            background-color: var(--light-blue);
-            color: var(--primary-blue);
-            border: none;
-            padding: 8px 15px;
-            border-radius: 6px;
-            font-family: 'Kanit', sans-serif;
-            cursor: pointer;
-            transition: var(--transition);
-            display: flex; align-items: center; gap: 5px;
-        }
-
-        .notice-board-btn:hover { background-color: #dce8ff; }
-
-        .notice-board-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
-        }
-
-        .notice-card {
-            background: white;
-            border-radius: var(--border-radius);
-            padding: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            border-left: 4px solid var(--notice-info);
-            transition: var(--transition);
-            border: 1px solid #eee;
-            border-left-width: 4px;
-        }
-
-        .notice-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); transform: translateY(-3px); }
-        .notice-card.urgent  { border-left-color: var(--notice-urgent); }
-        .notice-card.warning { border-left-color: var(--notice-warning); }
-        .notice-card.success { border-left-color: var(--notice-success); }
-        .notice-card.info    { border-left-color: var(--notice-info); }
-
-        .notice-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
-
-        .notice-card-type {
-            font-size: 0.8rem; padding: 4px 10px;
-            border-radius: 20px; font-weight: 500; font-family: 'Kanit', sans-serif;
-        }
-
-        .notice-card-type.info    { background-color: rgba(33,150,243,0.1); color: var(--notice-info); }
-        .notice-card-type.urgent  { background-color: rgba(255,82,82,0.1);  color: var(--notice-urgent); }
-        .notice-card-type.warning { background-color: rgba(255,152,0,0.1);  color: var(--notice-warning); }
-        .notice-card-type.success { background-color: rgba(76,175,80,0.1);  color: var(--notice-success); }
-
-        .notice-card-icon { margin-right: 10px; font-size: 1.1rem; }
-        .notice-card-icon.info    { color: var(--notice-info); }
-        .notice-card-icon.urgent  { color: var(--notice-urgent); }
-        .notice-card-icon.warning { color: var(--notice-warning); }
-        .notice-card-icon.success { color: var(--notice-success); }
-
-        .empty-notices { grid-column: 1 / -1; text-align: center; padding: 40px 20px; color: var(--text-light); }
-        .empty-notices i { font-size: 3rem; margin-bottom: 15px; color: #ddd; }
-
-        /* Main */
-        .main-title { text-align: center; margin-bottom: 30px; color: var(--text-dark); }
-        .main-title h2 { font-size: 2rem; margin-bottom: 10px; }
-        .main-title p { color: var(--text-light); max-width: 600px; margin: 0 auto; }
-
-        .departments-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 25px;
-            margin-bottom: 50px;
-        }
-
-        .department-card {
-            background: white; border-radius: var(--border-radius);
-            padding: 25px; box-shadow: var(--card-shadow);
-            transition: var(--transition); cursor: pointer;
-            border-left: 5px solid var(--primary-blue);
-            height: 100%; display: flex; flex-direction: column;
-        }
-
-        .department-card:hover { transform: translateY(-5px); box-shadow: var(--card-shadow-hover); }
-
-        .card-header { display: flex; align-items: center; margin-bottom: 20px; }
-
-        .card-icon {
-            width: 60px; height: 60px; border-radius: 12px;
-            display: flex; align-items: center; justify-content: center;
-            margin-right: 15px; font-size: 1.8rem; color: white; flex-shrink: 0;
-        }
-
-        .card-icon.maintenance { background: linear-gradient(135deg, #ff6b6b, #ee5a52); }
-        .card-icon.it          { background: linear-gradient(135deg, #4ecdc4, #44a08d); }
-        .card-icon.hr          { background: linear-gradient(135deg, #ffe66d, #ffd166); }
-        .card-icon.vehicle     { background: linear-gradient(135deg, #1a936f, #136f63); }
-        .card-icon.accounting  { background: linear-gradient(135deg, #9d4edd, #6a2c9c); }
-        .card-icon.store       { background: linear-gradient(135deg, #ff9a00, #ff6a00); }
-        .card-icon.supplychain { background: linear-gradient(135deg, #3a86ff, #265eb8); }
-
-        .card-title h3 { font-size: 1.3rem; margin-bottom: 5px; }
-        .card-title p  { font-size: 0.9rem; color: var(--text-light); }
-        .card-description { margin-bottom: 20px; flex-grow: 1; color: var(--text-light); }
-        .card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: auto; }
-
-        .visit-btn {
-            background-color: var(--primary-blue); color: white; border: none;
-            padding: 10px 18px; border-radius: 8px;
-            font-family: 'Kanit', sans-serif; cursor: pointer;
-            transition: var(--transition); display: flex; align-items: center; gap: 8px;
-        }
-
-        .visit-btn:hover { background-color: var(--dark-blue); }
-        .external-link { color: var(--primary-blue); font-size: 1.2rem; }
-
-        /* Footer */
-        footer {
-            background-color: white; padding: 25px 0;
-            margin-top: 30px; border-top: 1px solid #e0e0e0;
-            text-align: center; color: var(--text-light);
-        }
-
-        .footer-content { display: flex; flex-direction: column; align-items: center; gap: 15px; }
-        .footer-logo-container { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-        .footer-logo { font-weight: 600; color: var(--primary-blue); font-size: 1.2rem; }
-        .footer-logo-img { width: 40px; height: 40px; }
-        .footer-logo-img img { width: 100%; height: 100%; object-fit: contain; }
-
-        .no-results { text-align: center; padding: 40px; grid-column: 1 / -1; color: var(--text-light); }
-        .no-results i { font-size: 3rem; margin-bottom: 15px; color: #ccc; }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .header-row { flex-wrap: wrap; }
-            .logo-container { flex: 1 1 100%; justify-content: center; }
-            .search-container { flex: 1 1 100%; order: 3; }
-            .user-badge { align-self: center; }
-            .notice-board-grid { grid-template-columns: 1fr; }
-            .departments-grid { grid-template-columns: 1fr; gap: 20px; }
-            .main-title h2 { font-size: 1.6rem; }
-            .notice-board-header { flex-direction: column; gap: 15px; align-items: flex-start; }
-        }
-    </style>
+  /* ── REDUCED MOTION ── */
+  @media (prefers-reduced-motion: reduce){
+    .bg-tread svg,
+    .ticker-track,
+    .ring-outer,
+    .ring-sweep,
+    .ring-inner,
+    .bg-scanlines{animation:none;}
+    .bg-blue, .bg-glow{animation:none; opacity:.6;}
+  }
+</style>
 </head>
 <body>
-    <header>
-        <div class="container">
-            <div class="header-row">
-                <!-- Logo ซ้าย -->
-                <div class="logo-container">
-                    <div class="logo-image">
-                        <img src="https://mouldmate.vercel.app/logo/logotokai.png" alt="TokaiSolidTire Logo"
-                             onerror="this.onerror=null;this.src='https://via.placeholder.com/60/1a73e8/FFFFFF?text=T';">
-                    </div>
-                    <div class="logo-text">
-                        <h1>TokaiSolidTire System</h1>
-                        <p>ระบบบริหารจัดการองค์กร</p>
-                    </div>
-                </div>
 
-                <!-- Search กลาง -->
-                <div class="search-container">
-                    <i class="fas fa-search search-icon"></i>
-                    <input type="text" class="search-bar" id="searchInput" placeholder="ค้นหาแผนก...">
-                </div>
+<div class="bg-void"></div>
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
+<div class="bg-blue"></div>
+<div class="bg-scanlines"></div>
 
-                <!-- User Badge ขวา -->
-                <div class="user-badge">
-                    <i class="fas fa-user"></i>
-                    <div class="user-badge-info">
-                        <span class="user-greeting">ยินดีต้อนรับ</span>
-                        <span class="user-name" id="userNameDisplay">กำลังโหลด...</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </header>
+<div class="bg-tread">
+  <svg viewBox="0 0 800 160" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <g fill="none" stroke="rgba(224,30,43,0.18)" stroke-width="2.5">
+      <path d="M0,30 L22,80 L0,130"/><path d="M44,30 L66,80 L44,130"/>
+      <path d="M88,30 L110,80 L88,130"/><path d="M132,30 L154,80 L132,130"/>
+      <path d="M176,30 L198,80 L176,130"/><path d="M220,30 L242,80 L220,130"/>
+      <path d="M264,30 L286,80 L264,130"/><path d="M308,30 L330,80 L308,130"/>
+      <path d="M352,30 L374,80 L352,130"/><path d="M396,30 L418,80 L396,130"/>
+      <path d="M440,30 L462,80 L440,130"/><path d="M484,30 L506,80 L484,130"/>
+      <path d="M528,30 L550,80 L528,130"/><path d="M572,30 L594,80 L572,130"/>
+      <path d="M616,30 L638,80 L616,130"/><path d="M660,30 L682,80 L660,130"/>
+      <path d="M704,30 L726,80 L704,130"/><path d="M748,30 L770,80 L748,130"/>
+    </g>
+  </svg>
+</div>
 
-    <main class="container">
-        <!-- Notice Board -->
-        <div class="notice-board-container">
-            <div class="notice-board-header">
-                <div class="notice-board-title">
-                    <div class="notice-board-icon"><i class="fas fa-bullhorn"></i></div>
-                    <h3>กระดานประกาศองค์กร</h3>
-                    <span id="noticeCount" style="background-color:var(--primary-blue);color:white;padding:2px 8px;border-radius:10px;font-size:.9rem;margin-left:10px;">0</span>
-                </div>
-                <div class="notice-board-controls">
-                    <button class="notice-board-btn" id="toggleNoticesBtn">
-                        <i class="fas fa-chevron-down"></i> ซ่อนประกาศ
-                    </button>
-                </div>
-            </div>
-            <div class="notice-board-grid" id="noticeBoard"></div>
-        </div>
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="brand">
+    <img src="PASTE_LOGO_BASE64_HERE" alt="TOKAI TIRE & TRACK"/>
+    <div class="brand-text">
+      <b>MOULDMATE</b>
+      <span>TOKAISOLIDTIRE</span>
+    </div>
+  </div>
+  <div class="status-pill">
+    <span class="dot-live"></span>
+    <span>LIVE</span>
+    <span id="clock">--:--:--</span>
+  </div>
+</div>
 
-        <div class="main-title">
-            <h2>แผนกในระบบ TokaiSolidTire</h2>
-            <p>เข้าถึงระบบงานของแผนกต่างๆ ได้จากลิงก์ด้านล่างนี้</p>
-        </div>
+<!-- NEWS TICKER -->
+<div class="ticker">
+  <div class="ticker-tag">
+    <span class="dot-live"></span>
+    <span class="tag-label">NEWS</span>
+  </div>
+  <div class="ticker-track-wrap">
+    <div class="ticker-track" id="tickerTrack">
+      <span class="ticker-item"><b>อัปเดตระบบ:</b> บันทึก Backup อัตโนมัติทุกวัน</span>
+      <span class="ticker-sep">◆</span>
+      <span class="ticker-item"><b>แจ้งเตือน:</b> ปิดปรับปรุงระบบทุกวันเสาร์ 22:00–24:00 น.</span>
+      <span class="ticker-sep">◆</span>
+      <span class="ticker-item"><b>แม่พิมพ์ชุดใหม่:</b> MM-04 ถึง MM-09 พร้อมประเมินแล้ววันนี้</span>
+      <span class="ticker-sep">◆</span>
+      <span class="ticker-item"><b>ประกาศ:</b> พนักงานใหม่กรุณาลงทะเบียนก่อนเข้าใช้งานระบบ</span>
+      <span class="ticker-sep">◆</span>
+      <span class="ticker-item"><b>มาตรฐาน:</b> ตรวจสอบค่าความเที่ยงตรง ±0.01 มม. ทุกรอบการผลิต</span>
+      <span class="ticker-sep">◆</span>
+    </div>
+  </div>
+</div>
 
-        <div class="departments-grid" id="departmentsGrid"></div>
-    </main>
+<div class="main">
+  <!-- LEFT -->
+  <div class="left-col">
+    <div class="eyebrow">
+      <div class="bar"></div>
+      <span>MOULDMATE · TOKAISOLIDTIRE</span>
+    </div>
 
-    <footer>
-        <div class="container footer-content">
-            <div class="footer-logo-container">
-                <div class="footer-logo-img">
-                    <img src="https://mouldmate.vercel.app/logo/logotokai.png" alt="TokaiSolidTire Logo"
-                         onerror="this.onerror=null;this.src='https://via.placeholder.com/40/1a73e8/FFFFFF?text=T';">
-                </div>
-                <div class="footer-logo">TokaiSolidTire System</div>
-            </div>
-            <p>© 2026 ระบบบริหารจัดการองค์กรครบวงจร | ออกแบบเพื่อความสะดวกและประสิทธิภาพ</p>
-            <span>พัฒนาระบบโดย Sarawut.C</span>
-        </div>
-    </footer>
+    <h1>ยินดีต้อนรับ<br>MOULDMATE<span class="accent"> · HELPDESK</span></h1>
 
-    <script>
-        const SHEET_ID = '1xadpjbQOM4DlpcAjQNuIgdVzLFdPI32xnGCRDMHZylw';
+    <div class="btn-row">
+      <a href="https://mouldmate.vercel.app/" class="btn btn-primary" target="_blank">
+        เข้าสู่ระบบ →
+      </a>
+      <a href="https://sarawutc6689-cpu.github.io/Mouldmate-Estimate/Model1.html" class="btn btn-ghost" target="_blank">
+        แบบสำรวจและประเมิน
+      </a>
+    </div>
 
-        function loadUserName() {
-            // หน้า login เก็บชื่อไว้ใน localStorage key 'userName' (คอลัมน์ E)
-            const name = localStorage.getItem('userName') || '';
-            document.getElementById('userNameDisplay').textContent = name || 'ไม่พบข้อมูล';
-        }
+    <div class="meta-strip">
+      <div class="meta-item"><span class="ico">🔒</span> เฉพาะพนักงานที่ลงทะเบียน</div>
+      <div class="meta-item"><span class="ico">🛡️</span> ระบบความปลอดภัยสูง</div>
+      <div class="meta-item"><span class="ico">📡</span> ติดตามสถานะเรียลไทม์</div>
+    </div>
+  </div>
 
-        const departments = [
-            { id:1, name:"แผนกซ่อมบำรุงและไฟฟ้า",description:"ดูแลการซ่อมบำรุงอุปกรณ์ เครื่องจักร และระบบไฟฟ้าทั้งภายในและภายนอกองค์กร", url:"https://sites.google.com/view/mouldmatema",icon:"fas fa-tools",       iconClass:"maintenance" },
-            { id:2, name:"แผนกเทคโนโลยีสารสนเทศ",description:"จัดการระบบไอที ดูแลเครือข่าย พัฒนาซอฟต์แวร์ และให้การสนับสนุนด้านเทคโนโลยี",url:"https://mouldmate.vercel.app/IT/Home.html",icon:"fas fa-laptop-code", iconClass:"it" },
-            { id:3, name:"ฝ่ายทรัพยากรบุคคลและธุรการ",description:"บริหารงานบุคคล ดูแลสวัสดิการ พัฒนาบุคลากร และงานธุรการทั่วไป",url:"https://mouldmate.vercel.app/HR/Main.html",icon:"fas fa-users",iconClass:"hr" },
-            { id:4, name:"ฝ่ายซัพพลายเชนและโลจิสติก",description:"รับ-ส่งพัสดุเข้าโรงงาน",url:"https://mouldmate.vercel.app/SC/Home.html",icon:"fas fa-pallet",iconClass:"supplychain" },
-            { id:5, name:"ฝ่ายบัญชีและการเงิน", description:"ค้นหารหัสทรัพย์สิน เบิกเงินส่วนย่อย", url:"https://sarawutc6689-cpu.github.io/Mouldmate-Acc/Home.html", icon:"fas fa-file-invoice-dollar", iconClass:"accounting" }
-            
-        ];
+  <!-- RIGHT: HUD -->
+  <div class="hud-wrap">
+    <div class="hud-frame">
+      <div class="corner tl"></div><div class="corner tr"></div>
+      <div class="corner bl"></div><div class="corner br"></div>
 
-        const announcements = [
-            { id:1, title:"ระบบอัปเดตล่าสุด",                      content:"เพิ่มความเร็วในการเข้าถึงข้อมูล 30% และเพิ่มฟังก์ชันการทำงานใหม่",                                                                                   type:"info",    icon:"fas fa-rocket" },
-            { id:2, title:"นโยบายความปลอดภัยใหม่",                 content:"โปรดเปลี่ยนรหัสผ่านทุก 90 วันเพื่อความปลอดภัยของข้อมูลองค์กร",                                                                                         type:"warning", icon:"fas fa-shield-alt" },
-            { id:3, title:"ระบบแจ้งปัญหาผ่านช่องทางใหม่",          content:"แจ้งปัญหาได้ตลอด 24 ชม. ผ่านระบบออนไลน์และแอปพลิเคชันมือถือ",                                                                                           type:"success", icon:"fas fa-robot" },
-            { id:4, title:"ซ่อมบำรุงระบบ Helpdesk ประจำเดือน",    content:"วันที่ 25 ของทุกเดือน เวลา 20:00-00:00 น. ระบบอาจหยุดให้บริการชั่วคราว",                                                                                  type:"warning", icon:"fas fa-tools" },
-            { id:5, title:"รายงานประสิทธิภาพองค์กร",               content:"ประสิทธิภาพองค์กรเพิ่มขึ้น 10% ในเดือนที่ผ่านมา",                                                                                                           type:"success", icon:"fas fa-chart-line" },
-            { id:6, title:"ประกาศด่วน! ระบบ Helpdesk สำรองข้อมูล",content:"จะมีทดสอบระบบการสำรองข้อมูลทั้งหมดในวันที่ 31 มกราคม 2026 เวลา 21:00 น. อาจส่งผลกระทบต่อการใช้งาน",                                                         type:"urgent",  icon:"fas fa-exclamation-triangle" }
-        ];
+      <svg class="hud-svg" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="coreGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#e01e2b" stop-opacity="0.5"/>
+            <stop offset="100%" stop-color="#e01e2b" stop-opacity="0"/>
+          </radialGradient>
+          <linearGradient id="sweepGrad" x1="0" y1="1" x2="0" y2="0">
+            <stop offset="0%" stop-color="#ff2d3f" stop-opacity="0"/>
+            <stop offset="100%" stop-color="#ff2d3f" stop-opacity="1"/>
+          </linearGradient>
+        </defs>
 
-        function getTypeLabel(type) {
-            return { info:'ข้อมูล', urgent:'ด่วน', warning:'เตือน', success:'สำเร็จ' }[type] || type;
-        }
+        <circle cx="250" cy="250" r="140" fill="url(#coreGlow)"/>
 
-        function createNoticeCard(n) {
-            return `
-                <div class="notice-card ${n.type}">
-                    <div class="notice-card-header">
-                        <span class="notice-card-type ${n.type}">${getTypeLabel(n.type)}</span>
-                    </div>
-                    <div class="notice-card-content">
-                        <div style="display:flex;align-items:flex-start;margin-bottom:10px;">
-                            <i class="${n.icon} notice-card-icon ${n.type}"></i>
-                            <h4 style="margin:0;font-size:1.1rem;">${n.title}</h4>
-                        </div>
-                        <p style="margin-left:30px;">${n.content}</p>
-                    </div>
-                </div>`;
-        }
+        <!-- outer dashed measurement ring -->
+        <g class="ring-outer">
+          <circle cx="250" cy="250" r="205" fill="none" stroke="rgba(224,30,43,.35)" stroke-width="1.5" stroke-dasharray="3 8"/>
+          <circle cx="250" cy="250" r="205" fill="none" stroke="rgba(224,30,43,.5)" stroke-width="1" stroke-dasharray="1 2" stroke-dashoffset="40"/>
+        </g>
 
-        function renderNotices(arr) {
-            document.getElementById('noticeCount').textContent = arr.length;
-            const board = document.getElementById('noticeBoard');
-            if (!arr.length) {
-                board.innerHTML = `<div class="empty-notices"><i class="far fa-bell-slash"></i><h3>ไม่มีประกาศในขณะนี้</h3><p>เมื่อมีประกาศใหม่จะปรากฏที่นี่</p></div>`;
-                return;
-            }
-            const order = { urgent:0, warning:1, info:2, success:3 };
-            board.innerHTML = [...arr].sort((a,b) => order[a.type] - order[b.type]).map(createNoticeCard).join('');
-        }
+        <!-- tick marks -->
+        <g stroke="rgba(224,30,43,.7)" stroke-width="1.5">
+          <line x1="250" y1="35" x2="250" y2="55"/>
+          <line x1="250" y1="445" x2="250" y2="465"/>
+          <line x1="35" y1="250" x2="55" y2="250"/>
+          <line x1="445" y1="250" x2="465" y2="250"/>
+        </g>
 
-        function createDepartmentCard(dept) {
-            return `
-                <div class="department-card" data-dept-id="${dept.id}">
-                    <div class="card-header">
-                        <div class="card-icon ${dept.iconClass}"><i class="${dept.icon}"></i></div>
-                        <div class="card-title">
-                            <h3>${dept.name}</h3>
-                            <p>${dept.description}</p>
-                        </div>
-                    </div>
-                    <div class="card-description">เข้าสู่ระบบงานของแผนกเพื่อบริหารจัดการงานด้าน${dept.name.split(' ')[0]}</div>
-                    <div class="card-footer">
-                        <button class="visit-btn" onclick="window.open('${dept.url}','_blank')">
-                            <i class="fas fa-external-link-alt"></i> เข้าสู่ระบบ
-                        </button>
-                        <a href="${dept.url}" target="_blank" class="external-link"><i class="fas fa-external-link-alt"></i></a>
-                    </div>
-                </div>`;
-        }
+        <!-- middle tread ring -->
+        <circle cx="250" cy="250" r="155" fill="none" stroke="rgba(224,30,43,.55)" stroke-width="1.8"/>
+        <g class="ring-inner" fill="rgba(255,45,63,.8)">
+          <path d="M250,95 l7,16 l-14,0 Z"/>
+          <path d="M250,405 l7,-16 l-14,0 Z"/>
+          <path d="M405,250 l-16,7 l0,-14 Z"/>
+          <path d="M95,250 l16,7 l0,-14 Z"/>
+          <path d="M360,140 l-2,17 l-15,-8 Z"/>
+          <path d="M140,360 l2,-17 l15,8 Z"/>
+          <path d="M360,360 l-15,-8 l2,-17 Z"/>
+          <path d="M140,140 l15,8 l-2,17 Z"/>
+        </g>
 
-        function renderDepartments(arr) {
-            const grid = document.getElementById('departmentsGrid');
-            if (!arr.length) {
-                grid.innerHTML = `<div class="no-results"><i class="fas fa-search"></i><h3>ไม่พบแผนกที่คุณค้นหา</h3><p>ลองค้นหาด้วยคำอื่นหรือดูแผนกทั้งหมด</p></div>`;
-                return;
-            }
-            grid.innerHTML = arr.map(createDepartmentCard).join('');
-        }
+        <!-- inner mould cross-section -->
+        <circle cx="250" cy="250" r="95" fill="var(--carbon)" stroke="rgba(224,30,43,.3)" stroke-width="1.5"/>
+        <circle cx="250" cy="250" r="95" fill="none" stroke="rgba(0,229,255,.15)" stroke-width="1"/>
+        <g stroke="rgba(224,30,43,.3)" stroke-width="1" fill="none">
+          <path d="M175,250 q75,-50 150,0"/>
+          <path d="M175,250 q75,50 150,0"/>
+        </g>
+        <text x="250" y="242" text-anchor="middle" font-family="Orbitron, sans-serif" font-size="18" font-weight="700" fill="#f5f4f2" letter-spacing="1.5">MOULDMATE</text>
+        <text x="250" y="264" text-anchor="middle" class="hud-label">SOLID TIRE MOULD</text>
 
-        function searchDepartments() {
-            const q = document.getElementById('searchInput').value.toLowerCase();
-            renderDepartments(q ? departments.filter(d => d.name.toLowerCase().includes(q) || d.description.toLowerCase().includes(q)) : departments);
-        }
+        <!-- rotating sweep line -->
+        <g class="ring-sweep">
+          <line x1="250" y1="250" x2="250" y2="45" stroke="url(#sweepGrad)" stroke-width="2.5"/>
+          <circle cx="250" cy="45" r="4" fill="#ff2d3f" filter="drop-shadow(0 0 6px #ff2d3f)"/>
+        </g>
 
-        function toggleNoticesVisibility() {
-            const board = document.getElementById('noticeBoard');
-            const btn   = document.getElementById('toggleNoticesBtn');
-            const hidden = board.style.display === 'none';
-            board.style.display = hidden ? 'grid' : 'none';
-            btn.innerHTML = hidden
-                ? '<i class="fas fa-chevron-down"></i> ซ่อนประกาศ'
-                : '<i class="fas fa-chevron-up"></i> แสดงประกาศ';
-        }
+        <!-- center dot -->
+        <circle cx="250" cy="250" r="3" fill="#ff2d3f" filter="drop-shadow(0 0 8px #ff2d3f)"/>
 
-        function init() {
-            loadUserName();
-            renderNotices(announcements);
-            renderDepartments(departments);
-            document.getElementById('searchInput').addEventListener('input', searchDepartments);
-            document.getElementById('searchInput').addEventListener('keyup', e => { if (e.key === 'Enter') searchDepartments(); });
-            document.getElementById('toggleNoticesBtn').addEventListener('click', toggleNoticesVisibility);
-        }
+        <!-- annotations -->
+        <line x1="392" y1="160" x2="435" y2="138" stroke="rgba(224,30,43,.5)" stroke-width="1"/>
+        <text x="440" y="142" class="hud-label">TOLERANCE</text>
+        <text x="440" y="156" class="hud-label hud-label-red">±0.01 MM</text>
 
-        document.addEventListener('DOMContentLoaded', init);
-    </script>
+        <line x1="120" y1="360" x2="75" y2="386" stroke="rgba(224,30,43,.5)" stroke-width="1"/>
+        <text x="5" y="380" class="hud-label" text-anchor="start">SCAN</text>
+        <text x="5" y="394" class="hud-label hud-label-red" text-anchor="start">STATUS: READY</text>
+
+        <line x1="360" y1="360" x2="405" y2="394" stroke="rgba(224,30,43,.5)" stroke-width="1"/>
+        <text x="410" y="398" class="hud-label">BATCH</text>
+        <text x="410" y="412" class="hud-label">TK-2607</text>
+      </svg>
+    </div>
+  </div>
+</div>
+
+<div class="credit">Developed by Sarawut.C · © 2026 | TOKAISOLIDTIRE</div>
+
+<script>
+  function tick(){
+    const d = new Date();
+    const opts = {hour:'2-digit',minute:'2-digit',second:'2-digit', hour12:false, timeZone:'Asia/Bangkok'};
+    document.getElementById('clock').textContent = d.toLocaleTimeString('th-TH', opts);
+  }
+  tick();
+  setInterval(tick, 1000);
+
+  // duplicate ticker content once so the -50% loop scrolls seamlessly
+  const track = document.getElementById('tickerTrack');
+  if (track) track.innerHTML += track.innerHTML;
+</script>
 </body>
 </html>
