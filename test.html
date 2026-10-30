@@ -5,149 +5,102 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>MOULDMATE · TOKAI TIRE &amp; TRACK</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Orbitron:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Noto+Sans+Thai:wght@300;400;500;600&family=Noto+Serif+Thai:wght@400;500;600&display=swap" rel="stylesheet"/>
 <style>
   :root{
-    --void:       #050507;
-    --carbon:     #0d0d11;
-    --carbon-lt:  #16161c;
-    --steel:      #2a2a32;
-    --steel-lt:   #5a5a68;
-    --tread-red:  #e01e2b;
-    --red-glow:   #ff2d3f;
-    --red-neon:   #ff0040;
-    --red-dim:    #7a0f18;
-    --paper:      #f5f4f2;
-    --paper-dim:  #9a9aa8;
-    --cyan:       #00e5ff;
+    --bg:#0a0809;
+    --panel:#121012;
+    --panel2:#181518;
+    --line:rgba(201,169,110,.22);
+    --line2:rgba(255,255,255,.08);
+    --red:#a3202b;
+    --red2:#c5303b;
+    --ivory:#f3ede4;
+    --muted:#9b948a;
+    --gold:#c9a96e;
+    --serif:'Cormorant Garamond','Noto Serif Thai',serif;
+    --sans:'Noto Sans Thai','Inter',sans-serif;
   }
   *{margin:0;padding:0;box-sizing:border-box;}
   html{scroll-behavior:smooth;}
   body{
-    background:var(--void);
-    color:var(--paper);
-    font-family:'Inter',sans-serif;
+    background:var(--bg);
+    color:var(--ivory);
+    font-family:var(--sans);
+    font-weight:300;
     min-height:100vh;
     overflow-x:hidden;
     position:relative;
-  }
-
-  /* ── AMBIENT BACKGROUND ── */
-  .bg-void{position:fixed;inset:0;z-index:0;background:radial-gradient(circle at 50% 50%, #0a0a10 0%, #050507 100%);}
-  .bg-glow{
-    position:fixed;inset:0;z-index:0;pointer-events:none;
-    background:
-      radial-gradient(800px 800px at 78% 38%, rgba(224,30,43,0.28), transparent 60%),
-      radial-gradient(600px 600px at 15% 85%, rgba(224,30,43,0.14), transparent 65%);
-    animation:glowPulse 6s ease-in-out infinite;
-  }
-  @keyframes glowPulse{
-    0%,100%{opacity:.7;}
-    50%{opacity:1;}
-  }
-  .bg-blue{
-    position:fixed; inset:0; z-index:0; pointer-events:none;
-    background:
-      radial-gradient(700px 700px at 15% 25%, rgba(0,229,255,0.16), transparent 60%),
-      radial-gradient(500px 500px at 85% 80%, rgba(0,229,255,0.10), transparent 65%);
-    animation:bluePulse 5s ease-in-out infinite;
-  }
-  @keyframes bluePulse{
-    0%,100%{opacity:.3;}
-    50%{opacity:1;}
-  }
-  .bg-grid{
-    position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.5;
     background-image:
-      linear-gradient(rgba(224,30,43,.06) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(224,30,43,.06) 1px, transparent 1px);
-    background-size:48px 48px;
-    mask-image:radial-gradient(circle at 60% 45%, black 0%, transparent 75%);
+      radial-gradient(900px 600px at 92% -10%,rgba(163,32,43,.30),transparent 60%),
+      radial-gradient(700px 500px at -10% 110%,rgba(163,32,43,.15),transparent 60%);
+    background-attachment:fixed;
   }
-  /* scanline overlay */
-  .bg-scanlines{
-    position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.08;
-    background:repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,0,64,.4) 3px);
-    animation:scanMove 8s linear infinite;
-  }
-  @keyframes scanMove{ from{transform:translateY(0);} to{transform:translateY(4px);} }
-
-  /* tread-pattern strip drifting along bottom */
-  .bg-tread{
-    position:fixed; left:-10%; bottom:-40px; width:120%; height:160px;
-    z-index:0; pointer-events:none; opacity:.7;
-  }
-  .bg-tread svg{width:200%;height:100%;animation:treadDrift 30s linear infinite;}
-  @keyframes treadDrift{ from{transform:translateX(0);} to{transform:translateX(-50%);} }
 
   /* ── TOP BAR ── */
   .topbar{
     position:relative; z-index:10;
     display:flex; align-items:center; justify-content:space-between;
     padding:1.4rem 5%;
-    border-bottom:1px solid rgba(224,30,43,.25);
-    background:rgba(5,5,7,.6);
-    backdrop-filter:blur(12px);
+    border-bottom:1px solid var(--line2);
+    background:rgba(10,8,9,.6);
+    backdrop-filter:blur(10px);
   }
   .brand{display:flex;align-items:center;gap:.9rem;}
-  .brand img{height:42px;width:auto;display:block;filter:drop-shadow(0 0 18px rgba(224,30,43,.6));}
+  .brand img{height:38px;width:auto;display:block;filter:drop-shadow(0 0 10px rgba(163,32,43,.35));}
   .brand-text{display:flex;flex-direction:column;line-height:1.15;}
   .brand-text b{
-    font-family:'Orbitron',sans-serif;font-weight:800;font-size:1.05rem;
-    letter-spacing:.12em; color:var(--paper);
-    text-shadow:0 0 14px rgba(224,30,43,.5);
+    font-family:var(--serif);font-weight:600;font-size:1.05rem;
+    letter-spacing:.02em;color:var(--ivory);
   }
   .brand-text span{
-    font-family:'IBM Plex Mono',monospace; font-size:.6rem;
-    letter-spacing:.22em; color:var(--tread-red); text-transform:uppercase;
+    font-size:.6rem;letter-spacing:.24em;color:var(--gold);
+    text-transform:uppercase;font-weight:400;
   }
   .status-pill{
-    display:flex; align-items:center; gap:.6rem;
-    font-family:'IBM Plex Mono',monospace; font-size:.68rem;
-    letter-spacing:.12em; color:var(--paper-dim);
-    border:1px solid rgba(224,30,43,.4);
-    border-radius:4px; padding:.5rem 1rem .5rem .8rem;
-    background:rgba(224,30,43,.06);
-    box-shadow:inset 0 0 12px rgba(224,30,43,.1), 0 0 20px rgba(224,30,43,.12);
+    display:flex; align-items:center; gap:.55rem;
+    font-size:.68rem; letter-spacing:.12em; color:var(--muted);
+    border:1px solid var(--line); border-radius:30px;
+    padding:.4rem .95rem .4rem .75rem;
+    background:rgba(255,255,255,.02);
+    font-family:var(--sans);
   }
   .dot-live{
-    width:6px;height:6px;border-radius:50%;background:var(--red-glow);
-    box-shadow:0 0 10px 3px rgba(255,45,63,.85);
-    animation:pulseDot 1.5s ease-in-out infinite;
+    width:6px;height:6px;border-radius:50%;background:var(--red2);
+    box-shadow:0 0 8px rgba(197,48,59,.7);
+    animation:pulseDot 1.8s ease-in-out infinite;
   }
-  @keyframes pulseDot{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.3;transform:scale(.8);}}
-  #clock{color:var(--paper); text-shadow:0 0 8px rgba(224,30,43,.6);}
+  @keyframes pulseDot{0%,100%{opacity:1;}50%{opacity:.35;}}
+  #clock{color:var(--ivory);font-weight:400;}
 
   /* ── NEWS TICKER ── */
   .ticker{
     position:relative; z-index:10;
     display:flex; align-items:center;
-    background:linear-gradient(90deg, rgba(224,30,43,.12), rgba(13,13,17,.9) 20%);
-    border-bottom:1px solid rgba(224,30,43,.35);
+    background:var(--panel);
+    border-bottom:1px solid var(--line2);
     overflow:hidden;
     height:40px;
-    box-shadow:0 4px 24px rgba(224,30,43,.15);
   }
   .ticker-tag{
     flex:none;
     display:flex; align-items:center; gap:.5rem;
     height:100%;
-    padding:0 1.3rem;
-    background:linear-gradient(135deg, var(--tread-red), #b01020);
-    font-family:'Orbitron',sans-serif;
-    font-size:.64rem; font-weight:700; letter-spacing:.18em;
+    padding:0 1.2rem;
+    background:var(--red);
+    font-size:.66rem; font-weight:500; letter-spacing:.16em;
     color:#fff; text-transform:uppercase;
     clip-path:polygon(0 0,100% 0,88% 100%,0% 100%);
-    padding-right:2rem;
-    box-shadow:0 0 24px rgba(224,30,43,.5);
+    padding-right:1.9rem;
+    font-family:var(--sans);
   }
-  .ticker-tag .dot-live{margin-right:.15rem;background:#fff;box-shadow:0 0 10px #fff;}
+  .ticker-tag .dot-live{background:#fff;box-shadow:0 0 6px #fff;}
   .ticker-track-wrap{
     flex:1; overflow:hidden; height:100%; position:relative;
     mask-image:linear-gradient(90deg, transparent 0, black 3%, black 97%, transparent 100%);
   }
   .ticker-track{
-    display:flex; align-items:center; gap:0;
+    display:flex; align-items:center;
     white-space:nowrap; height:100%;
     animation:tickerScroll 32s linear infinite;
     width:max-content;
@@ -160,17 +113,17 @@
   .ticker-item{
     display:inline-flex; align-items:center; gap:.6rem;
     padding:0 2.2rem;
-    font-family:'Inter',sans-serif; font-size:.78rem; font-weight:300;
-    color:var(--paper-dim); letter-spacing:.01em;
+    font-size:.8rem; font-weight:300;
+    color:var(--muted); letter-spacing:.01em;
   }
-  .ticker-item b{color:var(--paper); font-weight:500; text-shadow:0 0 8px rgba(224,30,43,.4);}
-  .ticker-sep{color:var(--tread-red); font-size:.7rem; text-shadow:0 0 10px var(--red-glow);}
+  .ticker-item b{color:var(--ivory); font-weight:500;}
+  .ticker-sep{color:var(--red2); font-size:.7rem;}
   @media(max-width:520px){
     .ticker-tag span.tag-label{display:none;}
     .ticker-tag{padding:0 .8rem 0 .8rem;}
   }
 
-  /* ── MAIN LAYOUT ── */
+  /* ── MAIN ── */
   .main{
     position:relative; z-index:10;
     display:grid; grid-template-columns:1.05fr .95fr;
@@ -179,34 +132,30 @@
     padding:2rem 5% 3rem;
   }
 
-  /* ── LEFT: TEXT ── */
+  /* ── LEFT ── */
   .eyebrow{
     display:flex; align-items:center; gap:.7rem;
     margin-bottom:1.6rem;
     animation:riseIn .7s ease both;
   }
-  .eyebrow .bar{width:32px;height:2px;background:var(--tread-red);box-shadow:0 0 12px var(--red-glow);}
+  .eyebrow .bar{width:26px;height:1px;background:var(--gold);}
   .eyebrow span{
-    font-family:'IBM Plex Mono',monospace; font-size:.68rem;
-    letter-spacing:.28em; text-transform:uppercase; color:var(--paper-dim);
+    font-size:.68rem; letter-spacing:.28em;
+    text-transform:uppercase; color:var(--gold); font-weight:400;
   }
 
   h1{
-    font-family:'Orbitron',sans-serif; font-weight:900;
-    font-size:4rem; line-height:1.05; letter-spacing:-.01em;
-    text-transform:uppercase; color:var(--paper);
+    font-family:var(--serif); font-weight:600;
+    font-size:4.2rem; line-height:1.05; letter-spacing:.005em;
+    text-transform:uppercase; color:var(--ivory);
     margin-bottom:1.4rem;
     animation:riseIn .7s .08s both;
-    text-shadow:0 0 30px rgba(224,30,43,.35);
   }
-  h1 .accent{
-    color:var(--tread-red);
-    text-shadow:0 0 20px var(--red-glow), 0 0 40px rgba(224,30,43,.6);
-  }
+  h1 .accent{color:var(--red2); font-style:italic;}
 
   .subhead{
-    font-size:1rem; line-height:1.85; font-weight:300;
-    color:var(--paper-dim); max-width:460px;
+    font-size:.98rem; line-height:1.9; font-weight:300;
+    color:var(--muted); max-width:460px;
     margin-bottom:2.3rem;
     animation:riseIn .7s .14s both;
   }
@@ -215,66 +164,55 @@
   .btn{
     display:inline-flex; align-items:center; gap:.6rem;
     padding:1rem 2rem;
-    font-family:'Orbitron',sans-serif; font-size:.8rem; font-weight:600; letter-spacing:.08em;
-    text-transform:uppercase;
-    text-decoration:none; border-radius:4px;
+    font-family:var(--sans); font-size:.8rem; font-weight:500;
+    letter-spacing:.2em; text-transform:uppercase;
+    text-decoration:none; border-radius:2px;
     transition:all .3s ease;
-    position:relative;
-    overflow:hidden;
   }
-  .btn::before{
-    content:'';
-    position:absolute; top:0; left:-100%; width:100%; height:100%;
-    background:linear-gradient(90deg, transparent, rgba(255,255,255,.25), transparent);
-    transition:left .6s ease;
-  }
-  .btn:hover::before{left:100%;}
   .btn-primary{
-    background:linear-gradient(135deg, var(--tread-red), #a80e1a);
-    color:#fff; border:1px solid var(--red-glow);
-    box-shadow:0 0 20px rgba(224,30,43,.4), inset 0 0 20px rgba(255,255,255,.1);
+    background:var(--red); color:#fff; border:1px solid var(--red);
   }
   .btn-primary:hover{
-    box-shadow:0 0 35px rgba(224,30,43,.8), inset 0 0 30px rgba(255,255,255,.15);
+    background:var(--red2); border-color:var(--gold);
     transform:translateY(-2px);
+    box-shadow:0 8px 26px -10px rgba(163,32,43,.7);
   }
   .btn-ghost{
-    background:transparent; color:var(--paper); border:1px solid rgba(224,30,43,.5);
-    box-shadow:inset 0 0 20px rgba(224,30,43,.06);
+    background:transparent; color:var(--ivory);
+    border:1px solid var(--line);
   }
   .btn-ghost:hover{
-    border-color:var(--red-glow); color:#fff; transform:translateY(-2px);
-    box-shadow:0 0 30px rgba(224,30,43,.4), inset 0 0 20px rgba(224,30,43,.15);
+    border-color:var(--gold); color:var(--gold);
+    transform:translateY(-2px);
   }
-  .btn:focus-visible{outline:2px solid var(--red-glow); outline-offset:3px;}
+  .btn:focus-visible{outline:1px solid var(--gold); outline-offset:3px;}
 
   .meta-strip{
-    display:flex; flex-direction:column; gap:.65rem;
-    padding-top:1.6rem; border-top:1px solid rgba(224,30,43,.2);
+    display:flex; flex-direction:column; gap:.7rem;
+    padding-top:1.6rem; border-top:1px solid var(--line2);
     max-width:440px;
     animation:riseIn .7s .26s both;
   }
   .meta-item{
     display:flex; align-items:center; gap:.7rem;
-    font-size:.8rem; color:var(--paper-dim); font-weight:300;
+    font-size:.82rem; color:var(--muted); font-weight:300;
   }
   .meta-item .ico{
-    width:18px; text-align:center; color:var(--tread-red); font-size:.9rem;
-    text-shadow:0 0 10px var(--red-glow);
+    width:16px; text-align:center; color:var(--gold); font-size:.85rem;
   }
 
-  /* ── RIGHT: HUD GRAPHIC ── */
+  /* ── RIGHT: ORNAMENTAL RING ── */
   .hud-wrap{
     position:relative; display:flex; align-items:center; justify-content:center;
     animation:riseIn .9s .18s both;
   }
   .hud-frame{
-    position:relative; width:min(92%, 480px); aspect-ratio:1/1;
-    filter:drop-shadow(0 0 40px rgba(224,30,43,.3));
+    position:relative; width:min(92%, 460px); aspect-ratio:1/1;
+    filter:drop-shadow(0 0 40px rgba(163,32,43,.35));
   }
   .corner{
-    position:absolute; width:30px; height:30px; border:2px solid var(--tread-red);
-    box-shadow:0 0 12px rgba(224,30,43,.6);
+    position:absolute; width:22px; height:22px;
+    border:1px solid var(--gold);
   }
   .corner.tl{top:-8px;left:-8px;border-right:none;border-bottom:none;}
   .corner.tr{top:-8px;right:-8px;border-left:none;border-bottom:none;}
@@ -282,30 +220,27 @@
   .corner.br{bottom:-8px;right:-8px;border-left:none;border-top:none;}
 
   .hud-svg{width:100%;height:100%;display:block;}
-  .ring-outer{animation:spin 40s linear infinite;transform-origin:250px 250px;}
-  .ring-sweep{animation:spin 5s linear infinite;transform-origin:250px 250px;}
-  .ring-inner{animation:spinReverse 25s linear infinite;transform-origin:250px 250px;}
+  .ring-outer{animation:spin 60s linear infinite;transform-origin:250px 250px;}
+  .ring-sweep{animation:spin 12s linear infinite;transform-origin:250px 250px;}
+  .ring-inner{animation:spinReverse 30s linear infinite;transform-origin:250px 250px;}
   @keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
   @keyframes spinReverse{from{transform:rotate(360deg);}to{transform:rotate(0deg);}}
 
   .hud-label{
-    font-family:'IBM Plex Mono',monospace; font-size:.62rem; letter-spacing:.14em;
-    fill:var(--paper-dim); text-transform:uppercase;
+    font-family:var(--serif); font-size:.72rem; letter-spacing:.14em;
+    fill:var(--muted); text-transform:uppercase;
   }
-  .hud-label-red{fill:var(--red-glow); filter:drop-shadow(0 0 6px rgba(255,45,63,.8));}
+  .hud-label-red{fill:var(--red2); font-style:italic;}
 
-  /* ── ANIM ── */
-  @keyframes riseIn{ from{opacity:0;transform:translateY(20px);} to{opacity:1;transform:translateY(0);} }
+  @keyframes riseIn{ from{opacity:0;transform:translateY(16px);} to{opacity:1;transform:translateY(0);} }
 
-  /* ── FOOTER CREDIT ── */
+  /* ── FOOTER ── */
   .credit{
     position:relative; z-index:10; text-align:center;
-    font-family:'IBM Plex Mono',monospace; font-size:.62rem; letter-spacing:.18em;
-    color:var(--steel-lt); text-transform:uppercase;
+    font-size:.62rem; letter-spacing:.24em; text-transform:uppercase;
+    color:#5f5a53;
     padding:1.4rem 5% 1.8rem;
-    border-top:1px solid rgba(224,30,43,.15);
-    background:rgba(5,5,7,.6);
-    backdrop-filter:blur(8px);
+    border-top:1px solid var(--line2);
   }
 
   /* ── RESPONSIVE ── */
@@ -313,51 +248,25 @@
     .main{grid-template-columns:1fr; padding-top:1rem;}
     .hud-wrap{order:-1; margin-bottom:1rem;}
     .hud-frame{width:min(70%,340px);}
-    h1{font-size:2.8rem;}
+    h1{font-size:2.9rem;}
   }
   @media(max-width:520px){
-    h1{font-size:2rem;}
+    h1{font-size:2.2rem;}
     .btn-row{flex-direction:column; align-items:stretch;}
     .btn{justify-content:center;}
     .topbar{padding:1.1rem 6%;}
     .status-pill span#clock{display:none;}
   }
 
-  /* ── REDUCED MOTION ── */
   @media (prefers-reduced-motion: reduce){
-    .bg-tread svg,
     .ticker-track,
     .ring-outer,
     .ring-sweep,
-    .ring-inner,
-    .bg-scanlines{animation:none;}
-    .bg-blue, .bg-glow{animation:none; opacity:.6;}
+    .ring-inner{animation:none;}
   }
 </style>
 </head>
 <body>
-
-<div class="bg-void"></div>
-<div class="bg-grid"></div>
-<div class="bg-glow"></div>
-<div class="bg-blue"></div>
-<div class="bg-scanlines"></div>
-
-<div class="bg-tread">
-  <svg viewBox="0 0 800 160" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-    <g fill="none" stroke="rgba(224,30,43,0.18)" stroke-width="2.5">
-      <path d="M0,30 L22,80 L0,130"/><path d="M44,30 L66,80 L44,130"/>
-      <path d="M88,30 L110,80 L88,130"/><path d="M132,30 L154,80 L132,130"/>
-      <path d="M176,30 L198,80 L176,130"/><path d="M220,30 L242,80 L220,130"/>
-      <path d="M264,30 L286,80 L264,130"/><path d="M308,30 L330,80 L308,130"/>
-      <path d="M352,30 L374,80 L352,130"/><path d="M396,30 L418,80 L396,130"/>
-      <path d="M440,30 L462,80 L440,130"/><path d="M484,30 L506,80 L484,130"/>
-      <path d="M528,30 L550,80 L528,130"/><path d="M572,30 L594,80 L572,130"/>
-      <path d="M616,30 L638,80 L616,130"/><path d="M660,30 L682,80 L660,130"/>
-      <path d="M704,30 L726,80 L704,130"/><path d="M748,30 L770,80 L748,130"/>
-    </g>
-  </svg>
-</div>
 
 <!-- TOP BAR -->
 <div class="topbar">
@@ -365,7 +274,7 @@
     <img src="PASTE_LOGO_BASE64_HERE" alt="TOKAI TIRE & TRACK"/>
     <div class="brand-text">
       <b>MOULDMATE</b>
-      <span>TOKAISOLIDTIRE</span>
+      <span>Tokaisolidtire</span>
     </div>
   </div>
   <div class="status-pill">
@@ -375,11 +284,11 @@
   </div>
 </div>
 
-<!-- NEWS TICKER -->
+<!-- TICKER -->
 <div class="ticker">
   <div class="ticker-tag">
     <span class="dot-live"></span>
-    <span class="tag-label">NEWS</span>
+    <span class="tag-label">ข่าวสาร</span>
   </div>
   <div class="ticker-track-wrap">
     <div class="ticker-track" id="tickerTrack">
@@ -402,10 +311,10 @@
   <div class="left-col">
     <div class="eyebrow">
       <div class="bar"></div>
-      <span>MOULDMATE · TOKAISOLIDTIRE</span>
+      <span>Mouldmate · Tokaisolidtire</span>
     </div>
 
-    <h1>ยินดีต้อนรับ<br>MOULDMATE<span class="accent"> · HELPDESK</span></h1>
+    <h1>ยินดีต้อนรับ<br>MOULDMATE<span class="accent"> · Helpdesk</span></h1>
 
     <div class="btn-row">
       <a href="https://mouldmate.vercel.app/" class="btn btn-primary" target="_blank">
@@ -423,7 +332,7 @@
     </div>
   </div>
 
-  <!-- RIGHT: HUD -->
+  <!-- RIGHT: ORNAMENTAL HUD -->
   <div class="hud-wrap">
     <div class="hud-frame">
       <div class="corner tl"></div><div class="corner tr"></div>
@@ -432,75 +341,67 @@
       <svg class="hud-svg" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <radialGradient id="coreGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stop-color="#e01e2b" stop-opacity="0.5"/>
-            <stop offset="100%" stop-color="#e01e2b" stop-opacity="0"/>
+            <stop offset="0%" stop-color="#a3202b" stop-opacity="0.30"/>
+            <stop offset="100%" stop-color="#a3202b" stop-opacity="0"/>
           </radialGradient>
-          <linearGradient id="sweepGrad" x1="0" y1="1" x2="0" y2="0">
-            <stop offset="0%" stop-color="#ff2d3f" stop-opacity="0"/>
-            <stop offset="100%" stop-color="#ff2d3f" stop-opacity="1"/>
-          </linearGradient>
         </defs>
 
-        <circle cx="250" cy="250" r="140" fill="url(#coreGlow)"/>
+        <circle cx="250" cy="250" r="130" fill="url(#coreGlow)"/>
 
-        <!-- outer dashed measurement ring -->
+        <!-- outer ring -->
         <g class="ring-outer">
-          <circle cx="250" cy="250" r="205" fill="none" stroke="rgba(224,30,43,.35)" stroke-width="1.5" stroke-dasharray="3 8"/>
-          <circle cx="250" cy="250" r="205" fill="none" stroke="rgba(224,30,43,.5)" stroke-width="1" stroke-dasharray="1 2" stroke-dashoffset="40"/>
+          <circle cx="250" cy="250" r="200" fill="none" stroke="rgba(201,169,110,.35)" stroke-width="1" stroke-dasharray="2 6"/>
+          <circle cx="250" cy="250" r="200" fill="none" stroke="rgba(201,169,110,.5)" stroke-width="1" stroke-dasharray="1 2" stroke-dashoffset="40"/>
         </g>
 
         <!-- tick marks -->
-        <g stroke="rgba(224,30,43,.7)" stroke-width="1.5">
-          <line x1="250" y1="35" x2="250" y2="55"/>
-          <line x1="250" y1="445" x2="250" y2="465"/>
-          <line x1="35" y1="250" x2="55" y2="250"/>
-          <line x1="445" y1="250" x2="465" y2="250"/>
+        <g stroke="rgba(201,169,110,.5)" stroke-width="1">
+          <line x1="250" y1="42" x2="250" y2="58"/>
+          <line x1="250" y1="442" x2="250" y2="458"/>
+          <line x1="42" y1="250" x2="58" y2="250"/>
+          <line x1="442" y1="250" x2="458" y2="250"/>
         </g>
 
-        <!-- middle tread ring -->
-        <circle cx="250" cy="250" r="155" fill="none" stroke="rgba(224,30,43,.55)" stroke-width="1.8"/>
-        <g class="ring-inner" fill="rgba(255,45,63,.8)">
-          <path d="M250,95 l7,16 l-14,0 Z"/>
-          <path d="M250,405 l7,-16 l-14,0 Z"/>
-          <path d="M405,250 l-16,7 l0,-14 Z"/>
-          <path d="M95,250 l16,7 l0,-14 Z"/>
-          <path d="M360,140 l-2,17 l-15,-8 Z"/>
-          <path d="M140,360 l2,-17 l15,8 Z"/>
-          <path d="M360,360 l-15,-8 l2,-17 Z"/>
-          <path d="M140,140 l15,8 l-2,17 Z"/>
+        <!-- middle red ring with diamonds -->
+        <circle cx="250" cy="250" r="150" fill="none" stroke="rgba(163,32,43,.55)" stroke-width="1.2"/>
+        <g class="ring-inner" fill="rgba(197,48,59,.7)">
+          <path d="M250,100 l6,10 l-6,10 l-6,-10 Z"/>
+          <path d="M250,400 l6,-10 l-6,-10 l-6,10 Z"/>
+          <path d="M400,250 l-10,6 l-10,-6 l10,-6 Z"/>
+          <path d="M100,250 l10,6 l10,-6 l-10,-6 Z"/>
         </g>
 
-        <!-- inner mould cross-section -->
-        <circle cx="250" cy="250" r="95" fill="var(--carbon)" stroke="rgba(224,30,43,.3)" stroke-width="1.5"/>
-        <circle cx="250" cy="250" r="95" fill="none" stroke="rgba(0,229,255,.15)" stroke-width="1"/>
-        <g stroke="rgba(224,30,43,.3)" stroke-width="1" fill="none">
-          <path d="M175,250 q75,-50 150,0"/>
-          <path d="M175,250 q75,50 150,0"/>
+        <!-- inner circle -->
+        <circle cx="250" cy="250" r="92" fill="var(--panel)" stroke="rgba(201,169,110,.35)" stroke-width="1"/>
+        <g stroke="rgba(201,169,110,.25)" stroke-width="1" fill="none">
+          <path d="M180,250 q70,-46 140,0"/>
+          <path d="M180,250 q70,46 140,0"/>
         </g>
-        <text x="250" y="242" text-anchor="middle" font-family="Orbitron, sans-serif" font-size="18" font-weight="700" fill="#f5f4f2" letter-spacing="1.5">MOULDMATE</text>
-        <text x="250" y="264" text-anchor="middle" class="hud-label">SOLID TIRE MOULD</text>
+        <text x="250" y="242" text-anchor="middle" font-family="Cormorant Garamond, serif" font-size="22" font-weight="600" fill="#f3ede4" letter-spacing="1">MOULDMATE</text>
+        <text x="250" y="264" text-anchor="middle" class="hud-label">Solid Tire Mould</text>
 
-        <!-- rotating sweep line -->
+        <!-- rotating sweep -->
         <g class="ring-sweep">
-          <line x1="250" y1="250" x2="250" y2="45" stroke="url(#sweepGrad)" stroke-width="2.5"/>
-          <circle cx="250" cy="45" r="4" fill="#ff2d3f" filter="drop-shadow(0 0 6px #ff2d3f)"/>
+          <line x1="250" y1="250" x2="250" y2="50" stroke="url(#sweepGrad)" stroke-width="1.5"/>
+          <linearGradient id="sweepGrad" x1="0" y1="1" x2="0" y2="0">
+            <stop offset="0%" stop-color="#c5303b" stop-opacity="0"/>
+            <stop offset="100%" stop-color="#c5303b" stop-opacity="0.85"/>
+          </linearGradient>
+          <circle cx="250" cy="50" r="3" fill="#c5303b"/>
         </g>
-
-        <!-- center dot -->
-        <circle cx="250" cy="250" r="3" fill="#ff2d3f" filter="drop-shadow(0 0 8px #ff2d3f)"/>
 
         <!-- annotations -->
-        <line x1="392" y1="160" x2="435" y2="138" stroke="rgba(224,30,43,.5)" stroke-width="1"/>
-        <text x="440" y="142" class="hud-label">TOLERANCE</text>
-        <text x="440" y="156" class="hud-label hud-label-red">±0.01 MM</text>
+        <line x1="392" y1="160" x2="430" y2="140" stroke="rgba(201,169,110,.4)" stroke-width="1"/>
+        <text x="434" y="144" class="hud-label">Tolerance</text>
+        <text x="434" y="158" class="hud-label hud-label-red">±0.01 mm</text>
 
-        <line x1="120" y1="360" x2="75" y2="386" stroke="rgba(224,30,43,.5)" stroke-width="1"/>
-        <text x="5" y="380" class="hud-label" text-anchor="start">SCAN</text>
-        <text x="5" y="394" class="hud-label hud-label-red" text-anchor="start">STATUS: READY</text>
+        <line x1="120" y1="360" x2="80" y2="384" stroke="rgba(201,169,110,.4)" stroke-width="1"/>
+        <text x="10" y="378" class="hud-label" text-anchor="start">Scan</text>
+        <text x="10" y="392" class="hud-label hud-label-red" text-anchor="start">Status: Ready</text>
 
-        <line x1="360" y1="360" x2="405" y2="394" stroke="rgba(224,30,43,.5)" stroke-width="1"/>
-        <text x="410" y="398" class="hud-label">BATCH</text>
-        <text x="410" y="412" class="hud-label">TK-2607</text>
+        <line x1="360" y1="360" x2="400" y2="392" stroke="rgba(201,169,110,.4)" stroke-width="1"/>
+        <text x="404" y="396" class="hud-label">Batch</text>
+        <text x="404" y="410" class="hud-label">TK-2607</text>
       </svg>
     </div>
   </div>
@@ -517,7 +418,6 @@
   tick();
   setInterval(tick, 1000);
 
-  // duplicate ticker content once so the -50% loop scrolls seamlessly
   const track = document.getElementById('tickerTrack');
   if (track) track.innerHTML += track.innerHTML;
 </script>
