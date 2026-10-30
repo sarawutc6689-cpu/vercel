@@ -426,9 +426,9 @@ button svg{width:18px;height:18px;stroke:#fff;flex-shrink:0}
     {
       keys: ['วันที่เริ่มงาน', 'รูปแบบวันที่', 'ddmmyyyy'],
       reply:
-        'วันที่เริ่มงานให้กรอกเป็นตัวเลข 8 หลัก รูปแบบ DDMMYYYY (ปี ค.ศ.) 📅\n\n' +
-        'ตัวอย่าง: ถ้าเริ่มงานวันที่ 15 มกราคม 2023\n' +
-        'ให้กรอก: 15012023'
+        'วันที่เริ่มงานให้กรอกเป็นตัวเลข 8 หลัก รูปแบบ DDMMYYYY (ปี พ.ศ.) 📅\n\n' +
+        'ตัวอย่าง: ถ้าเริ่มงานวันที่ 15 มกราคม 2566\n' +
+        'ให้กรอก: 15012566'
     },
     {
       keys: ['รหัสพนักงาน', 'รูปแบบรหัส', 'กรอกรหัสยังไง'],
@@ -441,7 +441,7 @@ button svg{width:18px;height:18px;stroke:#fff;flex-shrink:0}
       reply:
         'วิธีเข้าใช้งานครับ 📝\n\n' +
         '1. กรอก "รหัสพนักงาน" ของคุณ\n' +
-        '2. กรอก "วันที่เริ่มงาน" ในรูปแบบ DDMMYYYY (ปี ค.ศ.) เช่น 15012023\n' +
+        '2. กรอก "วันที่เริ่มงาน" ในรูปแบบ DDMMYYYY (ปี พ.ศ.) เช่น 15012566\n' +
         '3. กดปุ่ม "เข้าสู่ระบบ"\n\n' +
         'หากข้อมูลถูกต้อง ระบบจะพาไปยังหน้า Dashboard อัตโนมัติครับ'
     },
@@ -550,6 +550,7 @@ button svg{width:18px;height:18px;stroke:#fff;flex-shrink:0}
         try {
           sessionStorage.setItem('mm_user', JSON.stringify({
             employee_id: result.employee_id,
+            employee_name: result.employee_name,
             token: result.token
           }));
         } catch(_){}
