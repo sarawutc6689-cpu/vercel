@@ -12,19 +12,19 @@
     <script>
     (async function(){
       // ⚠ ตรวจ URL นี้ให้ตรงกับหน้าล็อกอินจริงของคุณ
-      const LOGIN_URL = "https://mouldmate.vercel.app/";
+      const LOGIN_URL = "https://sarawutc6689-cpu.github.io/Mouldmate-Login/";
       const sb = window.supabase.createClient(
         "https://dhgjbpvbbixipxksqqzu.supabase.co",
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRoZ2picHZiYml4aXB4a3NxcXp1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5OTIxMjgsImV4cCI6MjEwMTU2ODEyOH0.kZBAN01vbe8kENacfofZewHvxQBCCd2OaTFKbcFYlpM"
       );
 
       function deny(){
-        try { sessionStorage.removeItem('mm_user'); } catch(_){}
+        try { localStorage.removeItem('mm_user'); } catch(_){}
         location.replace(LOGIN_URL);
       }
 
       let token = null;
-      try { token = (JSON.parse(sessionStorage.getItem('mm_user') || 'null') || {}).token; } catch(_){}
+      try { token = (JSON.parse(localStorage.getItem('mm_user') || 'null') || {}).token; } catch(_){}
 
       // รับ token จาก URL (#t=...) กรณีหน้าล็อกอินอยู่คนละโดเมน
       const m = location.hash.match(/[#&]t=([^&]+)/);
@@ -38,7 +38,7 @@
         const { data, error } = await sb.rpc('get_session_user', { p_token: token });
         if (error || !data) return deny();
 
-        sessionStorage.setItem('mm_user', JSON.stringify({ ...data, token }));
+        localStorage.setItem('mm_user', JSON.stringify({ ...data, token }));
 
         const showName = () => {
           const el = document.getElementById('userNameDisplay');
@@ -408,7 +408,7 @@
         function loadUserName() {
             // ชื่อจริงจะถูกเติมโดยตัวตรวจสิทธิ์ใน <head> หลังเซิร์ฟเวอร์ยืนยัน token
             try {
-                const u = JSON.parse(sessionStorage.getItem('mm_user') || 'null');
+                const u = JSON.parse(localStorage.getItem('mm_user') || 'null');
                 if (u && u.employee_name) document.getElementById('userNameDisplay').textContent = u.employee_name;
             } catch(_) {}
         }
