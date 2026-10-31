@@ -212,10 +212,11 @@ tbody td{padding:9px 12px;font-size:13px;vertical-align:middle}
    SUPABASE CONFIG (sbApp กันชนกับ global "supabase")
    ========================================== */
 const SUPABASE_URL = 'https://gjmgzjsbgqaaxlpbyykt.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdqbWd6anNiZ3FhYXhscGJ5eWt0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwMjQyMjUsImV4cCI6MjEwMTYwMDIyNX0.wacphD2FPgaaETYc0N-Ze4q9gPr2BaO0MKNo9RBnlm0';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdqbWd6anNiZ3FhYXhscGJ5eWt0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwMjQyMjUsImV4cCI6MjEwMTYwMDIyNX0.wacphD2FPgaaETYc0N-Ze4q9gPr2BaO0MKNo9RBnlm0'; // <-- ใส่ anon key จริงของคุณตรงนี้
 const sbApp = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const PAGE_SZ = 30;
+const FETCH_SZ = 1000; // ขนาดต่อหน้าตอนดึงจาก Supabase (เพดานของ Supabase = 1000)
 
 let DEPT_NAMES = [];   // เติมจาก get_department_headcounts()
 let allRows = [];      // ข้อมูลโอทีทั้งหมดจาก Supabase (ทุกแผนก ทุกวันที่)
@@ -281,22 +282,38 @@ async function reloadCurrent() {
   applyFilters();
 }
 
-/* ─── โหลดข้อมูลทั้งหมดจาก Supabase (แทนการโหลดหลายชีต) ───── */
+/* ─── ดึงข้อมูลโอทีแบบแบ่งหน้า จนครบทุกแถว (แก้ปัญหาเพดาน 1,000 แถว) ───── */
+async function fetchAllOT() {
+  let from = 0;
+  const all = [];
+  while (true) {
+    const { data, error } = await sbApp
+      .rpc('get_ot_records_public', { p_from: '2000-01-01', p_to: '2100-01-01' })
+      .range(from, from + FETCH_SZ - 1);
+    if (error) throw error;
+    const chunk = data || [];
+    all.push(...chunk);
+    showLov(`กำลังโหลดข้อมูล... (${all.length.toLocaleString()} รายการ)`);
+    if (chunk.length < FETCH_SZ) break;
+    from += FETCH_SZ;
+  }
+  return all;
+}
+
+/* ─── โหลดข้อมูลทั้งหมดจาก Supabase ───── */
 async function loadAll() {
   showLov('กำลังโหลดข้อมูล...');
   hideErr();
   try {
-    const [deptRes, otRes] = await Promise.all([
+    const [deptRes, records] = await Promise.all([
       sbApp.rpc('get_department_headcounts'),
-      sbApp.rpc('get_ot_records_public', { p_from: '2000-01-01', p_to: '2100-01-01' })
+      fetchAllOT()
     ]);
 
     if (deptRes.error) throw deptRes.error;
-    if (otRes.error) throw otRes.error;
 
     DEPT_NAMES = (deptRes.data || []).map(d => d.department).sort();
 
-    const records = otRes.data || [];
     allRows = records.map(r => {
       const dateObj = parseDate(r.work_date);
       return {
@@ -337,7 +354,7 @@ async function loadAll() {
 
 function parseDate(s) {
   if (!s) return null;
-  const d = new Date(s + 'T00:00:00');
+  const d = new Date(String(s).slice(0,10) + 'T00:00:00');
   return isNaN(d) ? null : d;
 }
 
@@ -520,15 +537,15 @@ function exportPDF() {
   const empCount = new Set(filtered.map(r => r.empId)).size;
   const totW = filtered.reduce((s,r) => s+r.otHrs, 0);
   const rows = filtered.map(r =>
-    '<tr><td>' + r.dateStr + '</td><td>' + r.empId + '</td><td>' + r.name +
-    '</td><td>' + r.department + '</td><td>' + (r.start||'—') + '</td><td>' + (r.end||'—') +
+    '<tr><td>' + r.dateStr + '</td><td>' + esc(r.empId) + '</td><td>' + esc(r.name) +
+    '</td><td>' + esc(r.department) + '</td><td>' + (esc(r.start)||'—') + '</td><td>' + (esc(r.end)||'—') +
     '</td><td style="text-align:center">' + r.otHrs.toFixed(2) +
     '</td><td style="text-align:center">' + r.monthWork.toFixed(1) +
     '</td><td style="text-align:center">' + r.yearWork.toFixed(1) +
-    '</td><td>' + (r.note||'—') + '</td></tr>'
+    '</td><td>' + (esc(r.note)||'—') + '</td></tr>'
   ).join('');
   const html = '<!DOCTYPE html><html><head><meta charset="UTF-8">' +
-    '<title>OT Report - ' + deptName + '</title>' +
+    '<title>OT Report - ' + esc(deptName) + '</title>' +
     '<style>' +
     'body{font-family:sans-serif;font-size:11px;padding:24px;color:#111}' +
     'h2{font-size:15px;margin-bottom:2px;color:#1e40af}' +
@@ -541,7 +558,7 @@ function exportPDF() {
     '.footer{margin-top:14px;font-size:9px;color:#aaa;text-align:right}' +
     '@media print{body{padding:10px}}' +
     '</style></head><body>' +
-    '<h2>รายงานโอที — แผนก ' + deptName + '</h2>' +
+    '<h2>รายงานโอที — แผนก ' + esc(deptName) + '</h2>' +
     '<div class="meta">' +
     '<span>ช่วงเวลา: ' + dateLabel + '</span>' +
     '<span>พนักงาน: ' + empCount + ' คน</span>' +
