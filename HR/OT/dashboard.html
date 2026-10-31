@@ -426,8 +426,10 @@ tr.hl-4 .chip{color:var(--hl4-txt)}
    SUPABASE CONFIG (ตั้งชื่อ sbApp กันชนกับ global "supabase" ของไลบรารี)
    ========================================== */
 const SUPABASE_URL = 'https://gjmgzjsbgqaaxlpbyykt.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdqbWd6anNiZ3FhYXhscGJ5eWt0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwMjQyMjUsImV4cCI6MjEwMTYwMDIyNX0.wacphD2FPgaaETYc0N-Ze4q9gPr2BaO0MKNo9RBnlm0';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdqbWd6anNiZ3FhYXhscGJ5eWt0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwMjQyMjUsImV4cCI6MjEwMTYwMDIyNX0.wacphD2FPgaaETYc0N-Ze4q9gPr2BaO0MKNo9RBnlm0'; // <-- ใส่ anon key จริงของคุณตรงนี้
 const sbApp = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const FETCH_SZ = 1000; // เพดานต่อคำขอของ Supabase
 
 let DEPT_NAMES  = [];   // เติมจาก get_department_headcounts()
 let headcountMap = {};  // { department: จำนวนพนักงานปัจจุบัน }
@@ -490,22 +492,31 @@ async function loadHeadcounts() {
   DEPT_NAMES = Object.keys(headcountMap).sort();
 }
 
+/* ดึงแบบแบ่งหน้าทีละ 1,000 แถวจนครบ (แก้ปัญหาเพดาน 1,000 แถวของ Supabase) */
 async function loadOtRecords() {
-  // ดึงย้อนหลังกว้างๆ ให้ครอบคลุมทุกแท็บ (ปรับช่วงได้ตามต้องการ)
-  const { data, error } = await sbApp.rpc('get_ot_records_public', {
-    p_from: '2000-01-01',
-    p_to: '2100-01-01'
-  });
-  if (error) throw error;
-  return data || [];
+  let from = 0;
+  const all = [];
+  while (true) {
+    const { data, error } = await sbApp
+      .rpc('get_ot_records_public', { p_from: '2000-01-01', p_to: '2100-01-01' })
+      .range(from, from + FETCH_SZ - 1);
+    if (error) throw error;
+    const chunk = data || [];
+    all.push(...chunk);
+    setStatus(`กำลังโหลด... ${all.length.toLocaleString()} รายการ`);
+    if (chunk.length < FETCH_SZ) break;
+    from += FETCH_SZ;
+  }
+  return all;
 }
 
 function buildRows(records) {
   const byDate = {};
   records.forEach(r => {
     if (!r.work_date) return;
-    if (!byDate[r.work_date]) byDate[r.work_date] = [];
-    byDate[r.work_date].push(r);
+    const key = String(r.work_date).slice(0, 10);
+    if (!byDate[key]) byDate[key] = [];
+    byDate[key].push(r);
   });
 
   const dates = Object.keys(byDate).sort();
@@ -892,7 +903,7 @@ async function init() {
     if (!rows.length) { setErr('โหลดข้อมูลได้แต่ไม่พบรายการโอทีในระบบ'); setStatus('ไม่มีข้อมูล'); return; }
 
     const lastDate = rows[rows.length - 1].date;
-    setStatus(`อัปเดตล่าสุด ${new Date().toLocaleTimeString('th-TH')} · ${rows.length} วัน`);
+    setStatus(`อัปเดตล่าสุด ${new Date().toLocaleTimeString('th-TH')} · ${rows.length} วัน · ${records.length.toLocaleString()} รายการ`);
     clearErr();
     document.getElementById('datePicker').value  = lastDate;
     document.getElementById('monthPicker').value = lastDate.slice(0, 7);
