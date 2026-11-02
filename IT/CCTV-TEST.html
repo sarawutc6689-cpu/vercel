@@ -346,6 +346,9 @@ function car(kind){const g=new THREE.Group(),L=new THREE.Group();g.add(L);
  add(bx(0.95,0.1,1.1),0x3a3f46,0,0.45,-0.82);[-1,1].forEach(s=>add(bx(0.06,0.32,1.1),BZ,s*0.445,0.62,-0.82,1));add(bx(0.95,0.32,0.06),BZ,0,0.62,-1.36,1);add(bx(0.95,0.32,0.06),BZ,0,0.62,-0.27);
  [-1,1].forEach(s=>{add(bx(0.2,0.1,0.04),0xfff3b0,s*0.32,0.62,1.33);add(bx(0.14,0.08,0.04),0xc0392b,s*0.4,0.66,-1.4)});
  [[-1,0.95],[1,0.95],[-1,-0.85],[1,-0.85]].forEach(w=>add(wg,0x222222,w[0]*0.5,0.2,w[1]));
+ {const cv=document.createElement('canvas');cv.width=512;cv.height=190;const x=cv.getContext('2d');x.strokeStyle=x.fillStyle='#eceff3';x.lineWidth=9;x.beginPath();x.ellipse(92,70,56,38,0,0,7);x.stroke();x.lineWidth=8;x.beginPath();x.ellipse(92,70,38,15,0,0,7);x.stroke();x.beginPath();x.ellipse(92,66,14,28,0,0,7);x.stroke();
+  x.font='bold 74px Arial,sans-serif';x.fillText('TOYOTA',170,100,320);x.lineWidth=3;x.beginPath();x.moveTo(172,122);x.lineTo(490,122);x.stroke();x.font='bold 46px Tahoma,Sarabun,sans-serif';x.fillText('เชียงใหม่',172,172,300);
+  const t=new THREE.CanvasTexture(cv);t.encoding=THREE.sRGBEncoding;t.anisotropy=4;const p=new THREE.Mesh(new THREE.PlaneGeometry(0.6,0.222),new THREE.MeshBasicMaterial({map:t,transparent:true}));p.position.set(0,0.62,-1.395);p.rotation.y=Math.PI;L.add(p)}
  g.position.set((268-450)*K,0.1,(510-300)*K);g.rotation.y=Math.PI;S.add(g)}
 function anim(dt){const on=$('act').checked;AG.forEach(a=>{a.g.visible=on});if(!on)return;
  AG.forEach(a=>{let mv=false;
