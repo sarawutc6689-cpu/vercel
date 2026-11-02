@@ -64,7 +64,7 @@ canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
    <label><input type="checkbox" id="bn" checked>ชื่ออาคาร</label>
    <label><input type="checkbox" id="auto">หมุนอัตโนมัติ</label>
    <label><input type="checkbox" id="act" checked>คน/รถโฟล์คลิฟท์</label>
-   <button class="btn" id="rst">มุมเริ่มต้น</button><button class="btn" id="top">มุมบน</button><button class="btn" id="eb" style="display:none">✏ แก้ไขกล้อง</button>
+   <button class="btn" id="rst">มุมเริ่มต้น</button><button class="btn" id="top">มุมบน</button><button class="btn" id="eb" style="display:none">✏ แก้ไขกล้อง</button><button class="btn" id="ex" style="display:none">⬇ ส่งออก</button><button class="btn" id="im" style="display:none">⬆ นำเข้า</button><input type="file" id="imf" accept=".json" style="display:none">
   </div>
   <div id="edh">โหมดแก้ไข · ลากกล้องเพื่อย้าย · ลากพื้นที่ว่างเพื่อหมุนมุมมอง</div><div id="toast"></div>
   <div id="povb">กำลังดูจากมุมกล้อง · ลากเพื่อกวาดมองรอบ ๆ · เลื่อนล้อเพื่อซูม</div>
@@ -211,7 +211,13 @@ $('top').onclick=()=>go({ph:0.15,r:95,t:V(0,0,0)});
 
 // editing
 function msg(t){const e=$('toast');e.textContent=t;e.style.display='block';clearTimeout(tT);tT=setTimeout(()=>e.style.display='none',2400)}
-function save(){if(!DB||!canE)return;clearTimeout(svT);
+const LS='cctv_cams_v2';
+function solo(){canE=true;['eb','ex','im'].forEach(i=>$(i).style.display='');try{const j=localStorage.getItem(LS);if(j)load(JSON.parse(j))}catch(x){}
+ $('ex').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(C)],{type:'application/json'}));a.download='cctv-cameras.json';a.click()};
+ $('im').onclick=()=>$('imf').click();
+ $('imf').onchange=e=>{const f=e.target.files[0];if(!f)return;f.text().then(t=>{load(JSON.parse(t));save();msg('นำเข้าแล้ว')}).catch(()=>msg('ไฟล์ไม่ถูกต้อง'));e.target.value=''}}
+function save(){if(!canE)return;clearTimeout(svT);
+ if(!DB){svT=setTimeout(()=>{try{localStorage.setItem(LS,JSON.stringify(C));msg('บันทึกแล้ว (เก็บในเครื่องนี้)')}catch(x){msg('บันทึกไม่สำเร็จ')}},600);return}
  svT=setTimeout(()=>DB.doc('cctv/state').set({cams:JSON.stringify(C),ts:Date.now()}).then(()=>msg('บันทึกแล้ว')).catch(()=>msg('บันทึกไม่สำเร็จ: ไม่มีสิทธิ์แก้ไข')),600)}
 function chg(k,v){const r=C[sel];if(!r)return;r[k]=v;upd(CS[sel]);vis();list();stats();
  $('dN').textContent=r[1];$('dZ').textContent=r[2];$('dR').textContent=r[6];$('dA').textContent=r[7]+'°';$('dS').innerHTML='<span class="bd '+r[5]+'">'+ST[r[5]]+'</span>';save()}
@@ -254,11 +260,11 @@ function resize(){const w=cv.clientWidth,h=cv.clientHeight;R.setSize(w,h,false);
 addEventListener('resize',resize);
 
 // shared storage (edit rights follow the page's sharing permissions)
-(async()=>{try{if(typeof claude==='undefined')return;
- const[d,u]=await Promise.all([claude.use('db'),claude.use('user')]);if(!d)return;DB=d;
+(async()=>{try{if(typeof claude==='undefined'){solo();return}
+ const[d,u]=await Promise.all([claude.use('db'),claude.use('user')]);if(!d){solo();return}DB=d;
  canE=u?await u.canEdit():false;$('eb').style.display=canE?'':'none';
  DB.doc('cctv/state').onSnapshot(s=>{if(!s.exists||drag)return;const j=s.data().cams;
-  if(typeof j==='string'&&j!==JSON.stringify(C)){try{load(JSON.parse(j))}catch(x){}}},()=>{})}catch(x){}})();
+  if(typeof j==='string'&&j!==JSON.stringify(C)){try{load(JSON.parse(j))}catch(x){}}},()=>{})}catch(x){if(!DB)solo()}})();
 
 // ===== roads, pedestrians, forklifts =====
 const mt=c=>mt.c[c]||(mt.c[c]=new THREE.MeshLambertMaterial({color:c}));mt.c={};
