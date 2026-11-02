@@ -45,6 +45,7 @@ canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
 .dr{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--bd);font-size:12.5px}
 #dI{font-size:16px;font-weight:800;color:var(--ac)}
 .ef{display:block;width:100%;margin:2px 0 6px;padding:5px 7px;border:1px solid var(--bd);border-radius:6px;background:var(--pn);color:var(--fg);font:inherit;font-size:12.5px}.el{font-size:11px;color:var(--mut)}
+#lg{position:fixed;inset:0;background:#0007;display:none;align-items:center;justify-content:center;z-index:50}#lg form{background:var(--pn);color:var(--fg);border:1px solid var(--bd);border-radius:10px;padding:18px;width:min(300px,90vw);display:flex;flex-direction:column;gap:9px;box-shadow:0 8px 30px #0006}#lg h3{margin:0 0 2px;font-size:15px}#lg input{background:var(--bg,#fff);color:var(--fg);border:1px solid var(--bd);border-radius:6px;padding:7px 9px;font:inherit;font-size:13px}#lg .r{display:flex;gap:8px;justify-content:flex-end}#lgE{color:#d33;font-size:12px;min-height:14px}
 #toast{position:absolute;right:10px;top:10px;display:none;background:var(--hd);color:#fff;border-radius:8px;padding:6px 12px;font-size:12.5px;box-shadow:0 3px 10px #0004}
 #pov{margin-top:8px;width:100%;justify-content:center;font-weight:700}
 @media (max-width:720px){
@@ -103,6 +104,7 @@ canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
  </aside>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<div id="lg"><form id="lgF" autocomplete="off"><h3>🔒 เข้าสู่ระบบเพื่อแก้ไข</h3><input id="lgU" placeholder="ชื่อผู้ใช้" autocomplete="off"><input id="lgP" type="password" placeholder="รหัสผ่าน" autocomplete="off"><div id="lgE"></div><div class="r"><button type="button" class="btn" id="lgC">ยกเลิก</button><button type="submit" class="btn" id="lgS">ยืนยัน</button></div></form></div>
 <script>
 (function(){
 const K=0.1,$=id=>document.getElementById(id),V=(x,y,z)=>new THREE.Vector3(x,y,z);
@@ -214,7 +216,7 @@ function msg(t){const e=$('toast');e.textContent=t;e.style.display='block';clear
 const LS='cctv_cams_v3';
 function solo(){canE=true;['eb','ex','im'].forEach(i=>$(i).style.display='');try{const j=localStorage.getItem(LS);if(j)load(JSON.parse(j))}catch(x){}
  $('ex').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(C)],{type:'application/json'}));a.download='cctv-cameras.json';a.click()};
- $('im').onclick=()=>$('imf').click();
+ $('im').onclick=()=>AUTH?$('imf').click():ask(()=>$('imf').click());
  $('imf').onchange=e=>{const f=e.target.files[0];if(!f)return;f.text().then(t=>{load(JSON.parse(t));save();msg('นำเข้าแล้ว')}).catch(()=>msg('ไฟล์ไม่ถูกต้อง'));e.target.value=''}}
 function save(){if(!canE)return;clearTimeout(svT);
  if(!DB){svT=setTimeout(()=>{try{localStorage.setItem(LS,JSON.stringify(C));msg('บันทึกแล้ว (เก็บในเครื่องนี้)')}catch(x){msg('บันทึกไม่สำเร็จ')}},600);return}
@@ -228,7 +230,15 @@ $('eS').onchange=e=>chg(5,e.target.value);
 $('eA').oninput=e=>chg(7,+e.target.value);
 $('eD').onclick=()=>{if(sel<0||!confirm('ลบกล้อง '+C[sel][0]+' ใช่หรือไม่?'))return;const o=CS[sel];C.splice(sel,1);rm(o);sel=-1;vis();list();stats();detail();save()};
 $('add').onclick=()=>{const n=Math.max(0,...C.map(c=>parseInt(String(c[0]).split('-')[1])||0))+1,r=['CAM-'+String(n).padStart(3,'0'),'กล้องใหม่','ทั่วไป',50,50,'online','1080p',0];C.push(r);mk(r);pick(C.length-1);stats();save();msg('เพิ่มกล้องแล้ว ลากไปวางตำแหน่งที่ต้องการ')};
-$('eb').onclick=()=>{edit=!edit;$('eb').textContent=edit?'✔ เสร็จสิ้น':'✏ แก้ไขกล้อง';$('add').style.display=edit?'':'none';detail();povUI()};
+let AUTH=false,lgCb=null;
+const hs=s=>{let a=0xdeadbeef,b=0x41c6ce57;for(let i=0;i<s.length;i++){const c=s.charCodeAt(i);a=Math.imul(a^c,2654435761);b=Math.imul(b^c,1597334677)}a=Math.imul(a^(a>>>16),2246822507)^Math.imul(b^(b>>>13),3266489909);b=Math.imul(b^(b>>>16),2246822507)^Math.imul(a^(a>>>13),3266489909);return (4294967296*(2097151&b)+(a>>>0)).toString(36)};
+function ask(cb){lgCb=cb;$('lgE').textContent='';$('lgU').value='';$('lgP').value='';$('lg').style.display='flex';$('lgU').focus()}
+$('lgF').onsubmit=e=>{e.preventDefault();if(hs($('lgU').value.trim()+':'+$('lgP').value)==='oiq10fdfej'){AUTH=true;$('lg').style.display='none';const f=lgCb;lgCb=null;f&&f()}else{$('lgE').textContent='ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง';$('lgP').value=''}};
+$('lgC').onclick=()=>{$('lg').style.display='none';lgCb=null};
+$('lg').addEventListener('keydown',e=>{e.stopPropagation();if(e.key==='Escape')$('lgC').onclick()});
+const tgE=()=>{edit=!edit;if(!edit)AUTH=false;$('eb').textContent=edit?'✔ เสร็จสิ้น':'✏ แก้ไขกล้อง';$('add').style.display=edit?'':'none';detail();povUI()};
+$('eb').onclick=()=>{if(!edit&&!AUTH)return ask(tgE);tgE()};
+
 
 // orbit input
 const ptr=new Map(),rc=new THREE.Raycaster(),nd=new THREE.Vector2(),tip=$('tip');let pinch=0,moved=0;
