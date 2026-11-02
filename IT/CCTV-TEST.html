@@ -339,6 +339,14 @@ function car(kind){const g=new THREE.Group(),L=new THREE.Group();g.add(L);
  else{add(bx(0.9,0.38,2.0),col,0,0.4,0,1);add(bx(0.8,0.34,1.0),0x33414f,0,0.76,-0.1,1);add(bx(0.7,0.04,0.8),col,0,0.95,-0.1);[0.62,-0.62].forEach(z=>[-1,1].forEach(s=>add(wg,0x222222,s*0.46,0.17,z)));[-1,1].forEach(s=>add(bx(0.18,0.1,0.04),0xfff3b0,s*0.3,0.45,1.01))}
  return g}
 [['s',.1,'car',5],['s',.55,'truck',4],['s',.8,'car',5.6],['n',.3,'car',5.2],['n',.6,'car',4.6],['n',.9,'truck',3.9],['n',.05,'car',5.8]].forEach(t=>{const sd_=t[0]==='s',x=(21-450)*K+(sd_?0.45:-0.45),A=V(x,0,((sd_?-60:660)-300)*K),B2=V(x,0,((sd_?660:-60)-300)*K),g=car(t[2]),yw=Math.atan2(B2.x-A.x,B2.z-A.z);S.add(g);AG.push({g,pts:[A,B2],dw:{},v:t[3],i:1,pos:A.clone().lerp(B2,t[1]),wait:0,dwT:0,yaw:yw,ty:yw,ph:0,wrap:1})});
+// parked pickup (bronze gold)
+{const g=new THREE.Group(),L=new THREE.Group();L.scale.setScalar(0.9);g.add(L);
+ const add=(geo,c,x,y,z,sh)=>{const m=new THREE.Mesh(geo,mt(c));m.position.set(x,y,z);m.castShadow=!!sh;L.add(m)},BZ=0xa8863f,wg=new THREE.CylinderGeometry(0.2,0.2,0.14,12).rotateZ(Math.PI/2);
+ add(bx(0.95,0.3,2.6),0x2b2f35,0,0.32,-0.05,1);add(bx(0.95,0.38,0.75),BZ,0,0.58,0.95,1);add(bx(0.95,0.7,0.8),BZ,0,0.78,0.25,1);add(bx(0.97,0.3,0.62),0x33414f,0,0.9,0.25);
+ add(bx(0.95,0.1,1.1),0x3a3f46,0,0.45,-0.82);[-1,1].forEach(s=>add(bx(0.06,0.32,1.1),BZ,s*0.445,0.62,-0.82,1));add(bx(0.95,0.32,0.06),BZ,0,0.62,-1.36,1);add(bx(0.95,0.32,0.06),BZ,0,0.62,-0.27);
+ [-1,1].forEach(s=>{add(bx(0.2,0.1,0.04),0xfff3b0,s*0.32,0.62,1.33);add(bx(0.14,0.08,0.04),0xc0392b,s*0.4,0.66,-1.4)});
+ [[-1,0.95],[1,0.95],[-1,-0.85],[1,-0.85]].forEach(w=>add(wg,0x222222,w[0]*0.5,0.2,w[1]));
+ g.position.set((268-450)*K,0.1,(510-300)*K);g.rotation.y=Math.PI;S.add(g)}
 function anim(dt){const on=$('act').checked;AG.forEach(a=>{a.g.visible=on});if(!on)return;
  AG.forEach(a=>{let mv=false;
   if(a.wait>0)a.wait-=dt;
