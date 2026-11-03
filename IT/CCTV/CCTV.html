@@ -132,7 +132,6 @@ function OFF(w,d,cx,cz){const BK=0x1d1d21,RE=0xb3171f,H1=2.5,H2=5.0,gh=H2-H1-0.2
  M(bx(w,H1,d),BK,cx,H1/2,cz);M(bx(w+0.1,0.3,d+0.1),RE,cx,0.15,cz,0);
  [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(c=>M(bx(0.45,H1,0.45),RE,cx+c[0]*(w/2-0.1),H1/2,cz+c[1]*(d/2-0.1)));
  M(bx(w+0.2,0.25,d+0.2),RE,cx,H1+0.125,cz);
- M(bx(w-1.2,gh-0.05,d-1.2),0x24384f,cx,gy,cz,0);
  const gl=M(bx(w-0.1,gh,d-0.1),0x8ec5e8,cx,gy,cz,0);gl.material.transparent=true;gl.material.opacity=0.42;gl.material.depthWrite=false;
  const nx=Math.round(w/1.6),nz=Math.round(d/1.6);
  for(let i=0;i<=nx;i++){const x=cx-w/2+0.05+i*(w-0.1)/nx;[-1,1].forEach(s=>M(bx(0.07,gh,0.07),BK,x,gy,cz+s*(d/2-0.05),0))}
@@ -361,6 +360,16 @@ function car(kind){const g=new THREE.Group(),L=new THREE.Group();g.add(L);
  else{add(bx(0.9,0.38,2.0),col,0,0.4,0,1);add(bx(0.8,0.34,1.0),0x33414f,0,0.76,-0.1,1);add(bx(0.7,0.04,0.8),col,0,0.95,-0.1);[0.62,-0.62].forEach(z=>[-1,1].forEach(s=>add(wg,0x222222,s*0.46,0.17,z)));[-1,1].forEach(s=>add(bx(0.18,0.1,0.04),0xfff3b0,s*0.3,0.45,1.01))}
  return g}
 [['s',.1,'car',5],['s',.55,'truck',4],['s',.8,'car',5.6],['n',.3,'car',5.2],['n',.6,'car',4.6],['n',.9,'truck',3.9],['n',.05,'car',5.8]].forEach(t=>{const sd_=t[0]==='s',x=(21-450)*K+(sd_?0.45:-0.45),A=V(x,0,((sd_?-60:660)-300)*K),B2=V(x,0,((sd_?660:-60)-300)*K),g=car(t[2]),yw=Math.atan2(B2.x-A.x,B2.z-A.z);S.add(g);AG.push({g,pts:[A,B2],dw:{},v:t[3],i:1,pos:A.clone().lerp(B2,t[1]),wait:0,dwT:0,yaw:yw,ty:yw,ph:0,wrap:1})});
+const OP=[];
+{const b=B.find(x=>x[0]==='สำนักงาน'),cx=(b[1]+b[3]/2-450)*K,cz=(b[2]+b[4]/2-300)*K,FY=2.75,occ=[1,1,0,1,1,1,0,1,1,0,1,1],shirts=[0xf2f2f2,0xcfe0f2,0xe7d9f2,0xf5e1e1,0xdfe8dc];let n=0;
+ const lt=new THREE.PointLight(0xfff2dd,0.9,14);lt.position.set(cx,FY+2,cz);S.add(lt);
+ [-5.2,-1.9,1.4,4.7].forEach(zr=>[-3.8,0,3.8].forEach(xr=>{const x=cx+xr,z=cz+zr,i=n++;
+  M(bx(1.5,0.05,0.8),0xe6dcc3,x,FY+0.44,z,0);[-1,1].forEach(s=>M(bx(0.05,0.44,0.7),0xc9bd9f,x+s*0.7,FY+0.22,z,0));
+  const sc=M(bx(0.55,0.34,0.04),0x0a1a2a,x,FY+0.71,z-0.2,0);sc.material.emissive=new THREE.Color(0x1a4f80);
+  M(bx(0.06,0.1,0.06),0x222222,x,FY+0.52,z-0.2,0);M(bx(0.45,0.02,0.15),0x2b2b2b,x,FY+0.48,z+0.15,0);M(bx(0.18,0.38,0.38),0x2b2f35,x+0.55,FY+0.64,z-0.2,0);
+  M(bx(0.45,0.06,0.45),0x222222,x,FY+0.26,z+0.8,0);M(bx(0.45,0.46,0.06),0xb3171f,x,FY+0.52,z+1.02,0);M(new THREE.CylinderGeometry(0.03,0.03,0.2,6),0x555555,x,FY+0.13,z+0.8,0);M(bx(0.4,0.03,0.4),0x333333,x,FY+0.03,z+0.8,0);
+  if(occ[i]){const p=person(pick1(shirts),null,0,pick1(SK));p.lg.forEach(l=>l.rotation.x=-1.5);p.ar.forEach(a=>a.rotation.x=-0.95);p.g.position.set(x,FY-0.11,z+0.8);p.g.rotation.y=Math.PI;S.add(p.g);OP.push({pe:p,ph:rnd()*6})}}));
+ [[-5.4,-6.4],[5.4,-6.4],[5.4,6.4]].forEach(q=>{M(new THREE.CylinderGeometry(0.22,0.18,0.35,8),0x333333,cx+q[0],FY+0.18,cz+q[1],0);M(new THREE.SphereGeometry(0.4,8,6),0x3f8f3a,cx+q[0],FY+0.6,cz+q[1],0)})}
 let BEAR=null;
 // parked pickup (bronze gold)
 {const g=new THREE.Group(),L=new THREE.Group();L.scale.setScalar(0.9);g.add(L);
@@ -385,7 +394,7 @@ let BEAR=null;
   [-1,1].forEach(s=>{bulb(head,s*0.17,0.3,0.02);[-0.55,-0.82,-1.1].forEach(z=>bulb(L,s*0.445,0.82,z))});
   return{body,head,arms,bl}})();
  g.position.set((268-450)*K,0.1,(510-300)*K);g.rotation.y=Math.PI;S.add(g)}
-function bearAnim(){if(!BEAR)return;const t=performance.now()/1000,B=BEAR;B.body.rotation.z=Math.sin(t*5)*0.1;B.body.position.y=Math.abs(Math.sin(t*5))*0.04;B.head.rotation.z=Math.sin(t*5+1)*0.15;B.arms[0].rotation.z=-(2.2+Math.sin(t*6)*0.5);B.arms[1].rotation.z=2.2+Math.sin(t*6+1.5)*0.5;
+function bearAnim(){const t0=performance.now()/1000;OP.forEach(o=>{const s=t0*8+o.ph;o.pe.ar[0].rotation.x=-0.95+Math.sin(s)*0.1;o.pe.ar[1].rotation.x=-0.95+Math.sin(s+2)*0.1});if(!BEAR)return;const t=performance.now()/1000,B=BEAR;B.body.rotation.z=Math.sin(t*5)*0.1;B.body.position.y=Math.abs(Math.sin(t*5))*0.04;B.head.rotation.z=Math.sin(t*5+1)*0.15;B.arms[0].rotation.z=-(2.2+Math.sin(t*6)*0.5);B.arms[1].rotation.z=2.2+Math.sin(t*6+1.5)*0.5;
  const P=[0xff2244,0xffd400,0x22dd66,0x2299ff,0xff44cc],f=Math.floor(t*4);B.bl.forEach((m,i)=>m.material.color.setHex((f+i)%2?P[(i+f)%5]:0x2a2a2a))}
 function anim(dt){bearAnim();const on=$('act').checked;AG.forEach(a=>{a.g.visible=on});if(!on)return;
  AG.forEach(a=>{let mv=false;
