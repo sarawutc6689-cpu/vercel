@@ -55,7 +55,7 @@ canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
 </style>
 </head>
 <body>
-<header><div><small>MOULDMATE CO., LTD.</small><br><b>ระบบ CCTV — แบบจำลอง 3 มิติโรงงาน | พัฒนาโดย Sarawut.C</b></div><div id="cnt"></div></header>
+<header><div><small>MOULDMATE CO., LTD.</small><br><b>ระบบ CCTV — แบบจำลอง 3 มิติโรงงาน</b></div><div id="cnt"></div></header>
 <div class="main">
  <div class="stage" id="stage">
   <canvas id="c" aria-label="แบบจำลอง 3 มิติของโรงงานและตำแหน่งกล้องวงจรปิด"></canvas>
@@ -370,6 +370,15 @@ const OP=[];
   M(bx(0.45,0.06,0.45),0x222222,x,FY+0.26,z+0.8,0);M(bx(0.45,0.46,0.06),0xb3171f,x,FY+0.52,z+1.02,0);M(new THREE.CylinderGeometry(0.03,0.03,0.2,6),0x555555,x,FY+0.13,z+0.8,0);M(bx(0.4,0.03,0.4),0x333333,x,FY+0.03,z+0.8,0);
   if(occ[i]){const p=person(pick1(shirts),null,0,pick1(SK));p.lg.forEach(l=>l.rotation.x=-1.5);p.ar.forEach(a=>a.rotation.x=-0.95);p.g.position.set(x,FY-0.11,z+0.8);p.g.rotation.y=Math.PI;S.add(p.g);OP.push({pe:p,ph:rnd()*6})}}));
  [[-5.4,-6.4],[5.4,-6.4],[5.4,6.4]].forEach(q=>{M(new THREE.CylinderGeometry(0.22,0.18,0.35,8),0x333333,cx+q[0],FY+0.18,cz+q[1],0);M(new THREE.SphereGeometry(0.4,8,6),0x3f8f3a,cx+q[0],FY+0.6,cz+q[1],0)})}
+{const b=B.find(x=>x[0]==='สำนักงาน'),pc=[b[1]+b[3]/2,b[2]+b[4]/2],FY=2.75,I=(x,z)=>[pc[0]+x*10,pc[1]+z*10];
+ const pa=person(0xf5e1e1,null,0,pick1(SK));spawn(pa.g,[I(-5.2,-5.2),I(-5.2,0.1),I(5.2,0.1),I(5.2,5.2)],0,0.85,0.3,3,{pe:pa,y0:FY});
+ const pb=person(0x3b7fc4,null,0,pick1(SK)),pp=new THREE.Mesh(bx(0.16,0.012,0.22),mt(0xffffff));pp.position.set(0,-0.4,0.1);pb.ar[1].add(pp);
+ const dp=new THREE.Mesh(bx(0.16,0.012,0.22),mt(0xffffff));dp.position.set((pc[0]-450)*K+0.45,FY+0.475,(pc[1]-300)*K-1.75);dp.visible=false;S.add(dp);
+ spawn(pb.g,[I(5.2,0.1),I(0.85,0.1),I(0.85,-0.95)],0,0.9,0,5,{pe:pb,y0:FY,
+  dk:(a,i)=>{if(i===2){a.ev={k:'hand',t:0};dp.visible=false;a.ty=-Math.PI/2}else if(i===0){a.ev={k:'pick',t:0}}},
+  hk:(a,mv,dt)=>{const p=a.pe;if(mv)a.ev=null;if(pp.visible)p.ar[1].rotation.x=-1.0;const e=a.ev;if(a.wait>0&&e){e.t+=dt;
+   if(e.k==='hand'){if(e.t<1.3){p.ar[0].rotation.x=-0.4+Math.sin(e.t*7)*0.35;p.ar[1].rotation.x=-1.0}else if(e.t<2.1){p.ar[1].rotation.x=-1.45;p.ar[0].rotation.x=0}else{if(pp.visible){pp.visible=false;dp.visible=true}p.ar[1].rotation.x=-0.3+Math.sin(e.t*5)*0.2;p.ar[0].rotation.x=-0.3+Math.sin(e.t*4)*0.2}}
+   else{if(e.t<0.9)p.ar[1].rotation.x=-1.4;else{pp.visible=true;p.ar[1].rotation.x=-1.0}}}}})}
 let BEAR=null;
 // parked pickup (bronze gold)
 {const g=new THREE.Group(),L=new THREE.Group();L.scale.setScalar(0.9);g.add(L);
@@ -400,11 +409,11 @@ function anim(dt){bearAnim();const on=$('act').checked;AG.forEach(a=>{a.g.visibl
  AG.forEach(a=>{let mv=false;
   if(a.wait>0)a.wait-=dt;
   else{const t=a.pts[a.i],dx=t.x-a.pos.x,dz=t.z-a.pos.z,d=Math.hypot(dx,dz),sp=a.v*dt;if(d>0.001)a.ty=Math.atan2(dx,dz);
-   if(d<=sp){a.pos.x=t.x;a.pos.z=t.z;if(a.dw[a.i]){a.wait=a.dwT*(0.6+rnd()*0.8);if(a.fk)a.fk.cg.visible=!a.fk.cg.visible}a.i=a.wrap?(a.pos.copy(a.pts[0]),1):(a.i+1)%a.pts.length}
+   if(d<=sp){a.pos.x=t.x;a.pos.z=t.z;if(a.dw[a.i]){a.wait=a.dwT*(0.6+rnd()*0.8);if(a.fk)a.fk.cg.visible=!a.fk.cg.visible;if(a.dk)a.dk(a,a.i)}a.i=a.wrap?(a.pos.copy(a.pts[0]),1):(a.i+1)%a.pts.length}
    else{a.pos.x+=dx/d*sp;a.pos.z+=dz/d*sp;mv=true}}
-  a.yaw+=wrap(a.ty-a.yaw)*Math.min(1,dt*(a.fk?6:10));a.g.position.set(a.pos.x,0.05,a.pos.z);a.g.rotation.y=a.yaw;
+  a.yaw+=wrap(a.ty-a.yaw)*Math.min(1,dt*(a.fk?6:10));a.g.position.set(a.pos.x,a.y0||0.05,a.pos.z);a.g.rotation.y=a.yaw;
   if(a.fk)a.fk.bc.color.setHex(Math.floor(performance.now()/300)%2?0xffb000:0x553300);
-  else if(a.pe){const p=a.pe;if(mv)a.ph+=dt*a.v*7;const s=mv?Math.sin(a.ph):0;p.lg[0].rotation.x=s*0.7;p.lg[1].rotation.x=-s*0.7;p.ar[0].rotation.x=-s*0.6;p.ar[1].rotation.x=s*0.6;p.g.children.forEach(c=>c.isMesh&&0);a.g.position.y=0.05+(mv?Math.abs(Math.cos(a.ph))*0.03:0)}})}
+  else if(a.pe){const p=a.pe;if(mv)a.ph+=dt*a.v*7;const s=mv?Math.sin(a.ph):0;p.lg[0].rotation.x=s*0.7;p.lg[1].rotation.x=-s*0.7;p.ar[0].rotation.x=-s*0.6;p.ar[1].rotation.x=s*0.6;p.g.children.forEach(c=>c.isMesh&&0);a.g.position.y=(a.y0||0.05)+(mv?Math.abs(Math.cos(a.ph))*0.03:0);if(a.hk)a.hk(a,mv,dt)}})}
 
 const pv=V(0,0,0);
 function frame(){
