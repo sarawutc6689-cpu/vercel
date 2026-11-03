@@ -55,7 +55,7 @@ canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
 </style>
 </head>
 <body>
-<header><div><small>MOULDMATE CO., LTD.</small><br><b>ระบบ CCTV — แบบจำลอง 3 มิติโรงงาน | พัฒนาโดย Sarawut.C</b></div><div id="cnt"></div></header>
+<header><div><small>MOULDMATE CO., LTD.</small><br><b>ระบบ CCTV — แบบจำลอง 3 มิติโรงงาน</b></div><div id="cnt"></div></header>
 <div class="main">
  <div class="stage" id="stage">
   <canvas id="c" aria-label="แบบจำลอง 3 มิติของโรงงานและตำแหน่งกล้องวงจรปิด"></canvas>
@@ -128,6 +128,24 @@ const M=(g,c,x,y,z,sh)=>{const m=new THREE.Mesh(g,new THREE.MeshLambertMaterial(
 const bx=(w,h,d)=>new THREE.BoxGeometry(w,h,d);
 function gable(w,d,rh,c,x,y,z){const W=Math.min(w,d)+0.5,D=Math.max(w,d)+0.5,s=new THREE.Shape();s.moveTo(-W/2,0);s.lineTo(W/2,0);s.lineTo(0,rh);
  const g=new THREE.ExtrudeGeometry(s,{depth:D,bevelEnabled:false});g.translate(0,0,-D/2);if(w>=d)g.rotateY(Math.PI/2);return M(g,c,x,y,z)}
+function OFF(w,d,cx,cz){const BK=0x1d1d21,RE=0xb3171f,H1=2.5,H2=5.0,gh=H2-H1-0.25,gy=H1+0.25+gh/2;
+ M(bx(w,H1,d),BK,cx,H1/2,cz);M(bx(w+0.1,0.3,d+0.1),RE,cx,0.15,cz,0);
+ [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(c=>M(bx(0.45,H1,0.45),RE,cx+c[0]*(w/2-0.1),H1/2,cz+c[1]*(d/2-0.1)));
+ M(bx(w+0.2,0.25,d+0.2),RE,cx,H1+0.125,cz);
+ M(bx(w-1.2,gh-0.05,d-1.2),0x24384f,cx,gy,cz,0);
+ const gl=M(bx(w-0.1,gh,d-0.1),0x8ec5e8,cx,gy,cz,0);gl.material.transparent=true;gl.material.opacity=0.42;gl.material.depthWrite=false;
+ const nx=Math.round(w/1.6),nz=Math.round(d/1.6);
+ for(let i=0;i<=nx;i++){const x=cx-w/2+0.05+i*(w-0.1)/nx;[-1,1].forEach(s=>M(bx(0.07,gh,0.07),BK,x,gy,cz+s*(d/2-0.05),0))}
+ for(let i=0;i<=nz;i++){const z=cz-d/2+0.05+i*(d-0.1)/nz;[-1,1].forEach(s=>M(bx(0.07,gh,0.07),BK,cx+s*(w/2-0.05),gy,z,0))}
+ [-1,1].forEach(s=>{M(bx(w,0.07,0.07),BK,cx,gy,cz+s*(d/2-0.05),0);M(bx(0.07,0.07,d),BK,cx+s*(w/2-0.05),gy,cz,0)});
+ M(bx(w+0.2,0.25,d+0.2),RE,cx,H2+0.125,cz,0);M(bx(w-0.2,0.05,d-0.2),BK,cx,H2+0.275,cz,0);
+ M(bx(2.6,2.2,0.12),0x0d0d10,cx,1.1,cz+d/2+0.04,0);M(bx(3.0,0.2,0.16),RE,cx,2.3,cz+d/2+0.05,0);
+ const cv=document.createElement('canvas');cv.width=64;cv.height=96;const x=cv.getContext('2d');x.fillStyle='#14315f';x.fillRect(0,0,64,96);x.strokeStyle='#5d7fb5';x.lineWidth=1;
+ for(let i=1;i<6;i++){x.beginPath();x.moveTo(i*64/6,0);x.lineTo(i*64/6,96);x.stroke()}for(let i=1;i<10;i++){x.beginPath();x.moveTo(0,i*9.6);x.lineTo(64,i*9.6);x.stroke()}x.strokeStyle='#cfd6df';x.lineWidth=3;x.strokeRect(1.5,1.5,61,93);
+ const tx=new THREE.CanvasTexture(cv);tx.encoding=THREE.sRGBEncoding;tx.anisotropy=4;
+ const pw=1.0,pl=1.62,cols=Math.floor((w-0.4)/pw),rows=Math.floor((d-0.4)/pl),im=new THREE.InstancedMesh(bx(pw-0.04,0.05,pl-0.04),new THREE.MeshLambertMaterial({map:tx}),cols*rows),m4=new THREE.Matrix4(),q=new THREE.Quaternion().setFromEuler(new THREE.Euler(0.17,0,0));
+ let n=0;for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){m4.compose(V(cx-cols*pw/2+pw/2+c*pw,H2+0.48,cz-rows*pl/2+pl/2+r*pl),q,V(1,1,1));im.setMatrixAt(n++,m4)}
+ im.castShadow=true;S.add(im)}
 const lbEl=$('lbl'),bl=[],solids=[];
 B.forEach((b,i)=>{
  const w=b[3]*K,d=b[4]*K,cx=(b[1]+b[3]/2-450)*K,cz=(b[2]+b[4]/2-300)*K,t=b[5]||'solid';
@@ -137,6 +155,7 @@ B.forEach((b,i)=>{
   if(b[0]==='ลานจอดรถ')for(let k=1;k<9;k++)M(bx(0.12,0.02,d*0.7),0xf2f4f7,cx-w/2+k*w/9,0.11,cz,0)}
  else if(t==='forest')M(bx(w,0.12,d),0x7bbd5a,cx,0.06,cz).castShadow=false;
  else if(t==='dotted')M(bx(w,0.08,d),0xa5d49f,cx,0.04,cz).castShadow=false;
+ else if(b[0]==='สำนักงาน'){OFF(w,d,cx,cz);top=5.7;solids.push({x0:b[1],x1:b[1]+b[3],y0:b[2],y1:b[2]+b[4],h:top})}
  else{
   const big=w*d>=120;top=h+(big?1.3:0.25);
   M(bx(w,h,d),col,cx,h/2,cz);
