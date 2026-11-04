@@ -152,6 +152,7 @@ textarea::placeholder{color:var(--t3)}
 .modal-btn{padding:10px 20px;border-radius:var(--rs);border:none;cursor:pointer;font-family:inherit;font-weight:600}
 .modal-btn.confirm{background:var(--err);color:#fff} .modal-btn.confirm:hover{background:#b91c1c}
 .modal-btn.cancel{background:var(--card);border:1px solid var(--border)} .modal-btn.cancel:hover{background:var(--bg)}
+.modal-btn:disabled{opacity:.5;cursor:not-allowed}
 
 .empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:40px 0}
 .eico{width:52px;height:52px;border-radius:13px;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:22px}
@@ -170,6 +171,12 @@ textarea::placeholder{color:var(--t3)}
 .lsearch .sico{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:13px;pointer-events:none}
 .lsearch .sclr{position:absolute;right:8px;top:50%;transform:translateY(-50%);border:none;background:none;cursor:pointer;color:var(--t3);font-size:14px;display:none}
 .lsearch.has-text .sclr{display:block}
+
+/* ปุ่มพิมพ์ใบขออนุมัติ + ช่องเลือกใน modal พิมพ์ */
+.btn-print{font-family:inherit;font-size:12px;font-weight:700;color:#fff;background:var(--accent);border:none;padding:5px 12px;border-radius:var(--rs);cursor:pointer;margin-left:8px;white-space:nowrap}
+.btn-print:hover{background:#1d40b0}
+input[type="date"],select{width:100%;background:#fff;border:1.5px solid var(--border);border-radius:var(--rs);padding:10px 12px;font-size:15px;font-family:inherit;color:var(--t1);outline:none}
+input[type="date"]:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(37,99,235,0.1)}
 </style>
 </head>
 <body>
@@ -284,8 +291,8 @@ textarea::placeholder{color:var(--t3)}
           </div>
 
           <div class="field">
-            <div class="lbl">หมายเหตุ</div>
-            <textarea id="remark" rows="2" placeholder="หมายเหตุ (ถ้ามี)"></textarea>
+            <div class="lbl">งานที่ทำ</div>
+            <textarea id="remark" rows="2" placeholder="กรอกระบุงานที่ทำ"></textarea>
           </div>
 
           <div class="alert ok" id="alertOk"></div>
@@ -309,14 +316,15 @@ textarea::placeholder{color:var(--t3)}
             <div class="sc"><div class="sl">รวมชั่วโมงโอที</div><div class="sv gr" id="cntHr">—</div><div class="su">ชั่วโมง</div></div>
           </div>
           <div class="lh">
-  <div class="lht">รายชื่อพนักงานที่ลงโอที</div>
-  <div class="lsearch" id="lsearch">
-    <span class="sico">🔍</span>
-    <input type="text" id="listSearch" placeholder="ค้นหาชื่อ / รหัส / แผนก..." oninput="applyListFilter()" autocomplete="off">
-    <button type="button" class="sclr" onclick="clearListSearch()">✕</button>
-  </div>
-  <div class="lhb" id="lhCnt">0 คน</div>
-</div>
+            <div class="lht">รายชื่อพนักงานที่ลงโอที</div>
+            <div class="lsearch" id="lsearch">
+              <span class="sico">🔍</span>
+              <input type="text" id="listSearch" placeholder="ค้นหาชื่อ / รหัส / แผนก..." oninput="applyListFilter()" autocomplete="off">
+              <button type="button" class="sclr" onclick="clearListSearch()">✕</button>
+            </div>
+            <div class="lhb" id="lhCnt">0 คน</div>
+            <button type="button" class="btn-print" onclick="openPrintModal()">🖨️ พิมพ์ใบขออนุมัติ</button>
+          </div>
           <div class="list-container" id="listContainer">
             <div class="olist" id="olist"><div class="dots"><span></span><span></span><span></span></div></div>
           </div>
@@ -355,6 +363,28 @@ textarea::placeholder{color:var(--t3)}
     <div class="modal-footer">
       <button class="modal-btn cancel" onclick="closeEditModal()">ยกเลิก</button>
       <button class="modal-btn confirm" onclick="confirmEdit()" style="background:var(--accent)">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="printModal">
+  <div class="modal-content">
+    <div class="modal-header">🖨️ พิมพ์ใบขออนุมัติทำงานล่วงเวลา</div>
+    <div class="modal-body">
+      <div class="field"><div class="lbl">วันที่</div>
+        <input type="date" id="printDate" onchange="loadPrintRows()">
+      </div>
+      <div class="field" style="margin-top:12px"><div class="lbl">แผนก</div>
+        <select id="printDept" onchange="updatePrintInfo()"><option value="">ทุกแผนก</option></select>
+      </div>
+      <div class="field" style="margin-top:12px"><div class="lbl">ฝ่าย</div>
+        <input type="text" id="printDivision" placeholder="พิมพ์ชื่อฝ่าย (เว้นว่างได้)" style="padding:10px 12px;font-size:15px" autocomplete="off">
+      </div>
+      <div class="hint" id="printInfo" style="margin-top:12px">—</div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn cancel" onclick="closePrintModal()">ยกเลิก</button>
+      <button class="modal-btn confirm" id="printGoBtn" onclick="doPrint()" style="background:var(--accent)" disabled>พิมพ์</button>
     </div>
   </div>
 </div>
@@ -730,7 +760,7 @@ async function confirmEdit(){
 document.getElementById('editModal').addEventListener('click', function(e){ if (e.target === this) closeEditModal(); });
 document.getElementById('deleteModal').addEventListener('click', function(e){ if (e.target === this) closeDeleteModal(); });
 
-  // ============================================================
+// ============================================================
 // check_before_ot_entry.js (ตัวอย่าง — เอาไปแปะในโค้ดฟอร์มกรอก OT ของ OT-Tracking)
 // เช็คก่อนบันทึก OT ว่าพนักงานคนนี้ถูกบล็อกอยู่หรือไม่ (แสดงข้อความเตือนทันที
 // ไม่ต้องรอ error จาก trigger ฝั่ง database ซึ่งเป็นแค่ด่านสุดท้ายกันพลาด)
@@ -785,7 +815,162 @@ function clearListSearch(){
   applyListFilter();
 }
 
-  
+/* ==========================================
+   พิมพ์ใบขออนุมัติทำงานล่วงเวลา
+   ========================================== */
+var _printRows = [];
+
+function openPrintModal(){
+  document.getElementById('printDate').value = toISODate(today());
+  document.getElementById('printModal').classList.add('active');
+  loadPrintRows();
+}
+function closePrintModal(){
+  document.getElementById('printModal').classList.remove('active');
+}
+
+async function loadPrintRows(){
+  var iso  = document.getElementById('printDate').value;
+  var sel  = document.getElementById('printDept');
+  var info = document.getElementById('printInfo');
+  var btn  = document.getElementById('printGoBtn');
+  btn.disabled = true;
+  if (!iso) { info.textContent = 'กรุณาเลือกวันที่'; return; }
+  info.textContent = 'กำลังโหลด...';
+  try {
+    const { data, error } = await sb.rpc('get_ot_report', {
+      p_manager_token: currentManager.token, p_from: iso, p_to: iso
+    });
+    if (error) throw error;
+    _printRows = (data || []).slice().sort(function(a,b){ return a.id - b.id; });
+
+    var depts = [];
+    _printRows.forEach(function(r){ if (r.department && depts.indexOf(r.department) === -1) depts.push(r.department); });
+    sel.innerHTML = '';
+    var all = document.createElement('option'); all.value = ''; all.textContent = 'ทุกแผนก'; sel.appendChild(all);
+    depts.forEach(function(dep){
+      var o = document.createElement('option'); o.value = dep; o.textContent = dep; sel.appendChild(o);
+    });
+    updatePrintInfo();
+  } catch (e) {
+    info.textContent = 'โหลดข้อมูลไม่สำเร็จ: ' + e.message;
+  }
+}
+
+function getPrintRows(){
+  var dep = document.getElementById('printDept').value;
+  return dep ? _printRows.filter(function(r){ return r.department === dep; }) : _printRows;
+}
+
+function updatePrintInfo(){
+  var rows = getPrintRows();
+  var sum = rows.reduce(function(s,r){ return s + (Number(r.emp_total)||0); }, 0);
+  document.getElementById('printInfo').textContent = rows.length
+    ? ('พบ ' + rows.length + ' คน · รวม ' + decToHHmm(sum) + ' ชม.')
+    : 'ไม่พบรายการโอทีตามเงื่อนไขที่เลือก';
+  document.getElementById('printGoBtn').disabled = !rows.length;
+
+  // เติมฝ่ายอัตโนมัติจากคอลัมน์ section (ถ้ามีหลายค่าจะคั่นด้วยจุลภาค แก้ไขเองได้ในช่อง)
+  var secs = [];
+  rows.forEach(function(r){ if (r.section && secs.indexOf(r.section) === -1) secs.push(r.section); });
+  document.getElementById('printDivision').value = secs.join(', ');
+}
+
+function doPrint(){
+  var rows = getPrintRows();
+  var p = document.getElementById('printDate').value.split('-');
+  var d = new Date(+p[0], +p[1]-1, +p[2]);
+  var dep = document.getElementById('printDept').value;
+  if (!dep) {
+    var ds = [];
+    rows.forEach(function(r){ if (r.department && ds.indexOf(r.department) === -1) ds.push(r.department); });
+    dep = ds.join(', ');
+  }
+  var division = document.getElementById('printDivision').value.trim();
+  closePrintModal();
+  printOTForm(rows, d, dep, division);
+}
+
+document.getElementById('printModal').addEventListener('click', function(e){ if (e.target === this) closePrintModal(); });
+
+function printOTForm(rows, d, deptName, division){
+  if (!rows || !rows.length) { alert('ไม่มีรายการโอทีให้พิมพ์'); return; }
+  var mons = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+  deptName = deptName || '';
+  division = division || '';
+  var LOGO_MM_URL = 'https://raw.githubusercontent.com/sarawutc6689-cpu/vercel/2e9557d5db6c28a5b4a023515a5ae8805805a512/logo/logomm.png';
+
+  function hm(t){ return t ? String(t).substring(0,5) : ''; }
+  var ROWS_PER_PAGE = 20;
+  var pages = '';
+
+  for (var p = 0; p < rows.length; p += ROWS_PER_PAGE) {
+    var chunk = rows.slice(p, p + ROWS_PER_PAGE);
+    var sum = chunk.reduce(function(s,r){ return s + (Number(r.emp_total)||0); }, 0);
+    var tr = '';
+    for (var i = 0; i < ROWS_PER_PAGE; i++) {
+      var r = chunk[i];
+      tr += '<tr>' +
+        '<td class="c">' + (p + i + 1) + '</td>' +
+        '<td class="c">' + (r ? escapeHtml(r.emp_code) : '') + '</td>' +
+        '<td>' + (r ? escapeHtml(r.emp_name) : '') + '</td>' +
+        '<td class="c">' + (r ? hm(r.start_time) : '') + '</td>' +
+        '<td class="c">' + (r ? hm(r.end_time) : '') + '</td>' +
+        '<td class="c">' + (r ? Number(r.emp_total).toFixed(2) : '') + '</td>' +
+        '<td>' + (r ? escapeHtml(r.remark || '') : '') + '</td>' +
+        '<td></td></tr>';
+    }
+    pages += '<div class="page">' +
+      '<div class="top"><div class="logo"><img src="' + LOGO_MM_URL + '" alt=""></div>' +
+        '<div class="title">ใบขออนุมัติทำงานล่วงเวลา</div>' +
+        '<div class="logo r"></div></div>' +
+      '<div class="line">แผนก <span class="dot w1">' + escapeHtml(deptName) + '</span>' +
+        ' ฝ่าย <span class="dot w1">' + (division ? escapeHtml(division) : '&nbsp;') + '</span> มีความประสงค์ขออนุมัติให้พนักงาน ทำงานล่วงเวลา</div>' +
+      '<div class="line">ในวันที่ <span class="dot w3">' + d.getDate() + '</span>' +
+        ' เดือน <span class="dot w2">' + mons[d.getMonth()] + '</span>' +
+        ' พ.ศ. <span class="dot w3">' + (d.getFullYear()+543) + '</span>' +
+        ' จำนวน <span class="dot w3">' + chunk.length + '</span> คน' +
+        ' รวม <span class="dot w3">' + decToHHmm(sum) + '</span> ชม.</div>' +
+      '<table><colgroup><col style="width:6%"><col style="width:9%"><col style="width:24%"><col style="width:7%"><col style="width:7%"><col style="width:7%"><col style="width:26%"><col style="width:14%"></colgroup>' +
+      '<thead><tr><th rowspan="2">ลำดับ</th><th rowspan="2">รหัส</th><th rowspan="2">ชื่อ-สกุล</th>' +
+        '<th colspan="2">เวลาในการทำ O.T</th><th rowspan="2">รวม<br>(ชม.)</th><th rowspan="2">งานที่ทำ</th><th rowspan="2">ลงชื่อพนักงาน</th></tr>' +
+        '<tr><th>ตั้งแต่</th><th>ถึง</th></tr></thead>' +
+      '<tbody>' + tr + '<tr class="tot"><td colspan="5" class="c">รวม</td><td class="c">' + sum.toFixed(2) + '</td><td colspan="2"></td></tr></tbody></table>' +
+      '<div class="sign">' +
+        '<div>ลงชื่อ..............................ผู้ขออนุมัติ<br>หัวหน้าแผนก<br>วันที่......./......./.......</div>' +
+        '<div>ลงชื่อ..............................ผู้ทวนสอบ<br>ผู้จัดการฝ่าย<br>วันที่......./......./.......</div>' +
+        '<div>ลงชื่อ..............................ผู้อนุมัติ<br>กรรมการผู้จัดการ<br>วันที่......./......./.......</div>' +
+      '</div>' +
+      '<div class="note"><u>หมายเหตุ :</u> 1.การทำงานล่วงเวลาทุกประเภท บริษัทฯ ต้องเสียค่าใช้จ่ายเพิ่มมากกว่าปกติ หากหน่วยงานได้วางแผนหรือประสานงานระหว่างกัน อาจจะสามารถหลีกเลี่ยงการทำงานล่วงเวลาได้<br>' +
+        '&emsp;2.กรุณากรอกข้อความให้ครบถ้วนและชัดเจน หากมีการทำงานล่วงเวลาต้องได้รับการอนุมัติจากกรรมการผู้จัดการก่อนทุกครั้ง<br>' +
+        '&emsp;3.หากได้รับการอนุมัติให้ทำงานล่วงเวลาแล้วให้รีบดำเนินการส่งเอกสารได้ที่ ฝ่ายบุคคลและธุรการภายใน 12.00 น.ของวันถัดไป</div>' +
+      '</div>';
+  }
+
+  var css = '@page{size:A4 portrait;margin:10mm}' +
+    'body{font-family:"Sarabun","TH Sarabun New",sans-serif;font-size:12px;color:#000;margin:0}' +
+    '.page{page-break-after:always}.page:last-child{page-break-after:auto}' +
+    '.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}' +
+    '.logo{font-size:12px;font-weight:700;width:120px}.logo.r{text-align:right}' +
+    '.logo img{display:block;height:36px;width:auto;margin-bottom:2px}' +
+    '.title{font-size:16px;font-weight:700;text-decoration:underline}' +
+    '.line{margin:6px 0;font-size:12px}' +
+    '.dot{display:inline-block;border-bottom:1px dotted #000;text-align:center;padding:0 4px}' +
+    '.w1{min-width:150px}.w2{min-width:90px}.w3{min-width:50px}' +
+    'table{width:100%;border-collapse:collapse;table-layout:fixed;margin-top:8px}' +
+    'th,td{border:1px solid #000;padding:2px 4px;height:22px;font-size:12px;overflow:hidden;word-break:break-word}' +
+    'th{text-align:center;font-weight:600;height:auto}.c{text-align:center}.tot td{font-weight:700}' +
+    '.sign{display:flex;justify-content:space-between;text-align:center;margin-top:22px;line-height:1.9}' +
+    '.note{margin-top:14px;font-size:11px;line-height:1.7}';
+
+  var w = window.open('', '_blank');
+  if (!w) { alert('เบราว์เซอร์บล็อกหน้าต่างพิมพ์ กรุณาอนุญาต pop-up'); return; }
+  w.document.write('<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"><title>ใบขออนุมัติทำงานล่วงเวลา</title>' +
+    '<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">' +
+    '<style>' + css + '</style></head><body>' + pages + '</body></html>');
+  w.document.close();
+  w.onload = function(){ setTimeout(function(){ w.focus(); w.print(); }, 400); };
+}
 </script>
 </body>
 </html>
