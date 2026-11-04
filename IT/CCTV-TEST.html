@@ -574,15 +574,15 @@ const OP=[];
  [0,0.5].forEach((f,i)=>{const p=person(i?0x4d6d52:0xcfe0f2,i?0xf5c518:null,i?0xff8a00:0,pick1(SK));spawn(p.g,[P(7.6,0.9),P(7.6,8.9)],0.4,0.85,f,3,{pe:p,y0:0.12})});
  // ชั้น 1: พนักงานประจำเครื่องในห้องทดสอบ 1 และ 2
  [3.2,12.0].forEach(u=>{const p=person(0x2f5f9e,0xf5c518,0xff8a00,pick1(SK));p.ar.forEach(a=>a.rotation.x=-0.9);p.g.position.set(X0+u,0.1,Z0+6.1);p.g.rotation.y=Math.PI;S.add(p.g);OP.push({pe:p,ph:rnd()*6})})}
- {const b=B.find(x=>x[0]==='RD'),P=(u,v)=>[b[1]+u*10,b[2]+v*10],X0=(b[1]-450)*K,Z0=(b[2]-300)*K,SL=3.2,sh=[0xf2f2f2,0xcfe0f2,0xe7d9f2,0xf5e1e1,0xdfe8dc];
+ {const b=B.find(x=>x[0]==='RD'),P=(u,v)=>[b[1]+u*10,b[2]+v*10],X0=(b[1]-450)*K,Z0=(b[2]-300)*K,SL=3.2,d=9.2,sh=[0xf2f2f2,0xcfe0f2,0xe7d9f2,0xf5e1e1,0xdfe8dc];
  // ชั้น 2: คนนั่งทำงานหน้าคอม
- [3.9,6.6].forEach((v,r)=>[2.4,5.0,7.6,10.2,12.8].forEach((u,c)=>{if((r*5+c)%4===2)return;const p=person(pick1(sh),null,0,pick1(SK));p.lg.forEach(l=>l.rotation.x=-1.5);p.ar.forEach(a=>a.rotation.x=-0.95);p.g.position.set(X0+u,SL-0.11,Z0+v+0.8);p.g.rotation.y=Math.PI;S.add(p.g);OP.push({pe:p,ph:rnd()*6})}));
+ [2.2,6.9].forEach((v,r)=>[1.6,3.8,6.0,8.2].forEach((u,c)=>{if((r*4+c)%5===2)return;const p=person(pick1(sh),null,0,pick1(SK));p.lg.forEach(l=>l.rotation.x=-1.5);p.ar.forEach(a=>a.rotation.x=-0.95);p.g.position.set(X0+u,SL-0.11,Z0+v+0.8);p.g.rotation.y=Math.PI;S.add(p.g);OP.push({pe:p,ph:rnd()*6})}));
  // ชั้น 2: คนเดินในทางเดินระหว่างแถวโต๊ะ
- const w1=person(0xf5e1e1,null,0,pick1(SK));spawn(w1.g,[P(2.2,5.55),P(13.2,5.55)],0,0.85,0.2,4,{pe:w1,y0:SL});
- // ชั้น 1: คนเดินตามทางเดินกลางจนถึงด้านหลังอาคาร
- [0,0.5].forEach((f,i)=>{const p=person(i?0x4d6d52:0xcfe0f2,i?0xf5c518:null,i?0xff8a00:0,pick1(SK));spawn(p.g,[P(7.6,0.9),P(7.6,8.9)],0.4,0.85,f,3,{pe:p,y0:0.12})});
- // ชั้น 1: พนักงานประจำเครื่องในห้องทดสอบ 1 และ 2
- [3.2,12.0].forEach(u=>{const p=person(0x2f5f9e,0xf5c518,0xff8a00,pick1(SK));p.ar.forEach(a=>a.rotation.x=-0.9);p.g.position.set(X0+u,0.1,Z0+6.1);p.g.rotation.y=Math.PI;S.add(p.g);OP.push({pe:p,ph:rnd()*6})})}
+ const w1=person(0xf5e1e1,null,0,pick1(SK));spawn(w1.g,[P(1.2,4.7),P(9.0,4.7)],0,0.85,0.2,4,{pe:w1,y0:SL});
+ // ชั้น 1: คนเดินตามทางเดินกลางจากประตูหน้าไปด้านหลังอาคาร
+ [0,0.5].forEach((f,i)=>{const p=person(i?0x4d6d52:0xcfe0f2,i?0xf5c518:null,i?0xff8a00:0,pick1(SK));spawn(p.g,[P(14.6,4.6),P(1.0,4.6)],0.4,0.85,f,3,{pe:p,y0:0.12})});
+ // ชั้น 1: พนักงานประจำเครื่องในห้องทดสอบ 1 (เหนือ) และ 2 (ใต้)
+ [0,1].forEach(i=>{const p=person(0x2f5f9e,0xf5c518,0xff8a00,pick1(SK));p.ar.forEach(a=>a.rotation.x=-0.9);p.g.position.set(X0+4.2,0.1,Z0+(i?d-2.3:2.3));p.g.rotation.y=i?0:Math.PI;S.add(p.g);OP.push({pe:p,ph:rnd()*6})})}
 let BEAR=null;
 // parked pickup (bronze gold)
 {const g=new THREE.Group(),L=new THREE.Group();L.scale.setScalar(0.9);g.add(L);
