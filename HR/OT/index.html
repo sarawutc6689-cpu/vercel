@@ -292,7 +292,7 @@ input[type="date"]:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0
 
           <div class="field">
             <div class="lbl">งานที่ทำ</div>
-            <textarea id="remark" rows="2" placeholder="กรอกระบุงานที่ทำ"></textarea>
+            <textarea id="remark" rows="2" placeholder="ระบุงานที่ทำ / หมายเหตุ"></textarea>
           </div>
 
           <div class="alert ok" id="alertOk"></div>
@@ -358,7 +358,7 @@ input[type="date"]:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0
         <div class="field"><div class="lbl">เวลาสิ้นสุด</div><input type="time" id="editEndTime"></div>
       </div>
       <div class="field" style="margin-top:12px"><div class="lbl">รวมชั่วโมง</div><input type="text" id="editEmpTotal" placeholder="เช่น 1.50"></div>
-      <div class="field" style="margin-top:12px"><div class="lbl">หมายเหตุ</div><textarea id="editRemark" rows="2" placeholder="หมายเหตุ (ถ้ามี)"></textarea></div>
+      <div class="field" style="margin-top:12px"><div class="lbl">หมายเหตุ</div><textarea id="editRemark" rows="2" placeholder="ระบุงานที่ทำ / หมายเหตุ"></textarea></div>
     </div>
     <div class="modal-footer">
       <button class="modal-btn cancel" onclick="closeEditModal()">ยกเลิก</button>
@@ -385,6 +385,19 @@ input[type="date"]:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0
     <div class="modal-footer">
       <button class="modal-btn cancel" onclick="closePrintModal()">ยกเลิก</button>
       <button class="modal-btn confirm" id="printGoBtn" onclick="doPrint()" style="background:var(--accent)" disabled>พิมพ์</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="warnModal">
+  <div class="modal-content" style="max-width:420px">
+    <div class="modal-header" id="warnTitle">⚠️ กรอกข้อมูลไม่ครบ</div>
+    <div class="modal-body">
+      <p id="warnIntro" style="font-size:15px;color:var(--t1)"></p>
+      <ul id="warnList" style="margin:10px 0 0 22px;font-size:15px;color:var(--err);line-height:1.8"></ul>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn confirm" onclick="closeWarnModal()" style="background:var(--accent)">ตกลง</button>
     </div>
   </div>
 </div>
@@ -520,16 +533,26 @@ function onEmpCodeInput(){
 }
 
 async function submitForm(){
-  if (!emp) { showAlert('err','กรุณากรอกรหัสพนักงาน'); return; }
   var date     = document.getElementById('workDate').value.trim();
   var start    = document.getElementById('startTime').value;
   var end      = document.getElementById('endTime').value;
   var empTotal = document.getElementById('empTotal').value.trim();
 
-  if (!date || !start || !end || !empTotal) { showAlert('err','กรุณากรอกข้อมูลให้ครบถ้วน'); return; }
+  var missing = [], firstId = null;
+  function need(ok, label, id){ if (!ok) { missing.push(label); if (!firstId) firstId = id; } }
+  need(!!emp, 'รหัสพนักงาน (กรอกแล้วรอให้ระบบค้นหาพบ)', 'empCode');
+  need(!!date, 'วันที่ทำโอที', 'workDate');
+  need(!!start, 'เวลาเริ่มต้น', 'startTime');
+  need(!!end, 'เวลาสิ้นสุด', 'endTime');
+  need(!!empTotal, 'รวมชั่วโมง', 'empTotal');
+  need(!!document.getElementById('remark').value.trim(), 'หมายเหตุ (งานที่ทำ)', 'remark');
+  if (missing.length) {
+    showWarn('⚠️ กรอกข้อมูลไม่ครบ', 'กรุณากรอกข้อมูลต่อไปนี้ให้ครบก่อนบันทึก', missing, firstId);
+    return;
+  }
   if (!isValidEmpTotal(empTotal)) {
-    showAlert('err','รวมชั่วโมงต้องลงท้ายด้วย .00 หรือ .50 เท่านั้น เช่น 1.00, 1.50, 2.00');
-    document.getElementById('empTotal').focus(); return;
+    showWarn('⚠️ รูปแบบรวมชั่วโมงไม่ถูกต้อง', 'รวมชั่วโมงต้องลงท้ายด้วย .00 หรือ .50 เท่านั้น', ['ตัวอย่างที่ถูกต้อง: 1.00, 1.50, 2.00'], 'empTotal');
+    return;
   }
   hideAlert('err');
 
@@ -646,6 +669,23 @@ function renderList(list){
   });
 }
 
+var _warnFocusId = null;
+function showWarn(title, intro, items, focusId){
+  document.getElementById('warnTitle').textContent = title;
+  document.getElementById('warnIntro').textContent = intro;
+  document.getElementById('warnList').innerHTML = (items || []).map(function(t){ return '<li>' + escapeHtml(t) + '</li>'; }).join('');
+  _warnFocusId = focusId || null;
+  document.getElementById('warnModal').classList.add('active');
+}
+function closeWarnModal(){
+  document.getElementById('warnModal').classList.remove('active');
+  if (_warnFocusId) { var el = document.getElementById(_warnFocusId); if (el) el.focus(); }
+  _warnFocusId = null;
+}
+document.addEventListener('keydown', function(e){
+  if (e.key === 'Escape' && document.getElementById('warnModal').classList.contains('active')) closeWarnModal();
+});
+
 function showAlert(type, msg){
   var el = document.getElementById(type === 'err' ? 'alertErr' : 'alertOk');
   el.textContent = msg; el.classList.add('on');
@@ -724,11 +764,20 @@ async function confirmEdit(){
     empTotal: document.getElementById('editEmpTotal').value.trim(),
     remark: document.getElementById('editRemark').value.trim()
   };
-  if (!updatedData.date || !updatedData.startTime || !updatedData.endTime || !updatedData.empTotal) {
-    showAlert('err', 'กรุณากรอกข้อมูลให้ครบถ้วน'); return;
+  var miss = [], firstEdit = null;
+  function needE(ok, label, id){ if (!ok) { miss.push(label); if (!firstEdit) firstEdit = id; } }
+  needE(!!updatedData.date, 'วันที่', 'editDate');
+  needE(!!updatedData.startTime, 'เวลาเริ่ม', 'editStartTime');
+  needE(!!updatedData.endTime, 'เวลาสิ้นสุด', 'editEndTime');
+  needE(!!updatedData.empTotal, 'รวมชั่วโมง', 'editEmpTotal');
+  needE(!!updatedData.remark, 'หมายเหตุ (งานที่ทำ)', 'editRemark');
+  if (miss.length) {
+    showWarn('⚠️ กรอกข้อมูลไม่ครบ', 'กรุณากรอกข้อมูลต่อไปนี้ให้ครบก่อนบันทึก', miss, firstEdit);
+    return;
   }
   if (!/^\d+(\.00|\.50)$/.test(updatedData.empTotal)) {
-    showAlert('err', 'รวมชั่วโมงต้องลงท้ายด้วย .00 หรือ .50'); return;
+    showWarn('⚠️ รูปแบบรวมชั่วโมงไม่ถูกต้อง', 'รวมชั่วโมงต้องลงท้ายด้วย .00 หรือ .50 เท่านั้น', ['ตัวอย่างที่ถูกต้อง: 1.00, 1.50, 2.00'], 'editEmpTotal');
+    return;
   }
 
   showLoading();
