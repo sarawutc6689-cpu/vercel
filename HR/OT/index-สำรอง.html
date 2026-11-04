@@ -164,6 +164,12 @@ textarea::placeholder{color:var(--t3)}
 ::-webkit-scrollbar{width:4px}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
 @media(max-width:768px){.grid{grid-template-columns:1fr}.page{padding:14px}}
+.lsearch{flex:1;position:relative;margin:0 12px;min-width:0}
+.lsearch input{width:100%;padding:7px 30px 7px 32px;font-size:14px;border:1.5px solid var(--border);border-radius:var(--rs);background:#fff;font-family:inherit;outline:none}
+.lsearch input:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(37,99,235,0.1)}
+.lsearch .sico{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:13px;pointer-events:none}
+.lsearch .sclr{position:absolute;right:8px;top:50%;transform:translateY(-50%);border:none;background:none;cursor:pointer;color:var(--t3);font-size:14px;display:none}
+.lsearch.has-text .sclr{display:block}
 </style>
 </head>
 <body>
@@ -302,7 +308,15 @@ textarea::placeholder{color:var(--t3)}
             <div class="sc"><div class="sl">จำนวนพนักงาน</div><div class="sv bl" id="cntEmp">—</div><div class="su">คน</div></div>
             <div class="sc"><div class="sl">รวมชั่วโมงโอที</div><div class="sv gr" id="cntHr">—</div><div class="su">ชั่วโมง</div></div>
           </div>
-          <div class="lh"><div class="lht">รายชื่อพนักงานที่ลงโอที</div><div class="lhb" id="lhCnt">0 คน</div></div>
+          <div class="lh">
+  <div class="lht">รายชื่อพนักงานที่ลงโอที</div>
+  <div class="lsearch" id="lsearch">
+    <span class="sico">🔍</span>
+    <input type="text" id="listSearch" placeholder="ค้นหาชื่อ / รหัส / แผนก..." oninput="applyListFilter()" autocomplete="off">
+    <button type="button" class="sclr" onclick="clearListSearch()">✕</button>
+  </div>
+  <div class="lhb" id="lhCnt">0 คน</div>
+</div>
           <div class="list-container" id="listContainer">
             <div class="olist" id="olist"><div class="dots"><span></span><span></span><span></span></div></div>
           </div>
@@ -553,9 +567,7 @@ async function loadList(){
 
     document.getElementById('cntEmp').textContent = rows.length;
     document.getElementById('cntHr').textContent = decToHHmm(dayTotal);
-    document.getElementById('lhCnt').textContent = rows.length + ' คน';
-
-    renderList(_currentList);
+    applyListFilter();
   } catch (e) {
     document.getElementById('olist').innerHTML =
       '<p style="color:var(--err);padding:20px;text-align:center;font-size:14px;">โหลดข้อมูลไม่สำเร็จ: ' + escapeHtml(e.message) + '</p>';
@@ -747,6 +759,30 @@ async function onSubmitOtForm(empCode) {
     return; // หยุด ไม่ insert ข้อมูล OT
   }
   // ... โค้ด insert เข้าตาราง ot_records ต่อตามปกติ
+}
+
+function applyListFilter(){
+  var q = document.getElementById('listSearch').value.trim().toLowerCase();
+  document.getElementById('lsearch').classList.toggle('has-text', !!q);
+
+  var filtered = !q ? _currentList : _currentList.filter(function(r){
+    var text = [r.emp_name, r.emp_code, r.department, r.section].join(' ').toLowerCase();
+    return text.indexOf(q) !== -1;
+  });
+
+  document.getElementById('lhCnt').textContent =
+    q ? (filtered.length + '/' + _currentList.length + ' คน') : (_currentList.length + ' คน');
+
+  if (q && !filtered.length) {
+    document.getElementById('olist').innerHTML =
+      '<div class="empty"><div class="eico">🔎</div><div class="etxt">ไม่พบรายชื่อที่ค้นหา</div></div>';
+    return;
+  }
+  renderList(filtered);
+}
+function clearListSearch(){
+  document.getElementById('listSearch').value = '';
+  applyListFilter();
 }
 
   
