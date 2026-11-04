@@ -270,8 +270,8 @@ function OFF(w,d,cx,cz){const BK=0x1d1d21,RE=0xb3171f,H1=2.5,H2=5.0,gh=H2-H1-0.2
  // ล็อบบี้ + บันได (ฝั่งตะวันตก) + เคาน์เตอร์
  for(let i=0;i<10;i++)X(0.5,1.5,0.35+i*0.27,0.62+i*0.27,0.1,0.5+i*0.3,0x2b2b30);
  X(9.5,12,1.0,1.7,0.1,1.0,BK);X(9.4,12.1,0.95,1.75,1.0,1.08,RE);
- // ห้องทดสอบยาง 1 (ซ้าย/ตะวันตก) และ 2 (ขวา/ตะวันออก)
- [[0.4,6.0,1],[9.2,14.8,2]].forEach((r,i)=>{const a=r[0],b=r[1],uc=(a+b)/2,cw=i?[a,a+0.1]:[b-0.1,b],ou=i?[b-0.1,b]:[a,a+0.1];
+ // ห้องทดสอบยาง 1 (ตะวันออก) และ 2 (ตะวันตก)
+ [[0.4,6.0,2],[9.2,14.8,1]].forEach((r,i)=>{const a=r[0],b=r[1],uc=(a+b)/2,cw=i?[a,a+0.1]:[b-0.1,b],ou=i?[b-0.1,b]:[a,a+0.1];
   X(a,b,3.2,8.8,0.1,0.12,0x4a4f57);
   W(a,b,3.2,3.3,0.1,3.0);W(a,b,8.7,8.8,0.1,3.0);W(ou[0],ou[1],3.2,8.8,0.1,3.0);W(cw[0],cw[1],4.5,8.8,0.1,3.0);W(cw[0],cw[1],3.2,3.5,0.1,3.0);
   X(cw[0],cw[1],3.5,4.5,2.6,3.0,BK);[3.45,4.5].forEach(v=>X(cw[0]-0.02,cw[1]+0.02,v,v+0.05,0.1,2.6,RE));
@@ -302,7 +302,7 @@ B.forEach((b,i)=>{
  else if(t==='storage'){STO(w,d,cx,cz);top=4.2;solids.push({x0:b[1],x1:b[1]+b[3],y0:b[2],y1:b[2]+b[4],h:3.7})}
  else if(t==='moldstore'){MST(w,d,cx,cz);top=4.4;solids.push({x0:b[1],x1:b[1]+b[3],y0:b[2],y1:b[2]+b[4],h:3.9})}
  else if(t==='canteen'){CAN(w,d,cx,cz);top=4;solids.push({x0:b[1],x1:b[1]+b[3],y0:b[2],y1:b[2]+b[4],h:3.4})}
- else if(t==='rd'){RDB(w,d,cx,cz);top=7;solids.push({x0:b[1],x1:b[1]+b[3],y0:b[2],y1:b[2]+b[4],h:6.3})}
+  else if(t==='rd'){RDB(w,d,cx,cz);top=7;solids.push({x0:b[1],x1:b[1]+b[3],y0:b[2],y1:b[2]+b[4],h:6.3})}
  else if(b[0]==='สำนักงาน'){OFF(w,d,cx,cz);top=5.7;solids.push({x0:b[1],x1:b[1]+b[3],y0:b[2],y1:b[2]+b[4],h:top})}
  else{
   const big=w*d>=120;top=h+(big?1.3:0.25);
@@ -567,6 +567,15 @@ const OP=[];
  const bl=bz1-bz0,bz=(bz0+bz1)/2;add(bx(1.6,0.06,bl),fl,bx0,0.03,bz);add(bx(2.0,0.08,bl),rm,bx0,2.3,bz);
  for(let z=bz0+0.3;z<bz1;z+=2.2)[-1,1].forEach(s=>add(bx(0.12,2.3,0.12),pm,bx0+s*0.95,1.15,z));
  const wk=(fr)=>{const p=person(pick1([0x2f5f9e,0x4d6d52,0x3b7fc4]),pick1([0xf5c518,0xffffff]),0xff8a00,pick1(SK));spawn(p.g,[[176,409.5],[228,409.5],[228,388]],0,0.85,fr,3,{pe:p,y0:0.1})};wk(0);wk(0.5)}
+ {const b=B.find(x=>x[0]==='RD'),P=(u,v)=>[b[1]+u*10,b[2]+v*10],X0=(b[1]-450)*K,Z0=(b[2]-300)*K,SL=3.2,sh=[0xf2f2f2,0xcfe0f2,0xe7d9f2,0xf5e1e1,0xdfe8dc];
+ // ชั้น 2: คนนั่งทำงานหน้าคอม
+ [3.9,6.6].forEach((v,r)=>[2.4,5.0,7.6,10.2,12.8].forEach((u,c)=>{if((r*5+c)%4===2)return;const p=person(pick1(sh),null,0,pick1(SK));p.lg.forEach(l=>l.rotation.x=-1.5);p.ar.forEach(a=>a.rotation.x=-0.95);p.g.position.set(X0+u,SL-0.11,Z0+v+0.8);p.g.rotation.y=Math.PI;S.add(p.g);OP.push({pe:p,ph:rnd()*6})}));
+ // ชั้น 2: คนเดินในทางเดินระหว่างแถวโต๊ะ
+ const w1=person(0xf5e1e1,null,0,pick1(SK));spawn(w1.g,[P(2.2,5.55),P(13.2,5.55)],0,0.85,0.2,4,{pe:w1,y0:SL});
+ // ชั้น 1: คนเดินตามทางเดินกลางจนถึงด้านหลังอาคาร
+ [0,0.5].forEach((f,i)=>{const p=person(i?0x4d6d52:0xcfe0f2,i?0xf5c518:null,i?0xff8a00:0,pick1(SK));spawn(p.g,[P(7.6,0.9),P(7.6,8.9)],0.4,0.85,f,3,{pe:p,y0:0.12})});
+ // ชั้น 1: พนักงานประจำเครื่องในห้องทดสอบ 1 และ 2
+ [3.2,12.0].forEach(u=>{const p=person(0x2f5f9e,0xf5c518,0xff8a00,pick1(SK));p.ar.forEach(a=>a.rotation.x=-0.9);p.g.position.set(X0+u,0.1,Z0+6.1);p.g.rotation.y=Math.PI;S.add(p.g);OP.push({pe:p,ph:rnd()*6})})}
  {const b=B.find(x=>x[0]==='RD'),P=(u,v)=>[b[1]+u*10,b[2]+v*10],X0=(b[1]-450)*K,Z0=(b[2]-300)*K,SL=3.2,sh=[0xf2f2f2,0xcfe0f2,0xe7d9f2,0xf5e1e1,0xdfe8dc];
  // ชั้น 2: คนนั่งทำงานหน้าคอม
  [3.9,6.6].forEach((v,r)=>[2.4,5.0,7.6,10.2,12.8].forEach((u,c)=>{if((r*5+c)%4===2)return;const p=person(pick1(sh),null,0,pick1(SK));p.lg.forEach(l=>l.rotation.x=-1.5);p.ar.forEach(a=>a.rotation.x=-0.95);p.g.position.set(X0+u,SL-0.11,Z0+v+0.8);p.g.rotation.y=Math.PI;S.add(p.g);OP.push({pe:p,ph:rnd()*6})}));
