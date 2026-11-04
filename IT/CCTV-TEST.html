@@ -129,7 +129,7 @@ const bx=(w,h,d)=>new THREE.BoxGeometry(w,h,d);
 function gable(w,d,rh,c,x,y,z){const W=Math.min(w,d)+0.5,D=Math.max(w,d)+0.5,s=new THREE.Shape();s.moveTo(-W/2,0);s.lineTo(W/2,0);s.lineTo(0,rh);
  const g=new THREE.ExtrudeGeometry(s,{depth:D,bevelEnabled:false});g.translate(0,0,-D/2);if(w>=d)g.rotateY(Math.PI/2);return M(g,c,x,y,z)}
 const MA=[],WSX={};
-function WS(w,d,cx,cz){const x0=cx-w/2,z0=cz-d/2,FL=0.1,H=3.4,a=0.15,G=0x4a4f57;
+function WS(w,d,cx,cz){const mm=c=>new THREE.MeshLambertMaterial({color:c});const x0=cx-w/2,z0=cz-d/2,FL=0.1,H=3.4,a=0.15,G=0x4a4f57;
  M(bx(w,0.1,d),0xbfbab0,cx,0.05,cz,0);
  const sg=(t,c)=>{const cv=document.createElement('canvas');cv.width=256;cv.height=52;const x=cv.getContext('2d');x.fillStyle=c;x.fillRect(0,0,256,52);x.fillStyle='#fff';x.font='bold 30px Tahoma,Sarabun,sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText(t,128,28,240);const tx=new THREE.CanvasTexture(cv);tx.encoding=THREE.sRGBEncoding;return tx};
  [0.3,3.7,7.1,10.5,13.5].forEach(u=>[z0+0.3,z0+d-0.3].forEach(z=>{M(bx(0.3,H,0.3),G,x0+u,FL+H/2,z);M(bx(0.42,0.1,0.42),0x8d939b,x0+u,FL+0.05,z,0);M(bx(0.14,0.1,0.28),G,x0+u,FL+H-0.3,z+(z<cz?0.12:-0.12),0)}));
@@ -140,9 +140,9 @@ function WS(w,d,cx,cz){const x0=cx-w/2,z0=cz-d/2,FL=0.1,H=3.4,a=0.15,G=0x4a4f57;
  M(bx(w+0.8,0.1,0.18),0x1f6fb2,cx,FL+H+rise+0.03,cz,0);[z0-0.4,z0+d+0.4].forEach(z=>M(bx(w+0.8,0.22,0.05),0x1f6fb2,cx,FL+H+0.02,z,0));
  {const m=new THREE.Mesh(new THREE.PlaneGeometry(2.4,0.49),new THREE.MeshBasicMaterial({map:sg('ผลิตแม่พิมพ์','#1f6fb2')}));m.position.set(cx,FL+H+0.02,z0-0.44);m.rotation.y=Math.PI;S.add(m)}
  const lathe=(x,z)=>{M(bx(1.9,0.55,0.7),0x3a6ea5,x,FL+0.275,z);M(bx(2.2,0.1,0.6),0x8f979f,x,FL+0.6,z,0);M(bx(0.5,0.65,0.7),0x2f5f8f,x-0.85,FL+0.95,z);M(bx(0.3,0.3,0.4),0x2f5f8f,x+0.95,FL+0.82,z);M(bx(0.45,0.25,0.5),0x555c66,x+0.1,FL+0.78,z+0.05,0);
-  const ch=new THREE.Group();ch.position.set(x-0.55,FL+0.95,z);S.add(ch);const cm=new THREE.Mesh(new THREE.CylinderGeometry(0.2,0.2,0.15,12).rotateZ(Math.PI/2),mt(0x666d75));ch.add(cm);
-  for(let k=0;k<3;k++){const j=new THREE.Mesh(bx(0.12,0.1,0.1),mt(0xd0d4d9));j.position.set(0.1,Math.cos(k*2.094)*0.15,Math.sin(k*2.094)*0.15);ch.add(j)}
-  const wp=new THREE.Group();wp.position.set(x+0.1,FL+0.95,z);S.add(wp);wp.add(new THREE.Mesh(new THREE.CylinderGeometry(0.09,0.09,1.1,10).rotateZ(Math.PI/2),mt(0xcfd4da)));const st=new THREE.Mesh(bx(1.1,0.03,0.05),mt(0x5a636c));st.position.y=0.09;wp.add(st);MA.push(ch,wp)};
+  const ch=new THREE.Group();ch.position.set(x-0.55,FL+0.95,z);S.add(ch);const cm=new THREE.Mesh(new THREE.CylinderGeometry(0.2,0.2,0.15,12).rotateZ(Math.PI/2),mm(0x666d75));ch.add(cm);
+  for(let k=0;k<3;k++){const j=new THREE.Mesh(bx(0.12,0.1,0.1),mm(0xd0d4d9));j.position.set(0.1,Math.cos(k*2.094)*0.15,Math.sin(k*2.094)*0.15);ch.add(j)}
+  const wp=new THREE.Group();wp.position.set(x+0.1,FL+0.95,z);S.add(wp);wp.add(new THREE.Mesh(new THREE.CylinderGeometry(0.09,0.09,1.1,10).rotateZ(Math.PI/2),mm(0xcfd4da)));const st=new THREE.Mesh(bx(1.1,0.03,0.05),mm(0x5a636c));st.position.y=0.09;wp.add(st);MA.push(ch,wp)};
  [2.0,5.4,8.8,12.2].forEach(u=>lathe(x0+u,z0+1.5));
  [3.5,7.0].forEach(u=>{const x=x0+u,z=z0+4.2;M(bx(1.6,0.3,1.3),0x3a3f46,x,FL+0.15,z);M(bx(1.6,1.15,1.3),0xe8ebee,x,FL+0.875,z);const wn=M(bx(1.1,0.7,0.05),0x1b4f72,x-0.1,FL+0.95,z+0.66,0);wn.material.emissive=new THREE.Color(0x0d2c44);M(bx(0.3,0.5,0.25),0x222222,x+0.65,FL+0.95,z+0.7,0).material.emissive=new THREE.Color(0x1e6b2e);M(bx(1.6,0.08,1.3),0x2f5f8f,x,FL+1.48,z,0)});
  const bench=(x,z,bw,bd)=>{M(bx(bw,0.08,bd),0x7d868f,x,FL+0.6,z,0);[-1,1].forEach(s=>[-1,1].forEach(t=>M(bx(0.08,0.56,0.08),0x333333,x+s*(bw/2-0.08),FL+0.28,z+t*(bd/2-0.08),0)))};
@@ -152,7 +152,7 @@ function WS(w,d,cx,cz){const x0=cx-w/2,z0=cz-d/2,FL=0.1,H=3.4,a=0.15,G=0x4a4f57;
  bench(x0+11.2,z0+5.6,2.0,1.0);M(bx(0.9,0.08,0.6),0x7d868f,x0+11.2,FL+0.68,z0+5.6,0);M(bx(0.6,0.02,0.04),0xff8a1f,x0+11.2,FL+0.73,z0+5.6,0).material.emissive=new THREE.Color(0xff6a00);
  M(bx(0.5,0.6,0.4),0xc0392b,x0+12.8,FL+0.3,z0+6.6);[0,1].forEach(k=>M(new THREE.CylinderGeometry(0.1,0.1,0.8,10),[0xc0392b,0x8f979f][k],x0+13.2,FL+0.4,z0+4.7+k*0.3));
  {const sc=M(bx(0.05,1.6,2.4),0xe67e22,x0+9.2,FL+0.8,z0+5.6,0);sc.material.transparent=true;sc.material.opacity=0.5}
- const br=new THREE.Group();br.position.set(x0+w/2,0,0);S.add(br);const bm=(g,c,x,y,z)=>{const m=new THREE.Mesh(g,mt(c));m.position.set(x,y,z);br.add(m)};
+ const br=new THREE.Group();br.position.set(x0+w/2,0,0);S.add(br);const bm=(g,c,x,y,z)=>{const m=new THREE.Mesh(g,mm(c));m.position.set(x,y,z);br.add(m)};
  bm(bx(0.3,0.25,d-1.1),0xf2a900,0,FL+H-0.42,cz);[-1,1].forEach(s=>bm(bx(0.4,0.2,0.3),0xf2a900,0,FL+H-0.35,cz+s*(d/2-0.55)));bm(bx(0.5,0.3,0.5),0x333333,0,FL+H-0.7,cz);bm(new THREE.CylinderGeometry(0.02,0.02,0.45,6),0x222222,0,FL+H-1.0,cz);bm(bx(1.0,0.45,0.7),0x3b3b40,0,FL+H-1.45,cz);
  WSX.cr={br,xc:x0+w/2,amp:w/2-2.5};
  const wl=new THREE.PointLight(0xa8c8ff,1.4,7);wl.position.set(x0+11.2,FL+1.1,z0+5.6);S.add(wl);WSX.wl=wl;WSX.wp=[[x0+10.9,FL+0.72,z0+5.5],[x0+11.5,FL+0.72,z0+5.7]];WSX.sp=[];
