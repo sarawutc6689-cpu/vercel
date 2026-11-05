@@ -108,7 +108,7 @@ canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
 <script>
 (function(){
 const K=0.1,$=id=>document.getElementById(id),V=(x,y,z)=>new THREE.Vector3(x,y,z);
-const B=[["เขตโรงงาน",34,25,853,560,"boundary"],["พุ่มไม้",34,25,280,92,"forest"],["พุ่มไม้",34,134,165,95,"forest"],["พุ่มไม้",34,231,137,65,"forest"],["หอพัก",333,32,150,73],["โรงคาร์บอน",496,32,71,73],["โรงบด",570,32,49,73],["คลังวัตถุดิบ",623,29,87,85],["คลังสารเคมี",711,32,71,82],["โรงผ้าใบ",782,45,62,145],["โรงอาหาร",219,135,91,52,"canteen"],["ห้องน้ำ",252,189,58,49,"wc"],["อาคาร T10",344,137,92,111,"t10"],["ยานยนต์",437,137,46,109,"garage"],["ผลิต2",344,247,92,201,"prod2"],["โรงเก็บแม่พิมพ์",175,239,137,61,"moldstore"],["แม่พิมพ์",174,300,138,85,"workshop"],["สำนักงาน",48,300,124,146],["โรงเก็บปลอก",242,385,70,62,"storage"],["ลานรถ",498,138,79,187,"dashed"],["คลังสินค้า",590,138,89,187,"warehouse"],["ซ่อม1",695,138,35,112,"repair1"],["ห้องน้ำ 2",747,190,32,65,"wc"],["ปั๊มน้ำ",784,190,35,67,"pumphouse"],["เก็บถัง",822,234,48,53,"drums"],["โครงการ",470,337,66,52,"project"],["ซ่อม2",470,389,66,51,"repair2"],["UT",536,337,41,103,"boiler"],["ห้าดาว",589,333,92,107,"fivestar"],["ผลิต1",692,295,118,146,"prod1"],["ห้องน้ำ 3",811,440,59,85,"wc"],["RD",47,465,152,92,"rd"],["ลานจอดรถ",200,471,175,100,"dashed"],["โรงเหล็ก",376,472,77,55,"steel"],["ลานเทสยาง",514,461,175,100,"dashed"]];
+const B=[["เขตโรงงาน",34,25,853,560,"boundary"],["พุ่มไม้",34,25,280,92,"forest"],["พุ่มไม้",34,134,165,95,"forest"],["พุ่มไม้",34,231,137,65,"forest"],["หอพัก",333,32,150,73,"dorm"],["โรงคาร์บอน",496,32,71,73],["โรงบด",570,32,49,73],["คลังวัตถุดิบ",623,29,87,85],["คลังสารเคมี",711,32,71,82],["โรงผ้าใบ",782,45,62,145],["โรงอาหาร",219,135,91,52,"canteen"],["ห้องน้ำ",252,189,58,49,"wc"],["อาคาร T10",344,137,92,111,"t10"],["ยานยนต์",437,137,46,109,"garage"],["ผลิต2",344,247,92,201,"prod2"],["โรงเก็บแม่พิมพ์",175,239,137,61,"moldstore"],["แม่พิมพ์",174,300,138,85,"workshop"],["สำนักงาน",48,300,124,146],["โรงเก็บปลอก",242,385,70,62,"storage"],["ลานรถ",498,138,79,187,"dashed"],["คลังสินค้า",590,138,89,187,"warehouse"],["ซ่อม1",695,138,35,112,"repair1"],["ห้องน้ำ 2",747,190,32,65,"wc"],["ปั๊มน้ำ",784,190,35,67,"pumphouse"],["เก็บถัง",822,234,48,53,"drums"],["โครงการ",470,337,66,52,"project"],["ซ่อม2",470,389,66,51,"repair2"],["UT",536,337,41,103,"boiler"],["ห้าดาว",589,333,92,107,"fivestar"],["ผลิต1",692,295,118,146,"prod1"],["ห้องน้ำ 3",811,440,59,85,"wc"],["RD",47,465,152,92,"rd"],["ลานจอดรถ",200,471,175,100,"dashed"],["โรงเหล็ก",376,472,77,55,"steel"],["ลานเทสยาง",514,461,175,100,"dashed"]];
 const C=[["CAM-001","ประตูหลักทางเข้า","ทางเข้า-ออก",4.49,77.82,"online","1080p",190],["CAM-002","ทางออกหลัก","ทางเข้า-ออก",4.86,79.71,"online","1080p",160],["CAM-003","หลังโรงรถ2","ทางเข้า-ออก",41.29,94.31,"online","720p",185],["CAM-013","อาคาร RD","สำนักงาน/RD",23,79.01,"online","720p",85],["CAM-021","โรงอาหาร1","โรงอาหาร/หอพัก",28,26,"online","1080p",90],["CAM-022","หอพักพนักงาน (หน้า)","โรงอาหาร/หอพัก",50.54,17.83,"online","1080p",180],["CAM-023","หอพักพนักงาน (หลัง)","โรงอาหาร/หอพัก",51.07,4.83,"online","720p",205],["CAM-031","อาคาร T10 (ทิศเหนือ)","T10/ผลิต2",35.18,17.85,"online","1080p",90],["CAM-034","แม่พิมพ์1","T10/ผลิต2",20.78,55.41,"online","1080p",60],["CAM-041","คลังสินค้า (หน้า)","คลังสินค้า/ลานรถ",67.81,22.85,"online","2MP",335],["CAM-042","คลังสินค้า1","คลังสินค้า/ลานรถ",66,40,"online","2MP",180],["CAM-043","คลังสินค้า (หลัง)","คลังสินค้า/ลานรถ",74.72,65.12,"online","2MP",110],["CAM-044","ห้าดาว","คลังสินค้า/ลานรถ",73.05,74.02,"online","720p",105],["CAM-051","หลังคลังวัตถุดิบ","วัตถุดิบ/สารเคมี",83.43,5.01,"online","1080p",180],["CAM-053","โรงคาร์บอน/โรงบด","วัตถุดิบ/สารเคมี",57.15,5.12,"online","720p",180],["CAM-061","ผลิต1 (หน้า)","ผลิต1/ซ่อม1",88.6,87.91,"online","2MP",265],["CAM-062","ผลิต1 (หลัง)","ผลิต1/ซ่อม1",91.31,71.61,"online","2MP",270],["CAM-063","ซ่อม1","ผลิต1/ซ่อม1",83.67,30.53,"online","720p",185],["CAM-071","ซ่อม2","ซ่อม2/โครงการ",55.84,66.24,"online","1080p",130],["CAM-072","โครงการ/UT","ซ่อม2/โครงการ",52.25,61.2,"online","720p",295],["CAM-081","ลานเทสยาง","ทดสอบ/กลางแจ้ง",68.64,78.3,"online","2MP",115],["CAM-082","ลานเทสยาง (ปลาย)","ทดสอบ/กลางแจ้ง",69.63,78.7,"online","720p",75],["CAM-083","ลานจอดรถ","ทดสอบ/กลางแจ้ง",30.15,79.35,"online","1080p",90],["CAM-084","หน้าโรงผ้าใบ","ทั่วไป",86.66,20.97,"online","1080p",180],["CAM-085","หลังโรงกรีน1","ทั่วไป",60.03,4.97,"online","1080p",0],["CAM-086","หลังโรงกรีน2","ทั่วไป",68.61,5,"online","1080p",190],["CAM-087","ลานจอด","ทั่วไป",53.58,18.18,"online","1080p",65],["CAM-088","หน้าคาร์บอน","ทั่วไป",58.6,17.45,"online","1080p",135],["CAM-089","หลังผลิต1","ทั่วไป",90.37,52.54,"online","1080p",95],["CAM-090","หลังห้องน้ำผลิต1","ทั่วไป",98.29,72.55,"online","1080p",180],["CAM-091","หลังโรงรถ1","ทั่วไป",22.33,94.47,"online","1080p",0],["CAM-092","โรงเหล็ก","ทั่วไป",41.33,78.74,"online","1080p",55],["CAM-093","เก็บถัง1","ทั่วไป",88.48,42.67,"online","1080p",0],["CAM-094","เก็บถัง2","ทั่วไป",86.83,42.51,"online","1080p",130],["CAM-095","หน้าคลังวัตถุดิบ","ทั่วไป",76.44,19.42,"online","1080p",170],["CAM-096","โรงอาหาร2","ทั่วไป",23.32,22.62,"online","1080p",190],["CAM-097","คลังสินค้า2","ทั่วไป",65.76,32.43,"online","1080p",180],["CAM-098","คลังสินค้า3","ทั่วไป",66.35,45.55,"online","1080p",120],["CAM-099","หอพัก","ทั่วไป",42.86,17.54,"online","1080p",170],["CAM-100","แม่พิมพ์2","ทั่วไป",26.12,61.44,"online","1080p",115]];
 const ST={online:'ออนไลน์',maint:'ออฟไลน์'},CL={online:0x1a9a5a,maint:0xe08a00};
 
@@ -734,6 +734,52 @@ function SHEDW(x0,z0,w,d,H,FL,a,dc,dh){dc=dc||w/2;dh=dh||H-0.55;WALLS(x0,z0,w,d,
  const rise=(w/2+0.4)*Math.tan(a),gs=new THREE.Shape();gs.moveTo(0,0);gs.lineTo(w,0);gs.lineTo(w/2,rise-0.04);gs.lineTo(0,0);
  const gmt=new THREE.MeshLambertMaterial({color:0xf4f6f7,transparent:true,opacity:0.55,depthWrite:false});
  [0,d-0.1].forEach(v=>{const m=new THREE.Mesh(new THREE.ExtrudeGeometry(gs,{depth:0.1,bevelEnabled:false}),gmt);m.position.set(x0,FL+H,z0+v);S.add(m)})}
+// ===== หอพัก 3 ชั้น ชั้นละ 15 ห้อง (แถวเหนือ 9 ห้อง + แถวใต้ 6 ห้อง) ทางเดินกลาง บันไดหักศอกอยู่กลางอาคาร หน้าอาคารหันลงถนนด้านใต้ =====
+function DORM(w,d,cx,cz){const x0=cx-w/2,z0=cz-d/2,FL=0.1,FH=2.7,TH=FL+3*FH,bw=w/9,CU0=3*bw,CU1=6*bw,LB=1.2,LD=1.2,NR=3.0,SV0=d-3.0,WL=0xeee9de,BL=0x1f4e9a,G=0x4a4f57;
+ const bb=(u0,u1,v0,v1,y0,y1,c,sh)=>M(bx(u1-u0,y1-y0,v1-v0),c,x0+(u0+u1)/2,(y0+y1)/2,z0+(v0+v1)/2,sh),
+ gm=new THREE.MeshLambertMaterial({color:0x9fc7e8,transparent:true,opacity:0.35,depthWrite:false}),
+ gp=(u0,u1,v0,v1,y0,y1)=>{const m=new THREE.Mesh(bx(u1-u0,y1-y0,v1-v0),gm);m.position.set(x0+(u0+u1)/2,(y0+y1)/2,z0+(v0+v1)/2);S.add(m);return m},
+ BXG=new THREE.BoxGeometry(1,1,1),q0=new THREE.Quaternion(),m4=new THREE.Matrix4(),
+ mkI=(list,col)=>{if(!list.length)return;const im=new THREE.InstancedMesh(BXG,new THREE.MeshLambertMaterial({color:col}),list.length);list.forEach((p,i)=>{m4.compose(V(p[0],p[1],p[2]),q0,V(p[3],p[4],p[5]));im.setMatrixAt(i,m4)});S.add(im);return im},
+ WG=[],WF=[],AC=[],DR=[],sl=(u0,u1,v0,v1,y)=>bb(u0,u1,v0,v1,y-0.2,y,0xbfbcb4,0);
+ // พื้นชั้นล่าง + ทางเดินเท้าเชื่อมถนน
+ M(bx(w,0.1,d),0xbdb8ae,cx,0.05,cz,0);M(bx(2.2,0.06,1.2),0xcfcac0,x0+CU0+0.7,0.03,z0+d+0.6,0);
+ // ผนังภายนอก + ผนังกั้นแกนบันได + ผนังทางเดิน
+ bb(0,w,0,0.15,FL,TH,WL);bb(0,0.15,0,d,FL,TH,WL);bb(w-0.15,w,0,d,FL,TH,WL);bb(0,CU0,d-0.15,d,FL,TH,WL);bb(CU1,w,d-0.15,d,FL,TH,WL);
+ bb(CU0-0.075,CU0+0.075,SV0,d,FL,TH,WL);bb(CU1-0.075,CU1+0.075,SV0,d,FL,TH,WL);
+ bb(0,w,NR-0.075,NR+0.075,FL,TH,0xe0dccf,0);bb(0,CU0,SV0-0.075,SV0+0.075,FL,TH,0xe0dccf,0);bb(CU1,w,SV0-0.075,SV0+0.075,FL,TH,0xe0dccf,0);
+ // ฐานอาคาร เสาหัวมุม แถบขอบพื้นสีน้ำเงิน
+ bb(-0.04,w+0.04,-0.04,0.17,FL,FL+0.4,0x9aa0a6,0);bb(-0.04,0.17,-0.04,d+0.04,FL,FL+0.4,0x9aa0a6,0);bb(w-0.17,w+0.04,-0.04,d+0.04,FL,FL+0.4,0x9aa0a6,0);bb(-0.04,CU0,d-0.17,d+0.04,FL,FL+0.4,0x9aa0a6,0);bb(CU1,w+0.04,d-0.17,d+0.04,FL,FL+0.4,0x9aa0a6,0);
+ [[0,0],[w,0],[0,d],[w,d]].forEach(c=>bb(c[0]-0.15,c[0]+0.15,c[1]-0.15,c[1]+0.15,FL,TH+0.55,0xd8d3c6,0));
+ [1,2].forEach(k=>{const y=FL+k*FH;bb(-0.05,w+0.05,-0.06,0.06,y-0.2,y+0.02,BL,0);bb(-0.06,0.06,-0.05,d+0.05,y-0.2,y+0.02,BL,0);bb(w-0.06,w+0.06,-0.05,d+0.05,y-0.2,y+0.02,BL,0);bb(-0.05,CU0,d-0.06,d+0.06,y-0.2,y+0.02,BL,0);bb(CU1,w+0.05,d-0.06,d+0.06,y-0.2,y+0.02,BL,0)});
+ // พื้นชั้น 2-3 (เว้นช่องบันได)
+ [1,2].forEach(k=>{const y=FL+k*FH;sl(0,w,0,SV0,y);sl(0,CU0+LB,SV0,d,y);sl(CU1,w,SV0,d,y)});
+ // ห้องพัก: หน้าต่าง กรอบ แอร์ ที่ผนังเหนือ 9 ห้อง / ผนังใต้ 6 ห้อง และประตูห้องบนผนังทางเดิน
+ for(let k=0;k<3;k++){const yk=FL+k*FH;
+  for(let i=0;i<9;i++){const u=x0+(i+0.5)*bw;
+   WG.push([u,yk+1.5,z0-0.03,0.95,1.2,0.06]);WF.push([u,yk+1.5,z0-0.02,1.1,1.35,0.04]);AC.push([u,yk+0.5,z0-0.17,0.6,0.4,0.3]);DR.push([u,yk+1.05,z0+NR+0.105,0.9,1.9,0.06])}
+  [0,1,2,6,7,8].forEach(i=>{const u=x0+(i+0.5)*bw;
+   WG.push([u,yk+1.5,z0+d+0.03,0.95,1.2,0.06]);WF.push([u,yk+1.5,z0+d+0.02,1.1,1.35,0.04]);AC.push([u,yk+0.5,z0+d+0.17,0.6,0.4,0.3]);DR.push([u,yk+1.05,z0+SV0-0.105,0.9,1.9,0.06])})}
+ mkI(WF,0xf2f4f7);mkI(WG,0x5f86ad);mkI(AC,0xe6eaee);mkI(DR,0x8a5a3a);
+ // ผนังกระจกหน้าแกนบันได + ประตูทางเข้า + กันสาด
+ gp(CU0,CU1,d-0.06,d,FL,TH);for(let u=CU0;u<=CU1+0.01;u+=1.0)bb(u-0.03,u+0.03,d-0.08,d+0.04,FL,TH,G,0);
+ [1,2].forEach(k=>bb(CU0,CU1,d-0.08,d+0.05,FL+k*FH-0.2,FL+k*FH+0.05,0xcfd4da,0));
+ bb(CU0+0.3,CU0+1.1,d,d+0.06,FL,FL+2.2,BL,0);bb(CU0-0.2,CU0+1.8,d,d+0.8,FL+2.35,FL+2.5,0xe9e4d8,0);bb(CU0-0.2,CU0+1.8,d+0.74,d+0.8,FL+2.2,FL+2.5,BL,0);[CU0-0.1,CU0+1.7].forEach(u=>bb(u-0.05,u+0.05,d+0.7,d+0.8,FL,FL+2.35,0xcfd4da,0));
+ // บันไดหักศอก 2 ช่วงต่อชั้น + ชานพัก (ช่วงเหนือขึ้นไปทางตะวันออก ชานพักปลายตะวันออก ช่วงใต้ย้อนกลับขึ้นชั้นถัดไป)
+ const run=(CU1-LD-(CU0+LB))/9,Lrun=run*9,rise=FH/2/9,ang=Math.atan((FH/2)/Lrun),Lr=Math.hypot(Lrun,FH/2),vA0=SV0+0.1,vA1=SV0+1.3,vB0=SV0+1.5,vB1=d-0.3;
+ const flight=(yb,us,dir,v0,v1,rails)=>{for(let i=0;i<9;i++){const ux=us+dir*(i+0.5)*run,ty=yb+rise*(i+1);bb(ux-run/2-0.005,ux+run/2+0.005,v0,v1,ty-0.06,ty,0xcfd4da,0)}
+  const mx=x0+us+dir*Lrun/2,my=yb+FH/4,sw=M(bx(Lr,0.14,v1-v0),0xaeb6be,mx,my-0.1,z0+(v0+v1)/2,0);sw.rotation.z=dir*ang;
+  rails.forEach(vr=>{const p=new THREE.Mesh(bx(Lr,0.7,0.03),gm);p.position.set(mx,my+0.43,z0+vr);p.rotation.z=dir*ang;S.add(p);const h=M(bx(Lr,0.05,0.06),G,mx,my+0.8,z0+vr,0);h.rotation.z=dir*ang})};
+ [0,1].forEach(k=>{const yb=FL+k*FH;flight(yb,CU0+LB,1,vA0,vA1,[vA0,vA1]);bb(CU1-LD,CU1-0.075,vA0,vB1,yb+FH/2-0.15,yb+FH/2,0xbfbcb4,0);flight(yb+FH/2,CU1-LD,-1,vB0,vB1,[vB0])});
+ // หลังคา: พื้นดาดฟ้า + กระจกเหนือแกนบันได + ผนังกันตก + ถังน้ำ + ป้ายชื่อ
+ sl(0,w,0,SV0,TH+0.05);sl(0,CU0,SV0,d,TH+0.05);sl(CU1,w,SV0,d,TH+0.05);
+ gp(CU0,CU1,SV0,d,TH-0.05,TH+0.02);for(let u=CU0;u<=CU1+0.01;u+=1.25)bb(u-0.03,u+0.03,SV0,d,TH-0.1,TH+0.04,G,0);
+ bb(0,w,0,0.12,TH,TH+0.55,WL,0);bb(0,0.12,0,d,TH,TH+0.55,WL,0);bb(w-0.12,w,0,d,TH,TH+0.55,WL,0);bb(0,w,d-0.12,d,TH,TH+0.55,WL,0);bb(-0.04,w+0.04,-0.04,0.16,TH+0.5,TH+0.6,BL,0);bb(-0.04,w+0.04,d-0.16,d+0.04,TH+0.5,TH+0.6,BL,0);
+ [[-0.5,-0.5],[0.5,-0.5],[-0.5,0.5],[0.5,0.5]].forEach(o=>bb(w-2.0+o[0]-0.06,w-2.0+o[0]+0.06,1.6+o[1]-0.06,1.6+o[1]+0.06,TH,TH+0.9,G,0));
+ M(new THREE.CylinderGeometry(0.7,0.7,1.5,18),0xcfd4da,x0+w-2.0,TH+0.9+0.75,z0+1.6);M(new THREE.SphereGeometry(0.7,18,8,0,Math.PI*2,0,Math.PI/2),0xb9c2cc,x0+w-2.0,TH+0.9+1.5,z0+1.6);
+ {const k=document.createElement('canvas');k.width=640;k.height=80;const q=k.getContext('2d');q.fillStyle='#1f4e9a';q.fillRect(0,0,640,80);q.fillStyle='#fff';q.font='bold 44px Tahoma,Sarabun,sans-serif';q.textAlign='center';q.textBaseline='middle';q.fillText('หอพัก',320,42,610);
+  const tx=new THREE.CanvasTexture(k);tx.encoding=THREE.sRGBEncoding;const m=new THREE.Mesh(new THREE.PlaneGeometry(3.2,0.4),new THREE.MeshBasicMaterial({map:tx}));m.position.set(x0+(CU0+CU1)/2,TH+0.3,z0+d+0.02);S.add(m)}
+ const pl=new THREE.PointLight(0xfff2dd,0.7,8);pl.position.set(x0+(CU0+CU1)/2,FL+3.2,z0+SV0+1.5);S.add(pl)}
 // ===== อาคารปั๊มน้ำ: เสา+หลังคา ผนังสไตล์อาคารห้าดาว ประตูหันไปทางถนน (ทิศใต้) ภายในมีปั๊ม 2 เครื่อง =====
 function PUMPH(w,d,cx,cz){const x0=cx-w/2,z0=cz-d/2,FL=0.1,H=3.2,a=0.3,G=0x4a4f57,BL=0x1f4e9a,ST=0xe9e4d8,PB=0x2a6bd1,PGN=0x2e9d5c,dc=w/2,P=0.3,CW=w+0.3,LD=[],SH=[];
  const bb=(u,v,sx,sz,y0,y1,c,sh)=>M(bx(sx,y1-y0,sz),c,x0+u,FL+(y0+y1)/2,z0+v,sh),
@@ -952,6 +998,7 @@ else if(t==='drums'){const n0=S.children.length,g=new THREE.Group();DRM(w,d,cx,c
  else if(t==='fivestar'){FIVE(w,d,cx,cz);top=7.4;solids.push({x0:b[1],x1:b[1]+b[3],y0:b[2],y1:b[2]+b[4],h:6.4})}
  else if(t==='canteen'){CAN(w,d,cx,cz);top=4;solids.push({x0:b[1],x1:b[1]+b[3],y0:b[2],y1:b[2]+b[4],h:3.4})}
   else if(t==='rd'){RDB(w,d,cx,cz);top=7;solids.push({x0:b[1],x1:b[1]+b[3],y0:b[2],y1:b[2]+b[4],h:6.3})}
+ else if(t==='dorm'){DORM(w,d,cx,cz);top=9.4;solids.push({x0:b[1],x1:b[1]+b[3],y0:b[2],y1:b[2]+b[4],h:8.4})}
  else if(t==='pumphouse'){PUMPH(w,d,cx,cz);top=4.7;solids.push({x0:b[1],x1:b[1]+b[3],y0:b[2],y1:b[2]+b[4],h:4.2})}
  else if(b[0]==='สำนักงาน'){OFF(w,d,cx,cz);top=5.7;solids.push({x0:b[1],x1:b[1]+b[3],y0:b[2],y1:b[2]+b[4],h:top})}
  else{
