@@ -463,18 +463,14 @@ function WB(w,d,cx,cz){const x0=cx-w/2,z0=cz-d/2,T=0.1,G=0x4a4f57;
  for(let k=0;k<8;k++)bb(1.0,4.3+k*0.5,1.36,0.04,0.26,0.275,0x8d959d,0);[0.34,1.66].forEach(u=>bb(u,6.0,0.06,3.8,0.26,0.28,0xf2c200,0));
  [4.1,7.9].forEach((v,i)=>{const r=M(bx(1.4,0.05,0.5),0x6b747d,x0+1.0,T+0.17,z0+(i?v+0.2:v-0.2),0);r.rotation.x=i?-0.25:0.25});
  [[0.38,4.25],[1.62,4.25],[0.38,7.75],[1.62,7.75]].forEach(p=>bb(p[0],p[1],0.12,0.12,0.04,0.2,0xd98a00,0));
- // ห้องควบคุมตาชั่ง (กระจก)
- gl(0.05,1.6,2.2,6.0,0,1.6);gl(0.05,1.6,3.4,6.0,0,1.6);gl(1.2,0.05,2.8,5.2,0,1.6);gl(1.2,0.05,2.8,6.8,0,1.6);bb(2.8,6.0,1.4,1.8,1.6,1.66,G,0);bb(2.8,6.0,1.2,1.6,0,0.02,0xdcd8ce,0);
- [[2.2,5.2],[3.4,5.2],[2.2,6.8],[3.4,6.8]].forEach(p=>bb(p[0],p[1],0.07,0.07,0,1.6,G,0));
- bb(2.55,6.0,0.5,1.0,0,0.5,0xb08850);bb(2.4,6.0,0.04,0.4,0.5,0.8,0x30353b,0);bb(2.42,6.0,0.02,0.34,0.54,0.78,0x3cff7a,0);bb(2.65,6.0,0.15,0.4,0.5,0.52,0x2b2b2b,0);bb(3.0,6.0,0.4,0.4,0,0.3,0x222222,0);
  // จอแสดงน้ำหนัก
- cy(0.04,1.4,G,2.0,0.7,4.6);const cv=document.createElement('canvas');cv.width=256;cv.height=96;const cx2=cv.getContext('2d'),tx=new THREE.CanvasTexture(cv);tx.encoding=THREE.sRGBEncoding;
+ const cv=document.createElement('canvas');cv.width=256;cv.height=96;const cx2=cv.getContext('2d'),tx=new THREE.CanvasTexture(cv);tx.encoding=THREE.sRGBEncoding;
  WBX.draw=t=>{cx2.fillStyle='#050805';cx2.fillRect(0,0,256,96);cx2.fillStyle='#3cff7a';cx2.font='bold 56px monospace';cx2.textAlign='center';cx2.textBaseline='middle';cx2.fillText(t+' t',128,50);tx.needsUpdate=true};WBX.draw('12.45');
- const dm=new THREE.Mesh(new THREE.PlaneGeometry(1.1,0.42),new THREE.MeshBasicMaterial({map:tx}));dm.position.set(x0+2.0,T+1.5,z0+4.6);dm.rotation.y=-Math.PI/2;S.add(dm);bb(2.0,4.6,0.05,1.2,1.28,1.74,0x222222,0);
+ const dm=new THREE.Mesh(new THREE.PlaneGeometry(1.1,0.42),new THREE.MeshBasicMaterial({map:tx}));const gx=(437-450)*K+4.45,gz=(137-300)*K+9.3,gy=3.05;dm.position.set(gx+0.04,gy,gz);dm.rotation.y=Math.PI/2;S.add(dm);M(bx(0.06,0.56,1.3),0x222222,gx,gy,gz,0);[-0.5,0.5].forEach(o=>M(bx(0.03,0.75,0.03),0x8d939b,gx,gy+0.65,gz+o,0));
  // ไม้กั้น + ไฟจราจร
  bb(1.95,3.6,0.12,0.12,0,0.8,G);for(let k=0;k<4;k++){const q=0.2+0.4*k,m=M(bx(0.4,0.07,0.07),k%2?0xffffff:0xd33,x0+1.95-0.36*q,T+0.8+0.93*q,z0+3.6,0);m.rotation.z=-1.2}
  bb(2.3,3.6,0.1,0.1,0,1.0,G);WBX.lamps=[0,1].map(i=>{const m=new THREE.Mesh(new THREE.SphereGeometry(0.06,8,6),new THREE.MeshBasicMaterial({color:i?0x22cc66:0xff2222}));m.position.set(x0+2.3,T+0.85-i*0.2,z0+3.6+0.07);S.add(m);return m});bb(2.3,3.6,0.14,0.08,0.65,1.0,0x222222,0);
- const l=new THREE.PointLight(0xfff2dd,0.7,5);l.position.set(x0+2.4,T+2.2,z0+6.0);S.add(l)}
+ }
 const lbEl=$('lbl'),bl=[],solids=[];
 B.forEach((b,i)=>{
  const w=b[3]*K,d=b[4]*K,cx=(b[1]+b[3]/2-450)*K,cz=(b[2]+b[4]/2-300)*K,t=b[5]||'solid';
@@ -816,7 +812,7 @@ const OP=[];
 {const b=B.find(x=>x[0]==='ลานรถ'),X0=(b[1]-450)*K,Z0=(b[2]-300)*K,T=0.1;WBX.w=[];
  const tk=car('truck');tk.position.set(X0+1.0,T+0.26,Z0+6.0);S.add(tk);
  const pw=(sh,hat,u,v,ry,l,ar,am,sp,y)=>{const p=person(sh,hat,hat?0xff8a00:0,pick1(SK));p.g.position.set(X0+u,y,Z0+v);p.g.rotation.y=ry;p.lg.forEach(q=>q.rotation.x=l);S.add(p.g);WBX.w.push({pe:p,b:ar,am,sp,ph:rnd()*6})};
- pw(0xf2f2f2,null,2.95,6.0,-Math.PI/2,-1.5,-0.95,0.1,7,T-0.11);pw(0x2f5f9e,0xf5c518,2.3,7.5,-Math.PI/2,0,-0.7,0.15,4,T);
+ pw(0x2f5f9e,0xf5c518,2.3,7.5,-Math.PI/2,0,-0.7,0.15,4,T);
  WBX.tick=t=>{WBX.w.forEach(o=>{const s=t*o.sp+o.ph;o.pe.ar[0].rotation.x=o.b+Math.sin(s)*o.am;o.pe.ar[1].rotation.x=o.b+Math.sin(s+2)*o.am});
   const k=t%10,f=Math.floor(t*4);if(f!==WBX.f){WBX.f=f;WBX.draw((k<6?12.45*k/6+Math.random()*0.05:12.45).toFixed(2))}WBX.lamps[0].visible=k<6;WBX.lamps[1].visible=k>=6}}
 let BEAR=null;
