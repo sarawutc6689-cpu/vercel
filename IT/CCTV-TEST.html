@@ -641,7 +641,7 @@ B.forEach((b,i)=>{
  else if(t==='prod2'){P2(w,d,cx,cz);top=5.4;solids.push({x0:b[1],x1:b[1]+b[3],y0:b[2],y1:b[2]+b[4],h:4.6})}
  else if(t==='t10'){T10(w,d,cx,cz);top=5.4;solids.push({x0:b[1],x1:b[1]+b[3],y0:b[2],y1:b[2]+b[4],h:4.6})}
  else if(t==='warehouse'){WHS(w,d,cx,cz);top=5.2;solids.push({x0:b[1],x1:b[1]+b[3],y0:b[2],y1:b[2]+b[4],h:4.4})}
- else if(t==='wc'){if(b[0]==='ห้องน้ำ'){const n0=S.children.length,g=new THREE.Group();WC(d,w,cx,cz,2);const ms=S.children.slice(n0);ms.forEach(m=>{S.remove(m);m.position.x-=cx;m.position.z-=cz;g.add(m)});g.position.set(cx,0,cz);g.rotation.y=Math.PI/2;S.add(g)}else WC(w,d,cx,cz);top=3.5;solids.push({x0:b[1],x1:b[1]+b[3],y0:b[2],y1:b[2]+b[4],h:3.5})}
+ else if(t==='wc'){if(b[0].indexOf('ห้องน้ำ')===0){const n0=S.children.length,g=new THREE.Group();WC(d,w,cx,cz,2);const ms=S.children.slice(n0);ms.forEach(m=>{S.remove(m);m.position.x-=cx;m.position.z-=cz;g.add(m)});g.position.set(cx,0,cz);g.rotation.y=b[0]==='ห้องน้ำ'?Math.PI/2:-Math.PI/2;S.add(g)}else WC(w,d,cx,cz);top=3.5;solids.push({x0:b[1],x1:b[1]+b[3],y0:b[2],y1:b[2]+b[4],h:3.5})}
  else if(t==='canteen'){CAN(w,d,cx,cz);top=4;solids.push({x0:b[1],x1:b[1]+b[3],y0:b[2],y1:b[2]+b[4],h:3.4})}
   else if(t==='rd'){RDB(w,d,cx,cz);top=7;solids.push({x0:b[1],x1:b[1]+b[3],y0:b[2],y1:b[2]+b[4],h:6.3})}
  else if(b[0]==='สำนักงาน'){OFF(w,d,cx,cz);top=5.7;solids.push({x0:b[1],x1:b[1]+b[3],y0:b[2],y1:b[2]+b[4],h:top})}
