@@ -236,11 +236,11 @@ function WHS(w,d,cx,cz){const x0=cx-w/2,z0=cz-d/2,FL=0.1,H=3.8,a=0.14,G=0x4a4f57
  bb(8.1,14.5,0.9,0.4,0.02,1.5,0x8d939b);bb(4.4,14.5,0.9,0.4,0.02,1.2,0x7d868f);
  sgn('สำนักงานคลังสินค้า','#1a5fa8',256,52,1.8,0.37,x0+u0-0.06,FL+OH-0.35,z0+15.15,-Math.PI/2);
  const l1=new THREE.PointLight(0xfff2dd,0.9,7);l1.position.set(x0+uc,FL+2.2,z0+vc);S.add(l1);const l2=new THREE.PointLight(0xfff2dd,1.0,14);l2.position.set(cx,FL+3.2,z0+7);S.add(l2)}
-function WC(w,d,cx,cz){const H=2.9,GR=0x9ca3aa;
+function WC(w,d,cx,cz,nd0){const H=2.9,GR=0x9ca3aa;
  M(bx(w,H,d),GR,cx,H/2,cz);M(bx(w+0.1,0.3,d+0.1),0x6e757c,cx,0.15,cz);
  M(bx(w+0.5,0.3,d+0.5),0x4d535a,cx,H+0.15,cz);M(bx(w+0.5,0.06,0.12),0x7a8189,cx,H+0.33,cz+d/2+0.2,0);M(bx(w+0.5,0.06,0.12),0x7a8189,cx,H+0.33,cz-d/2-0.2,0);
  [-1,1].forEach(s=>{M(bx(w*0.6,0.28,0.05),0xc9d3dc,cx+s*w*0.02,2.4,cz+s*(d/2+0.03),0)});
- const nd=w>=5?2:1;
+ const nd=nd0||(w>=5?2:1);
  for(let k=0;k<nd;k++){const x=cx+(nd===1?0:(k?1:-1)*w/4);M(bx(1.0,2.0,0.1),0x3f5b78,x,1.0,cz+d/2+0.05,0);M(bx(0.36,0.36,0.04),nd===1?0x1f6fb2:(k?0xd9577f:0x1f6fb2),x,2.5,cz+d/2+0.07,0)}}
 function CAN(w,d,cx,cz){const x0=cx-w/2,z0=cz-d/2,FL=0.1,H=2.65,a=0.25,G=0x8d939b,RD2=0xc0392b;
  M(bx(w,0.1,d),0xd8d2c4,cx,0.05,cz,0);
@@ -641,7 +641,7 @@ B.forEach((b,i)=>{
  else if(t==='prod2'){P2(w,d,cx,cz);top=5.4;solids.push({x0:b[1],x1:b[1]+b[3],y0:b[2],y1:b[2]+b[4],h:4.6})}
  else if(t==='t10'){T10(w,d,cx,cz);top=5.4;solids.push({x0:b[1],x1:b[1]+b[3],y0:b[2],y1:b[2]+b[4],h:4.6})}
  else if(t==='warehouse'){WHS(w,d,cx,cz);top=5.2;solids.push({x0:b[1],x1:b[1]+b[3],y0:b[2],y1:b[2]+b[4],h:4.4})}
- else if(t==='wc'){WC(w,d,cx,cz);top=3.5;solids.push({x0:b[1],x1:b[1]+b[3],y0:b[2],y1:b[2]+b[4],h:3.5})}
+ else if(t==='wc'){if(b[0]==='ห้องน้ำ'){const n0=S.children.length,g=new THREE.Group();WC(d,w,cx,cz,2);const ms=S.children.slice(n0);ms.forEach(m=>{S.remove(m);m.position.x-=cx;m.position.z-=cz;g.add(m)});g.position.set(cx,0,cz);g.rotation.y=Math.PI/2;S.add(g)}else WC(w,d,cx,cz);top=3.5;solids.push({x0:b[1],x1:b[1]+b[3],y0:b[2],y1:b[2]+b[4],h:3.5})}
  else if(t==='canteen'){CAN(w,d,cx,cz);top=4;solids.push({x0:b[1],x1:b[1]+b[3],y0:b[2],y1:b[2]+b[4],h:3.4})}
   else if(t==='rd'){RDB(w,d,cx,cz);top=7;solids.push({x0:b[1],x1:b[1]+b[3],y0:b[2],y1:b[2]+b[4],h:6.3})}
  else if(b[0]==='สำนักงาน'){OFF(w,d,cx,cz);top=5.7;solids.push({x0:b[1],x1:b[1]+b[3],y0:b[2],y1:b[2]+b[4],h:top})}
