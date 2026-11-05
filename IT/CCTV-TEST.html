@@ -784,7 +784,7 @@ function PUMPH(w,d,cx,cz){const x0=cx-w/2,z0=cz-d/2,FL=0.1,H=3.2,a=0.3,G=0x4a4f5
  PMX.sh=SH;PMX.leds=LD;
  PMX.tick=t=>{PMX.sh.forEach(m=>m.rotation.x=t*25);const f=Math.floor(t*2);PMX.leds.forEach((m,i)=>m.material.color.setHex((f+i)%5===0?0xffb000:0x22cc66))}}
 // ===== รั้วล้อมลานจอดรถ ประตูทางเข้าอยู่ด้านเหนือ หันหน้าไปทางถนน =====
-function PFENCE(w,d,cx,cz){const x0=cx-w/2+0.12,x1=cx+w/2-0.12,z0=cz-d/2+0.12,z1=cz+d/2-0.12,H=1.8,G=0x4a4f57,gw=4.0,gx0=cx-gw/2,gx1=cx+gw/2,
+function PFENCE(w,d,cx,cz){const x0=cx-w/2+0.12,x1=cx+w/2-0.12,z0=cz-d/2+0.12,z1=cz+d/2-0.12,H=1.8,G=0x4a4f57,gw=4.0,gc=cx-w/2+4.3,gx0=gc-gw/2,gx1=gc+gw/2,
  pm=new THREE.MeshLambertMaterial({color:0xaab3bb,transparent:true,opacity:0.35,depthWrite:false,side:THREE.DoubleSide});
  const seg=(ax,az,bx2,bz)=>{const hz=az===bz,L=hz?bx2-ax:bz-az,n=Math.max(1,Math.round(L/2.2)),st=L/n,mx=hz?(ax+bx2)/2:ax,mz=hz?az:(az+bz)/2;
   const pn=new THREE.Mesh(bx(hz?L:0.02,H-0.25,hz?0.02:L),pm);pn.position.set(mx,0.25+(H-0.25)/2,mz);S.add(pn);
@@ -795,16 +795,16 @@ function PFENCE(w,d,cx,cz){const x0=cx-w/2+0.12,x1=cx+w/2-0.12,z0=cz-d/2+0.12,z1
  // เสาประตู + คานป้าย + โคม
  [gx0,gx1].forEach(x=>{M(bx(0.4,2.5,0.4),0xe9e4d8,x,1.25,z0);M(bx(0.5,0.1,0.5),0x8d939b,x,2.55,z0);M(bx(0.44,0.12,0.44),0x1f4e9a,x,0.9,z0,0);
   const l=new THREE.Mesh(new THREE.SphereGeometry(0.1,8,6),new THREE.MeshBasicMaterial({color:0xfff2b0}));l.position.set(x,2.72,z0);S.add(l)});
- M(bx(gw+0.4,0.4,0.2),0xe9e4d8,cx,2.25,z0,0);
+ M(bx(gw+0.4,0.4,0.2),0xe9e4d8,gc,2.25,z0,0);
  {const k=document.createElement('canvas');k.width=640;k.height=80;const q=k.getContext('2d');q.fillStyle='#1f4e9a';q.fillRect(0,0,640,80);q.fillStyle='#fff';q.font='bold 44px Tahoma,Sarabun,sans-serif';q.textAlign='center';q.textBaseline='middle';q.fillText('ลานจอดรถ',320,42,610);
-  const tx=new THREE.CanvasTexture(k);tx.encoding=THREE.sRGBEncoding;const m=new THREE.Mesh(new THREE.PlaneGeometry(3.2,0.4),new THREE.MeshBasicMaterial({map:tx}));m.position.set(cx,2.25,z0-0.101);m.rotation.y=Math.PI;S.add(m)}
+  const tx=new THREE.CanvasTexture(k);tx.encoding=THREE.sRGBEncoding;const m=new THREE.Mesh(new THREE.PlaneGeometry(3.2,0.4),new THREE.MeshBasicMaterial({map:tx}));m.position.set(gc,2.25,z0-0.101);m.rotation.y=Math.PI;S.add(m)}
  // บานประตู 2 บาน แง้มเปิดเข้าด้านใน
  const fm=new THREE.MeshLambertMaterial({color:0x1f4e9a}),Lw=gw/2-0.25;
  [[gx0+0.2,1,-1.1],[gx1-0.2,-1,1.1]].forEach(o=>{const g=new THREE.Group(),s=o[1],add=(geo,mat,x,y)=>{const m=new THREE.Mesh(geo,mat);m.position.set(x,y,0);g.add(m)};
   g.position.set(o[0],0,z0);
   [0.3,0.9,1.5].forEach(y=>add(bx(Lw,0.06,0.06),fm,s*Lw/2,y));[0.03,Lw/2,Lw-0.03].forEach(x=>add(bx(0.06,1.26,0.06),fm,s*x,0.9));
   add(bx(Lw,1.2,0.02),pm,s*Lw/2,0.9);g.rotation.y=o[2];S.add(g)});
- M(bx(gw+0.4,0.06,0.9),0xcfcac0,cx,0.03,z0-0.12-0.45,0)}
+ M(bx(gw+0.4,0.06,0.9),0xcfcac0,gc,0.03,z0-0.12-0.45,0)}
 function DRM(w,d,cx,cz){const x0=cx-w/2,z0=cz-d/2,FL=0.1,H=4.4,a=0.15,G=0x4a4f57,AC=0xb3171f;
  const bb=(u,v,sx,sz,y0,y1,c,sh)=>M(bx(sx,y1-y0,sz),c,x0+u,FL+(y0+y1)/2,z0+v,sh);
  M(bx(w,0.1,d),0xbfbcb4,cx,0.05,cz,0);
@@ -1152,7 +1152,7 @@ PS.forEach(s=>{const t=s[2],p=t==='w'?person(pick1([0x2f5f9e,0x3b7fc4,0x4d6d52,0
  t==='g'?person(0x1d2a44,0x1d2a44,0,SK[1]):t==='o'?person(pick1([0xf2f2f2,0xcfe0f2,0xe7d9f2]),null,0,pick1(SK)):person(pick1([0xc0392b,0x27ae60,0xe67e22,0x8e44ad,0xf1c40f]),null,0,pick1(SK));
  spawn(p.g,PR[s[0]],0.68,0.75+rnd()*0.3,s[1],3,{pe:p})});
 [[[680,290],[687,290],[687,455],[600,455],[600,461]],[[437,380],[454,380],[454,304],[491,304],[491,250],[498,250]],[[415,471],[415,455],[390,455],[390,449]],[[666,116],[666,125],[491,125],[491,250],[498,250]],[[691,370],[687,370],[687,268],[813,268],[813,263]],[[470,365],[454,365],[454,455],[415,455],[415,471]],[[590,390],[584,390],[584,332],[537,332],[537,326]]]
-.forEach((P,i)=>{const f=forklift();spawn(f.g,P,0.18,2+rnd()*0.6,i/6,4,{fk:f})});
+.forEach((P,i)=>{if(![0,1,3].includes(i))return;const f=forklift();spawn(f.g,P,0.18,2+rnd()*0.6,i/6,4,{fk:f})});
 function car(kind){const g=new THREE.Group(),L=new THREE.Group();g.add(L);
  const add=(geo,c,x,y,z,sh)=>{const m=new THREE.Mesh(geo,mt(c));m.position.set(x,y,z);m.castShadow=!!sh;L.add(m)},col=pick1([0xd9d9d9,0x1f3a5f,0xc0392b,0x2d2f33,0xf5f5f5,0x3b7a57,0xe6b422]),wg=new THREE.CylinderGeometry(0.17,0.17,0.12,10).rotateZ(Math.PI/2);
  if(kind==='truck'){add(bx(0.95,0.3,3.0),0x30353b,0,0.3,0,1);add(bx(0.95,0.95,0.9),col,0,0.85,1.0,1);add(bx(0.96,0.35,0.05),0x28323c,0,1.05,1.46);add(bx(0.98,1.1,2.0),0xf2f2f2,0,1.0,-0.5,1);[[-1,1.0],[1,1.0],[-1,-0.9],[1,-0.9],[-1,-1.4],[1,-1.4]].forEach(w=>add(wg,0x222222,w[0]*0.48,0.17,w[1]))}
