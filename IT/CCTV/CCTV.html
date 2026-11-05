@@ -108,7 +108,7 @@ canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
 <script>
 (function(){
 const K=0.1,$=id=>document.getElementById(id),V=(x,y,z)=>new THREE.Vector3(x,y,z);
-const B=[["เขตโรงงาน",34,25,853,560,"boundary"],["พุ่มไม้",34,25,280,92,"forest"],["พุ่มไม้",34,134,165,95,"forest"],["พุ่มไม้",34,231,137,65,"forest"],["หอพัก",333,32,150,73],["โรงคาร์บอน",496,32,71,73],["โรงบด",570,32,49,73],["คลังวัตถุดิบ",623,29,87,85],["คลังสารเคมี",711,32,71,82],["โรงผ้าใบ",782,45,62,145],["โรงอาหาร",219,135,91,52,"canteen"],["ห้องน้ำ",252,189,58,49,"wc"],["อาคาร T10",344,137,92,111],["ยานยนต์",437,137,46,109,"garage"],["ผลิต2",344,247,92,201,"prod2"],["โรงเก็บแม่พิมพ์",175,239,137,61,"moldstore"],["แม่พิมพ์",174,300,138,85,"workshop"],["สำนักงาน",48,300,124,146],["โรงเก็บปลอก",242,385,70,62,"storage"],["ลานรถ",498,138,79,187,"dashed"],["คลังสินค้า",590,138,89,187],["ซ่อม1",683,138,47,112],["ห้องน้ำ 2",747,192,36,49,"wc"],["ปั๊มน้ำ",786,193,47,38],["เก็บถัง",822,234,48,53],["โครงการ",470,337,66,52,"project"],["ซ่อม2",470,389,66,51,"repair2"],["UT",536,337,41,103,"boiler"],["ห้าดาว",589,333,92,107],["ผลิต1",692,295,118,146],["ห้องน้ำ 3",811,440,59,85,"wc"],["RD",47,465,152,92,"rd"],["ลานจอดรถ",200,471,175,100,"dashed"],["โรงเหล็ก",376,472,77,55,"steel"],["ลานเทสยาง",514,461,175,100,"dashed"]];
+const B=[["เขตโรงงาน",34,25,853,560,"boundary"],["พุ่มไม้",34,25,280,92,"forest"],["พุ่มไม้",34,134,165,95,"forest"],["พุ่มไม้",34,231,137,65,"forest"],["หอพัก",333,32,150,73],["โรงคาร์บอน",496,32,71,73],["โรงบด",570,32,49,73],["คลังวัตถุดิบ",623,29,87,85],["คลังสารเคมี",711,32,71,82],["โรงผ้าใบ",782,45,62,145],["โรงอาหาร",219,135,91,52,"canteen"],["ห้องน้ำ",252,189,58,49,"wc"],["อาคาร T10",344,137,92,111,"t10"],["ยานยนต์",437,137,46,109,"garage"],["ผลิต2",344,247,92,201,"prod2"],["โรงเก็บแม่พิมพ์",175,239,137,61,"moldstore"],["แม่พิมพ์",174,300,138,85,"workshop"],["สำนักงาน",48,300,124,146],["โรงเก็บปลอก",242,385,70,62,"storage"],["ลานรถ",498,138,79,187,"dashed"],["คลังสินค้า",590,138,89,187,"warehouse"],["ซ่อม1",683,138,47,112],["ห้องน้ำ 2",747,192,36,49,"wc"],["ปั๊มน้ำ",786,193,47,38],["เก็บถัง",822,234,48,53],["โครงการ",470,337,66,52,"project"],["ซ่อม2",470,389,66,51,"repair2"],["UT",536,337,41,103,"boiler"],["ห้าดาว",589,333,92,107],["ผลิต1",692,295,118,146],["ห้องน้ำ 3",811,440,59,85,"wc"],["RD",47,465,152,92,"rd"],["ลานจอดรถ",200,471,175,100,"dashed"],["โรงเหล็ก",376,472,77,55,"steel"],["ลานเทสยาง",514,461,175,100,"dashed"]];
 const C=[["CAM-001","ประตูหลักทางเข้า","ทางเข้า-ออก",4.49,77.82,"online","1080p",190],["CAM-002","ทางออกหลัก","ทางเข้า-ออก",4.86,79.71,"online","1080p",160],["CAM-003","หลังโรงรถ2","ทางเข้า-ออก",41.29,94.31,"online","720p",185],["CAM-013","อาคาร RD","สำนักงาน/RD",23,79.01,"online","720p",85],["CAM-021","โรงอาหาร1","โรงอาหาร/หอพัก",28,26,"online","1080p",90],["CAM-022","หอพักพนักงาน (หน้า)","โรงอาหาร/หอพัก",50.54,17.83,"online","1080p",180],["CAM-023","หอพักพนักงาน (หลัง)","โรงอาหาร/หอพัก",51.07,4.83,"online","720p",205],["CAM-031","อาคาร T10 (ทิศเหนือ)","T10/ผลิต2",35.18,17.85,"online","1080p",90],["CAM-034","แม่พิมพ์1","T10/ผลิต2",20.78,55.41,"online","1080p",60],["CAM-041","คลังสินค้า (หน้า)","คลังสินค้า/ลานรถ",67.81,22.85,"online","2MP",335],["CAM-042","คลังสินค้า1","คลังสินค้า/ลานรถ",66,40,"online","2MP",180],["CAM-043","คลังสินค้า (หลัง)","คลังสินค้า/ลานรถ",74.72,65.12,"online","2MP",110],["CAM-044","ห้าดาว","คลังสินค้า/ลานรถ",73.05,74.02,"online","720p",105],["CAM-051","หลังคลังวัตถุดิบ","วัตถุดิบ/สารเคมี",83.43,5.01,"online","1080p",180],["CAM-053","โรงคาร์บอน/โรงบด","วัตถุดิบ/สารเคมี",57.15,5.12,"online","720p",180],["CAM-061","ผลิต1 (หน้า)","ผลิต1/ซ่อม1",88.6,87.91,"online","2MP",265],["CAM-062","ผลิต1 (หลัง)","ผลิต1/ซ่อม1",91.31,71.61,"online","2MP",270],["CAM-063","ซ่อม1","ผลิต1/ซ่อม1",83.67,30.53,"online","720p",185],["CAM-071","ซ่อม2","ซ่อม2/โครงการ",55.84,66.24,"online","1080p",130],["CAM-072","โครงการ/UT","ซ่อม2/โครงการ",52.25,61.2,"online","720p",295],["CAM-081","ลานเทสยาง","ทดสอบ/กลางแจ้ง",68.64,78.3,"online","2MP",115],["CAM-082","ลานเทสยาง (ปลาย)","ทดสอบ/กลางแจ้ง",69.63,78.7,"online","720p",75],["CAM-083","ลานจอดรถ","ทดสอบ/กลางแจ้ง",30.15,79.35,"online","1080p",90],["CAM-084","หน้าโรงผ้าใบ","ทั่วไป",86.66,20.97,"online","1080p",180],["CAM-085","หลังโรงกรีน1","ทั่วไป",60.03,4.97,"online","1080p",0],["CAM-086","หลังโรงกรีน2","ทั่วไป",68.61,5,"online","1080p",190],["CAM-087","ลานจอด","ทั่วไป",53.58,18.18,"online","1080p",65],["CAM-088","หน้าคาร์บอน","ทั่วไป",58.6,17.45,"online","1080p",135],["CAM-089","หลังผลิต1","ทั่วไป",90.37,52.54,"online","1080p",95],["CAM-090","หลังห้องน้ำผลิต1","ทั่วไป",98.29,72.55,"online","1080p",180],["CAM-091","หลังโรงรถ1","ทั่วไป",22.33,94.47,"online","1080p",0],["CAM-092","โรงเหล็ก","ทั่วไป",41.33,78.74,"online","1080p",55],["CAM-093","เก็บถัง1","ทั่วไป",88.48,42.67,"online","1080p",0],["CAM-094","เก็บถัง2","ทั่วไป",86.83,42.51,"online","1080p",130],["CAM-095","หน้าคลังวัตถุดิบ","ทั่วไป",76.44,19.42,"online","1080p",170],["CAM-096","โรงอาหาร2","ทั่วไป",23.32,22.62,"online","1080p",190],["CAM-097","คลังสินค้า2","ทั่วไป",65.76,32.43,"online","1080p",180],["CAM-098","คลังสินค้า3","ทั่วไป",66.35,45.55,"online","1080p",120],["CAM-099","หอพัก","ทั่วไป",42.86,17.54,"online","1080p",170],["CAM-100","แม่พิมพ์2","ทั่วไป",26.12,61.44,"online","1080p",115]];
 const ST={online:'ออนไลน์',maint:'ออฟไลน์'},CL={online:0x1a9a5a,maint:0xe08a00};
 
@@ -128,7 +128,7 @@ const M=(g,c,x,y,z,sh)=>{const m=new THREE.Mesh(g,new THREE.MeshLambertMaterial(
 const bx=(w,h,d)=>new THREE.BoxGeometry(w,h,d);
 function gable(w,d,rh,c,x,y,z){const W=Math.min(w,d)+0.5,D=Math.max(w,d)+0.5,s=new THREE.Shape();s.moveTo(-W/2,0);s.lineTo(W/2,0);s.lineTo(0,rh);
  const g=new THREE.ExtrudeGeometry(s,{depth:D,bevelEnabled:false});g.translate(0,0,-D/2);if(w>=d)g.rotateY(Math.PI/2);return M(g,c,x,y,z)}
-const MA=[],WSX={},DR={},RPX={},RJX={},RUX={},RVX={},WBX={},M2X={};
+const MA=[],WSX={},DR={},RPX={},RJX={},RUX={},RVX={},WBX={},M2X={},T10X={},WHX={};
 function WALLS(x0,z0,w,d,H,FL,dc){dc=dc||w/2;const fm=new THREE.MeshLambertMaterial({color:0xf4f6f7,transparent:true,opacity:0.55,depthWrite:false}),bm=new THREE.MeshLambertMaterial({color:0x9aa0a6}),
  seg=(sx,sz,x,z)=>{const m=new THREE.Mesh(bx(sx,H,sz),fm);m.position.set(x,FL+H/2,z);S.add(m);const b2=new THREE.Mesh(bx(sx+0.02,0.3,sz+0.02),bm);b2.position.set(x,FL+0.15,z);S.add(b2)},g=1.2,l1=dc-g,l2=w-dc-g;
  seg(w,0.1,x0+w/2,z0+0.05);seg(0.1,d,x0+0.05,z0+d/2);seg(0.1,d,x0+w-0.05,z0+d/2);seg(l1,0.1,x0+l1/2,z0+d-0.05);seg(l2,0.1,x0+dc+g+l2/2,z0+d-0.05)}
@@ -197,6 +197,45 @@ function MST(w,d,cx,cz){const x0=cx-w/2,z0=cz-d/2,FL=0.1,H=3.2,a=0.15,G=0x4a4f57
  const i1=new THREE.InstancedMesh(new THREE.CylinderGeometry(1,1,1,24),new THREE.MeshLambertMaterial({color:0xffffff}),T.length),i2=new THREE.InstancedMesh(new THREE.CylinderGeometry(1,1,1,24),new THREE.MeshLambertMaterial({color:0x15181c}),T.length),m4=new THREE.Matrix4(),q0=new THREE.Quaternion();
  T.forEach((t,i)=>{m4.compose(new THREE.Vector3(t[0],t[1],t[2]),q0,new THREE.Vector3(t[3],t[4],t[3]));i1.setMatrixAt(i,m4);i1.setColorAt(i,new THREE.Color(cols[t[5]]));
   m4.compose(new THREE.Vector3(t[0],t[1]+t[4]/2+0.011,t[2]),q0,new THREE.Vector3(t[3]*0.62,0.02,t[3]*0.62));i2.setMatrixAt(i,m4)});i1.castShadow=true;S.add(i1);S.add(i2)}
+function WHS(w,d,cx,cz){const x0=cx-w/2,z0=cz-d/2,FL=0.1,H=3.8,a=0.14,G=0x4a4f57,AC=0x1a5fa8;
+ const bb=(u,v,sx,sz,y0,y1,c,sh)=>M(bx(sx,y1-y0,sz),c,x0+u,FL+(y0+y1)/2,z0+v,sh),hv=(p,q)=>{const s=Math.sin(p*12.9898+q*78.233)*43758.5453;return s-Math.floor(s)};
+ const gm=new THREE.MeshLambertMaterial({color:0x9fd0ee,transparent:true,opacity:0.3,depthWrite:false}),gl=(sx,sz,u,v,y0,y1)=>{const m=new THREE.Mesh(bx(sx,y1-y0,sz),gm);m.position.set(x0+u,FL+(y0+y1)/2,z0+v);S.add(m)};
+ M(bx(w,0.1,d),0xbfbcb4,cx,0.05,cz,0);
+ const VR=[0.3,4.9,9.5,14.1,d-0.3];
+ [0.3,w/2,w-0.3].forEach(u=>VR.forEach(v=>{bb(u,v,0.26,0.26,0,H,G);bb(u,v,0.42,0.42,0,0.1,0x8d939b,0)}));
+ [0.3,w-0.3].forEach(u=>M(bx(0.14,0.16,d+0.3),G,x0+u,FL+H,cz,0));M(bx(0.16,0.18,d),G,cx,FL+H-0.05,cz,0);VR.forEach(v=>M(bx(w-0.2,0.14,0.12),G,cx,FL+H-0.1,z0+v,0));
+ const Lw=(w/2+0.4)/Math.cos(a),rise=(w/2+0.4)*Math.tan(a);
+ [[a,x0-0.4+(w/2+0.4)/2],[-a,x0+w+0.4-(w/2+0.4)/2]].forEach(r=>{const m=M(bx(Lw,0.05,d+0.8),0xd5dde2,r[1],FL+H+rise/2,cz,0);m.rotation.z=r[0];m.material.transparent=true;m.material.opacity=0.5;m.material.depthWrite=false});
+ M(bx(0.18,0.1,d+0.8),AC,cx,FL+H+rise+0.03,cz,0);[x0-0.4,x0+w+0.4].forEach(x=>M(bx(0.05,0.22,d+0.8),AC,x,FL+H+0.02,cz,0));
+ const sgn=(t,c,cw,chh,pw,ph,x,y,z,ry)=>{const cv=document.createElement('canvas');cv.width=cw;cv.height=chh;const q=cv.getContext('2d');q.fillStyle=c;q.fillRect(0,0,cw,chh);q.fillStyle='#fff';q.font='bold '+Math.round(chh*0.5)+'px Tahoma,Sarabun,sans-serif';q.textAlign='center';q.textBaseline='middle';q.fillText(t,cw/2,chh/2+2,cw-24);
+  const tx=new THREE.CanvasTexture(cv);tx.encoding=THREE.sRGBEncoding;const m=new THREE.Mesh(new THREE.PlaneGeometry(pw,ph),new THREE.MeshBasicMaterial({map:tx}));m.position.set(x,y,z);m.rotation.y=ry;S.add(m)};
+ sgn('คลังสินค้า','#1a5fa8',640,80,3.8,0.48,x0-0.45,FL+H+0.02,cz,-Math.PI/2);
+ const TI=[],TG=[],SZ=[[0.22,0.15,3],[0.32,0.22,2],[0.45,0.28,2]],lv=[0.25,0.95,1.65],v0=0.8,bw=2.44;
+ [2.9,5.2,7.5].forEach((u,ri)=>{
+  for(let k=0;k<=5;k++)[-1,1].forEach(s=>bb(u+s*0.5,v0+k*bw,0.07,0.07,0,2.35,0x1f4e9a,0));
+  lv.forEach((y,li)=>{[-1,1].forEach(s=>bb(u+s*0.5,v0+6.1,0.05,12.2,y-0.045,y+0.045,0xe67e22,0));bb(u,v0+6.1,1.0,12.2,y+0.035,y+0.065,0x7d868f,0);
+   for(let b=0;b<5;b++){const bs=v0+b*bw,be=bs+bw;let z=bs+0.12,n=0;
+    if(hv(ri*9+b,li*3+1)>0.2)TG.push([u-0.53,y+0.02,(bs+be)/2,hv(b,ri+li)>0.5?0x2ecc71:0xf1c40f]);
+    while(n<3){const sz=SZ[Math.floor(hv(ri*5+b+n,li*7+n)*3)],r=sz[0];if(z+2*r>be-0.06)break;
+     if(hv(b*3+n,ri+li*5)>0.1){const st=1+Math.floor(hv(n+b,li+ri*3)*sz[2]);for(let q=0;q<st;q++)TI.push([u+(hv(n,b+li)-0.5)*0.12,y+0.065+sz[1]/2+q*sz[1],z+r,r,sz[1]])}
+     z+=2*r+0.08;n++}}})});
+ const m4=new THREE.Matrix4(),q0=new THREE.Quaternion(),V3=(x,y,z)=>new THREE.Vector3(x,y,z),CYg=new THREE.CylinderGeometry(1,1,1,16),
+  it=new THREE.InstancedMesh(CYg,new THREE.MeshLambertMaterial({color:0xffffff}),TI.length),ih=new THREE.InstancedMesh(CYg,new THREE.MeshLambertMaterial({color:0x8d939b}),TI.length),cl=[0x1e2023,0x24272b,0x2b2f33,0x181a1d].map(c=>new THREE.Color(c));
+ TI.forEach((t,i)=>{m4.compose(V3(x0+t[0],FL+t[1],z0+t[2]),q0,V3(t[3],t[4],t[3]));it.setMatrixAt(i,m4);it.setColorAt(i,cl[i%4]);m4.compose(V3(x0+t[0],FL+t[1],z0+t[2]),q0,V3(t[3]*0.52,t[4]+0.012,t[3]*0.52));ih.setMatrixAt(i,m4)});it.castShadow=true;S.add(it);S.add(ih);
+ const ig=new THREE.InstancedMesh(bx(1,1,1),new THREE.MeshLambertMaterial({color:0xffffff}),TG.length);TG.forEach((t,i)=>{m4.compose(V3(x0+t[0],FL+t[1],z0+t[2]),q0,V3(0.012,0.1,0.2));ig.setMatrixAt(i,m4);ig.setColorAt(i,new THREE.Color(t[3]))});S.add(ig);
+ // office (SE corner)
+ const u0=3.4,u1=8.8,v0o=14.2,v1=18.5,OH=2.6,uc=(u0+u1)/2,vc=(v0o+v1)/2;
+ bb(uc,vc,u1-u0,v1-v0o,0,0.02,0xe6e2d8,0);
+ gl(u1-u0,0.05,uc,v0o,0,OH);gl(u1-u0,0.05,uc,v1,0,OH);gl(0.05,v1-v0o,u1,vc,0,OH);gl(0.05,1.9,u0,(v0o+16.1)/2,0,OH);gl(0.05,1.4,u0,(17.1+v1)/2,0,OH);
+ [[u0,v0o],[uc,v0o],[u1,v0o],[u0,v1],[uc,v1],[u1,v1],[u1,vc],[u0,16.1],[u0,17.1]].forEach(p=>bb(p[0],p[1],0.1,0.1,0,OH,0x1d1d21,0));
+ [[uc,v0o,u1-u0,0.1],[uc,v1,u1-u0,0.1],[u1,vc,0.1,v1-v0o],[u0,vc,0.1,v1-v0o]].forEach(p=>bb(p[0],p[1],p[2],p[3],OH-0.06,OH,0x1d1d21,0));bb(u0,16.6,0.1,1.0,2.0,OH,0x1d1d21,0);
+ {const cm=bb(uc,vc,u1-u0+0.2,v1-v0o+0.2,OH,OH+0.06,0xf2f4f7,0);cm.material.transparent=true;cm.material.opacity=0.55;cm.material.depthWrite=false}
+ [15.3,17.0].forEach(v=>[4.3,5.9,7.5].forEach(u=>{bb(u,v,1.3,0.7,0.4,0.45,0xe6dcc3,0);[-1,1].forEach(s=>bb(u+s*0.6,v,0.05,0.65,0.02,0.4,0xc9bd9f,0));
+  bb(u,v-0.2,0.5,0.04,0.55,0.88,0x0a1a2a,0).material.emissive=new THREE.Color(0x1a4f80);bb(u,v-0.2,0.06,0.06,0.45,0.55,0x222222,0);bb(u,v+0.12,0.4,0.15,0.45,0.47,0x2b2b2b,0);bb(u+0.5,v-0.15,0.18,0.38,0.02,0.4,0x2b2f35,0);
+  bb(u,v+0.8,0.45,0.45,0.23,0.29,0x222222,0);bb(u,v+1.02,0.45,0.06,0.29,0.75,0x1a5fa8,0)}));
+ bb(8.1,14.5,0.9,0.4,0.02,1.5,0x8d939b);bb(4.4,14.5,0.9,0.4,0.02,1.2,0x7d868f);
+ sgn('สำนักงานคลังสินค้า','#1a5fa8',256,52,1.8,0.37,x0+u0-0.06,FL+OH-0.35,z0+15.15,-Math.PI/2);
+ const l1=new THREE.PointLight(0xfff2dd,0.9,7);l1.position.set(x0+uc,FL+2.2,z0+vc);S.add(l1);const l2=new THREE.PointLight(0xfff2dd,1.0,14);l2.position.set(cx,FL+3.2,z0+7);S.add(l2)}
 function WC(w,d,cx,cz){const H=2.9,GR=0x9ca3aa;
  M(bx(w,H,d),GR,cx,H/2,cz);M(bx(w+0.1,0.3,d+0.1),0x6e757c,cx,0.15,cz);
  M(bx(w+0.5,0.3,d+0.5),0x4d535a,cx,H+0.15,cz);M(bx(w+0.5,0.06,0.12),0x7a8189,cx,H+0.33,cz+d/2+0.2,0);M(bx(w+0.5,0.06,0.12),0x7a8189,cx,H+0.33,cz-d/2-0.2,0);
@@ -339,7 +378,7 @@ function RP2(w,d,cx,cz){const x0=cx-w/2,z0=cz-d/2,FL=0.1,H=3.4,a=0.15,G=0x4a4f57
  [[-a,z0-0.4+(d/2+0.4)/2],[a,z0+d+0.4-(d/2+0.4)/2]].forEach(r=>{const m=M(bx(w+0.8,0.05,L),0xd5dde2,cx,FL+H+rise/2,r[1],0);m.rotation.x=r[0];m.material.transparent=true;m.material.opacity=0.5;m.material.depthWrite=false;
   for(let k=0;k<=4;k++){const f=M(bx(0.07,0.07,L),G,x0+k*w/4,FL+H+rise/2-0.05,r[1],0);f.rotation.x=r[0]}});
  M(bx(w+0.8,0.1,0.18),AC,cx,FL+H+rise+0.03,cz,0);[z0-0.4,z0+d+0.4].forEach(z=>M(bx(w+0.8,0.22,0.05),AC,cx,FL+H+0.02,z,0));
- {const cv=document.createElement('canvas');cv.width=640;cv.height=80;const x=cv.getContext('2d');x.fillStyle='#b86c00';x.fillRect(0,0,640,80);x.fillStyle='#fff';x.font='bold 42px Tahoma,Sarabun,sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText('อู่ซ่อม2',320,42,610);
+ {const cv=document.createElement('canvas');cv.width=640;cv.height=80;const x=cv.getContext('2d');x.fillStyle='#b86c00';x.fillRect(0,0,640,80);x.fillStyle='#fff';x.font='bold 42px Tahoma,Sarabun,sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText('อู่ซ่อมเครื่องจักร · ซ่อมไฟฟ้า',320,42,610);
   const tx=new THREE.CanvasTexture(cv);tx.encoding=THREE.sRGBEncoding;const m=new THREE.Mesh(new THREE.PlaneGeometry(4.4,0.55),new THREE.MeshBasicMaterial({map:tx}));m.position.set(cx,FL+H+0.05,z0+d+0.45);S.add(m)}
  bb(dc,d-0.05,2.4,0.1,H-0.55,H,0x8d939b,0);bb(dc,d-0.05,2.4,0.12,H-0.62,H-0.55,0xf2c200,0);
  [[2.15,1.75,2.7,0.08],[2.15,3.75,2.7,0.08],[0.8,2.75,0.08,2.08],[3.5,2.75,0.08,2.08]].forEach(p=>bb(p[0],p[1],p[2],p[3],0,0.02,0xf2c200,0));
@@ -378,7 +417,7 @@ function RPJ(w,d,cx,cz){const x0=cx-w/2,z0=cz-d/2,FL=0.1,H=4.7,SL=2.3,a=0.15,G=0
  [[-a,z0-0.4+(d/2+0.4)/2],[a,z0+d+0.4-(d/2+0.4)/2]].forEach(r=>{const m=M(bx(w+0.8,0.05,L),0xd5dde2,cx,FL+H+rise/2,r[1],0);m.rotation.x=r[0];m.material.transparent=true;m.material.opacity=0.5;m.material.depthWrite=false;
   for(let k=0;k<=4;k++){const f=M(bx(0.07,0.07,L),G,x0+k*w/4,FL+H+rise/2-0.05,r[1],0);f.rotation.x=r[0]}});
  M(bx(w+0.8,0.1,0.18),AC,cx,FL+H+rise+0.03,cz,0);[z0-0.4,z0+d+0.4].forEach(z=>M(bx(w+0.8,0.22,0.05),AC,cx,FL+H+0.02,z,0));
- {const cv=document.createElement('canvas');cv.width=640;cv.height=80;const x=cv.getContext('2d');x.fillStyle='#1a5fa8';x.fillRect(0,0,640,80);x.fillStyle='#fff';x.font='bold 40px Tahoma,Sarabun,sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText('อาคารโปรเจค · เทรนนิ่ง',320,42,610);
+ {const cv=document.createElement('canvas');cv.width=640;cv.height=80;const x=cv.getContext('2d');x.fillStyle='#1a5fa8';x.fillRect(0,0,640,80);x.fillStyle='#fff';x.font='bold 40px Tahoma,Sarabun,sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText('อาคารสร้างเครื่องจักร · โปรเจค · เทรนนิ่ง',320,42,610);
   const tx=new THREE.CanvasTexture(cv);tx.encoding=THREE.sRGBEncoding;const m=new THREE.Mesh(new THREE.PlaneGeometry(4.6,0.58),new THREE.MeshBasicMaterial({map:tx}));m.position.set(cx,FL+H+0.05,z0-0.46);m.rotation.y=Math.PI;S.add(m)}
  // ชั้น 2 ลอย (ห้องเทรนนิ่ง) + เสารับ + ราวกระจก
  bb(4.9,2.6,3.2,4.8,SL-0.15,SL,0xcfc9bd);[3.4,6.4].forEach(u=>{bb(u,2.6,0.14,4.8,SL-0.35,SL-0.15,G,0);[0.4,2.6,4.8].forEach(v=>bb(u,v,0.14,0.14,0,SL-0.35,G,0))});
@@ -414,7 +453,7 @@ function RUT(w,d,cx,cz){const x0=cx-w/2,z0=cz-d/2,FL=0.1,H=4.0,a=0.2,G=0x4a4f57,
  const Lw=(w/2+0.4)/Math.cos(a),rise=(w/2+0.4)*Math.tan(a);
  [[a,x0-0.4+(w/2+0.4)/2],[-a,x0+w+0.4-(w/2+0.4)/2]].forEach(r=>{const m=M(bx(Lw,0.05,d+0.8),0xd5dde2,r[1],FL+H+rise/2,cz,0);m.rotation.z=r[0];m.material.transparent=true;m.material.opacity=0.5;m.material.depthWrite=false});
  M(bx(0.18,0.1,d+0.8),AC,cx,FL+H+rise+0.03,cz,0);[x0-0.4,x0+w+0.4].forEach(x=>M(bx(0.05,0.22,d+0.8),AC,x,FL+H+0.02,cz,0));
- {const cv=document.createElement('canvas');cv.width=512;cv.height=72;const x=cv.getContext('2d');x.fillStyle='#1b7f8c';x.fillRect(0,0,512,72);x.fillStyle='#fff';x.font='bold 36px Tahoma,Sarabun,sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText('UT · หม้อไอน้ำ',256,38,490);
+ {const cv=document.createElement('canvas');cv.width=512;cv.height=72;const x=cv.getContext('2d');x.fillStyle='#1b7f8c';x.fillRect(0,0,512,72);x.fillStyle='#fff';x.font='bold 36px Tahoma,Sarabun,sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText('UT · หม้อไอน้ำ · ถังน้ำ',256,38,490);
   const tx=new THREE.CanvasTexture(cv);tx.encoding=THREE.sRGBEncoding;const m=new THREE.Mesh(new THREE.PlaneGeometry(3.2,0.45),new THREE.MeshBasicMaterial({map:tx}));m.position.set(cx,FL+H-0.35,z0+d+0.07);S.add(m)}
  // ห้องทำงานเล็ก (ทิศเหนือ)
  gl(2.45,0.05,1.375,2.6,0,2.3);gl(0.55,0.05,3.675,2.6,0,2.3);bb(1.375,2.6,2.45,0.06,2.3,2.36,0xcfd4da,0);bb(3.675,2.6,0.55,0.06,2.3,2.36,0xcfd4da,0);bb(3.0,2.6,0.06,0.06,0,2.3,0x8d939b,0);
@@ -478,7 +517,7 @@ function P2(w,d,cx,cz){const x0=cx-w/2,z0=cz-d/2,FL=0.1,H=4.2,a=0.15,G=0x4a4f57,
  const Lw=(w/2+0.4)/Math.cos(a),rise=(w/2+0.4)*Math.tan(a);
  [[a,x0-0.4+(w/2+0.4)/2],[-a,x0+w+0.4-(w/2+0.4)/2]].forEach(r=>{const m=M(bx(Lw,0.05,d+0.8),0xd5dde2,r[1],FL+H+rise/2,cz,0);m.rotation.z=r[0];m.material.transparent=true;m.material.opacity=0.5;m.material.depthWrite=false});
  M(bx(0.18,0.1,d+0.8),AC,cx,FL+H+rise+0.03,cz,0);[x0-0.4,x0+w+0.4].forEach(x=>M(bx(0.05,0.22,d+0.8),AC,x,FL+H+0.02,cz,0));
- {const cv=document.createElement('canvas');cv.width=640;cv.height=80;const x=cv.getContext('2d');x.fillStyle='#1a5fa8';x.fillRect(0,0,640,80);x.fillStyle='#fff';x.font='bold 40px Tahoma,Sarabun,sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText('ผลิต2 · อาคารตรีทอง',320,42,610);
+ {const cv=document.createElement('canvas');cv.width=640;cv.height=80;const x=cv.getContext('2d');x.fillStyle='#1a5fa8';x.fillRect(0,0,640,80);x.fillStyle='#fff';x.font='bold 40px Tahoma,Sarabun,sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText('ผลิต2 · เครื่องอบยาง Solid',320,42,610);
   const tx=new THREE.CanvasTexture(cv);tx.encoding=THREE.sRGBEncoding;const m=new THREE.Mesh(new THREE.PlaneGeometry(4.2,0.52),new THREE.MeshBasicMaterial({map:tx}));m.position.set(cx,FL+H-0.45,z0+d-0.1);S.add(m)}
  [6,14].forEach(v=>{const l=new THREE.PointLight(0xfff2dd,0.9,14);l.position.set(cx,3.4,z0+v);S.add(l)});
  // เครื่องอบยาง Solid 8 แถว (จำนวนต่อแถวไม่เท่ากัน 7-12 ตัว)
@@ -494,6 +533,54 @@ function P2(w,d,cx,cz){const x0=cx-w/2,z0=cz-d/2,FL=0.1,H=4.2,a=0.15,G=0x4a4f57,
  mk(BX,0xb08850,TS.pal);mk(CY,0x232323,TS.tire);mk(CY,0xb9c2cc,TS.hub);
  M2X.im={};[['base',0x30353b],['post',0x8d939b],['head',0x2f5f9e],['ring',0x1a1a1a],['box',0xcfd4d9]].forEach(k=>mk(BX,k[1],L[k[0]]));mk(CY,0x555c66,L.mold);
  M2X.im.plat=mk(BX,0xd98a00,L.plat);M2X.im.rod=mk(CY,0xcfd4da,L.rod);M2X.im.led=mk(BX,0x22cc66,L.led,1);M2X.P=P;M2X.FL=FL;M2X.st=P.map(()=>1)}
+function T10(w,d,cx,cz){T10X.sh=[];const x0=cx-w/2,z0=cz-d/2,FL=0.1,H=4.2,a=0.15,G=0x4a4f57,AC=0x1b7f8c,SP=5.5,LD=[],MP=[];
+ const bb=(u,v,sx,sz,y0,y1,c,sh)=>M(bx(sx,y1-y0,sz),c,x0+u,FL+(y0+y1)/2,z0+v,sh),cy=(r,l,c,u,y,v,ax)=>{const g=new THREE.CylinderGeometry(r,r,l,14);if(ax==='x')g.rotateZ(Math.PI/2);if(ax==='z')g.rotateX(Math.PI/2);return M(g,c,x0+u,FL+y,z0+v)};
+ const sg=(t,c,W,Hh,u,y,v,ry)=>{const cv=document.createElement('canvas');cv.width=512;cv.height=Math.round(512*Hh/W);const x=cv.getContext('2d');x.fillStyle=c;x.fillRect(0,0,512,cv.height);x.fillStyle='#fff';x.font='bold 34px Tahoma,Sarabun,sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText(t,256,cv.height/2+2,490);
+  const tx=new THREE.CanvasTexture(cv);tx.encoding=THREE.sRGBEncoding;const m=new THREE.Mesh(new THREE.PlaneGeometry(W,Hh),new THREE.MeshBasicMaterial({map:tx}));m.position.set(x0+u,FL+y,z0+v);m.rotation.y=ry;S.add(m)};
+ M(bx(w,0.1,d),0xbfbcb4,cx,0.05,cz,0);
+ const vs=[0.3,SP,d-0.3];vs.forEach(v=>[0.3,w/2,w-0.3].forEach(u=>{M(bx(0.26,H,0.26),G,x0+u,FL+H/2,z0+v);M(bx(0.42,0.1,0.42),0x8d939b,x0+u,FL+0.05,z0+v,0)}));
+ [0.3,w-0.3].forEach(u=>M(bx(0.14,0.16,d+0.3),G,x0+u,FL+H,cz,0));M(bx(0.16,0.18,d),G,cx,FL+H-0.05,cz,0);vs.forEach(v=>M(bx(w-0.2,0.14,0.12),G,cx,FL+H-0.1,z0+v,0));
+ const Lw=(w/2+0.4)/Math.cos(a),rise=(w/2+0.4)*Math.tan(a);
+ [[a,x0-0.4+(w/2+0.4)/2],[-a,x0+w+0.4-(w/2+0.4)/2]].forEach(r=>{const m=M(bx(Lw,0.05,d+0.8),0xd5dde2,r[1],FL+H+rise/2,cz,0);m.rotation.z=r[0];m.material.transparent=true;m.material.opacity=0.5;m.material.depthWrite=false});
+ M(bx(0.18,0.1,d+0.8),AC,cx,FL+H+rise+0.03,cz,0);[x0-0.4,x0+w+0.4].forEach(x=>M(bx(0.05,0.22,d+0.8),AC,x,FL+H+0.02,cz,0));
+ sg('อาคาร T10 · เครื่องจักร / คลังแม่พิมพ์','#1b7f8c',4.4,0.52,w/2,H-0.45,d-0.1,0);
+ sg('เครื่องจักร','#2f5f9e',2.2,0.4,w/2,H-0.55,SP-0.1,Math.PI);sg('ที่เก็บแม่พิมพ์','#b86c00',2.2,0.4,w/2,H-0.55,SP+0.1,0);
+ [3,8].forEach(v=>{const l=new THREE.PointLight(0xfff2dd,0.9,13);l.position.set(cx,3.4,z0+v*(v===3?1:1.0));S.add(l)});
+ // เส้นแบ่งส่วนตามแนวขวาง: รั้วโปร่ง + ช่องประตู
+ const fm=new THREE.MeshLambertMaterial({color:0x9fd0ee,transparent:true,opacity:0.25,depthWrite:false});
+ [[0.3,6.0],[7.2,8.9]].forEach(g=>{const L2=g[1]-g[0],m=new THREE.Mesh(bx(L2,1.2,0.04),fm);m.position.set(x0+(g[0]+g[1])/2,FL+0.7,z0+SP);S.add(m);bb((g[0]+g[1])/2,SP,L2,0.06,1.3,1.36,0xf2c200,0);bb((g[0]+g[1])/2,SP,L2,0.06,0.1,0.16,0xf2c200,0);
+  for(let u=g[0];u<=g[1]+0.01;u+=Math.max(1.2,L2/Math.ceil(L2/1.4)))bb(u,SP,0.06,0.06,0,1.36,0xf2c200,0)});
+ bb(6.6,SP,0.06,0.06,0,1.36,0xf2c200,0);bb(w/2,SP+0.0,w-0.6,0.12,0,0.02,0xf2c200,0);
+ // ส่วนที่ 1: เครื่องจักร 6 เครื่อง (3x2)
+ [1.6,3.9].forEach((v,r)=>[1.8,4.6,7.4].forEach((u,c)=>{
+  bb(u,v,1.7,1.4,0,0.18,0x30353b);bb(u,v,1.3,1.0,0.18,0.3,0x555c66);[[-1,-1],[1,-1],[-1,1],[1,1]].forEach(p=>bb(u+p[0]*0.6,v+p[1]*0.45,0.1,0.1,0.3,1.65,0xb9c2cc));
+  bb(u,v,1.5,1.2,1.65,1.9,0x2f5f9e);cy(0.16,0.3,0xcfd4da,u,0.0+2.05,v,'y');
+  const lm=bb(u,v,0.9,0.7,0.3,0.45,0x2b2f33);const hp=bb(u,v,0.92,0.72,0.45,0.48,0xff7a1a,0);hp.material.emissive=new THREE.Color(0xaa3300);
+  const pl=bb(u,v,1.1,0.8,0.5,0.65,0xd98a00),rd=M(new THREE.CylinderGeometry(0.06,0.06,1,10),0xcfd4da,x0+u,FL+1,z0+v);MP.push({pl,rd,ph:(r*3+c)*1.1});
+  bb(u+1.05,v+0.3,0.4,0.5,0,1.0,0xcfd4d9);bb(u+0.85,v+0.3,0.02,0.34,0.62,0.9,0x3cff7a,0);bb(u-1.05,v,0.5,0.5,0,0.8,0x7d868f);bb(u-1.05,v,0.6,0.6,0.8,1.0,0xb9c2cc);
+  [0,1].forEach(k=>{const l=new THREE.Mesh(new THREE.SphereGeometry(0.03,8,6),new THREE.MeshBasicMaterial({color:0x22cc66}));l.position.set(x0+u+0.85,FL+0.95+k*0.0,z0+v+0.1+k*0.2);S.add(l);LD.push(l)})}));
+ // ส่วนที่ 2: ที่เก็บแม่พิมพ์ มีชั้นวาง 3 แถว
+ const BX=bx(1,1,1),CY=new THREE.CylinderGeometry(1,1,1,10),q0=new THREE.Quaternion(),m4=new THREE.Matrix4(),V3=(x,y,z)=>new THREE.Vector3(x,y,z),
+  mk=(geo,col,list,vc)=>{if(!list.length)return;const im=new THREE.InstancedMesh(geo,new THREE.MeshLambertMaterial({color:vc?0xffffff:col}),list.length);list.forEach((p,i)=>{m4.compose(V3(p[0],p[1],p[2]),q0,V3(p[3],p[4],p[5]));im.setMatrixAt(i,m4);if(vc)im.setColorAt(i,new THREE.Color(p[6]))});S.add(im);return im},
+  R={up:[],bm:[],dk:[],mo:[],eb:[],tg:[]},MC=[0x4a5460,0x6b747d,0x8d939b,0x3d4a5a,0x5a6b7d],hv=(p,q)=>{const t=Math.sin(p*12.9898+q*78.233)*43758.5453;return t-Math.floor(t)};
+ [6.75,8.45,10.15].forEach((v,ri)=>{const z=z0+v,rl=5.55,xs=x0+0.85;for(let k=0;k<4;k++)[-1,1].forEach(sd=>R.up.push([xs+k*rl/3,FL+0.95,z+sd*0.38,0.07,1.9,0.07]));
+  [0.3,0.85,1.4].forEach((y,li)=>{[-1,1].forEach(sd=>R.bm.push([xs+rl/2,FL+y,z+sd*0.38,rl,0.08,0.06]));R.dk.push([xs+rl/2,FL+y+0.05,z,rl,0.03,0.8]);
+   for(let k=0;k<3;k++){R.tg.push([xs+(k+0.5)*rl/3,FL+y,z+0.4,0.14,0.07,0.01]);[0,1].forEach(m=>{if(hv(ri*7+li*3+k,m+1)<0.85){const mh=0.22+hv(k+li,m+ri)*0.16,mx=xs+(k+0.28+m*0.44)*rl/3;R.mo.push([mx,FL+y+0.065+mh/2,z,0.72,mh,0.66,MC[Math.floor(hv(k*3+m,li+ri*5)*5)]]);R.eb.push([mx,FL+y+0.065+mh+0.03,z,0.04,0.06,0.04])}})}})});
+ mk(BX,0x1f4e9a,R.up);mk(BX,0xe67e22,R.bm);mk(BX,0x7d868f,R.dk);mk(BX,0xf2f2f2,R.tg);mk(CY,0xd98a00,R.eb);mk(BX,0xffffff,R.mo,1);
+ // ห้องปั๊มน้ำ 2 เครื่อง (มุมตะวันออกเฉียงใต้ ปลายชั้นวาง)
+ {const rm=new THREE.MeshLambertMaterial({color:0xf4f6f7,transparent:true,opacity:0.5,depthWrite:false}),bm=new THREE.MeshLambertMaterial({color:0x9aa0a6}),RH=2.4,U0=6.7,U1=8.85,V0=6.1,V1=10.7;
+  const wl=(sx,sz,u,v)=>{const m=new THREE.Mesh(bx(sx,RH,sz),rm);m.position.set(x0+u,FL+RH/2,z0+v);S.add(m);const b2=new THREE.Mesh(bx(sx+0.02,0.3,sz+0.02),bm);b2.position.set(x0+u,FL+0.15,z0+v);S.add(b2)};
+  wl(U1-U0,0.06,(U0+U1)/2,V0);wl(U1-U0,0.06,(U0+U1)/2,V1);wl(0.06,V1-V0,U1,(V0+V1)/2);wl(0.06,1.8,U0,V0+0.9);wl(0.06,1.8,U0,V1-0.9);
+  const rf=new THREE.Mesh(bx(U1-U0,0.05,V1-V0),rm);rf.position.set(x0+(U0+U1)/2,FL+RH+0.02,z0+(V0+V1)/2);S.add(rf);bb((U0+U1)/2,(V0+V1)/2,U1-U0,V1-V0,0,0.02,0xdcd8ce,0);
+  sg('ห้องปั๊มน้ำ','#1f6fb0',1.1,0.32,U0-0.05,RH-0.1,8.4,-Math.PI/2);
+  [7.2,9.6].forEach((v,i)=>{bb(7.75,v,1.6,0.5,0,0.08,0x30353b);cy(0.2,0.7,0x1b7f8c,8.35,0.34,v,'x');cy(0.21,0.04,0x15616b,8.15,0.34,v,'x');cy(0.2,0.04,0x2b2f33,8.72,0.34,v,'x');bb(8.35,v,0.2,0.2,0.54,0.66,0x30353b,0);
+   const cp=cy(0.06,0.25,0xcfd4da,7.88,0.34,v,'x');cp.add(new THREE.Mesh(bx(0.1,0.03,0.03),new THREE.MeshLambertMaterial({color:0xd33})));T10X.sh.push(cp);
+   cy(0.22,0.4,0x2a6bd1,7.55,0.34,v,'x');cy(0.26,0.16,0x2a6bd1,7.4,0.38,v,'y');cy(0.08,0.55,0x2a6bd1,7.2,0.34,v,'x');cy(0.08,1.0,0x2a6bd1,6.5,0.34,v,'x');
+   cy(0.06,1.1,0x2e9d5c,7.4,1.1,v,'y');const vw=new THREE.Mesh(new THREE.TorusGeometry(0.09,0.02,6,12),new THREE.MeshLambertMaterial({color:0xd33}));vw.position.set(x0+7.4,FL+1.0,z0+v+0.1);S.add(vw);cy(0.07,0.02,0xf2f4f7,7.4,1.3,v-0.07,'z')});
+  cy(0.07,2.4,0x2e9d5c,7.4,1.65,8.4,'z');cy(0.08,1.4,0x2e9d5c,7.4,2.3,8.4,'y');
+  [7.9,8.7].forEach(u=>{bb(u,6.35,0.7,0.4,0,1.55,0xcfd4d9);bb(u,6.54,0.62,0.03,0.1,1.45,0xaeb6be);[-0.15,0,0.15].forEach((o,k)=>{const l=new THREE.Mesh(new THREE.SphereGeometry(0.03,8,6),new THREE.MeshBasicMaterial({color:0x22cc66}));l.position.set(x0+u+o,FL+1.35,z0+6.57);S.add(l);LD.push(l)})});
+  const pl=new THREE.PointLight(0xfff2dd,0.7,5);pl.position.set(x0+7.8,FL+2.2,z0+8.4);S.add(pl)}
+ T10X.mp=MP;T10X.leds=LD;T10X.FL=FL;T10X.o=[x0,z0]}
 const lbEl=$('lbl'),bl=[],solids=[];
 B.forEach((b,i)=>{
  const w=b[3]*K,d=b[4]*K,cx=(b[1]+b[3]/2-450)*K,cz=(b[2]+b[4]/2-300)*K,t=b[5]||'solid';
@@ -512,6 +599,8 @@ B.forEach((b,i)=>{
  else if(t==='boiler'){RUT(w,d,cx,cz);top=5.6;solids.push({x0:b[1],x1:b[1]+b[3],y0:b[2],y1:b[2]+b[4],h:4.2})}
  else if(t==='garage'){RPV(w,d,cx,cz);top=5.2;solids.push({x0:b[1],x1:b[1]+b[3],y0:b[2],y1:b[2]+b[4],h:4.0})}
  else if(t==='prod2'){P2(w,d,cx,cz);top=5.4;solids.push({x0:b[1],x1:b[1]+b[3],y0:b[2],y1:b[2]+b[4],h:4.6})}
+ else if(t==='t10'){T10(w,d,cx,cz);top=5.4;solids.push({x0:b[1],x1:b[1]+b[3],y0:b[2],y1:b[2]+b[4],h:4.6})}
+ else if(t==='warehouse'){WHS(w,d,cx,cz);top=5.2;solids.push({x0:b[1],x1:b[1]+b[3],y0:b[2],y1:b[2]+b[4],h:4.4})}
  else if(t==='wc'){WC(w,d,cx,cz);top=3.5;solids.push({x0:b[1],x1:b[1]+b[3],y0:b[2],y1:b[2]+b[4],h:3.5})}
  else if(t==='canteen'){CAN(w,d,cx,cz);top=4;solids.push({x0:b[1],x1:b[1]+b[3],y0:b[2],y1:b[2]+b[4],h:3.4})}
   else if(t==='rd'){RDB(w,d,cx,cz);top=7;solids.push({x0:b[1],x1:b[1]+b[3],y0:b[2],y1:b[2]+b[4],h:6.3})}
@@ -663,7 +752,7 @@ addEventListener('resize',resize);
 const mt=c=>mt.c[c]||(mt.c[c]=new THREE.MeshLambertMaterial({color:c}));mt.c={};
 function strip(x1,y1,x2,y2,w,h,y,c,ext){const hz=y1===y2,L=(Math.abs(hz?x2-x1:y2-y1)+(ext?w:0))*K,Wd=w*K,
  m=new THREE.Mesh(bx(hz?L:Wd,h,hz?Wd:L),mt(c));m.position.set(((x1+x2)/2-450)*K,y,((y1+y2)/2-300)*K);m.receiveShadow=true;S.add(m);return m}
-const RD=[[21,-40,21,640,18,1],[219,125,747,125,16],[328,125,328,455,16],[491,125,491,304,16],[454,304,491,304,16],[454,304,454,455,16],[687,268,687,455,12],[687,268,822,268,16],[739,125,739,268,16],[21,455,806,455,14],[21,125,219,125,16],[584,125,584,455,12],[454,331.4,584,331.4,12]];
+const RD=[[21,-40,21,640,18,1],[219,125,747,125,16],[328,125,328,455,16],[491,125,491,304,16],[454,304,491,304,16],[454,304,454,455,16],[687,268,687,455,12],[687,268,822,268,16],[739,125,739,268,16],[21,455,806,455,14],[21,125,219,125,16],[584,125,584,455,12],[454,331.4,584,331.4,12],[681,125,681,325,4]];
 const FP=[];
 RD.forEach(r=>strip(r[0],r[1],r[2],r[3],r[4],0.3,-0.1,0x4b535d,!r[5]));
 FP.forEach(f=>strip(f[0],f[1],f[2],f[3],6,0.1,0.02,0xd9d3c5,true));
@@ -708,7 +797,7 @@ function forklift(){const g=new THREE.Group(),L=new THREE.Group();L.scale.setSca
  const cb=new THREE.Mesh(bx(0.58,0.5,0.58),mt(pick1([0xc9a46a,0x3b7fc4,0xd9d9d9])));cb.position.y=0.34;cb.castShadow=true;cg.add(cb);
  cg.visible=rnd()<0.5;return{g,bc,cg}}
 const PR={A:[[408,106],[408,125],[328,125],[328,160],[311,160]],B:[[110,447],[110,455],[48,455],[44,448]],C:[[123,464],[123,455],[290,455],[290,471]],D:[[390,449],[390,455],[290,455],[290,471]],E:[[680,300],[687,300],[687,455],[635,455],[635,442]],F:[[751,442],[751,455],[687,455],[687,420],[682,420]],G:[[706,251],[706,268],[687,268],[687,300],[692,300]],H:[[666,116],[666,125],[739,125],[739,215],[746,215]],I:[[531,106],[531,125],[408,125],[408,107]],J:[[498,250],[491,250],[491,125],[390,125],[390,136]],K:[[312,340],[328,340],[328,455],[290,455],[290,471]],L:[[590,200],[584,200],[584,332],[535,332],[535,338]],G1:[[214,125],[240,125]],G2:[[30,458],[56,458]]};
-const PS=[['A',0,'c'],['A',.5,'c'],['B',.2,'o'],['B',.7,'o'],['C',.3,'w'],['D',.1,'w'],['D',.6,'w'],['E',.6,'w'],['E',.1,'w'],['F',.4,'w'],['G',.5,'w'],['H',.15,'w'],['H',.65,'w'],['I',.3,'w'],['J',.8,'w'],['K',.4,'w'],['L',.5,'w'],['G1',0,'g'],['G2',0,'g']];
+const PS=[['A',0,'c'],['A',.5,'c'],['B',.2,'o'],['B',.7,'o'],['C',.3,'w'],['D',.1,'w'],['D',.6,'w'],['E',.6,'w'],['E',.1,'w'],['F',.4,'w'],['G',.5,'w'],['H',.15,'w'],['H',.65,'w'],['I',.3,'w'],['J',.8,'w'],['K',.4,'w'],['G1',0,'g'],['G2',0,'g']];
 const SK=[0xf0c8a0,0xd9a577,0xb98560];
 PS.forEach(s=>{const t=s[2],p=t==='w'?person(pick1([0x2f5f9e,0x3b7fc4,0x4d6d52,0x8a8f98]),pick1([0xf5c518,0xffffff,0xff8a00]),rnd()<0.7?0xff8a00:0,pick1(SK)):
  t==='g'?person(0x1d2a44,0x1d2a44,0,SK[1]):t==='o'?person(pick1([0xf2f2f2,0xcfe0f2,0xe7d9f2]),null,0,pick1(SK)):person(pick1([0xc0392b,0x27ae60,0xe67e22,0x8e44ad,0xf1c40f]),null,0,pick1(SK));
@@ -849,6 +938,31 @@ const OP=[];
    tm.compose(new THREE.Vector3(p[0],yc,p[1]),q,new THREE.Vector3(0.4,0.07,0.6));im.plat.setMatrixAt(i,tm);tm.compose(new THREE.Vector3(p[0],(top+yc+0.035)/2,p[1]),q,new THREE.Vector3(0.045,len,0.045));im.rod.setMatrixAt(i,tm);
    const st=sn>0.5?0:1;if(st!==M2X.st[i]){M2X.st[i]=st;im.led.setColorAt(i,col.setHex(st?0x22cc66:0xffb000));im.led.instanceColor.needsUpdate=true}});
   im.plat.instanceMatrix.needsUpdate=true;im.rod.instanceMatrix.needsUpdate=true}}
+// พนักงานและฟอร์คลิฟท์ใน T10
+{const b=B.find(x=>x[0]==='อาคาร T10'),X0=(b[1]-450)*K,Z0=(b[2]-300)*K,FL=0.1;T10X.w=[];
+ const pw=(sh,u,v,ry,ar,am,sp)=>{const p=person(sh,pick1([0xf5c518,0xffffff]),0xff8a00,pick1(SK));p.g.position.set(X0+u,FL,Z0+v);p.g.rotation.y=ry;S.add(p.g);T10X.w.push({pe:p,b:ar,am,sp,ph:rnd()*6})};
+ [[2.75,1.8],[2.75,4.6],[2.75,7.4],[5.05,1.8],[5.05,4.6],[5.05,7.4]].forEach((p,i)=>pw([0x2f5f9e,0x4d6d52,0x3b7fc4][i%3],p[1],p[0],Math.PI,-1.0,0.3,5+i%3*2));
+ pw(0x2f5f9e,2.4,7.6,0,-0.8,0.12,3);pw(0x3b7fc4,7.95,8.4,Math.PI,-0.9,0.2,4);
+ const fk=forklift();fk.cg.visible=true;fk.g.position.set(X0+3.5,FL,Z0+9.3);fk.g.rotation.y=Math.PI/2;S.add(fk.g);
+ const wp=person(0x4d6d52,0xf5c518,0xff8a00,pick1(SK));spawn(wp.g,[[352,214],[402,214]],0,0.7,0.3,3,{pe:wp,y0:0.12});
+ T10X.tick=t=>{T10X.w.forEach(o=>{const s=t*o.sp+o.ph;o.pe.ar[0].rotation.x=o.b+Math.sin(s)*o.am;o.pe.ar[1].rotation.x=o.b+Math.sin(s+2)*o.am});
+  T10X.mp.forEach(o=>{const sn=Math.sin(t*0.8+o.ph),yc=0.96+0.34*sn,top=1.65,len=top-(yc+0.075);o.pl.position.y=T10X.FL+yc;o.rd.scale.y=len;o.rd.position.y=T10X.FL+(top+yc+0.075)/2});
+  T10X.sh.forEach(m=>m.rotation.x=t*25);const f=Math.floor(t*2);T10X.leds.forEach((m,i)=>m.material.color.setHex((f+i)%5===0?0xffb000:0x22cc66))}}
+// คลังสินค้า: รถบรรทุกจอดหน้าคลัง + ฟอร์คลิฟท์ตักยาง + พนักงานออฟฟิศ
+{const b=B.find(x=>x[0]==='คลังสินค้า'),X0=(b[1]-450)*K,Z0=(b[2]-300)*K,FL=0.1,PX=u=>b[1]+u*10,PY=v=>b[2]+v*10,TK=[];
+ const trk=(col)=>{const g=new THREE.Group(),L=new THREE.Group();g.add(L);const add=(geo,c,x,y,z,sh)=>{const m=new THREE.Mesh(geo,mt(c));m.position.set(x,y,z);m.castShadow=!!sh;L.add(m);return m},wg=new THREE.CylinderGeometry(0.17,0.17,0.12,10).rotateZ(Math.PI/2);
+  add(bx(0.9,0.28,3.4),0x30353b,0,0.3,-0.1,1);add(bx(0.9,0.9,0.85),col,0,0.85,1.2,1);add(bx(0.92,0.32,0.05),0x28323c,0,1.05,1.64);add(bx(0.98,0.08,2.2),0x6b4f2a,0,0.5,-0.55,1);
+  [-1,1].forEach(s=>add(bx(0.04,0.2,2.2),0x555c66,s*0.47,0.62,-0.55));add(bx(0.98,0.2,0.04),0x555c66,0,0.62,-1.63);add(bx(0.98,0.3,0.04),0x555c66,0,0.64,0.55);
+  [[-1,1.1],[1,1.1],[-1,-0.9],[1,-0.9],[-1,-1.35],[1,-1.35]].forEach(w=>add(wg,0x222222,w[0]*0.48,0.17,w[1]));
+  const slots=[];[0,1].forEach(ly=>[-0.75,0,0.75].forEach(dz=>{const t=new THREE.Mesh(new THREE.CylinderGeometry(0.3,0.3,0.22,16),mt(0x1e2023));t.position.set(0,0.54+0.11+ly*0.23,-0.55+dz);t.visible=false;t.castShadow=true;L.add(t);t.add(new THREE.Mesh(new THREE.CylinderGeometry(0.17,0.17,0.225,12),mt(0x8d939b)));slots.push(t)}));
+  return{g,slots,n:0}},
+ ld=tk=>{if(tk.n>=tk.slots.length){tk.slots.forEach(s=>s.visible=false);tk.n=0}tk.slots[tk.n++].visible=true};
+ [[3.6,-Math.PI/2,0x2f5f9e],[9.2,-Math.PI/2,0xc0392b]].forEach(c=>{const t=trk(c[2]);t.g.position.set((584-450)*K-1.1,0.05,Z0+c[0]);t.g.rotation.y=c[1];S.add(t.g);const k=Math.floor(rnd()*4);for(let i=0;i<k;i++)ld(t);TK.push(t)});
+ [[[PX(1.55),PY(2.0)],[PX(1.55),PY(3.05)],[PX(0.55),PY(3.05)],0,0.0],[[PX(1.55),PY(7.0)],[PX(1.55),PY(9.75)],[PX(0.55),PY(9.75)],1,0.35]].forEach(r=>{
+  const ti=r[r.length-2],fr=r[r.length-1],P=r.slice(0,r.length-2),f=forklift();
+  spawn(f.g,P,0.18,1.9+rnd()*0.4,fr,3,{fk:f,y0:FL,dk:(a,i)=>{if(i===0){a.fk.cg.visible=true;a.ty=Math.PI/2}else if(i===P.length-1){a.fk.cg.visible=false;a.ty=-Math.PI/2;ld(TK[ti])}}})});
+ const x0=(b[1]-450)*K,z0=(b[2]-300)*K,FY=FL+0.02,shirts=[0xf2f2f2,0xcfe0f2,0xe7d9f2,0xf5e1e1,0xdfe8dc];let n=0;
+ [15.3,17.0].forEach(v=>[4.3,5.9,7.5].forEach(u=>{if(n++===4)return;const p=person(pick1(shirts),null,0,pick1(SK));p.lg.forEach(l=>l.rotation.x=-1.5);p.ar.forEach(a=>a.rotation.x=-0.95);p.g.position.set(x0+u,FY-0.11,z0+v+0.8);p.g.rotation.y=Math.PI;S.add(p.g);OP.push({pe:p,ph:rnd()*6})}))}
 let BEAR=null;
 // parked pickup (bronze gold)
 {const g=new THREE.Group(),L=new THREE.Group();L.scale.setScalar(0.9);g.add(L);
@@ -873,7 +987,7 @@ let BEAR=null;
   [-1,1].forEach(s=>{bulb(head,s*0.17,0.3,0.02);[-0.55,-0.82,-1.1].forEach(z=>bulb(L,s*0.445,0.82,z))});
   return{body,head,arms,bl}})();
  g.position.set((268-450)*K,0.1,(510-300)*K);g.rotation.y=Math.PI;S.add(g)}
-function bearAnim(){const t0=performance.now()/1000;OP.forEach(o=>{const s=t0*8+o.ph;o.pe.ar[0].rotation.x=-0.95+Math.sin(s)*0.1;o.pe.ar[1].rotation.x=-0.95+Math.sin(s+2)*0.1});MA.forEach(m=>m.rotation.x=t0*16);RPX.tick&&RPX.tick(t0);RJX.tick&&RJX.tick(t0);RUX.tick&&RUX.tick(t0);RVX.tick&&RVX.tick(t0);WBX.tick&&WBX.tick(t0);M2X.tick&&M2X.tick(t0);if(WSX.cr){WSX.cr.br.position.x=WSX.cr.xc+Math.sin(t0*0.25)*WSX.cr.amp;WSX.sp.forEach((s,i)=>{const q=WSX.wp[i%2];s.visible=Math.random()<0.7;s.position.set(q[0]+(Math.random()-0.5)*0.5,q[1]+Math.random()*0.5,q[2]+(Math.random()-0.5)*0.4)});WSX.wl.intensity=Math.random()<0.6?1.4:0.2}if(!BEAR)return;const t=performance.now()/1000,B=BEAR;B.body.rotation.z=Math.sin(t*5)*0.1;B.body.position.y=Math.abs(Math.sin(t*5))*0.04;B.head.rotation.z=Math.sin(t*5+1)*0.15;B.arms[0].rotation.z=-(2.2+Math.sin(t*6)*0.5);B.arms[1].rotation.z=2.2+Math.sin(t*6+1.5)*0.5;
+function bearAnim(){const t0=performance.now()/1000;OP.forEach(o=>{const s=t0*8+o.ph;o.pe.ar[0].rotation.x=-0.95+Math.sin(s)*0.1;o.pe.ar[1].rotation.x=-0.95+Math.sin(s+2)*0.1});MA.forEach(m=>m.rotation.x=t0*16);RPX.tick&&RPX.tick(t0);RJX.tick&&RJX.tick(t0);RUX.tick&&RUX.tick(t0);RVX.tick&&RVX.tick(t0);WBX.tick&&WBX.tick(t0);M2X.tick&&M2X.tick(t0);T10X.tick&&T10X.tick(t0);if(WSX.cr){WSX.cr.br.position.x=WSX.cr.xc+Math.sin(t0*0.25)*WSX.cr.amp;WSX.sp.forEach((s,i)=>{const q=WSX.wp[i%2];s.visible=Math.random()<0.7;s.position.set(q[0]+(Math.random()-0.5)*0.5,q[1]+Math.random()*0.5,q[2]+(Math.random()-0.5)*0.4)});WSX.wl.intensity=Math.random()<0.6?1.4:0.2}if(!BEAR)return;const t=performance.now()/1000,B=BEAR;B.body.rotation.z=Math.sin(t*5)*0.1;B.body.position.y=Math.abs(Math.sin(t*5))*0.04;B.head.rotation.z=Math.sin(t*5+1)*0.15;B.arms[0].rotation.z=-(2.2+Math.sin(t*6)*0.5);B.arms[1].rotation.z=2.2+Math.sin(t*6+1.5)*0.5;
  const P=[0xff2244,0xffd400,0x22dd66,0x2299ff,0xff44cc],f=Math.floor(t*4);B.bl.forEach((m,i)=>m.material.color.setHex((f+i)%2?P[(i+f)%5]:0x2a2a2a))}
 function anim(dt){bearAnim();const on=$('act').checked;AG.forEach(a=>{a.g.visible=on});
  if(DR.l){let nr=false;if(on)AG.forEach(a=>{if(a.door&&Math.hypot(a.pos.x-DR.x,a.pos.z-DR.z)<1.8)nr=true});DR.t+=((nr?1:0)-DR.t)*Math.min(1,dt*6);DR.l.forEach((m,i)=>m.position.x=DR.x+(i?1:-1)*(DR.w/4+DR.t*0.5))}
