@@ -108,7 +108,7 @@ canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
 <script>
 (function(){
 const K=0.1,$=id=>document.getElementById(id),V=(x,y,z)=>new THREE.Vector3(x,y,z);
-const B=[["เขตโรงงาน",34,25,853,560,"boundary"],["พุ่มไม้",34,25,280,92,"forest"],["พุ่มไม้",34,134,165,95,"forest"],["พุ่มไม้",34,231,137,65,"forest"],["หอพัก",333,32,150,73],["โรงคาร์บอน",496,32,71,73],["โรงบด",570,32,49,73],["คลังวัตถุดิบ",623,29,87,85],["คลังสารเคมี",711,32,71,82],["โรงผ้าใบ",782,45,62,145],["โรงอาหาร",219,135,91,52,"canteen"],["ห้องน้ำ",252,189,58,49,"wc"],["อาคาร T10",344,137,92,111,"t10"],["ยานยนต์",437,137,46,109,"garage"],["ผลิต2",344,247,92,201,"prod2"],["โรงเก็บแม่พิมพ์",175,239,137,61,"moldstore"],["แม่พิมพ์",174,300,138,85,"workshop"],["สำนักงาน",48,300,124,146],["โรงเก็บปลอก",242,385,70,62,"storage"],["ลานรถ",498,138,79,187,"dashed"],["คลังสินค้า",590,138,89,187,"warehouse"],["ซ่อม1",695,138,35,112,"repair1"],["ห้องน้ำ 2",747,192,36,49,"wc"],["ปั๊มน้ำ",786,193,47,38,"pumphouse"],["เก็บถัง",822,234,48,53,"drums"],["โครงการ",470,337,66,52,"project"],["ซ่อม2",470,389,66,51,"repair2"],["UT",536,337,41,103,"boiler"],["ห้าดาว",589,333,92,107,"fivestar"],["ผลิต1",692,295,118,146,"prod1"],["ห้องน้ำ 3",811,440,59,85,"wc"],["RD",47,465,152,92,"rd"],["ลานจอดรถ",200,471,175,100,"dashed"],["โรงเหล็ก",376,472,77,55,"steel"],["ลานเทสยาง",514,461,175,100,"dashed"]];
+const B=[["เขตโรงงาน",34,25,853,560,"boundary"],["พุ่มไม้",34,25,280,92,"forest"],["พุ่มไม้",34,134,165,95,"forest"],["พุ่มไม้",34,231,137,65,"forest"],["หอพัก",333,32,150,73],["โรงคาร์บอน",496,32,71,73],["โรงบด",570,32,49,73],["คลังวัตถุดิบ",623,29,87,85],["คลังสารเคมี",711,32,71,82],["โรงผ้าใบ",782,45,62,145],["โรงอาหาร",219,135,91,52,"canteen"],["ห้องน้ำ",252,189,58,49,"wc"],["อาคาร T10",344,137,92,111,"t10"],["ยานยนต์",437,137,46,109,"garage"],["ผลิต2",344,247,92,201,"prod2"],["โรงเก็บแม่พิมพ์",175,239,137,61,"moldstore"],["แม่พิมพ์",174,300,138,85,"workshop"],["สำนักงาน",48,300,124,146],["โรงเก็บปลอก",242,385,70,62,"storage"],["ลานรถ",498,138,79,187,"dashed"],["คลังสินค้า",590,138,89,187,"warehouse"],["ซ่อม1",695,138,35,112,"repair1"],["ห้องน้ำ 2",747,190,32,65,"wc"],["ปั๊มน้ำ",784,190,35,67,"pumphouse"],["เก็บถัง",822,234,48,53,"drums"],["โครงการ",470,337,66,52,"project"],["ซ่อม2",470,389,66,51,"repair2"],["UT",536,337,41,103,"boiler"],["ห้าดาว",589,333,92,107,"fivestar"],["ผลิต1",692,295,118,146,"prod1"],["ห้องน้ำ 3",811,440,59,85,"wc"],["RD",47,465,152,92,"rd"],["ลานจอดรถ",200,471,175,100,"dashed"],["โรงเหล็ก",376,472,77,55,"steel"],["ลานเทสยาง",514,461,175,100,"dashed"]];
 const C=[["CAM-001","ประตูหลักทางเข้า","ทางเข้า-ออก",4.49,77.82,"online","1080p",190],["CAM-002","ทางออกหลัก","ทางเข้า-ออก",4.86,79.71,"online","1080p",160],["CAM-003","หลังโรงรถ2","ทางเข้า-ออก",41.29,94.31,"online","720p",185],["CAM-013","อาคาร RD","สำนักงาน/RD",23,79.01,"online","720p",85],["CAM-021","โรงอาหาร1","โรงอาหาร/หอพัก",28,26,"online","1080p",90],["CAM-022","หอพักพนักงาน (หน้า)","โรงอาหาร/หอพัก",50.54,17.83,"online","1080p",180],["CAM-023","หอพักพนักงาน (หลัง)","โรงอาหาร/หอพัก",51.07,4.83,"online","720p",205],["CAM-031","อาคาร T10 (ทิศเหนือ)","T10/ผลิต2",35.18,17.85,"online","1080p",90],["CAM-034","แม่พิมพ์1","T10/ผลิต2",20.78,55.41,"online","1080p",60],["CAM-041","คลังสินค้า (หน้า)","คลังสินค้า/ลานรถ",67.81,22.85,"online","2MP",335],["CAM-042","คลังสินค้า1","คลังสินค้า/ลานรถ",66,40,"online","2MP",180],["CAM-043","คลังสินค้า (หลัง)","คลังสินค้า/ลานรถ",74.72,65.12,"online","2MP",110],["CAM-044","ห้าดาว","คลังสินค้า/ลานรถ",73.05,74.02,"online","720p",105],["CAM-051","หลังคลังวัตถุดิบ","วัตถุดิบ/สารเคมี",83.43,5.01,"online","1080p",180],["CAM-053","โรงคาร์บอน/โรงบด","วัตถุดิบ/สารเคมี",57.15,5.12,"online","720p",180],["CAM-061","ผลิต1 (หน้า)","ผลิต1/ซ่อม1",88.6,87.91,"online","2MP",265],["CAM-062","ผลิต1 (หลัง)","ผลิต1/ซ่อม1",91.31,71.61,"online","2MP",270],["CAM-063","ซ่อม1","ผลิต1/ซ่อม1",83.67,30.53,"online","720p",185],["CAM-071","ซ่อม2","ซ่อม2/โครงการ",55.84,66.24,"online","1080p",130],["CAM-072","โครงการ/UT","ซ่อม2/โครงการ",52.25,61.2,"online","720p",295],["CAM-081","ลานเทสยาง","ทดสอบ/กลางแจ้ง",68.64,78.3,"online","2MP",115],["CAM-082","ลานเทสยาง (ปลาย)","ทดสอบ/กลางแจ้ง",69.63,78.7,"online","720p",75],["CAM-083","ลานจอดรถ","ทดสอบ/กลางแจ้ง",30.15,79.35,"online","1080p",90],["CAM-084","หน้าโรงผ้าใบ","ทั่วไป",86.66,20.97,"online","1080p",180],["CAM-085","หลังโรงกรีน1","ทั่วไป",60.03,4.97,"online","1080p",0],["CAM-086","หลังโรงกรีน2","ทั่วไป",68.61,5,"online","1080p",190],["CAM-087","ลานจอด","ทั่วไป",53.58,18.18,"online","1080p",65],["CAM-088","หน้าคาร์บอน","ทั่วไป",58.6,17.45,"online","1080p",135],["CAM-089","หลังผลิต1","ทั่วไป",90.37,52.54,"online","1080p",95],["CAM-090","หลังห้องน้ำผลิต1","ทั่วไป",98.29,72.55,"online","1080p",180],["CAM-091","หลังโรงรถ1","ทั่วไป",22.33,94.47,"online","1080p",0],["CAM-092","โรงเหล็ก","ทั่วไป",41.33,78.74,"online","1080p",55],["CAM-093","เก็บถัง1","ทั่วไป",88.48,42.67,"online","1080p",0],["CAM-094","เก็บถัง2","ทั่วไป",86.83,42.51,"online","1080p",130],["CAM-095","หน้าคลังวัตถุดิบ","ทั่วไป",76.44,19.42,"online","1080p",170],["CAM-096","โรงอาหาร2","ทั่วไป",23.32,22.62,"online","1080p",190],["CAM-097","คลังสินค้า2","ทั่วไป",65.76,32.43,"online","1080p",180],["CAM-098","คลังสินค้า3","ทั่วไป",66.35,45.55,"online","1080p",120],["CAM-099","หอพัก","ทั่วไป",42.86,17.54,"online","1080p",170],["CAM-100","แม่พิมพ์2","ทั่วไป",26.12,61.44,"online","1080p",115]];
 const ST={online:'ออนไลน์',maint:'ออฟไลน์'},CL={online:0x1a9a5a,maint:0xe08a00};
 
@@ -734,15 +734,15 @@ function SHEDW(x0,z0,w,d,H,FL,a,dc,dh){dc=dc||w/2;dh=dh||H-0.55;WALLS(x0,z0,w,d,
  const rise=(w/2+0.4)*Math.tan(a),gs=new THREE.Shape();gs.moveTo(0,0);gs.lineTo(w,0);gs.lineTo(w/2,rise-0.04);gs.lineTo(0,0);
  const gmt=new THREE.MeshLambertMaterial({color:0xf4f6f7,transparent:true,opacity:0.55,depthWrite:false});
  [0,d-0.1].forEach(v=>{const m=new THREE.Mesh(new THREE.ExtrudeGeometry(gs,{depth:0.1,bevelEnabled:false}),gmt);m.position.set(x0,FL+H,z0+v);S.add(m)})}
-// ===== อาคารปั๊มน้ำ: เสา+หลังคา ผนังสไตล์อาคารห้าดาว หน้าอาคารหันไปทางถนน (ทิศใต้) ภายในมีปั๊ม 2 เครื่อง =====
-function PUMPH(w,d,cx,cz){const x0=cx-w/2,z0=cz-d/2,FL=0.1,H=3.2,a=0.3,G=0x4a4f57,BL=0x1f4e9a,ST=0xe9e4d8,PB=0x2a6bd1,PGN=0x2e9d5c,dc=w/2,P=1.2,LD=[],SH=[];
+// ===== อาคารปั๊มน้ำ: เสา+หลังคา ผนังสไตล์อาคารห้าดาว ประตูหันไปทางถนน (ทิศใต้) ภายในมีปั๊ม 2 เครื่อง =====
+function PUMPH(w,d,cx,cz){const x0=cx-w/2,z0=cz-d/2,FL=0.1,H=3.2,a=0.3,G=0x4a4f57,BL=0x1f4e9a,ST=0xe9e4d8,PB=0x2a6bd1,PGN=0x2e9d5c,dc=w/2,P=0.3,CW=w+0.3,LD=[],SH=[];
  const bb=(u,v,sx,sz,y0,y1,c,sh)=>M(bx(sx,y1-y0,sz),c,x0+u,FL+(y0+y1)/2,z0+v,sh),
  cy=(r,l,c,u,y,v,ax,sh)=>{const g=new THREE.CylinderGeometry(r,r,l,16);if(ax==='x')g.rotateZ(Math.PI/2);if(ax==='z')g.rotateX(Math.PI/2);return M(g,c,x0+u,FL+y,z0+v,sh)},
  led=(u,y,v)=>{const m=new THREE.Mesh(new THREE.SphereGeometry(0.03,8,6),new THREE.MeshBasicMaterial({color:0x22cc66}));m.position.set(x0+u,FL+y,z0+v);S.add(m);LD.push(m)},
  sgn=(t,c,pw,ph,u,y,v,ry)=>{const k=document.createElement('canvas');k.width=640;k.height=80;const q=k.getContext('2d');q.fillStyle=c;q.fillRect(0,0,640,80);q.fillStyle='#fff';q.font='bold 44px Tahoma,Sarabun,sans-serif';q.textAlign='center';q.textBaseline='middle';q.fillText(t,320,42,610);const tx=new THREE.CanvasTexture(k);tx.encoding=THREE.sRGBEncoding;const m=new THREE.Mesh(new THREE.PlaneGeometry(pw,ph),new THREE.MeshBasicMaterial({map:tx}));m.position.set(x0+u,FL+y,z0+v);m.rotation.y=ry;S.add(m)};
- // พื้น + ลานหน้าอาคารต่อถึงถนน (ทิศใต้)
+ // พื้น + ลานหน้าประตูต่อถึงขอบถนน (ทิศใต้)
  M(bx(w,0.1,d),0xbdb8ae,cx,0.05,cz,0);bb(w/2,d/2,w-0.3,d-0.3,0,0.02,0xdcd8ce,0);
- M(bx(3.4,0.08,2.8),0xcfcac0,x0+dc,0.04,z0+d+P/2+0.7+0.1,0);bb(dc,d-0.12,2.4,0.08,0,0.025,0xf2c200,0);
+ M(bx(2.8,0.08,P),0xcfcac0,x0+dc,0.04,z0+d+P/2,0);bb(dc,d-0.12,2.4,0.08,0,0.025,0xf2c200,0);
  // ผนังสไตล์เดียวกับอาคารห้าดาว (แผ่นใส + แถบฐานเทา) เปิดช่องประตูกลางด้านหน้า
  WALLS(x0,z0,w,d,H,FL,dc);
  M(bx(2.4,H-2.45,0.1),0x8d939b,x0+dc,FL+(2.45+H)/2,z0+d-0.05,0);M(bx(2.4,0.06,0.12),0xf2c200,x0+dc,FL+2.45,z0+d-0.05,0);
@@ -753,36 +753,58 @@ function PUMPH(w,d,cx,cz){const x0=cx-w/2,z0=cz-d/2,FL=0.1,H=3.2,a=0.3,G=0x4a4f5
  [0.2,w-0.2].forEach(u=>bb(u,d/2,0.14,d-0.1,H-0.19,H-0.03,G,0));
  [d/3,2*d/3].forEach(v=>bb(w/2,v,w-0.3,0.1,H-0.3,H-0.2,G,0));
  // หลังคาทรงจั่ว (สันหลังคาขนานแนวหน้า-หลัง) แผ่นใส + แป + สันและเชิงชายสีน้ำเงิน
- const rise=(w/2+0.4)*Math.tan(a),L=(w/2+0.4)/Math.cos(a),D=d+0.8;
+ const rise=(w/2+0.4)*Math.tan(a),L=(w/2+0.4)/Math.cos(a),D=d+0.8,nr=Math.max(4,Math.round(D/1.4));
  [[a,cx-(w/2+0.4)/2],[-a,cx+(w/2+0.4)/2]].forEach(r=>{const m=M(bx(L,0.05,D),0xd5dde2,r[1],FL+H+rise/2,cz,0);m.rotation.z=r[0];m.material.transparent=true;m.material.opacity=0.5;m.material.depthWrite=false;
-  for(let k=0;k<=4;k++){const f=M(bx(L,0.07,0.07),G,r[1],FL+H+rise/2-0.05,z0-0.4+k*D/4,0);f.rotation.z=r[0]}});
+  for(let k=0;k<=nr;k++){const f=M(bx(L,0.07,0.07),G,r[1],FL+H+rise/2-0.05,z0-0.4+k*D/nr,0);f.rotation.z=r[0]}});
  M(bx(0.18,0.1,D),BL,cx,FL+H+rise+0.03,cz,0);[x0-0.4,x0+w+0.4].forEach(x=>M(bx(0.05,0.22,D),BL,x,FL+H+0.02,cz,0));
  // หน้าจั่วด้านหน้า/หลัง + หน้าต่างกลม
  const ps=new THREE.Shape();ps.moveTo(0,0);ps.lineTo(w+0.8,0);ps.lineTo((w+0.8)/2,rise);ps.lineTo(0,0);
- [[z0+d-0.02],[z0-0.1]].forEach(p=>{const m=new THREE.Mesh(new THREE.ExtrudeGeometry(ps,{depth:0.12,bevelEnabled:false}),new THREE.MeshLambertMaterial({color:ST}));m.position.set(x0-0.4,FL+H,p[0]);m.castShadow=true;S.add(m)});
- M(new THREE.CylinderGeometry(0.17,0.17,0.04,20).rotateX(Math.PI/2),0x9fc7e8,cx,FL+H+0.4,z0+d+0.1,0);
- M(new THREE.TorusGeometry(0.19,0.03,8,20),BL,cx,FL+H+0.4,z0+d+0.1,0);
- // ซุ้มทางเข้า (portico) เสากลม 2 ต้น + ป้ายชื่อ
- M(bx(3.4,0.12,P),ST,x0+dc,FL+H-0.12,z0+d+P/2,0);M(bx(3.4,0.32,0.08),BL,x0+dc,FL+H-0.1,z0+d+P,0);
+ [z0+d-0.02,z0-0.1].forEach(p=>{const m=new THREE.Mesh(new THREE.ExtrudeGeometry(ps,{depth:0.12,bevelEnabled:false}),new THREE.MeshLambertMaterial({color:ST}));m.position.set(x0-0.4,FL+H,p);m.castShadow=true;S.add(m)});
+ M(new THREE.CylinderGeometry(0.17,0.17,0.04,20).rotateX(Math.PI/2),0x9fc7e8,cx,FL+H+0.32,z0+d+0.1,0);
+ M(new THREE.TorusGeometry(0.19,0.03,8,20),BL,cx,FL+H+0.32,z0+d+0.1,0);
+ // กันสาดทางเข้า + เสากลม 2 ต้น + ป้ายชื่อ (ชิดขอบถนน จึงยื่นออกมาน้อย)
+ M(bx(CW,0.12,P),ST,x0+dc,FL+H-0.12,z0+d+P/2,0);M(bx(CW,0.32,0.08),BL,x0+dc,FL+H-0.1,z0+d+P,0);
  sgn('ปั๊มน้ำ','#1f4e9a',2.4,0.3,dc,H-0.1,d+P+0.045,0);
- [-1.45,1.45].forEach(o=>{const u=dc+o,v=d+P-0.2;cy(0.19,0.12,0xcfd4da,u,0.06,v);cy(0.12,H-0.42,0xf1ece2,u,0.12+(H-0.42)/2,v);cy(0.125,0.05,BL,u,0.3,v);cy(0.17,0.12,0xcfd4da,u,H-0.24,v)});
- [0.35,w-0.35].forEach(u=>{M(new THREE.CylinderGeometry(0.15,0.12,0.3,10),0x8a6a4a,x0+u,0.15,z0+d+0.4);M(new THREE.IcosahedronGeometry(0.24,1),0x4f9e4a,x0+u,0.5,z0+d+0.4)});
- // ตู้ควบคุม 2 ตู้ที่ผนังด้านหลัง
+ [-1.5,1.5].forEach(o=>{const u=dc+o,v=d+P-0.12;cy(0.19,0.12,0xcfd4da,u,0.06,v);cy(0.12,H-0.42,0xf1ece2,u,0.12+(H-0.42)/2,v);cy(0.125,0.05,BL,u,0.3,v);cy(0.17,0.12,0xcfd4da,u,H-0.24,v)});
+ // ตู้ควบคุม 2 ตู้ที่ผนังด้านหลัง + ถังดับเพลิง
  [dc-0.4,dc+0.4].forEach(u=>{bb(u,0.35,0.7,0.4,0,1.55,0xcfd4d9);bb(u,0.54,0.62,0.03,0.1,1.45,0xaeb6be);[-0.15,0,0.15].forEach(o=>led(u+o,1.35,0.57))});
- // เครื่องปั๊มน้ำ 2 เครื่อง (แกนเครื่องวางหน้า-หลัง) ท่อดูดลงพื้น ท่อจ่ายขึ้นรวมท่อเมนออกผนังด้านตะวันออก
- const pu0=1.15,pu1=w-1.15;
- [pu0,pu1].forEach(pu=>{bb(pu,1.75,0.5,2.0,0,0.08,0x30353b);
-  cy(0.2,0.75,0x1b7f8c,pu,0.34,1.12,'z');cy(0.21,0.04,0x15616b,pu,0.34,1.5,'z');cy(0.2,0.04,0x2b2f33,pu,0.34,0.72,'z');cy(0.17,0.08,0x2b2f33,pu,0.34,0.66,'z');bb(pu,1.12,0.2,0.2,0.54,0.66,0x30353b,0);
-  const cp=cy(0.06,0.25,0xcfd4da,pu,0.34,1.68,'z');const mk=new THREE.Mesh(bx(0.03,0.03,0.12),new THREE.MeshLambertMaterial({color:0xd33}));mk.position.set(0.062,0,0);cp.add(mk);SH.push(cp);
-  cy(0.24,0.38,PB,pu,0.34,1.98,'z');cy(0.14,0.1,PB,pu,0.6,1.98,'y');
-  cy(0.1,0.85,PB,pu,0.34,2.62,'z');cy(0.14,0.04,0x15616b,pu,0.34,2.25,'z');cy(0.1,0.34,PB,pu,0.17,3.05,'y');cy(0.14,0.04,0x15616b,pu,0.04,3.05,'y');
-  cy(0.065,1.0,PGN,pu,1.1,1.98,'y');cy(0.1,0.18,0x8d939b,pu,0.85,1.98,'y');cy(0.02,0.3,0xcfd4da,pu,0.85,2.18,'z');
-  const vw=M(new THREE.TorusGeometry(0.09,0.02,6,12),0xd33,x0+pu,FL+0.85,z0+2.34,0);
-  cy(0.015,0.05,0x8d939b,pu,1.25,2.05,'z');cy(0.065,0.03,0xf2f4f7,pu,1.25,2.08,'z')});
- const hs=pu0-0.07,he=w+0.55;cy(0.08,he-hs,PGN,(hs+he)/2,1.6,1.98,'x');cy(0.08,1.68,PGN,he,0.84,1.98,'y');bb(he,1.98,0.3,0.3,0,0.06,0x8d939b,0);
+ bb(0.3,d-1.2,0.2,0.2,0.9,1.5,0xd33);
+ // เครื่องปั๊มน้ำ 2 เครื่อง เรียงตามความลึกอาคาร (แกนเครื่องวางแนวซ้าย-ขวา) ท่อดูดลงพื้นด้านตะวันออก ท่อจ่ายขึ้นรวมท่อเมนออกผนังด้านหลัง
+ const V1=d*0.30,V2=d*0.60;
+ [V1,V2].forEach(vk=>{bb(dc-0.2,vk,2.0,0.5,0,0.08,0x30353b);
+  cy(0.2,0.75,0x1b7f8c,dc-0.8,0.34,vk,'x');cy(0.21,0.04,0x15616b,dc-0.41,0.34,vk,'x');cy(0.2,0.04,0x2b2f33,dc-1.17,0.34,vk,'x');cy(0.17,0.08,0x2b2f33,dc-1.21,0.34,vk,'x');bb(dc-0.8,vk,0.2,0.2,0.54,0.66,0x30353b,0);
+  const cp=cy(0.06,0.25,0xcfd4da,dc-0.25,0.34,vk,'x');const mk=new THREE.Mesh(bx(0.12,0.03,0.03),new THREE.MeshLambertMaterial({color:0xd33}));mk.position.set(0,0.062,0);cp.add(mk);SH.push(cp);
+  cy(0.24,0.38,PB,dc,0.34,vk,'x');cy(0.14,0.1,PB,dc,0.6,vk,'y');
+  cy(0.1,0.95,PB,dc+0.7,0.34,vk,'x');cy(0.14,0.04,0x15616b,dc+0.35,0.34,vk,'x');cy(0.1,0.34,PB,dc+1.2,0.17,vk,'y');cy(0.14,0.04,0x15616b,dc+1.2,0.04,vk,'y');
+  cy(0.065,1.7,PGN,dc,1.45,vk,'y');cy(0.1,0.18,0x8d939b,dc,0.95,vk,'y');cy(0.02,0.3,0xcfd4da,dc,0.95,vk+0.2,'z');
+  M(new THREE.TorusGeometry(0.09,0.02,6,12),0xd33,x0+dc,FL+0.95,z0+vk+0.36,0);
+  cy(0.015,0.05,0x8d939b,dc,1.5,vk+0.09,'z');cy(0.065,0.03,0xf2f4f7,dc,1.5,vk+0.125,'z')});
+ cy(0.08,V2+0.07+0.55,PGN,dc,2.3,(V2+0.07-0.55)/2,'z');cy(0.08,2.38,PGN,dc,1.19,-0.55,'y');bb(dc,-0.55,0.3,0.3,0,0.06,0x8d939b,0);
  const pl=new THREE.PointLight(0xfff2dd,0.7,6);pl.position.set(cx,FL+2.5,cz);S.add(pl);
  PMX.sh=SH;PMX.leds=LD;
- PMX.tick=t=>{PMX.sh.forEach(m=>m.rotation.z=t*25);const f=Math.floor(t*2);PMX.leds.forEach((m,i)=>m.material.color.setHex((f+i)%5===0?0xffb000:0x22cc66))}}
+ PMX.tick=t=>{PMX.sh.forEach(m=>m.rotation.x=t*25);const f=Math.floor(t*2);PMX.leds.forEach((m,i)=>m.material.color.setHex((f+i)%5===0?0xffb000:0x22cc66))}}
+// ===== รั้วล้อมลานจอดรถ ประตูทางเข้าอยู่ด้านเหนือ หันหน้าไปทางถนน =====
+function PFENCE(w,d,cx,cz){const x0=cx-w/2+0.12,x1=cx+w/2-0.12,z0=cz-d/2+0.12,z1=cz+d/2-0.12,H=1.8,G=0x4a4f57,gw=4.0,gx0=cx-gw/2,gx1=cx+gw/2,
+ pm=new THREE.MeshLambertMaterial({color:0xaab3bb,transparent:true,opacity:0.35,depthWrite:false,side:THREE.DoubleSide});
+ const seg=(ax,az,bx2,bz)=>{const hz=az===bz,L=hz?bx2-ax:bz-az,n=Math.max(1,Math.round(L/2.2)),st=L/n,mx=hz?(ax+bx2)/2:ax,mz=hz?az:(az+bz)/2;
+  const pn=new THREE.Mesh(bx(hz?L:0.02,H-0.25,hz?0.02:L),pm);pn.position.set(mx,0.25+(H-0.25)/2,mz);S.add(pn);
+  M(bx(hz?L:0.14,0.25,hz?0.14:L),0xb9bec4,mx,0.125,mz,0);
+  [0.95,H].forEach(y=>M(bx(hz?L:0.05,0.05,hz?0.05:L),G,mx,y,mz,0));
+  for(let k=0;k<=n;k++)M(bx(0.09,H,0.09),G,hz?ax+k*st:ax,H/2,hz?az:az+k*st,0)};
+ seg(x0,z1,x1,z1);seg(x0,z0,x0,z1);seg(x1,z0,x1,z1);seg(x0,z0,gx0,z0);seg(gx1,z0,x1,z0);
+ // เสาประตู + คานป้าย + โคม
+ [gx0,gx1].forEach(x=>{M(bx(0.4,2.5,0.4),0xe9e4d8,x,1.25,z0);M(bx(0.5,0.1,0.5),0x8d939b,x,2.55,z0);M(bx(0.44,0.12,0.44),0x1f4e9a,x,0.9,z0,0);
+  const l=new THREE.Mesh(new THREE.SphereGeometry(0.1,8,6),new THREE.MeshBasicMaterial({color:0xfff2b0}));l.position.set(x,2.72,z0);S.add(l)});
+ M(bx(gw+0.4,0.4,0.2),0xe9e4d8,cx,2.25,z0,0);
+ {const k=document.createElement('canvas');k.width=640;k.height=80;const q=k.getContext('2d');q.fillStyle='#1f4e9a';q.fillRect(0,0,640,80);q.fillStyle='#fff';q.font='bold 44px Tahoma,Sarabun,sans-serif';q.textAlign='center';q.textBaseline='middle';q.fillText('ลานจอดรถ',320,42,610);
+  const tx=new THREE.CanvasTexture(k);tx.encoding=THREE.sRGBEncoding;const m=new THREE.Mesh(new THREE.PlaneGeometry(3.2,0.4),new THREE.MeshBasicMaterial({map:tx}));m.position.set(cx,2.25,z0-0.101);m.rotation.y=Math.PI;S.add(m)}
+ // บานประตู 2 บาน แง้มเปิดเข้าด้านใน
+ const fm=new THREE.MeshLambertMaterial({color:0x1f4e9a}),Lw=gw/2-0.25;
+ [[gx0+0.2,1,-1.1],[gx1-0.2,-1,1.1]].forEach(o=>{const g=new THREE.Group(),s=o[1],add=(geo,mat,x,y)=>{const m=new THREE.Mesh(geo,mat);m.position.set(x,y,0);g.add(m)};
+  g.position.set(o[0],0,z0);
+  [0.3,0.9,1.5].forEach(y=>add(bx(Lw,0.06,0.06),fm,s*Lw/2,y));[0.03,Lw/2,Lw-0.03].forEach(x=>add(bx(0.06,1.26,0.06),fm,s*x,0.9));
+  add(bx(Lw,1.2,0.02),pm,s*Lw/2,0.9);g.rotation.y=o[2];S.add(g)});
+ M(bx(gw+0.4,0.06,0.9),0xcfcac0,cx,0.03,z0-0.12-0.45,0)}
 function DRM(w,d,cx,cz){const x0=cx-w/2,z0=cz-d/2,FL=0.1,H=4.4,a=0.15,G=0x4a4f57,AC=0xb3171f;
  const bb=(u,v,sx,sz,y0,y1,c,sh)=>M(bx(sx,y1-y0,sz),c,x0+u,FL+(y0+y1)/2,z0+v,sh);
  M(bx(w,0.1,d),0xbfbcb4,cx,0.05,cz,0);
@@ -904,7 +926,7 @@ B.forEach((b,i)=>{
  const h=3+((i*3)%7)*0.55,col=PAL[i%4];let top=0.2;
  if(t==='boundary'){M(bx(w,0.2,d),0xe3e8ee,cx,-0.1,cz).castShadow=false;M(bx(w+0.6,0.1,d+0.6),0xc9d1da,cx,-0.16,cz).castShadow=false}
  else if(t==='dashed'){M(bx(w,0.1,d),0x69727e,cx,0.05,cz).castShadow=false;
-  if(b[0]==='ลานจอดรถ')for(let k=1;k<9;k++)M(bx(0.12,0.02,d*0.7),0xf2f4f7,cx-w/2+k*w/9,0.11,cz,0);if(b[0]==='ลานรถ')WB(w,d,cx,cz)}
+  if(b[0]==='ลานจอดรถ')for(let k=1;k<9;k++)M(bx(0.12,0.02,d*0.7),0xf2f4f7,cx-w/2+k*w/9,0.11,cz,0);if(b[0]==='ลานรถ')WB(w,d,cx,cz);if(b[0]==='ลานจอดรถ')PFENCE(w,d,cx,cz)}
  else if(t==='forest')M(bx(w,0.12,d),0x7bbd5a,cx,0.06,cz).castShadow=false;
  else if(t==='dotted')M(bx(w,0.08,d),0xa5d49f,cx,0.04,cz).castShadow=false;
  else if(t==='workshop'){WS(w,d,cx,cz);top=4.6;solids.push({x0:b[1],x1:b[1]+b[3],y0:b[2],y1:b[2]+b[4],h:4.1})}
