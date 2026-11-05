@@ -209,7 +209,7 @@ function WHS(w,d,cx,cz){const x0=cx-w/2,z0=cz-d/2,FL=0.1,H=3.8,a=0.14,G=0x4a4f57
  M(bx(0.18,0.1,d+0.8),AC,cx,FL+H+rise+0.03,cz,0);[x0-0.4,x0+w+0.4].forEach(x=>M(bx(0.05,0.22,d+0.8),AC,x,FL+H+0.02,cz,0));
  const sgn=(t,c,cw,chh,pw,ph,x,y,z,ry)=>{const cv=document.createElement('canvas');cv.width=cw;cv.height=chh;const q=cv.getContext('2d');q.fillStyle=c;q.fillRect(0,0,cw,chh);q.fillStyle='#fff';q.font='bold '+Math.round(chh*0.5)+'px Tahoma,Sarabun,sans-serif';q.textAlign='center';q.textBaseline='middle';q.fillText(t,cw/2,chh/2+2,cw-24);
   const tx=new THREE.CanvasTexture(cv);tx.encoding=THREE.sRGBEncoding;const m=new THREE.Mesh(new THREE.PlaneGeometry(pw,ph),new THREE.MeshBasicMaterial({map:tx}));m.position.set(x,y,z);m.rotation.y=ry;S.add(m)};
- sgn('คลังสินค้า · ยางพร้อมขาย','#1a5fa8',640,80,3.8,0.48,x0-0.45,FL+H+0.02,cz,-Math.PI/2);
+ sgn('คลังสินค้า','#1a5fa8',640,80,3.8,0.48,x0-0.45,FL+H+0.02,cz,-Math.PI/2);
  const TI=[],TG=[],SZ=[[0.22,0.15,3],[0.32,0.22,2],[0.45,0.28,2]],lv=[0.25,0.95,1.65],v0=0.8,bw=2.44;
  [2.9,5.2,7.5].forEach((u,ri)=>{
   for(let k=0;k<=5;k++)[-1,1].forEach(s=>bb(u+s*0.5,v0+k*bw,0.07,0.07,0,2.35,0x1f4e9a,0));
