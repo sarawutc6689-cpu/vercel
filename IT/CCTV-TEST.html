@@ -494,7 +494,7 @@ function P2(w,d,cx,cz){const x0=cx-w/2,z0=cz-d/2,FL=0.1,H=4.2,a=0.15,G=0x4a4f57,
  mk(BX,0xb08850,TS.pal);mk(CY,0x232323,TS.tire);mk(CY,0xb9c2cc,TS.hub);
  M2X.im={};[['base',0x30353b],['post',0x8d939b],['head',0x2f5f9e],['ring',0x1a1a1a],['box',0xcfd4d9]].forEach(k=>mk(BX,k[1],L[k[0]]));mk(CY,0x555c66,L.mold);
  M2X.im.plat=mk(BX,0xd98a00,L.plat);M2X.im.rod=mk(CY,0xcfd4da,L.rod);M2X.im.led=mk(BX,0x22cc66,L.led,1);M2X.P=P;M2X.FL=FL;M2X.st=P.map(()=>1)}
-function T10(w,d,cx,cz){const x0=cx-w/2,z0=cz-d/2,FL=0.1,H=4.2,a=0.15,G=0x4a4f57,AC=0x1b7f8c,SP=5.5,LD=[],MP=[];
+function T10(w,d,cx,cz){T10X.sh=[];const x0=cx-w/2,z0=cz-d/2,FL=0.1,H=4.2,a=0.15,G=0x4a4f57,AC=0x1b7f8c,SP=5.5,LD=[],MP=[];
  const bb=(u,v,sx,sz,y0,y1,c,sh)=>M(bx(sx,y1-y0,sz),c,x0+u,FL+(y0+y1)/2,z0+v,sh),cy=(r,l,c,u,y,v,ax)=>{const g=new THREE.CylinderGeometry(r,r,l,14);if(ax==='x')g.rotateZ(Math.PI/2);if(ax==='z')g.rotateX(Math.PI/2);return M(g,c,x0+u,FL+y,z0+v)};
  const sg=(t,c,W,Hh,u,y,v,ry)=>{const cv=document.createElement('canvas');cv.width=512;cv.height=Math.round(512*Hh/W);const x=cv.getContext('2d');x.fillStyle=c;x.fillRect(0,0,512,cv.height);x.fillStyle='#fff';x.font='bold 34px Tahoma,Sarabun,sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText(t,256,cv.height/2+2,490);
   const tx=new THREE.CanvasTexture(cv);tx.encoding=THREE.sRGBEncoding;const m=new THREE.Mesh(new THREE.PlaneGeometry(W,Hh),new THREE.MeshBasicMaterial({map:tx}));m.position.set(x0+u,FL+y,z0+v);m.rotation.y=ry;S.add(m)};
@@ -524,10 +524,23 @@ function T10(w,d,cx,cz){const x0=cx-w/2,z0=cz-d/2,FL=0.1,H=4.2,a=0.15,G=0x4a4f57
  const BX=bx(1,1,1),CY=new THREE.CylinderGeometry(1,1,1,10),q0=new THREE.Quaternion(),m4=new THREE.Matrix4(),V3=(x,y,z)=>new THREE.Vector3(x,y,z),
   mk=(geo,col,list,vc)=>{if(!list.length)return;const im=new THREE.InstancedMesh(geo,new THREE.MeshLambertMaterial({color:vc?0xffffff:col}),list.length);list.forEach((p,i)=>{m4.compose(V3(p[0],p[1],p[2]),q0,V3(p[3],p[4],p[5]));im.setMatrixAt(i,m4);if(vc)im.setColorAt(i,new THREE.Color(p[6]))});S.add(im);return im},
   R={up:[],bm:[],dk:[],mo:[],eb:[],tg:[]},MC=[0x4a5460,0x6b747d,0x8d939b,0x3d4a5a,0x5a6b7d],hv=(p,q)=>{const t=Math.sin(p*12.9898+q*78.233)*43758.5453;return t-Math.floor(t)};
- [6.75,8.45,10.15].forEach((v,ri)=>{const z=z0+v,rl=7.4,xs=x0+0.85;for(let k=0;k<5;k++)[-1,1].forEach(sd=>R.up.push([xs+k*rl/4,FL+0.95,z+sd*0.38,0.07,1.9,0.07]));
+ [6.75,8.45,10.15].forEach((v,ri)=>{const z=z0+v,rl=5.55,xs=x0+0.85;for(let k=0;k<4;k++)[-1,1].forEach(sd=>R.up.push([xs+k*rl/3,FL+0.95,z+sd*0.38,0.07,1.9,0.07]));
   [0.3,0.85,1.4].forEach((y,li)=>{[-1,1].forEach(sd=>R.bm.push([xs+rl/2,FL+y,z+sd*0.38,rl,0.08,0.06]));R.dk.push([xs+rl/2,FL+y+0.05,z,rl,0.03,0.8]);
-   for(let k=0;k<4;k++){R.tg.push([xs+(k+0.5)*rl/4,FL+y,z+0.4,0.14,0.07,0.01]);[0,1].forEach(m=>{if(hv(ri*7+li*3+k,m+1)<0.85){const mh=0.22+hv(k+li,m+ri)*0.16,mx=xs+(k+0.28+m*0.44)*rl/4;R.mo.push([mx,FL+y+0.065+mh/2,z,0.72,mh,0.66,MC[Math.floor(hv(k*3+m,li+ri*5)*5)]]);R.eb.push([mx,FL+y+0.065+mh+0.03,z,0.04,0.06,0.04])}})}})});
+   for(let k=0;k<3;k++){R.tg.push([xs+(k+0.5)*rl/3,FL+y,z+0.4,0.14,0.07,0.01]);[0,1].forEach(m=>{if(hv(ri*7+li*3+k,m+1)<0.85){const mh=0.22+hv(k+li,m+ri)*0.16,mx=xs+(k+0.28+m*0.44)*rl/3;R.mo.push([mx,FL+y+0.065+mh/2,z,0.72,mh,0.66,MC[Math.floor(hv(k*3+m,li+ri*5)*5)]]);R.eb.push([mx,FL+y+0.065+mh+0.03,z,0.04,0.06,0.04])}})}})});
  mk(BX,0x1f4e9a,R.up);mk(BX,0xe67e22,R.bm);mk(BX,0x7d868f,R.dk);mk(BX,0xf2f2f2,R.tg);mk(CY,0xd98a00,R.eb);mk(BX,0xffffff,R.mo,1);
+ // ห้องปั๊มน้ำ 2 เครื่อง (มุมตะวันออกเฉียงใต้ ปลายชั้นวาง)
+ {const rm=new THREE.MeshLambertMaterial({color:0xf4f6f7,transparent:true,opacity:0.5,depthWrite:false}),bm=new THREE.MeshLambertMaterial({color:0x9aa0a6}),RH=2.4,U0=6.7,U1=8.85,V0=6.1,V1=10.7;
+  const wl=(sx,sz,u,v)=>{const m=new THREE.Mesh(bx(sx,RH,sz),rm);m.position.set(x0+u,FL+RH/2,z0+v);S.add(m);const b2=new THREE.Mesh(bx(sx+0.02,0.3,sz+0.02),bm);b2.position.set(x0+u,FL+0.15,z0+v);S.add(b2)};
+  wl(U1-U0,0.06,(U0+U1)/2,V0);wl(U1-U0,0.06,(U0+U1)/2,V1);wl(0.06,V1-V0,U1,(V0+V1)/2);wl(0.06,1.8,U0,V0+0.9);wl(0.06,1.8,U0,V1-0.9);
+  const rf=new THREE.Mesh(bx(U1-U0,0.05,V1-V0),rm);rf.position.set(x0+(U0+U1)/2,FL+RH+0.02,z0+(V0+V1)/2);S.add(rf);bb((U0+U1)/2,(V0+V1)/2,U1-U0,V1-V0,0,0.02,0xdcd8ce,0);
+  sg('ห้องปั๊มน้ำ','#1f6fb0',1.1,0.32,U0-0.05,RH-0.1,8.4,-Math.PI/2);
+  [7.2,9.6].forEach((v,i)=>{bb(7.75,v,1.6,0.5,0,0.08,0x30353b);cy(0.2,0.7,0x1b7f8c,8.35,0.34,v,'x');cy(0.21,0.04,0x15616b,8.15,0.34,v,'x');cy(0.2,0.04,0x2b2f33,8.72,0.34,v,'x');bb(8.35,v,0.2,0.2,0.54,0.66,0x30353b,0);
+   const cp=cy(0.06,0.25,0xcfd4da,7.88,0.34,v,'x');cp.add(new THREE.Mesh(bx(0.1,0.03,0.03),new THREE.MeshLambertMaterial({color:0xd33})));T10X.sh.push(cp);
+   cy(0.22,0.4,0x2a6bd1,7.55,0.34,v,'x');cy(0.26,0.16,0x2a6bd1,7.4,0.38,v,'y');cy(0.08,0.55,0x2a6bd1,7.2,0.34,v,'x');cy(0.08,1.0,0x2a6bd1,6.5,0.34,v,'x');
+   cy(0.06,1.1,0x2e9d5c,7.4,1.1,v,'y');const vw=new THREE.Mesh(new THREE.TorusGeometry(0.09,0.02,6,12),new THREE.MeshLambertMaterial({color:0xd33}));vw.position.set(x0+7.4,FL+1.0,z0+v+0.1);S.add(vw);cy(0.07,0.02,0xf2f4f7,7.4,1.3,v-0.07,'z')});
+  cy(0.07,2.4,0x2e9d5c,7.4,1.65,8.4,'z');cy(0.08,1.4,0x2e9d5c,7.4,2.3,8.4,'y');
+  [7.9,8.7].forEach(u=>{bb(u,6.35,0.7,0.4,0,1.55,0xcfd4d9);bb(u,6.54,0.62,0.03,0.1,1.45,0xaeb6be);[-0.15,0,0.15].forEach((o,k)=>{const l=new THREE.Mesh(new THREE.SphereGeometry(0.03,8,6),new THREE.MeshBasicMaterial({color:0x22cc66}));l.position.set(x0+u+o,FL+1.35,z0+6.57);S.add(l);LD.push(l)})});
+  const pl=new THREE.PointLight(0xfff2dd,0.7,5);pl.position.set(x0+7.8,FL+2.2,z0+8.4);S.add(pl)}
  T10X.mp=MP;T10X.leds=LD;T10X.FL=FL;T10X.o=[x0,z0]}
 const lbEl=$('lbl'),bl=[],solids=[];
 B.forEach((b,i)=>{
@@ -889,12 +902,12 @@ const OP=[];
 {const b=B.find(x=>x[0]==='อาคาร T10'),X0=(b[1]-450)*K,Z0=(b[2]-300)*K,FL=0.1;T10X.w=[];
  const pw=(sh,u,v,ry,ar,am,sp)=>{const p=person(sh,pick1([0xf5c518,0xffffff]),0xff8a00,pick1(SK));p.g.position.set(X0+u,FL,Z0+v);p.g.rotation.y=ry;S.add(p.g);T10X.w.push({pe:p,b:ar,am,sp,ph:rnd()*6})};
  [[2.75,1.8],[2.75,4.6],[2.75,7.4],[5.05,1.8],[5.05,4.6],[5.05,7.4]].forEach((p,i)=>pw([0x2f5f9e,0x4d6d52,0x3b7fc4][i%3],p[1],p[0],Math.PI,-1.0,0.3,5+i%3*2));
- pw(0x2f5f9e,2.4,7.6,0,-0.8,0.12,3);
- const fk=forklift();fk.cg.visible=true;fk.g.position.set(X0+6.5,FL,Z0+9.3);fk.g.rotation.y=Math.PI/2;S.add(fk.g);
- const wp=person(0x4d6d52,0xf5c518,0xff8a00,pick1(SK));spawn(wp.g,[[352,214],[428,214]],0,0.7,0.3,3,{pe:wp,y0:0.12});
+ pw(0x2f5f9e,2.4,7.6,0,-0.8,0.12,3);pw(0x3b7fc4,7.95,8.4,Math.PI,-0.9,0.2,4);
+ const fk=forklift();fk.cg.visible=true;fk.g.position.set(X0+3.5,FL,Z0+9.3);fk.g.rotation.y=Math.PI/2;S.add(fk.g);
+ const wp=person(0x4d6d52,0xf5c518,0xff8a00,pick1(SK));spawn(wp.g,[[352,214],[402,214]],0,0.7,0.3,3,{pe:wp,y0:0.12});
  T10X.tick=t=>{T10X.w.forEach(o=>{const s=t*o.sp+o.ph;o.pe.ar[0].rotation.x=o.b+Math.sin(s)*o.am;o.pe.ar[1].rotation.x=o.b+Math.sin(s+2)*o.am});
   T10X.mp.forEach(o=>{const sn=Math.sin(t*0.8+o.ph),yc=0.96+0.34*sn,top=1.65,len=top-(yc+0.075);o.pl.position.y=T10X.FL+yc;o.rd.scale.y=len;o.rd.position.y=T10X.FL+(top+yc+0.075)/2});
-  const f=Math.floor(t*2);T10X.leds.forEach((m,i)=>m.material.color.setHex((f+i)%5===0?0xffb000:0x22cc66))}}
+  T10X.sh.forEach(m=>m.rotation.x=t*25);const f=Math.floor(t*2);T10X.leds.forEach((m,i)=>m.material.color.setHex((f+i)%5===0?0xffb000:0x22cc66))}}
 let BEAR=null;
 // parked pickup (bronze gold)
 {const g=new THREE.Group(),L=new THREE.Group();L.scale.setScalar(0.9);g.add(L);
