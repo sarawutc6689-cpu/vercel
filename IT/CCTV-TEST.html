@@ -339,7 +339,7 @@ function RP2(w,d,cx,cz){const x0=cx-w/2,z0=cz-d/2,FL=0.1,H=3.4,a=0.15,G=0x4a4f57
  [[-a,z0-0.4+(d/2+0.4)/2],[a,z0+d+0.4-(d/2+0.4)/2]].forEach(r=>{const m=M(bx(w+0.8,0.05,L),0xd5dde2,cx,FL+H+rise/2,r[1],0);m.rotation.x=r[0];m.material.transparent=true;m.material.opacity=0.5;m.material.depthWrite=false;
   for(let k=0;k<=4;k++){const f=M(bx(0.07,0.07,L),G,x0+k*w/4,FL+H+rise/2-0.05,r[1],0);f.rotation.x=r[0]}});
  M(bx(w+0.8,0.1,0.18),AC,cx,FL+H+rise+0.03,cz,0);[z0-0.4,z0+d+0.4].forEach(z=>M(bx(w+0.8,0.22,0.05),AC,cx,FL+H+0.02,z,0));
- {const cv=document.createElement('canvas');cv.width=640;cv.height=80;const x=cv.getContext('2d');x.fillStyle='#b86c00';x.fillRect(0,0,640,80);x.fillStyle='#fff';x.font='bold 42px Tahoma,Sarabun,sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText('อู่ซ่อมเครื่องจักร · ซ่อมไฟฟ้า',320,42,610);
+ {const cv=document.createElement('canvas');cv.width=640;cv.height=80;const x=cv.getContext('2d');x.fillStyle='#b86c00';x.fillRect(0,0,640,80);x.fillStyle='#fff';x.font='bold 42px Tahoma,Sarabun,sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText('อู่ซ่อม2',320,42,610);
   const tx=new THREE.CanvasTexture(cv);tx.encoding=THREE.sRGBEncoding;const m=new THREE.Mesh(new THREE.PlaneGeometry(4.4,0.55),new THREE.MeshBasicMaterial({map:tx}));m.position.set(cx,FL+H+0.05,z0+d+0.45);S.add(m)}
  bb(dc,d-0.05,2.4,0.1,H-0.55,H,0x8d939b,0);bb(dc,d-0.05,2.4,0.12,H-0.62,H-0.55,0xf2c200,0);
  [[2.15,1.75,2.7,0.08],[2.15,3.75,2.7,0.08],[0.8,2.75,0.08,2.08],[3.5,2.75,0.08,2.08]].forEach(p=>bb(p[0],p[1],p[2],p[3],0,0.02,0xf2c200,0));
@@ -378,7 +378,7 @@ function RPJ(w,d,cx,cz){const x0=cx-w/2,z0=cz-d/2,FL=0.1,H=4.7,SL=2.3,a=0.15,G=0
  [[-a,z0-0.4+(d/2+0.4)/2],[a,z0+d+0.4-(d/2+0.4)/2]].forEach(r=>{const m=M(bx(w+0.8,0.05,L),0xd5dde2,cx,FL+H+rise/2,r[1],0);m.rotation.x=r[0];m.material.transparent=true;m.material.opacity=0.5;m.material.depthWrite=false;
   for(let k=0;k<=4;k++){const f=M(bx(0.07,0.07,L),G,x0+k*w/4,FL+H+rise/2-0.05,r[1],0);f.rotation.x=r[0]}});
  M(bx(w+0.8,0.1,0.18),AC,cx,FL+H+rise+0.03,cz,0);[z0-0.4,z0+d+0.4].forEach(z=>M(bx(w+0.8,0.22,0.05),AC,cx,FL+H+0.02,z,0));
- {const cv=document.createElement('canvas');cv.width=640;cv.height=80;const x=cv.getContext('2d');x.fillStyle='#1a5fa8';x.fillRect(0,0,640,80);x.fillStyle='#fff';x.font='bold 40px Tahoma,Sarabun,sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText('อาคารสร้างเครื่องจักร · โปรเจค · เทรนนิ่ง',320,42,610);
+ {const cv=document.createElement('canvas');cv.width=640;cv.height=80;const x=cv.getContext('2d');x.fillStyle='#1a5fa8';x.fillRect(0,0,640,80);x.fillStyle='#fff';x.font='bold 40px Tahoma,Sarabun,sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText('อาคารโปรเจค · เทรนนิ่ง',320,42,610);
   const tx=new THREE.CanvasTexture(cv);tx.encoding=THREE.sRGBEncoding;const m=new THREE.Mesh(new THREE.PlaneGeometry(4.6,0.58),new THREE.MeshBasicMaterial({map:tx}));m.position.set(cx,FL+H+0.05,z0-0.46);m.rotation.y=Math.PI;S.add(m)}
  // ชั้น 2 ลอย (ห้องเทรนนิ่ง) + เสารับ + ราวกระจก
  bb(4.9,2.6,3.2,4.8,SL-0.15,SL,0xcfc9bd);[3.4,6.4].forEach(u=>{bb(u,2.6,0.14,4.8,SL-0.35,SL-0.15,G,0);[0.4,2.6,4.8].forEach(v=>bb(u,v,0.14,0.14,0,SL-0.35,G,0))});
@@ -414,7 +414,7 @@ function RUT(w,d,cx,cz){const x0=cx-w/2,z0=cz-d/2,FL=0.1,H=4.0,a=0.2,G=0x4a4f57,
  const Lw=(w/2+0.4)/Math.cos(a),rise=(w/2+0.4)*Math.tan(a);
  [[a,x0-0.4+(w/2+0.4)/2],[-a,x0+w+0.4-(w/2+0.4)/2]].forEach(r=>{const m=M(bx(Lw,0.05,d+0.8),0xd5dde2,r[1],FL+H+rise/2,cz,0);m.rotation.z=r[0];m.material.transparent=true;m.material.opacity=0.5;m.material.depthWrite=false});
  M(bx(0.18,0.1,d+0.8),AC,cx,FL+H+rise+0.03,cz,0);[x0-0.4,x0+w+0.4].forEach(x=>M(bx(0.05,0.22,d+0.8),AC,x,FL+H+0.02,cz,0));
- {const cv=document.createElement('canvas');cv.width=512;cv.height=72;const x=cv.getContext('2d');x.fillStyle='#1b7f8c';x.fillRect(0,0,512,72);x.fillStyle='#fff';x.font='bold 36px Tahoma,Sarabun,sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText('UT · หม้อไอน้ำ · ถังน้ำ',256,38,490);
+ {const cv=document.createElement('canvas');cv.width=512;cv.height=72;const x=cv.getContext('2d');x.fillStyle='#1b7f8c';x.fillRect(0,0,512,72);x.fillStyle='#fff';x.font='bold 36px Tahoma,Sarabun,sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText('UT · หม้อไอน้ำ',256,38,490);
   const tx=new THREE.CanvasTexture(cv);tx.encoding=THREE.sRGBEncoding;const m=new THREE.Mesh(new THREE.PlaneGeometry(3.2,0.45),new THREE.MeshBasicMaterial({map:tx}));m.position.set(cx,FL+H-0.35,z0+d+0.07);S.add(m)}
  // ห้องทำงานเล็ก (ทิศเหนือ)
  gl(2.45,0.05,1.375,2.6,0,2.3);gl(0.55,0.05,3.675,2.6,0,2.3);bb(1.375,2.6,2.45,0.06,2.3,2.36,0xcfd4da,0);bb(3.675,2.6,0.55,0.06,2.3,2.36,0xcfd4da,0);bb(3.0,2.6,0.06,0.06,0,2.3,0x8d939b,0);
@@ -478,7 +478,7 @@ function P2(w,d,cx,cz){const x0=cx-w/2,z0=cz-d/2,FL=0.1,H=4.2,a=0.15,G=0x4a4f57,
  const Lw=(w/2+0.4)/Math.cos(a),rise=(w/2+0.4)*Math.tan(a);
  [[a,x0-0.4+(w/2+0.4)/2],[-a,x0+w+0.4-(w/2+0.4)/2]].forEach(r=>{const m=M(bx(Lw,0.05,d+0.8),0xd5dde2,r[1],FL+H+rise/2,cz,0);m.rotation.z=r[0];m.material.transparent=true;m.material.opacity=0.5;m.material.depthWrite=false});
  M(bx(0.18,0.1,d+0.8),AC,cx,FL+H+rise+0.03,cz,0);[x0-0.4,x0+w+0.4].forEach(x=>M(bx(0.05,0.22,d+0.8),AC,x,FL+H+0.02,cz,0));
- {const cv=document.createElement('canvas');cv.width=640;cv.height=80;const x=cv.getContext('2d');x.fillStyle='#1a5fa8';x.fillRect(0,0,640,80);x.fillStyle='#fff';x.font='bold 40px Tahoma,Sarabun,sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText('ผลิต2 · เครื่องอบยาง Solid',320,42,610);
+ {const cv=document.createElement('canvas');cv.width=640;cv.height=80;const x=cv.getContext('2d');x.fillStyle='#1a5fa8';x.fillRect(0,0,640,80);x.fillStyle='#fff';x.font='bold 40px Tahoma,Sarabun,sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText('ผลิต2 · อาคารตรีทอง',320,42,610);
   const tx=new THREE.CanvasTexture(cv);tx.encoding=THREE.sRGBEncoding;const m=new THREE.Mesh(new THREE.PlaneGeometry(4.2,0.52),new THREE.MeshBasicMaterial({map:tx}));m.position.set(cx,FL+H-0.45,z0+d-0.1);S.add(m)}
  [6,14].forEach(v=>{const l=new THREE.PointLight(0xfff2dd,0.9,14);l.position.set(cx,3.4,z0+v);S.add(l)});
  // เครื่องอบยาง Solid 8 แถว (จำนวนต่อแถวไม่เท่ากัน 7-12 ตัว)
