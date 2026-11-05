@@ -444,17 +444,17 @@ function RPV(w,d,cx,cz){const x0=cx-w/2,z0=cz-d/2,FL=0.1,H=3.8,a=0.15,G=0x4a4f57
  {const cv=document.createElement('canvas');cv.width=512;cv.height=72;const x=cv.getContext('2d');x.fillStyle='#b86c00';x.fillRect(0,0,512,72);x.fillStyle='#fff';x.font='bold 36px Tahoma,Sarabun,sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText('อู่ซ่อมรถ · ยานยนต์',256,38,490);
   const tx=new THREE.CanvasTexture(cv);tx.encoding=THREE.sRGBEncoding;const m=new THREE.Mesh(new THREE.PlaneGeometry(3.2,0.45),new THREE.MeshBasicMaterial({map:tx}));m.position.set(cx,FL+H-0.4,z0+d-0.1);S.add(m)}
  // ลานซ่อม: เส้นช่องจอด + หลุมซ่อม
- bb(0.95,2.4,0.7,2.8,0,0.02,0x2b2f33,0);[[0.95,0.9,1.5,0.08],[0.95,3.9,1.5,0.08],[3.5,4.6,1.5,0.08],[3.5,8.2,1.5,0.08]].forEach(p=>bb(p[0],p[1],p[2],p[3],0,0.02,0xf2c200,0));
- // ห้องทำงาน (มุมตะวันออกเฉียงเหนือ)
- gl(0.05,2.7,2.2,1.65,0,2.4);gl(2.2,0.05,3.3,0.3,0,2.4);gl(0.05,2.7,4.4,1.65,0,2.4);gl(0.8,0.05,2.6,3.0,0,2.4);gl(0.5,0.05,4.15,3.0,0,2.4);gl(2.2,2.7,3.3,1.65,2.4,2.44);
- bb(3.4,0.8,1.5,0.6,0,0.5,0xb08850);[3.1,3.7].forEach(u=>{bb(u,0.7,0.4,0.04,0.5,0.8,0x30353b,0);bb(u,0.72,0.34,0.02,0.54,0.78,0x3cff7a,0);bb(u,0.9,0.4,0.15,0.5,0.52,0x2b2b2b,0)});
- bb(2.55,2.0,0.6,1.2,0,0.5,0xb08850);bb(2.45,2.0,0.04,0.4,0.5,0.8,0x30353b,0);bb(2.47,2.0,0.02,0.34,0.54,0.78,0x3cff7a,0);bb(2.7,2.0,0.15,0.4,0.5,0.52,0x2b2b2b,0);bb(4.15,2.4,0.4,0.5,0,1.1,0x9aa1a9);
- bb(3.5,1.45,0.45,0.45,0,0.06,0x222222,0);bb(3.5,1.45,0.05,0.05,0.06,0.3,0x555555,0);bb(3.5,1.45,0.45,0.45,0.3,0.34,0x222222,0);bb(3.15,2.05,0.4,0.4,0.3,0.34,0x222222,0);
+ bb(0.95,5.0,0.7,2.8,0,0.02,0x2b2f33,0);[[0.95,3.5,1.5,0.08],[0.95,6.5,1.5,0.08],[3.5,5.6,1.5,0.08],[3.5,8.4,1.5,0.08]].forEach(p=>bb(p[0],p[1],p[2],p[3],0,0.02,0xf2c200,0));
+ // ห้องทำงาน (ทางทิศเหนือของอาคาร เต็มความกว้าง)
+ gl(4.0,0.05,2.3,0.3,0,2.4);gl(0.05,2.6,0.3,1.6,0,2.4);gl(0.05,2.6,4.3,1.6,0,2.4);gl(1.6,0.05,1.1,2.9,0,2.4);gl(1.6,0.05,3.5,2.9,0,2.4);gl(4.0,2.6,2.3,1.6,2.4,2.44);
+ [1.2,3.3].forEach(u=>{bb(u,0.8,1.5,0.6,0,0.5,0xb08850);[-0.3,0.3].forEach(o=>{bb(u+o,0.7,0.4,0.04,0.5,0.8,0x30353b,0);bb(u+o,0.72,0.34,0.02,0.54,0.78,0x3cff7a,0);bb(u+o,0.9,0.4,0.15,0.5,0.52,0x2b2b2b,0)});
+  bb(u,1.45,0.45,0.45,0,0.06,0x222222,0);bb(u,1.45,0.05,0.05,0.06,0.3,0x555555,0);bb(u,1.45,0.45,0.45,0.3,0.34,0x222222,0)});
+ bb(4.0,2.3,0.4,0.5,0,1.1,0x9aa1a9);bb(2.3,0.5,0.5,0.4,0,0.8,0x7d868f);
  // อุปกรณ์ในอู่
- bb(2.0,4.4,0.5,0.3,0,0.65,0xc0392b);bb(2.0,4.4,0.52,0.32,0.65,0.69,0x30353b,0);
- [0,1,2,3].forEach(k=>cy(0.2,0.12,0x222222,0.55,0.08+k*0.12,6.0,'y'));[[4.1,9.5],[4.35,9.35],[3.85,9.65]].forEach(p=>cy(0.14,0.3,0x2a6bd1,p[0],0.15,p[1],'y'));
+ bb(2.4,10.0,0.5,0.3,0,0.65,0xc0392b);bb(2.4,10.0,0.52,0.32,0.65,0.69,0x30353b,0);
+ [0,1,2,3].forEach(k=>cy(0.2,0.12,0x222222,4.1,0.08+k*0.12,3.6,'y'));[[4.1,9.5],[4.35,9.35],[3.85,9.65]].forEach(p=>cy(0.14,0.3,0x2a6bd1,p[0],0.15,p[1],'y'));
  cy(0.18,0.6,0xd33,0.5,0.3,9.6,'z');bb(0.5,9.6,0.4,0.2,0,0.3,0x30353b);[8.6,9.4].forEach(v=>bb(4.3,v,0.1,0.1,0,1.4,0x1f4e9a));[0.3,0.8,1.3].forEach(y=>bb(4.3,9.0,0.4,1.2,y,y+0.03,0x7d868f,0));[[8.8,0.4],[9.3,0.9]].forEach(p=>bb(4.3,p[0],0.3,0.4,p[1]+0.03,p[1]+0.3,0xc9a46a,0));
- const l=new THREE.PointLight(0xfff2dd,0.9,10);l.position.set(cx,3.0,z0+6);S.add(l);const l2=new THREE.PointLight(0xfff2dd,0.7,5);l2.position.set(x0+3.3,2.0,z0+1.6);S.add(l2)}
+ const l=new THREE.PointLight(0xfff2dd,0.9,10);l.position.set(cx,3.0,z0+6);S.add(l);const l2=new THREE.PointLight(0xfff2dd,0.8,6);l2.position.set(x0+2.3,2.0,z0+1.6);S.add(l2)}
 const lbEl=$('lbl'),bl=[],solids=[];
 B.forEach((b,i)=>{
  const w=b[3]*K,d=b[4]*K,cx=(b[1]+b[3]/2-450)*K,cz=(b[2]+b[4]/2-300)*K,t=b[5]||'solid';
@@ -778,7 +778,7 @@ const OP=[];
 // ยานพาหนะและพนักงานในอู่ซ่อมรถ (ยานยนต์)
 {const b=B.find(x=>x[0]==='ยานยนต์'),X0=(b[1]-450)*K,Z0=(b[2]-300)*K,FL=0.1;RVX.w=[];
  const veh=(g,u,v,ry)=>{g.position.set(X0+u,FL,Z0+v);g.rotation.y=ry;S.add(g)},tw=(sh,hat,u,v,ry,l,ar,am,sp,dy)=>{const p=person(sh,hat,0xff8a00,pick1(SK));p.g.position.set(X0+u,FL+(dy||0),Z0+v);p.g.rotation.y=ry;p.lg.forEach(q=>q.rotation.x=l);S.add(p.g);RVX.w.push({pe:p,b:ar,am,sp,ph:rnd()*6});return p};
- veh(car('truck'),0.95,2.4,0);
+ veh(car('truck'),0.95,5.0,0);
  {const g=new THREE.Group(),L=new THREE.Group();g.add(L);const add=(geo,c,x,y,z)=>{const m=new THREE.Mesh(geo,mt(c));m.position.set(x,y,z);m.castShadow=true;L.add(m);return m},wg=new THREE.CylinderGeometry(0.17,0.17,0.12,10).rotateZ(Math.PI/2),OR=0xe67e22;
   add(bx(0.95,0.3,2.6),0x30353b,0,0.3,0);add(bx(0.95,0.95,0.8),OR,0,0.85,0.95);add(bx(0.96,0.35,0.05),0x28323c,0,1.05,1.36);add(bx(0.98,0.4,1.6),0x7d868f,0,0.55,-0.4);[[-1,0.9],[1,0.9],[-1,-0.7],[1,-0.7]].forEach(q=>add(wg,0x222222,q[0]*0.48,0.17,q[1]));
   [-1,1].forEach(s=>{add(bx(0.4,0.06,0.08),0x30353b,s*0.65,0.25,-1.1);add(bx(0.14,0.04,0.14),0xf2c200,s*0.82,0.05,-1.1)});add(new THREE.CylinderGeometry(0.2,0.2,0.2,12),0x30353b,0,0.82,-0.55);
@@ -786,11 +786,11 @@ const OP=[];
   const bk=new THREE.Group();bk.position.set(0,1.85,-1.55);L.add(bk);const ba=(sx,sy,sz,x,y,z)=>{const m=new THREE.Mesh(bx(sx,sy,sz),mt(0xf2f2f2));m.position.set(x,y,z);bk.add(m)};
   ba(0.55,0.05,0.55,0,0,0);ba(0.55,0.35,0.04,0,0.2,0.27);ba(0.55,0.35,0.04,0,0.2,-0.27);ba(0.04,0.35,0.55,0.27,0.2,0);ba(0.04,0.35,0.55,-0.27,0.2,0);
   const bp=person(0x2f5f9e,0xffffff,0xff8a00,pick1(SK));bp.g.position.set(0,0.03,0);bp.g.scale.setScalar(0.9);bk.add(bp.g);RVX.w.push({pe:bp,b:-0.9,am:0.3,sp:6,ph:1});
-  RVX.bc=new THREE.MeshBasicMaterial({color:0xffb000});const bcn=new THREE.Mesh(new THREE.SphereGeometry(0.06,8,6),RVX.bc);bcn.position.set(0,1.38,0.95);L.add(bcn);veh(g,3.5,6.4,0)}
- const f=forklift();f.cg.visible=true;veh(f.g,1.3,7.6,0.5);
- tw(0x4d6d52,0xf5c518,1.85,3.2,-Math.PI/2,0,-1.2,0.3,9);tw(0x3b7fc4,0xffffff,0.95,0.5,0,-1.4,-1.2,0.35,12,-0.2);
- [[3.4,1.45,Math.PI,0xf2f2f2],[3.15,2.05,-Math.PI/2,0xcfe0f2]].forEach(p=>{const q=tw(p[3],null,p[0],p[1],p[2],-1.5,-0.95,0.1,7,-0.11);q.g.position.y=FL-0.11});
- const wp=person(0x2f5f9e,0xf5c518,0xff8a00,pick1(SK));spawn(wp.g,[[458,230],[458,170]],0,0.7,0.3,3,{pe:wp,y0:0.12});
+  RVX.bc=new THREE.MeshBasicMaterial({color:0xffb000});const bcn=new THREE.Mesh(new THREE.SphereGeometry(0.06,8,6),RVX.bc);bcn.position.set(0,1.38,0.95);L.add(bcn);veh(g,3.5,7.0,0)}
+ const f=forklift();f.cg.visible=true;veh(f.g,1.3,8.6,0.5);
+ tw(0x4d6d52,0xf5c518,1.85,5.9,-Math.PI/2,0,-1.2,0.3,9);tw(0x3b7fc4,0xffffff,0.95,3.2,0,-1.4,-1.2,0.35,12,-0.2);
+ [[1.2,1.45,Math.PI,0xf2f2f2],[3.3,1.45,Math.PI,0xcfe0f2]].forEach(p=>{const q=tw(p[3],null,p[0],p[1],p[2],-1.5,-0.95,0.1,7,-0.11);q.g.position.y=FL-0.11});
+ const wp=person(0x2f5f9e,0xf5c518,0xff8a00,pick1(SK));spawn(wp.g,[[459,228],[459,171]],0,0.7,0.3,3,{pe:wp,y0:0.12});
  RVX.tick=t=>{RVX.w.forEach(o=>{const s=t*o.sp+o.ph;o.pe.ar[0].rotation.x=o.b+Math.sin(s)*o.am;o.pe.ar[1].rotation.x=o.b+Math.sin(s+2)*o.am});RVX.bc.color.setHex(Math.floor(t*3)%2?0xffb000:0x553300)}}
 let BEAR=null;
 // parked pickup (bronze gold)
