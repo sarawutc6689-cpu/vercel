@@ -957,8 +957,8 @@ const OP=[];
   const slots=[];[0,1].forEach(ly=>[-0.75,0,0.75].forEach(dz=>{const t=new THREE.Mesh(new THREE.CylinderGeometry(0.3,0.3,0.22,16),mt(0x1e2023));t.position.set(0,0.54+0.11+ly*0.23,-0.55+dz);t.visible=false;t.castShadow=true;L.add(t);t.add(new THREE.Mesh(new THREE.CylinderGeometry(0.17,0.17,0.225,12),mt(0x8d939b)));slots.push(t)}));
   return{g,slots,n:0}},
  ld=tk=>{if(tk.n>=tk.slots.length){tk.slots.forEach(s=>s.visible=false);tk.n=0}tk.slots[tk.n++].visible=true};
- [[3.6,0,0x2f5f9e],[9.2,Math.PI,0xc0392b],[14.4,0,0x3b7a57]].forEach(c=>{const t=trk(c[2]);t.g.position.set((584-450)*K,0.05,Z0+c[0]);t.g.rotation.y=c[1];S.add(t.g);const k=Math.floor(rnd()*4);for(let i=0;i<k;i++)ld(t);TK.push(t)});
- [[[PX(1.55),PY(2.0)],[PX(1.55),PY(3.05)],[PX(0.55),PY(3.05)],0,0.0],[[PX(1.55),PY(7.0)],[PX(1.55),PY(9.75)],[PX(0.55),PY(9.75)],1,0.35],[[PX(4.05),PY(6.0)],[PX(4.05),PY(13.5)],[PX(1.55),PY(13.5)],[PX(1.55),PY(13.85)],[PX(0.55),PY(13.85)],2,0.6]].forEach(r=>{
+ [[3.6,-Math.PI/2,0x2f5f9e],[9.2,-Math.PI/2,0xc0392b]].forEach(c=>{const t=trk(c[2]);t.g.position.set((584-450)*K-1.1,0.05,Z0+c[0]);t.g.rotation.y=c[1];S.add(t.g);const k=Math.floor(rnd()*4);for(let i=0;i<k;i++)ld(t);TK.push(t)});
+ [[[PX(1.55),PY(2.0)],[PX(1.55),PY(3.05)],[PX(0.55),PY(3.05)],0,0.0],[[PX(1.55),PY(7.0)],[PX(1.55),PY(9.75)],[PX(0.55),PY(9.75)],1,0.35]].forEach(r=>{
   const ti=r[r.length-2],fr=r[r.length-1],P=r.slice(0,r.length-2),f=forklift();
   spawn(f.g,P,0.18,1.9+rnd()*0.4,fr,3,{fk:f,y0:FL,dk:(a,i)=>{if(i===0){a.fk.cg.visible=true;a.ty=Math.PI/2}else if(i===P.length-1){a.fk.cg.visible=false;a.ty=-Math.PI/2;ld(TK[ti])}}})});
  const x0=(b[1]-450)*K,z0=(b[2]-300)*K,FY=FL+0.02,shirts=[0xf2f2f2,0xcfe0f2,0xe7d9f2,0xf5e1e1,0xdfe8dc];let n=0;
