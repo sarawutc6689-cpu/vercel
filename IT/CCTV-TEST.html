@@ -267,8 +267,7 @@ function FIVE(w,d,cx,cz){const x0=cx-w/2,z0=cz-d/2,FL=0.1,H=6.0,SL=3.5,a=0.15,G=
  [[-a,z0-0.4+(d/2+0.4)/2],[a,z0+d+0.4-(d/2+0.4)/2]].forEach(r=>{const m=M(bx(w+0.8,0.05,L),0xd5dde2,cx,FL+H+rise/2,r[1],0);m.rotation.x=r[0];m.material.transparent=true;m.material.opacity=0.5;m.material.depthWrite=false;
   for(let k=0;k<=4;k++){const f=M(bx(0.07,0.07,L),G,x0+k*w/4,FL+H+rise/2-0.05,r[1],0);f.rotation.x=r[0]}});
  M(bx(w+0.8,0.1,0.18),BL,cx,FL+H+rise+0.03,cz,0);[z0-0.4,z0+d+0.4].forEach(z=>M(bx(w+0.8,0.22,0.05),BL,cx,FL+H+0.02,z,0));
- sgn('ห้าดาว · ยางตีนตะขาบ','#1f4e9a',4.0,0.5,w/2,H+0.02,d+0.44,0);sgn('ห้าดาว · ยางตีนตะขาบ','#1f4e9a',4.0,0.5,w/2,H+0.02,-0.44,Math.PI);
- sgn('ส่วนที่ 1 · ผลิตยางตีนตะขาบ','#b5462f',3.4,0.48,3.2,H-0.6,SV-0.12,Math.PI);sgn('ส่วนที่ 2 · Mill / Calender','#2f7d4f',3.4,0.48,3.2,H-0.6,SV+0.12,0);
+ sgn('ห้าดาว ','#1f4e9a',4.0,0.5,w/2,H+0.02,d+0.44,0);sgn('ห้าดาว','#1f4e9a',4.0,0.5,w/2,H+0.02,-0.44,Math.PI);
  // เส้นแบ่งส่วน: เสาเตี้ย + ราว เว้นช่องทางเดินกลาง
  [0.5,1.6,2.7,3.8,5.4,6.5,7.6,8.7].forEach(u=>bb(u,SV,0.08,0.08,0,1.05,0xf2c200));
  [[2.15,3.3],[7.05,3.3]].forEach(r=>{bb(r[0],SV,r[1],0.05,0.5,0.56,AC);bb(r[0],SV,r[1],0.05,0.95,1.01,AC)});
