@@ -638,20 +638,13 @@ function P1(w,d,cx,cz){const x0=cx-w/2,z0=cz-d/2,FL=0.1,H=7.9,a=0.15,G=0x4a4f57,
  M(bx(0.18,0.1,d+0.8),0x2a6bd1,cx,FL+H+rise+0.03,cz,0);[x0-0.4,x0+w+0.4].forEach(x=>M(bx(0.05,0.22,d+0.8),0x2a6bd1,x,FL+H+0.02,cz,0));
  sgn('ผลิต1 · ผสมยาง','#1a5fa8',640,80,3.6,0.45,cx,FL+H-0.35,z0+d+0.03,0);
  [[2.8,2],[9,2],[2.8,7],[9,7],[2.8,12],[9,12]].forEach(p=>em(bb(p[0],p[1],0.9,0.4,H-0.55,H-0.47,0xfffbe8,0),0xfff2c8));
-// ===== ผนังอาคาร (ผนังทึบล่าง + แถบกระจกบน + หน้าจั่ว) =====
- {const WT=0.08,CL=0xdfe7ee,CN=0xb9c2cc,GB0=3.2,GB1=H-0.7;
-  const seg=(u1,v1,u2,v2,y0,y1,c)=>bb((u1+u2)/2,(v1+v2)/2,Math.max(u2-u1,WT),Math.max(v2-v1,WT),y0,y1,c),
-   gls=(u1,v1,u2,v2,y0,y1)=>gl(Math.max(u2-u1,0.04),Math.max(v2-v1,0.04),(u1+u2)/2,(v1+v2)/2,y0,y1);
-  const run=(hz,fix,a1,a2,gaps)=>{let cur=a1;const parts=[];gaps.slice().sort((p,q)=>p[0]-q[0]).forEach(g=>{parts.push([cur,g[0]]);cur=g[1]});parts.push([cur,a2]);
-   const P=(s,e,y0,y1,c)=>hz?seg(s,fix,e,fix,y0,y1,c):seg(fix,s,fix,e,y0,y1,c),G=(s,e,y0,y1)=>hz?gls(s,fix,e,fix,y0,y1):gls(fix,s,fix,e,y0,y1);
-   parts.forEach(p=>{if(p[1]-p[0]<0.05)return;P(p[0],p[1],0,0.5,CN);P(p[0],p[1],0.5,GB0,CL);G(p[0],p[1],GB0,GB1);P(p[0],p[1],GB1,H,CL);
-    const n=Math.floor((p[1]-p[0])/2.4);for(let k=1;k<=n;k++){const s=p[0]+(p[1]-p[0])*k/(n+1);P(s-0.03,s+0.03,GB0,GB1,0x8d939b)}});
-   gaps.forEach(g=>{P(g[0],g[1],g[2],H,CL);P(g[0],g[1],g[2]-0.12,g[2],0xf1c40f);[g[0],g[1]].forEach(s=>hz?bb(s,fix,0.14,0.14,0,g[2],0x1d1d21,0):bb(fix,s,0.14,0.14,0,g[2],0x1d1d21,0))})};
-  run(true,d-0.04,0,w,[[6.4,10.4,4.2]]);run(true,0.04,0,w,[]);run(false,0.04,0,d,[]);run(false,w-0.04,0,d,[[6.0,7.4,2.6]]);
-  bb(8.4,d-0.04,4.0,0.2,3.7,4.0,0x8d939b,0);
+// ===== ผนังแบบอู่ซ่อมเครื่องจักร (แผงขาวขุ่นกึ่งโปร่ง + ขอบล่างสีเทา, ประตูหน้าตรงลิฟท์) =====
+ {const dc=lu;WALLS(x0,z0,w,d,H,FL,dc);
+  bb(dc,d-0.05,2.4,0.1,4.2,H,0x8d939b,0);bb(dc,d-0.05,2.4,0.12,4.08,4.2,0xf2c200,0);
   const gs=new THREE.Shape();gs.moveTo(0,0);gs.lineTo(w,0);gs.lineTo(w/2,rise-0.04);gs.lineTo(0,0);
-  [0,d-0.08].forEach(v=>{const g=new THREE.ExtrudeGeometry(gs,{depth:0.08,bevelEnabled:false});M(g,CL,x0,FL+H,z0+v,0)})}
-  // ===== ชั้นลอย 1 (เครื่องผสมยาง) และชั้นลอย 2 (ไซโล) กรอบเหลือง = แถบด้านเหนือ =====
+  const gmt=new THREE.MeshLambertMaterial({color:0xf4f6f7,transparent:true,opacity:0.55,depthWrite:false});
+  [0,d-0.1].forEach(v=>{const g=new THREE.ExtrudeGeometry(gs,{depth:0.1,bevelEnabled:false}),m=new THREE.Mesh(g,gmt);m.position.set(x0,FL+H,z0+v);S.add(m)})}
+ // ===== ชั้นลอย 1 (เครื่องผสมยาง) และชั้นลอย 2 (ไซโล) กรอบเหลือง = แถบด้านเหนือ =====
  const dw=w-0.4;
  [M1,M2].forEach(Y=>{bb(w/2,1.65,dw,2.5,Y-DT,Y,0x7d868f);bb(w/2,2.9,dw,0.08,Y-DT-0.02,Y+0.02,YL,0);bb(w/2,2.8,dw,0.2,Y-DT-0.24,Y-DT,BL,0);bb(w/2,0.4,dw,0.2,Y-DT-0.24,Y-DT,BL,0)});
  [0.3,2.95,5.9,8.85,w-0.3].forEach(u=>{bb(u,2.8,0.2,0.2,0,M2,BL);bb(u,2.8,0.36,0.36,0,0.1,0x8d939b,0)});
