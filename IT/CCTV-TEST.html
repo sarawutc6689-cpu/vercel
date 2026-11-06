@@ -108,7 +108,7 @@ canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
 <script>
 (function(){
 const K=0.1,$=id=>document.getElementById(id),V=(x,y,z)=>new THREE.Vector3(x,y,z);
-const B=[["เขตโรงงาน",34,25,853,560,"boundary"],["พุ่มไม้",34,25,280,92,"forest"],["พุ่มไม้",34,134,165,95,"forest"],["พุ่มไม้",34,231,137,65,"forest"],["หอพัก",333,32,150,73,"dorm"],["โรงคาร์บอน",496,32,71,37,"carbon"],["โรงบด",570,32,49,37,"crusher"],["ลานคาร์บอน",496,72,123,33,"cyard"],["คลังวัตถุดิบ",623,29,87,85,"rawmat"],["คลังสารเคมี",711,32,71,82,"chem"],["โรงผ้าใบ",782,45,62,145],["โรงอาหาร",219,135,91,52,"canteen"],["ห้องน้ำ",252,189,58,49,"wc"],["อาคาร T10",344,137,92,111,"t10"],["ยานยนต์",437,137,46,109,"garage"],["ผลิต2",344,247,92,201,"prod2"],["โรงเก็บแม่พิมพ์",175,239,137,61,"moldstore"],["แม่พิมพ์",174,300,138,85,"workshop"],["สำนักงาน",48,300,124,146],["โรงเก็บปลอก",242,385,70,62,"storage"],["ลานรถ",498,138,79,187,"dashed"],["คลังสินค้า",590,138,89,187,"warehouse"],["ซ่อม1",695,138,35,112,"repair1"],["ห้องน้ำ 2",747,190,32,65,"wc"],["ปั๊มน้ำ",784,190,35,67,"pumphouse"],["เก็บถัง",822,234,48,53,"drums"],["โครงการ",470,337,66,52,"project"],["ซ่อม2",470,389,66,51,"repair2"],["UT",536,337,41,103,"boiler"],["ห้าดาว",589,333,92,107,"fivestar"],["ผลิต1",692,295,118,146,"prod1"],["ห้องน้ำ 3",811,440,59,85,"wc"],["RD",47,465,152,92,"rd"],["ลานจอดรถ",200,471,175,100,"dashed"],["โรงเหล็ก",376,472,77,55,"steel"],["ลานเทสยาง",514,461,175,100,"dashed"]];
+const B=[["เขตโรงงาน",34,25,853,560,"boundary"],["พุ่มไม้",34,25,280,92,"forest"],["พุ่มไม้",34,134,165,95,"forest"],["พุ่มไม้",34,231,137,65,"forest"],["หอพัก",333,32,150,73,"dorm"],["โรงคาร์บอน",496,32,71,37,"carbon"],["โรงบด",570,32,49,37,"crusher"],["ลานคาร์บอน",496,72,123,33,"cyard"],["คลังวัตถุดิบ",623,29,87,85,"rawmat"],["คลังสารเคมี",711,32,71,82,"chem"],["โรงผ้าใบ",782,45,62,145,"canvas"],["โรงอาหาร",219,135,91,52,"canteen"],["ห้องน้ำ",252,189,58,49,"wc"],["อาคาร T10",344,137,92,111,"t10"],["ยานยนต์",437,137,46,109,"garage"],["ผลิต2",344,247,92,201,"prod2"],["โรงเก็บแม่พิมพ์",175,239,137,61,"moldstore"],["แม่พิมพ์",174,300,138,85,"workshop"],["สำนักงาน",48,300,124,146],["โรงเก็บปลอก",242,385,70,62,"storage"],["ลานรถ",498,138,79,187,"dashed"],["คลังสินค้า",590,138,89,187,"warehouse"],["ซ่อม1",695,138,35,112,"repair1"],["ห้องน้ำ 2",747,190,32,65,"wc"],["ปั๊มน้ำ",784,190,35,67,"pumphouse"],["เก็บถัง",822,234,48,53,"drums"],["โครงการ",470,337,66,52,"project"],["ซ่อม2",470,389,66,51,"repair2"],["UT",536,337,41,103,"boiler"],["ห้าดาว",589,333,92,107,"fivestar"],["ผลิต1",692,295,118,146,"prod1"],["ห้องน้ำ 3",811,440,59,85,"wc"],["RD",47,465,152,92,"rd"],["ลานจอดรถ",200,471,175,100,"dashed"],["โรงเหล็ก",376,472,77,55,"steel"],["ลานเทสยาง",514,461,175,100,"dashed"]];
 const C=[["CAM-001","ประตูหลักทางเข้า","ทางเข้า-ออก",4.49,77.82,"online","1080p",190],["CAM-002","ทางออกหลัก","ทางเข้า-ออก",4.86,79.71,"online","1080p",160],["CAM-003","หลังโรงรถ2","ทางเข้า-ออก",41.29,94.31,"online","720p",185],["CAM-013","อาคาร RD","สำนักงาน/RD",23,79.01,"online","720p",85],["CAM-021","โรงอาหาร1","โรงอาหาร/หอพัก",28,26,"online","1080p",90],["CAM-022","หอพักพนักงาน (หน้า)","โรงอาหาร/หอพัก",50.54,17.83,"online","1080p",180],["CAM-023","หอพักพนักงาน (หลัง)","โรงอาหาร/หอพัก",51.07,4.83,"online","720p",205],["CAM-031","อาคาร T10 (ทิศเหนือ)","T10/ผลิต2",35.18,17.85,"online","1080p",90],["CAM-034","แม่พิมพ์1","T10/ผลิต2",20.78,55.41,"online","1080p",60],["CAM-041","คลังสินค้า (หน้า)","คลังสินค้า/ลานรถ",67.81,22.85,"online","2MP",335],["CAM-042","คลังสินค้า1","คลังสินค้า/ลานรถ",66,40,"online","2MP",180],["CAM-043","คลังสินค้า (หลัง)","คลังสินค้า/ลานรถ",74.72,65.12,"online","2MP",110],["CAM-044","ห้าดาว","คลังสินค้า/ลานรถ",73.05,74.02,"online","720p",105],["CAM-051","หลังคลังวัตถุดิบ","วัตถุดิบ/สารเคมี",83.43,5.01,"online","1080p",180],["CAM-053","โรงคาร์บอน/โรงบด","วัตถุดิบ/สารเคมี",57.15,5.12,"online","720p",180],["CAM-061","ผลิต1 (หน้า)","ผลิต1/ซ่อม1",88.6,87.91,"online","2MP",265],["CAM-062","ผลิต1 (หลัง)","ผลิต1/ซ่อม1",91.31,71.61,"online","2MP",270],["CAM-063","ซ่อม1","ผลิต1/ซ่อม1",83.67,30.53,"online","720p",185],["CAM-071","ซ่อม2","ซ่อม2/โครงการ",55.84,66.24,"online","1080p",130],["CAM-072","โครงการ/UT","ซ่อม2/โครงการ",52.25,61.2,"online","720p",295],["CAM-081","ลานเทสยาง","ทดสอบ/กลางแจ้ง",68.64,78.3,"online","2MP",115],["CAM-082","ลานเทสยาง (ปลาย)","ทดสอบ/กลางแจ้ง",69.63,78.7,"online","720p",75],["CAM-083","ลานจอดรถ","ทดสอบ/กลางแจ้ง",30.15,79.35,"online","1080p",90],["CAM-084","หน้าโรงผ้าใบ","ทั่วไป",86.66,20.97,"online","1080p",180],["CAM-085","หลังโรงกรีน1","ทั่วไป",60.03,4.97,"online","1080p",0],["CAM-086","หลังโรงกรีน2","ทั่วไป",68.61,5,"online","1080p",190],["CAM-087","ลานจอด","ทั่วไป",53.58,18.18,"online","1080p",65],["CAM-088","หน้าคาร์บอน","ทั่วไป",58.6,17.45,"online","1080p",135],["CAM-089","หลังผลิต1","ทั่วไป",90.37,52.54,"online","1080p",95],["CAM-090","หลังห้องน้ำผลิต1","ทั่วไป",98.29,72.55,"online","1080p",180],["CAM-091","หลังโรงรถ1","ทั่วไป",22.33,94.47,"online","1080p",0],["CAM-092","โรงเหล็ก","ทั่วไป",41.33,78.74,"online","1080p",55],["CAM-093","เก็บถัง1","ทั่วไป",88.48,42.67,"online","1080p",0],["CAM-094","เก็บถัง2","ทั่วไป",86.83,42.51,"online","1080p",130],["CAM-095","หน้าคลังวัตถุดิบ","ทั่วไป",76.44,19.42,"online","1080p",170],["CAM-096","โรงอาหาร2","ทั่วไป",23.32,22.62,"online","1080p",190],["CAM-097","คลังสินค้า2","ทั่วไป",65.76,32.43,"online","1080p",180],["CAM-098","คลังสินค้า3","ทั่วไป",66.35,45.55,"online","1080p",120],["CAM-099","หอพัก","ทั่วไป",42.86,17.54,"online","1080p",170],["CAM-100","แม่พิมพ์2","ทั่วไป",26.12,61.44,"online","1080p",115]];
 const ST={online:'ออนไลน์',maint:'ออฟไลน์'},CL={online:0x1a9a5a,maint:0xe08a00};
 
@@ -1091,6 +1091,73 @@ function CHEM(w,d,cx,cz){const H=4.2,DC=1.7,sh=SHD(w,d,cx,cz,H,0xb3261e,4,DC),x0
  const pl4=new THREE.PointLight(0xdff0ff,0.5,4);pl4.position.set(x0+5.3,FL+2.3,z0+6.6);S.add(pl4);
  // คนทำงานส่วนที่ 2 (2 คน) — เพิ่มตอนสร้างฉาก
  CHX.W=[[4.5,2.65,Math.PI,0x2f5f9e],[5.0,3.75,0,0x4d6d52]];CHX.x0=x0;CHX.z0=z0}
+// ===== โรงผ้าใบ: อาคารเสา+หลังคา+ผนังแบบคลังสารเคมี ภายในมีเครื่องบรรจุสาร 2 เครื่อง ฝุ่นฟุ้ง พัดลม/เครื่องดูดอากาศ =====
+const CVX={w:[],fans:[],heads:[],dust:null,N:0};
+function CANV(w,d,cx,cz){const H=4.2,sh=SHD(w,d,cx,cz,H,0xb3261e,3),x0=sh.x0,z0=sh.z0,FL=0.1,tn=Math.tan(0.17),
+ bb=(u,v,sx,sz,y0,y1,c,t)=>M(bx(sx,y1-y0,sz),c,x0+u,FL+(y0+y1)/2,z0+v,t),
+ cy=(u,v,y0,y1,rb,rt,c,t)=>M(new THREE.CylinderGeometry(rt,rb,y1-y0,18),c,x0+u,FL+(y0+y1)/2,z0+v,t),
+ em=(m,c)=>{m.material.emissive=new THREE.Color(c);return m},
+ hv=(p,q)=>{const s=Math.sin(p*12.9898+q*78.233)*43758.5453;return s-Math.floor(s)},
+ yr=v=>H+(Math.min(v,d-v)+0.4)*tn;
+ SGN2('โรงผ้าใบ','#b3261e',2.0,0.45,cx,FL+H+0.02,z0+d+0.44,0);SGN2('โรงผ้าใบ','#b3261e',2.0,0.45,cx,FL+H+0.02,z0-0.44,Math.PI);
+ // เสากลางเพิ่มรับหลังคาช่วงยาว
+ [0.3,w-0.3].forEach(u=>[d/3,2*d/3].forEach(v=>{bb(u,v,0.26,0.26,0,H,0x4a4f57);bb(u,v,0.44,0.44,0,0.1,0x8d939b,0)}));
+ // ป้ายความปลอดภัยหน้าอาคาร
+ HZS('haz',x0+0.5,FL+2.5,z0+d+0.07,0,0.7);HZS('corr',x0+w-0.5,FL+2.5,z0+d+0.07,0,0.7);
+ SGN2('ต้องสวมหน้ากากกันพิษ ในพื้นที่ฝุ่น','#1f4e9a',2.4,0.3,cx,FL+3.35,z0+d+0.07,0);
+ // ===== เครื่องบรรจุสารขนาดเล็ก 2 เครื่อง =====
+ const MV=[4.5,9.8],MU=2.4;
+ MV.forEach((v,i)=>{
+  bb(MU,v,1.1,0.9,0,0.9,0x6f8fa8);bb(MU,v,1.16,0.96,0.88,0.94,0x2f5f86,0);
+  bb(MU,v+0.46,0.7,0.04,0.35,0.8,0xcfd4d9,0);em(bb(MU,v+0.49,0.34,0.02,0.55,0.74,0x14202c,0),0x0a3a58);[0,1,2].forEach(k=>em(bb(MU-0.2+k*0.2,v+0.49,0.06,0.02,0.4,0.46,0x333,0),[0x22cc66,0xffb000,0x22cc66][k]));
+  cy(MU,v,0.94,1.5,0.14,0.46,0xd8dde2);cy(MU,v,1.5,1.95,0.46,0.46,0xd8dde2);cy(MU,v,1.95,2.0,0.46,0.46,0x8d939b,0);cy(MU,v,2.0,2.04,0.1,0.1,0x30353b,0);
+  [1.2,1.7].forEach(y=>cy(MU,v,y,y+0.04,0.48,0.48,0x8d939b,0));
+  bb(MU,v+0.62,0.14,0.34,0.98,1.06,0x6f7780,0);cy(MU,v+0.78,0.62,0.98,0.05,0.05,0x30353b,0);
+  bb(MU,v+0.78,0.62,0.5,0,0.3,0x555c66);em(bb(MU,v+1.04,0.22,0.02,0.14,0.24,0x1ee08a,0),0x0a8a50);bb(MU,v+0.78,0.5,0.4,0.3,0.34,0xcfd4da,0);
+  bb(MU,v+0.78,0.32,0.12,0.34,0.62,[0xf5f0e1,0xf3d98a][i]);
+  // เศษผงสารหกบนพื้น
+  [[0.1,0.9],[-0.3,1.15],[0.35,1.05]].forEach((o,k)=>bb(MU+o[0],v+o[1],0.5+k*0.1,0.4,0,0.02,0xf2efe6,0));
+  // เครื่องดูดอากาศขนาดกลาง + ท่อดูดที่ปากถุง + ท่อระบายผ่านหลังคา
+  const ev=v+0.78,eu=5.4;
+  bb(eu,ev,0.8,0.8,0,1.5,0x9aa6b4);bb(eu,ev,0.9,0.9,1.5,1.56,0x6f7780,0);bb(eu,ev,0.84,0.84,0.55,0.6,0x30353b,0);
+  const fg=new THREE.Group();fg.position.set(x0+eu-0.405,FL+1.0,z0+ev);fg.rotation.y=-Math.PI/2;S.add(fg);
+  fg.add(new THREE.Mesh(new THREE.TorusGeometry(0.27,0.03,6,18),new THREE.MeshLambertMaterial({color:0x30353b})));
+  const bl=new THREE.Group();fg.add(bl);for(let k=0;k<5;k++){const b=new THREE.Mesh(bx(0.24,0.06,0.02),new THREE.MeshLambertMaterial({color:0xcfd4d9}));b.position.set(0,0.13,0);const p=new THREE.Group();p.rotation.z=k*Math.PI*2/5;p.add(b);bl.add(p)}
+  fg.add(new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,0.04,10).rotateX(Math.PI/2),new THREE.MeshLambertMaterial({color:0x555c66})));CVX.fans.push({g:bl,sp:18+i*3});
+  M(new THREE.CylinderGeometry(0.11,0.11,5.3-0.4-0.0,12).rotateZ(Math.PI/2),0x8d939b,x0+(MU+0.9+eu-0.4)/2,FL+1.05,z0+ev,0);
+  M(new THREE.CylinderGeometry(0.34,0.11,0.3,14).rotateZ(Math.PI/2),0x6f7780,x0+MU+0.62,FL+1.05,z0+ev,0);
+  const top=yr(ev)+0.12;cy(eu,ev,1.56,top,0.16,0.16,0x8d939b,0);cy(eu,ev,top,top+0.1,0.3,0.3,0x6f7780,0);cy(eu,ev,top+0.1,top+0.14,0.22,0.22,0x30353b,0)});
+ // ===== พัดลมติดผนัง 2 ตัว + พัดลมตั้งพื้น 2 ตัว =====
+ const fan=(u,y,v,ry,r,sp)=>{const g=new THREE.Group();g.position.set(x0+u,FL+y,z0+v);g.rotation.y=ry;S.add(g);
+  g.add(new THREE.Mesh(new THREE.TorusGeometry(r,0.04,6,22),new THREE.MeshLambertMaterial({color:0x30353b})));
+  const bl=new THREE.Group();g.add(bl);for(let k=0;k<4;k++){const p=new THREE.Group();p.rotation.z=k*Math.PI/2;const b=new THREE.Mesh(bx(r*0.9,0.1,0.015),new THREE.MeshLambertMaterial({color:0x7fb8d8}));b.position.set(0,r*0.5,0);p.add(b);bl.add(p)}
+  g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.07,0.07,0.1,10).rotateX(Math.PI/2),new THREE.MeshLambertMaterial({color:0x555c66})));CVX.fans.push({g:bl,sp});return g};
+ [3.3,11.5].forEach((v,i)=>{fan(0.2,2.5,v,Math.PI/2,0.45,14+i*2);bb(0.12,v,0.1,0.1,2.0,2.5,0x555c66,0);bb(0.11,v,0.06,1.0,2.97,3.0,0x555c66,0)});
+ [[1.5,7.2,0.5],[4.2,12.7,-0.6]].forEach((p,i)=>{cy(p[0],p[1],0,0.06,0.28,0.28,0x30353b,0);cy(p[0],p[1],0.06,1.15,0.04,0.04,0x8d939b,0);
+  const g=fan(p[0],1.3,p[1],p[2]>0?-Math.PI/2+0.3:Math.PI/2-0.3,0.28,20+i*3);CVX.heads.push({g,b:g.rotation.y,ph:i*2})});
+ // พาเลทถุงสารที่บรรจุแล้ว
+ [[1.0,5.9],[1.0,11.4]].forEach((p,i)=>{bb(p[0],p[1],1.1,1.1,0,0.14,0xa9814f,0);for(let l=0;l<4;l++)[-1,1].forEach(a=>[-1,1].forEach(c=>bb(p[0]+a*0.26,p[1]+c*0.26,0.5,0.5,0.14+l*0.17,0.29+l*0.17,l%2?0xf5f0e1:0xf3d98a)))});
+ // ===== ฝุ่นฟุ้งเต็มห้อง =====
+ const hz=M(bx(w-0.4,H-0.15,d-0.4),0xd8cfae,cx,FL+H/2,cz,0);hz.material.transparent=true;hz.material.opacity=0.09;hz.material.depthWrite=false;
+ const N=1600,pos=new Float32Array(N*3),base=new Float32Array(N*4);
+ for(let i=0;i<N;i++){let u,v,y;const r=hv(i,1);
+  if(r<0.4){const mi=i%2,mv=MV[mi]+0.8,a=hv(i,2)*6.28,rr=Math.pow(hv(i,3),0.7)*1.5;u=MU+Math.cos(a)*rr;v=mv+Math.sin(a)*rr;y=0.4+hv(i,4)*2.4}
+  else{u=0.5+hv(i,5)*(w-1);v=0.5+hv(i,6)*(d-1);y=0.2+hv(i,7)*(H-0.4)}
+  base[i*4]=u;base[i*4+1]=y;base[i*4+2]=v;base[i*4+3]=hv(i,8)*6.28}
+ const gg=new THREE.BufferGeometry();gg.setAttribute('position',new THREE.BufferAttribute(pos,3));
+ const cv=document.createElement('canvas');cv.width=cv.height=64;const q=cv.getContext('2d'),gr=q.createRadialGradient(32,32,0,32,32,32);gr.addColorStop(0,'rgba(255,255,255,0.85)');gr.addColorStop(1,'rgba(255,255,255,0)');q.fillStyle=gr;q.fillRect(0,0,64,64);
+ const pts=new THREE.Points(gg,new THREE.PointsMaterial({size:0.42,map:new THREE.CanvasTexture(cv),color:0xe3dbbd,transparent:true,opacity:0.34,depthWrite:false,sizeAttenuation:true}));pts.frustumCulled=false;S.add(pts);
+ CVX.dust={pts,pos,base,N,x0:x0+0+FL*0,z0,FL};CVX.ox=x0;CVX.oz=z0;
+ const pl=new THREE.PointLight(0xffe9c0,0.9,11);pl.position.set(cx,FL+3.2,cz-3);S.add(pl);const pl2=pl.clone();pl2.position.set(cx,FL+3.2,cz+3);S.add(pl2);
+ CVX.W=[[MU,MV[0]+1.75,Math.PI,0x2f5f9e],[MU,MV[1]+1.75,Math.PI,0x4d6d52]]}
+CVX.tick=t=>{const D=CVX.dust;if(D){const P=D.pos,B=D.base,ox=CVX.ox,oz=CVX.oz;for(let i=0;i<D.N;i++){const ph=B[i*4+3],j=i*3;
+  P[j]=ox+B[i*4]+Math.sin(t*0.35+ph)*0.7+(t*0.04+ph)%1*0.0;P[j+1]=D.FL+0.15+((B[i*4+1]+Math.sin(t*0.5+ph*1.7)*0.35)+4.2*100)%4.0;P[j+2]=oz+B[i*4+2]+Math.cos(t*0.3+ph)*0.7}
+  D.pts.geometry.attributes.position.needsUpdate=true}
+ CVX.fans.forEach(f=>f.g.rotation.z=t*f.sp);CVX.heads.forEach(h=>h.g.rotation.y=h.b+Math.sin(t*0.5+h.ph)*0.6);
+ CVX.w.forEach(o=>{const s=t*o.sp+o.ph;o.pe.ar[0].rotation.x=-1.0+Math.sin(s)*0.3;o.pe.ar[1].rotation.x=-1.0+Math.sin(s+2)*0.3})};
+function MASK(p){const g=p.g,m=(geo,c,x,y,z)=>{const e=new THREE.Mesh(geo,new THREE.MeshLambertMaterial({color:c}));e.position.set(x,y,z);g.add(e);return e};
+ m(new THREE.BoxGeometry(0.13,0.075,0.06),0x2b2f33,0,0.835,0.1);[-1,1].forEach(s=>{const f=m(new THREE.CylinderGeometry(0.032,0.032,0.05,10),0x6b7a3a,s*0.055,0.82,0.14);f.rotation.x=Math.PI/2});
+ m(new THREE.BoxGeometry(0.15,0.045,0.03),0x8ec5e8,0,0.885,0.105);m(new THREE.BoxGeometry(0.18,0.02,0.2),0x2b2f33,0,0.855,0.0)}
 function SGN2(t,c,W,Hh,x,y,z,ry){const cv=document.createElement('canvas');cv.width=512;cv.height=Math.round(512*Hh/W);const q=cv.getContext('2d');q.fillStyle=c;q.fillRect(0,0,512,cv.height);q.fillStyle='#fff';q.font='bold '+Math.round(cv.height*0.55)+'px Tahoma,Sarabun,sans-serif';q.textAlign='center';q.textBaseline='middle';q.fillText(t,256,cv.height/2+2,490);
  const tx=new THREE.CanvasTexture(cv);tx.encoding=THREE.sRGBEncoding;const m=new THREE.Mesh(new THREE.PlaneGeometry(W,Hh),new THREE.MeshBasicMaterial({map:tx}));m.position.set(x,y,z);m.rotation.y=ry;S.add(m);return m}
 function SHD(w,d,cx,cz,H,AC,nu,dc){dc=dc||w/2;const x0=cx-w/2,z0=cz-d/2,FL=0.1,a=0.17,G=0x4a4f57;
@@ -1215,6 +1282,7 @@ B.forEach((b,i)=>{
  else if(t==='forest')M(bx(w,0.12,d),0x7bbd5a,cx,0.06,cz).castShadow=false;
  else if(t==='rawmat'){RAWM(w,d,cx,cz);top=5.2;solids.push({x0:b[1],x1:b[1]+b[3],y0:b[2],y1:b[2]+b[4],h:4.4})}
  else if(t==='chem'){CHEM(w,d,cx,cz);top=5.4;solids.push({x0:b[1],x1:b[1]+b[3],y0:b[2],y1:b[2]+b[4],h:4.6})}
+ else if(t==='canvas'){CANV(w,d,cx,cz);top=5.4;solids.push({x0:b[1],x1:b[1]+b[3],y0:b[2],y1:b[2]+b[4],h:4.6})}
  else if(t==='carbon'){CARB(w,d,cx,cz);top=5.4;solids.push({x0:b[1],x1:b[1]+b[3],y0:b[2],y1:b[2]+b[4],h:4.6})}
  else if(t==='crusher'){CRSH(w,d,cx,cz);top=4.6;solids.push({x0:b[1],x1:b[1]+b[3],y0:b[2],y1:b[2]+b[4],h:3.9})}
  else if(t==='cyard'){CYARD(w,d,cx,cz);top=0.5;solids.push({x0:b[1]+60,x1:b[1]+84,y0:b[2]+2,y1:b[2]+22,h:2.5})}
@@ -1596,6 +1664,8 @@ const OP=[];
  {const p=person(0x2f5f9e,0xf5c518,0xff8a00,pick1(SK));spawn(p.g,[[746,356],[756,356],[756,410],[746,410]],0,0.7,0.3,3,{pe:p,y0:0.12})}}
 // พนักงานคลังสารเคมี ส่วนที่ 2 (AUTOFEED) 2 คน
 (CHX.W||[]).forEach((o,i)=>{const p=person(o[3],pick1([0xf5c518,0xffffff]),0xff8a00,pick1(SK));p.g.position.set(CHX.x0+o[0],0.1,CHX.z0+o[1]);p.g.rotation.y=o[2];S.add(p.g);CHX.w.push({pe:p,ph:rnd()*6,sp:4+i*2})});
+// พนักงานโรงผ้าใบ สวมหน้ากากกันพิษ 2 คน
+(CVX.W||[]).forEach((o,i)=>{const p=person(o[3],0xffffff,0xff8a00,pick1(SK));MASK(p);p.g.position.set(CVX.ox+o[0],0.1,CVX.oz+o[1]);p.g.rotation.y=o[2];S.add(p.g);CVX.w.push({pe:p,ph:rnd()*6,sp:5+i*2})});
 // พนักงานและฟอร์คลิฟท์ใน T10
 {const b=B.find(x=>x[0]==='อาคาร T10'),X0=(b[1]-450)*K,Z0=(b[2]-300)*K,FL=0.1;T10X.w=[];
  const pw=(sh,u,v,ry,ar,am,sp)=>{const p=person(sh,pick1([0xf5c518,0xffffff]),0xff8a00,pick1(SK));p.g.position.set(X0+u,FL,Z0+v);p.g.rotation.y=ry;S.add(p.g);T10X.w.push({pe:p,b:ar,am,sp,ph:rnd()*6})};
@@ -1645,7 +1715,7 @@ let BEAR=null;
   [-1,1].forEach(s=>{bulb(head,s*0.17,0.3,0.02);[-0.55,-0.82,-1.1].forEach(z=>bulb(L,s*0.445,0.82,z))});
   return{body,head,arms,bl}})();
  g.position.set((268-450)*K,0.1,(510-300)*K);g.rotation.y=Math.PI;S.add(g)}
-function bearAnim(){const t0=performance.now()/1000;OP.forEach(o=>{const s=t0*8+o.ph;o.pe.ar[0].rotation.x=-0.95+Math.sin(s)*0.1;o.pe.ar[1].rotation.x=-0.95+Math.sin(s+2)*0.1});MA.forEach(m=>m.rotation.x=t0*16);RPX.tick&&RPX.tick(t0);RP1X.tick&&RP1X.tick(t0);RJX.tick&&RJX.tick(t0);RUX.tick&&RUX.tick(t0);RVX.tick&&RVX.tick(t0);WBX.tick&&WBX.tick(t0);M2X.tick&&M2X.tick(t0);P1X.tick&&P1X.tick(t0);T10X.tick&&T10X.tick(t0);FVX.tick&&FVX.tick(t0);PMX.tick&&PMX.tick(t0);if(WSX.cr){WSX.cr.br.position.x=WSX.cr.xc+Math.sin(t0*0.25)*WSX.cr.amp;WSX.sp.forEach((s,i)=>{const q=WSX.wp[i%2];s.visible=Math.random()<0.7;s.position.set(q[0]+(Math.random()-0.5)*0.5,q[1]+Math.random()*0.5,q[2]+(Math.random()-0.5)*0.4)});WSX.wl.intensity=Math.random()<0.6?1.4:0.2}if(!BEAR)return;const t=performance.now()/1000,B=BEAR;B.body.rotation.z=Math.sin(t*5)*0.1;B.body.position.y=Math.abs(Math.sin(t*5))*0.04;B.head.rotation.z=Math.sin(t*5+1)*0.15;B.arms[0].rotation.z=-(2.2+Math.sin(t*6)*0.5);B.arms[1].rotation.z=2.2+Math.sin(t*6+1.5)*0.5;
+function bearAnim(){const t0=performance.now()/1000;OP.forEach(o=>{const s=t0*8+o.ph;o.pe.ar[0].rotation.x=-0.95+Math.sin(s)*0.1;o.pe.ar[1].rotation.x=-0.95+Math.sin(s+2)*0.1});MA.forEach(m=>m.rotation.x=t0*16);RPX.tick&&RPX.tick(t0);CVX.tick&&CVX.tick(t0);RP1X.tick&&RP1X.tick(t0);RJX.tick&&RJX.tick(t0);RUX.tick&&RUX.tick(t0);RVX.tick&&RVX.tick(t0);WBX.tick&&WBX.tick(t0);M2X.tick&&M2X.tick(t0);P1X.tick&&P1X.tick(t0);T10X.tick&&T10X.tick(t0);FVX.tick&&FVX.tick(t0);PMX.tick&&PMX.tick(t0);if(WSX.cr){WSX.cr.br.position.x=WSX.cr.xc+Math.sin(t0*0.25)*WSX.cr.amp;WSX.sp.forEach((s,i)=>{const q=WSX.wp[i%2];s.visible=Math.random()<0.7;s.position.set(q[0]+(Math.random()-0.5)*0.5,q[1]+Math.random()*0.5,q[2]+(Math.random()-0.5)*0.4)});WSX.wl.intensity=Math.random()<0.6?1.4:0.2}if(!BEAR)return;const t=performance.now()/1000,B=BEAR;B.body.rotation.z=Math.sin(t*5)*0.1;B.body.position.y=Math.abs(Math.sin(t*5))*0.04;B.head.rotation.z=Math.sin(t*5+1)*0.15;B.arms[0].rotation.z=-(2.2+Math.sin(t*6)*0.5);B.arms[1].rotation.z=2.2+Math.sin(t*6+1.5)*0.5;
  const P=[0xff2244,0xffd400,0x22dd66,0x2299ff,0xff44cc],f=Math.floor(t*4);B.bl.forEach((m,i)=>m.material.color.setHex((f+i)%2?P[(i+f)%5]:0x2a2a2a))}
 function anim(dt){bearAnim();const on=$('act').checked;AG.forEach(a=>{a.g.visible=on});
  if(DR.l){let nr=false;if(on)AG.forEach(a=>{if(a.door&&Math.hypot(a.pos.x-DR.x,a.pos.z-DR.z)<1.8)nr=true});DR.t+=((nr?1:0)-DR.t)*Math.min(1,dt*6);DR.l.forEach((m,i)=>m.position.x=DR.x+(i?1:-1)*(DR.w/4+DR.t*0.5))}
