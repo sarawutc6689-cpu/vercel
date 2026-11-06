@@ -10,7 +10,7 @@
 <body class="bg-gray-100 p-8 flex items-center justify-center min-h-screen">
     <div class="max-w-md w-full bg-white p-6 rounded-lg shadow-md">
         <h1 class="text-2xl font-bold mb-2 text-gray-800 text-center">🔗 ผูกบัญชี Telegram</h1>
-        <p class="text-sm text-gray-500 text-center mb-6">กรอก Chat ID ของคุณเพื่อรับการแจ้งเตือนงาน</p>
+        <p class="text-sm text-gray-500 text-center mb-6">กรอกรหัสพนักงานและ Chat ID เพื่อรับการแจ้งเตือน</p>
         
         <!-- วิธีหา Chat ID -->
         <div class="bg-blue-50 p-4 rounded-md mb-6 text-sm text-blue-800">
@@ -23,18 +23,34 @@
         </div>
 
         <form id="linkForm" class="space-y-4">
+            <!-- ช่องค้นหารหัสพนักงาน -->
             <div>
-                <label class="block text-sm font-medium text-gray-700">เลือกชื่อของคุณ</label>
-                <select id="employeeSelect" class="mt-1 block w-full border border-gray-300 rounded-md p-2" required>
-                    <option value="">-- กำลังโหลดรายชื่อ... --</option>
-                </select>
+                <label class="block text-sm font-medium text-gray-700">รหัสพนักงาน (Code)</label>
+                <div class="flex gap-2 mt-1">
+                    <input type="text" id="employeeCodeInput" class="block w-full border border-gray-300 rounded-md p-2 uppercase" 
+                           required placeholder="เช่น EMP001">
+                    <button type="button" id="searchBtn" class="bg-gray-800 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition">
+                        ค้นหา
+                    </button>
+                </div>
+                <p id="searchStatus" class="text-xs mt-1 text-gray-500"></p>
             </div>
-            <div>
+
+            <!-- แสดงชื่อที่ค้นเจอ (ซ่อนไว้ก่อน) -->
+            <div id="employeeInfo" class="hidden bg-green-50 p-3 rounded-md border border-green-200">
+                <p class="text-sm text-green-800">พบข้อมูลพนักงาน:</p>
+                <p class="font-bold text-green-900 text-lg" id="foundEmployeeName"></p>
+            </div>
+
+            <!-- ช่องกรอก Chat ID (จะแสดงเมื่อค้นเจอ) -->
+            <div id="chatIdSection" class="hidden">
                 <label class="block text-sm font-medium text-gray-700">Telegram Chat ID</label>
                 <input type="text" id="chatIdInput" class="mt-1 block w-full border border-gray-300 rounded-md p-2" 
-                       required placeholder="เช่น 123456789" pattern="[0-9-]+" title="กรุณากรอกตัวเลขเท่านั้น">
+                       placeholder="เช่น 123456789" pattern="[0-9-]+" title="กรุณากรอกตัวเลขเท่านั้น">
+                <p class="text-xs text-gray-500 mt-1">หากเคยผูกไว้แล้ว ระบบจะดึงข้อมูลเดิมมาให้</p>
             </div>
-            <button type="submit" id="submitBtn" class="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition">
+
+            <button type="submit" id="submitBtn" class="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition hidden">
                 บันทึกข้อมูล
             </button>
         </form>
@@ -51,74 +67,109 @@
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNsb3d2Y3JheWR4cHZ3ZGJwa2hpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3NTA3NTAsImV4cCI6MjEwMzMyNjc1MH0.pXV0g3JfakqNRgKjgCe87Reie5ZhXzqYXpZ3OVkluHk'; // ใส่ ANON KEY ของคุณ
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        const employeeSelect = document.getElementById('employeeSelect');
+        // ==== Element References ====
+        const searchBtn = document.getElementById('searchBtn');
+        const employeeCodeInput = document.getElementById('employeeCodeInput');
+        const searchStatus = document.getElementById('searchStatus');
+        const employeeInfo = document.getElementById('employeeInfo');
+        const foundEmployeeName = document.getElementById('foundEmployeeName');
+        const chatIdSection = document.getElementById('chatIdSection');
+        const chatIdInput = document.getElementById('chatIdInput');
+        const submitBtn = document.getElementById('submitBtn');
         const linkForm = document.getElementById('linkForm');
         const statusMessage = document.getElementById('statusMessage');
-        const submitBtn = document.getElementById('submitBtn');
 
-        // 1. ดึงรายชื่อพนักงานทั้งหมดมาแสดง
-        async function loadEmployees() {
-            const { data, error } = await supabaseClient
-                .from('employees')
-                .select('id, name, telegram_chat_id')
-                .order('name', { ascending: true }); // เรียงตามชื่อ
+        let currentEmployeeId = null; // เก็บ ID พนักงานที่ค้นเจอ
 
-            if (error) {
-                console.error('Error loading employees:', error);
-                statusMessage.innerHTML = '<span class="text-red-600">❌ โหลดรายชื่อไม่สำเร็จ</span>';
+        // 1. ฟังก์ชันค้นหาพนักงานจากรหัส (Code)
+        async function searchEmployee() {
+            const code = employeeCodeInput.value.trim().toUpperCase();
+            
+            // รีเซ็ตสถานะก่อนค้นหา
+            statusMessage.textContent = '';
+            employeeInfo.classList.add('hidden');
+            chatIdSection.classList.add('hidden');
+            submitBtn.classList.add('hidden');
+            currentEmployeeId = null;
+
+            if (!code) {
+                searchStatus.textContent = 'กรุณากรอกรหัสพนักงาน';
+                searchStatus.className = 'text-xs mt-1 text-red-500';
                 return;
             }
 
-            employeeSelect.innerHTML = '<option value="">-- เลือกชื่อของคุณ --</option>';
-            data.forEach(emp => {
-                const option = document.createElement('option');
-                option.value = emp.id;
-                option.textContent = emp.name + (emp.telegram_chat_id ? ' (ผูกแล้ว)' : '');
-                // แนบข้อมูล chat_id เดิมไว้ใน dataset เผื่อต้องการแสดง
-                option.dataset.currentChatId = emp.telegram_chat_id || ''; 
-                employeeSelect.appendChild(option);
-            });
+            searchStatus.textContent = 'กำลังค้นหา...';
+            searchStatus.className = 'text-xs mt-1 text-blue-500';
+
+            // ค้นหาในตาราง employees โดยใช้คอลัมน์ code
+            const { data, error } = await supabaseClient
+                .from('employees')
+                .select('id, name, telegram_chat_id')
+                .eq('code', code)
+                .single(); // คาดหวังผลลัพธ์แค่ 1 แถว
+
+            if (error || !data) {
+                searchStatus.textContent = '❌ ไม่พบรหัสพนักงานนี้ในระบบ';
+                searchStatus.className = 'text-xs mt-1 text-red-500';
+                return;
+            }
+
+            // เมื่อค้นเจอ
+            searchStatus.textContent = '✅ พบข้อมูล';
+            searchStatus.className = 'text-xs mt-1 text-green-500';
+            
+            currentEmployeeId = data.id;
+            foundEmployeeName.textContent = data.name;
+            employeeInfo.classList.remove('hidden');
+            
+            // แสดงช่องกรอก Chat ID และปุ่มบันทึก
+            chatIdSection.classList.remove('hidden');
+            submitBtn.classList.remove('hidden');
+            
+            // ถ้าเคยมี chat_id อยู่แล้ว ให้ดึงมาใส่ในช่อง
+            chatIdInput.value = data.telegram_chat_id || '';
         }
 
-        // 2. เมื่อเลือกชื่อ ให้ดึง chat_id เดิมมาใส่ในช่องกรอก (ถ้ามี)
-        employeeSelect.addEventListener('change', (e) => {
-            const selectedOption = e.target.options[e.target.selectedIndex];
-            const currentChatId = selectedOption.dataset.currentChatId;
-            document.getElementById('chatIdInput').value = currentChatId || '';
+        // กดปุ่มค้นหา หรือกด Enter ในช่องรหัส
+        searchBtn.addEventListener('click', searchEmployee);
+        employeeCodeInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                searchEmployee();
+            }
         });
 
-        // 3. จัดการเมื่อกดปุ่มบันทึก
+        // 2. ฟังก์ชันบันทึก Chat ID
         linkForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+            
+            if (!currentEmployeeId) {
+                statusMessage.innerHTML = '<span class="text-red-600">❌ กรุณาค้นหารหัสพนักงานก่อน</span>';
+                return;
+            }
+
+            const chatId = chatIdInput.value.trim();
+            if (!chatId) {
+                statusMessage.innerHTML = '<span class="text-red-600">❌ กรุณากรอก Chat ID</span>';
+                return;
+            }
+
             submitBtn.disabled = true;
             submitBtn.textContent = 'กำลังบันทึก...';
             statusMessage.textContent = '';
 
-            const employeeId = employeeSelect.value;
-            const chatId = document.getElementById('chatIdInput').value.trim();
-
-            if (!employeeId) {
-                statusMessage.innerHTML = '<span class="text-red-600">❌ กรุณาเลือกชื่อของคุณ</span>';
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'บันทึกข้อมูล';
-                return;
-            }
-
             try {
-                // อัปเดตข้อมูลลงตาราง employees
                 const { error } = await supabaseClient
                     .from('employees')
                     .update({ telegram_chat_id: chatId })
-                    .eq('id', employeeId);
+                    .eq('id', currentEmployeeId);
 
                 if (error) throw error;
 
                 statusMessage.innerHTML = '<span class="text-green-600">✅ บันทึก Chat ID สำเร็จ! คุณพร้อมรับแจ้งเตือนแล้ว</span>';
                 
-                // อัปเดต Dropdown ใหม่ให้แสดงคำว่า (ผูกแล้ว)
-                await loadEmployees(); 
-                // ล้างค่าในช่องกรอก
-                document.getElementById('chatIdInput').value = '';
+                // อัปเดตข้อมูลในฟอร์มให้เป็นค่าใหม่
+                await searchEmployee(); 
 
             } catch (error) {
                 console.error(error);
@@ -128,9 +179,6 @@
                 submitBtn.textContent = 'บันทึกข้อมูล';
             }
         });
-
-        // เริ่มทำงาน
-        loadEmployees();
     </script>
 </body>
 </html>
