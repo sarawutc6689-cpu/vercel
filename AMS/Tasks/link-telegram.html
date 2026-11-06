@@ -28,7 +28,7 @@
                 <label class="block text-sm font-medium text-gray-700">รหัสพนักงาน (Code)</label>
                 <div class="flex gap-2 mt-1">
                     <input type="text" id="employeeCodeInput" class="block w-full border border-gray-300 rounded-md p-2 uppercase" 
-                           required placeholder="เช่น EMP001">
+                           required placeholder="">
                     <button type="button" id="searchBtn" class="bg-gray-800 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition">
                         ค้นหา
                     </button>
@@ -45,8 +45,8 @@
             <!-- ช่องกรอก Chat ID (จะแสดงเมื่อค้นเจอ) -->
             <div id="chatIdSection" class="hidden">
                 <label class="block text-sm font-medium text-gray-700">Telegram Chat ID</label>
-                <input type="text" id="chatIdInput" class="mt-1 block w-full border border-gray-300 rounded-md p-2" 
-                       placeholder="เช่น 123456789" pattern="[0-9-]+" title="กรุณากรอกตัวเลขเท่านั้น">
+               <input type="text" id="chatIdInput" class="mt-1 block w-full border border-gray-300 rounded-md p-2" 
+       placeholder="เช่น 123456789" pattern="\d+" title="กรุณากรอกเฉพาะตัวเลข 0-9 เท่านั้น">
                 <p class="text-xs text-gray-500 mt-1">หากเคยผูกไว้แล้ว ระบบจะดึงข้อมูลเดิมมาให้</p>
             </div>
 
