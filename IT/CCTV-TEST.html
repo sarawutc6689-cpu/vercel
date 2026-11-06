@@ -1001,6 +1001,12 @@ function SGN2(t,c,W,Hh,x,y,z,ry){const cv=document.createElement('canvas');cv.wi
  const tx=new THREE.CanvasTexture(cv);tx.encoding=THREE.sRGBEncoding;const m=new THREE.Mesh(new THREE.PlaneGeometry(W,Hh),new THREE.MeshBasicMaterial({map:tx}));m.position.set(x,y,z);m.rotation.y=ry;S.add(m);return m}
 function SHD(w,d,cx,cz,H,AC,nu){const x0=cx-w/2,z0=cz-d/2,FL=0.1,a=0.17,G=0x4a4f57;
  M(bx(w,0.1,d),0xc9c5bb,cx,0.05,cz,0);
+ // ผนังแบบผลิต1: แผงขาวขุ่นกึ่งโปร่ง + ขอบล่างเทา ประตูหน้ากลางอาคาร + หน้าจั่วด้านข้าง
+ WALLS(x0,z0,w,d,H,FL,w/2);
+ {const gs=new THREE.Shape(),tn=Math.tan(a),rs=(d/2+0.4)*tn-0.04;gs.moveTo(0,0);gs.lineTo(d,0);gs.lineTo(d,0.4*tn);gs.lineTo(d/2,rs);gs.lineTo(0,0.4*tn);gs.lineTo(0,0);
+  const gmt=new THREE.MeshLambertMaterial({color:0xf4f6f7,transparent:true,opacity:0.55,depthWrite:false});
+  [x0+w,x0+0.1].forEach(x=>{const m=new THREE.Mesh(new THREE.ExtrudeGeometry(gs,{depth:0.1,bevelEnabled:false}),gmt);m.rotation.y=-Math.PI/2;m.position.set(x,FL+H,z0);S.add(m)});
+  M(bx(2.4,0.1,0.1),0x8d939b,cx,FL+H-0.55,z0+d-0.05,0);M(bx(2.4,0.12,0.12),0xf2c200,cx,FL+H-0.68,z0+d-0.05,0)}
  const cu=[];for(let i=0;i<nu;i++)cu.push(0.3+(w-0.6)*i/(nu-1));
  cu.forEach(u=>[z0+0.3,z0+d-0.3].forEach(z=>{M(bx(0.26,H,0.26),G,x0+u,FL+H/2,z);M(bx(0.44,0.1,0.44),0x8d939b,x0+u,FL+0.05,z,0)}));
  [z0+0.3,z0+d-0.3].forEach(z=>M(bx(w+0.3,0.16,0.14),G,cx,FL+H,z,0));
