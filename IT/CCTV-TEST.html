@@ -108,7 +108,7 @@ canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
 <script>
 (function(){
 const K=0.1,$=id=>document.getElementById(id),V=(x,y,z)=>new THREE.Vector3(x,y,z);
-const B=[["เขตโรงงาน",34,25,853,560,"boundary"],["พุ่มไม้",34,25,280,92,"forest"],["พุ่มไม้",34,134,165,95,"forest"],["พุ่มไม้",34,231,137,65,"forest"],["หอพัก",333,32,150,73,"dorm"],["โรงคาร์บอน",496,32,71,37,"carbon"],["โรงบด",570,32,49,37,"crusher"],["ลานคาร์บอน",496,72,123,33,"cyard"],["คลังวัตถุดิบ",623,29,87,85,"rawmat"],["คลังสารเคมี",711,32,71,82,"chem"],["โรงผ้าใบ",782,45,62,145,"canvas"],["โรงอาหาร",219,135,91,52,"canteen"],["ห้องน้ำ",252,189,58,49,"wc"],["อาคาร T10",344,137,92,111,"t10"],["ยานยนต์",437,137,46,109,"garage"],["ผลิต2",344,247,92,201,"prod2"],["โรงเก็บแม่พิมพ์",175,239,137,61,"moldstore"],["แม่พิมพ์",174,300,138,85,"workshop"],["สำนักงาน",48,300,124,146],["โรงเก็บปลอก",242,385,70,62,"storage"],["ลานรถ",498,138,79,187,"dashed"],["คลังสินค้า",590,138,89,187,"warehouse"],["ซ่อม1",695,138,35,112,"repair1"],["ห้องน้ำ 2",747,190,32,65,"wc"],["ปั๊มน้ำ",784,190,35,67,"pumphouse"],["เก็บถัง",822,234,48,53,"drums"],["โครงการ",470,337,66,52,"project"],["ซ่อม2",470,389,66,51,"repair2"],["UT",536,337,41,103,"boiler"],["ห้าดาว",589,333,92,107,"fivestar"],["ผลิต1",692,295,118,146,"prod1"],["ห้องน้ำ 3",811,440,59,85,"wc"],["RD",47,465,152,92,"rd"],["ลานจอดรถ",200,471,175,100,"dashed"],["โรงเหล็ก",376,472,77,55,"steel"],["ลานเทสยาง",514,461,175,100,"dashed"]];
+const B=[["เขตโรงงาน",34,25,853,560,"boundary"],["พุ่มไม้",34,25,280,92,"forest"],["พุ่มไม้",34,134,165,95,"forest"],["พุ่มไม้",34,231,137,65,"forest"],["หอพัก",333,32,150,73,"dorm"],["โรงคาร์บอน",496,32,71,37,"carbon"],["โรงบด",570,32,49,37,"crusher"],["ลานคาร์บอน",496,72,123,33,"cyard"],["คลังวัตถุดิบ",623,29,87,85,"rawmat"],["คลังสารเคมี",711,32,71,82,"chem"],["โรงผ้าใบ",782,45,62,145,"canvas"],["โรงอาหาร",219,135,91,52,"canteen"],["ห้องน้ำ",252,189,58,49,"wc"],["อาคาร T10",344,137,92,111,"t10"],["ยานยนต์",437,137,46,109,"garage"],["ผลิต2",344,247,92,201,"prod2"],["โรงเก็บแม่พิมพ์",175,239,137,61,"moldstore"],["แม่พิมพ์",174,300,138,85,"workshop"],["สำนักงาน",48,300,124,146],["โรงเก็บปลอก",242,385,70,62,"storage"],["ลานรถ",498,138,79,187,"dashed"],["คลังสินค้า",590,138,89,187,"warehouse"],["ซ่อม1",695,138,35,112,"repair1"],["ห้องน้ำ 2",747,190,32,65,"wc"],["ปั๊มน้ำ",784,190,35,67,"pumphouse"],["เก็บถัง",822,234,48,53,"drums"],["โครงการ",470,337,66,52,"project"],["ซ่อม2",470,389,66,51,"repair2"],["UT",536,337,41,103,"boiler"],["ห้าดาว",589,333,92,107,"fivestar"],["ผลิต1",692,295,118,146,"prod1"],["ห้องน้ำ 3",811,440,59,85,"wc"],["RD",47,465,152,92,"rd"],["ลานจอดรถ",200,471,175,100,"dashed"],["โรงเหล็ก",376,472,77,55,"steel"],["ลานเทสยาง",514,461,175,100,"trackyard"]];
 const C=[["CAM-001","ประตูหลักทางเข้า","ทางเข้า-ออก",4.49,77.82,"online","1080p",190],["CAM-002","ทางออกหลัก","ทางเข้า-ออก",4.86,79.71,"online","1080p",160],["CAM-003","หลังโรงรถ2","ทางเข้า-ออก",41.29,94.31,"online","720p",185],["CAM-013","อาคาร RD","สำนักงาน/RD",23,79.01,"online","720p",85],["CAM-021","โรงอาหาร1","โรงอาหาร/หอพัก",28,26,"online","1080p",90],["CAM-022","หอพักพนักงาน (หน้า)","โรงอาหาร/หอพัก",50.54,17.83,"online","1080p",180],["CAM-023","หอพักพนักงาน (หลัง)","โรงอาหาร/หอพัก",51.07,4.83,"online","720p",205],["CAM-031","อาคาร T10 (ทิศเหนือ)","T10/ผลิต2",35.18,17.85,"online","1080p",90],["CAM-034","แม่พิมพ์1","T10/ผลิต2",20.78,55.41,"online","1080p",60],["CAM-041","คลังสินค้า (หน้า)","คลังสินค้า/ลานรถ",67.81,22.85,"online","2MP",335],["CAM-042","คลังสินค้า1","คลังสินค้า/ลานรถ",66,40,"online","2MP",180],["CAM-043","คลังสินค้า (หลัง)","คลังสินค้า/ลานรถ",74.72,65.12,"online","2MP",110],["CAM-044","ห้าดาว","คลังสินค้า/ลานรถ",73.05,74.02,"online","720p",105],["CAM-051","หลังคลังวัตถุดิบ","วัตถุดิบ/สารเคมี",83.43,5.01,"online","1080p",180],["CAM-053","โรงคาร์บอน/โรงบด","วัตถุดิบ/สารเคมี",57.15,5.12,"online","720p",180],["CAM-061","ผลิต1 (หน้า)","ผลิต1/ซ่อม1",88.6,87.91,"online","2MP",265],["CAM-062","ผลิต1 (หลัง)","ผลิต1/ซ่อม1",91.31,71.61,"online","2MP",270],["CAM-063","ซ่อม1","ผลิต1/ซ่อม1",83.67,30.53,"online","720p",185],["CAM-071","ซ่อม2","ซ่อม2/โครงการ",55.84,66.24,"online","1080p",130],["CAM-072","โครงการ/UT","ซ่อม2/โครงการ",52.25,61.2,"online","720p",295],["CAM-081","ลานเทสยาง","ทดสอบ/กลางแจ้ง",68.64,78.3,"online","2MP",115],["CAM-082","ลานเทสยาง (ปลาย)","ทดสอบ/กลางแจ้ง",69.63,78.7,"online","720p",75],["CAM-083","ลานจอดรถ","ทดสอบ/กลางแจ้ง",30.15,79.35,"online","1080p",90],["CAM-084","หน้าโรงผ้าใบ","ทั่วไป",86.66,20.97,"online","1080p",180],["CAM-085","หลังโรงกรีน1","ทั่วไป",60.03,4.97,"online","1080p",0],["CAM-086","หลังโรงกรีน2","ทั่วไป",68.61,5,"online","1080p",190],["CAM-087","ลานจอด","ทั่วไป",53.58,18.18,"online","1080p",65],["CAM-088","หน้าคาร์บอน","ทั่วไป",58.6,17.45,"online","1080p",135],["CAM-089","หลังผลิต1","ทั่วไป",90.37,52.54,"online","1080p",95],["CAM-090","หลังห้องน้ำผลิต1","ทั่วไป",98.29,72.55,"online","1080p",180],["CAM-091","หลังโรงรถ1","ทั่วไป",22.33,94.47,"online","1080p",0],["CAM-092","โรงเหล็ก","ทั่วไป",41.33,78.74,"online","1080p",55],["CAM-093","เก็บถัง1","ทั่วไป",88.48,42.67,"online","1080p",0],["CAM-094","เก็บถัง2","ทั่วไป",86.83,42.51,"online","1080p",130],["CAM-095","หน้าคลังวัตถุดิบ","ทั่วไป",76.44,19.42,"online","1080p",170],["CAM-096","โรงอาหาร2","ทั่วไป",23.32,22.62,"online","1080p",190],["CAM-097","คลังสินค้า2","ทั่วไป",65.76,32.43,"online","1080p",180],["CAM-098","คลังสินค้า3","ทั่วไป",66.35,45.55,"online","1080p",120],["CAM-099","หอพัก","ทั่วไป",42.86,17.54,"online","1080p",170],["CAM-100","แม่พิมพ์2","ทั่วไป",26.12,61.44,"online","1080p",115]];
 const ST={online:'ออนไลน์',maint:'ออฟไลน์'},CL={online:0x1a9a5a,maint:0xe08a00};
 
@@ -1158,6 +1158,77 @@ CVX.tick=t=>{const D=CVX.dust;if(D){const P=D.pos,B=D.base,ox=CVX.ox,oz=CVX.oz;f
 function MASK(p){const g=p.g,m=(geo,c,x,y,z)=>{const e=new THREE.Mesh(geo,new THREE.MeshLambertMaterial({color:c}));e.position.set(x,y,z);g.add(e);return e};
  m(new THREE.BoxGeometry(0.13,0.075,0.06),0x2b2f33,0,0.835,0.1);[-1,1].forEach(s=>{const f=m(new THREE.CylinderGeometry(0.032,0.032,0.05,10),0x6b7a3a,s*0.055,0.82,0.14);f.rotation.x=Math.PI/2});
  m(new THREE.BoxGeometry(0.15,0.045,0.03),0x8ec5e8,0,0.885,0.105);m(new THREE.BoxGeometry(0.18,0.02,0.2),0x2b2f33,0,0.855,0.0)}
+// ===== ลานเทสยางตีนตะขาบ: พื้นดินมีเนิน หลุม แอ่งน้ำ + รถตีนตะขาบวิ่งทดสอบ =====
+const CRX={ms:[],wt:[],rp:[]};
+function TRKY(w,d,cx,cz){const x0=cx-w/2,z0=cz-d/2,B=0.55,WL=0.28,
+ hv=(p,q)=>{const s=Math.sin(p*12.9898+q*78.233)*43758.5453;return s-Math.floor(s)},
+ ss=x=>{x=Math.max(0,Math.min(1,x));return x*x*(3-2*x)},
+ MD=[[3.0,2.7,1.3,0.8],[8.6,7.4,1.6,0.95],[14.6,6.6,1.2,0.75],[12.2,2.0,0.9,0.5],[2.6,7.8,0.9,0.5],[16.0,2.4,0.8,0.45]],
+ PT=[[5.0,5.0,1.3,0.47,'a'],[13.2,3.9,1.0,0.45,'b'],[10.4,8.4,0.8,0.40,'c']],
+ RT=[[1.8,1.4],[6,1.3],[10,1.7],[15.8,1.5]],
+ hg=(u,v)=>{const e=ss(Math.min(u,w-u,v,d-v)/0.9);let a=0;
+  MD.forEach(m=>a+=m[3]*Math.exp(-((u-m[0])**2+(v-m[1])**2)/(2*m[2]*m[2])));
+  for(let k=0;k<5;k++){const bu=6.6+k*0.62;a+=0.2*Math.exp(-((u-bu)**2)/(2*0.09))*ss((v-3.0)/0.4)*(1-ss((v-3.9)/0.4))}
+  PT.forEach(p=>a-=p[3]*Math.exp(-((u-p[0])**2+(v-p[1])**2)/(2*p[2]*p[2])));
+  return 0.1+(B-0.1)*e+a*e},
+ segd=(u,v)=>{let m=9;for(let i=0;i<RT.length-1;i++){const a=RT[i],b=RT[i+1],dx=b[0]-a[0],dz=b[1]-a[1],t=Math.max(0,Math.min(1,((u-a[0])*dx+(v-a[1])*dz)/(dx*dx+dz*dz))),q=Math.hypot(u-a[0]-t*dx,v-a[1]-t*dz);if(q<m)m=q}return m};
+ // ภูมิประเทศ
+ const nx=90,nz=52,g=new THREE.PlaneGeometry(w,d,nx,nz).rotateX(-Math.PI/2),P=g.attributes.position,col=new Float32Array(P.count*3),cc=new THREE.Color();
+ for(let i=0;i<P.count;i++){const u=P.getX(i)+w/2,v=P.getZ(i)+d/2,y=hg(u,v);P.setY(i,y);
+  const n=hv(i,3)*0.08,wet=Math.min(1,Math.max(0,(0.42-y)/0.25)),hi=Math.min(1,Math.max(0,(y-0.8)/0.7));
+  cc.setRGB(0.50+n+hi*0.12-wet*0.22,0.38+n*0.8+hi*0.1-wet*0.17,0.25+n*0.6+hi*0.06-wet*0.1);
+  const sd=segd(u,v);if(Math.abs(sd-0.52)<0.17&&Math.min(u,w-u,v,d-v)>0.5)cc.multiplyScalar(0.62);
+  if(Math.min(u,w-u,v,d-v)<0.7)cc.lerp(new THREE.Color(0x69727e),1-ss(Math.min(u,w-u,v,d-v)/0.7)*1);
+  col[i*3]=cc.r;col[i*3+1]=cc.g;col[i*3+2]=cc.b}
+ g.setAttribute('color',new THREE.BufferAttribute(col,3));g.computeVertexNormals();
+ const tm=new THREE.Mesh(g,new THREE.MeshLambertMaterial({vertexColors:true}));tm.position.set(cx,0,cz);tm.receiveShadow=true;tm.castShadow=false;S.add(tm);
+ // แอ่งน้ำ
+ PT.forEach((p,i)=>{const r=p[2]*Math.sqrt(2*Math.log(p[3]/(B-WL)))+0.04,wm=new THREE.Mesh(new THREE.CircleGeometry(r,36).rotateX(-Math.PI/2),new THREE.MeshLambertMaterial({color:0x3a7fa8,transparent:true,opacity:0.72,emissive:0x0b2a3c,depthWrite:false}));
+  wm.position.set(x0+p[0],WL,z0+p[1]);wm.renderOrder=2;S.add(wm);CRX.wt.push({m:wm,ph:i*1.7});
+  for(let k=0;k<2;k++){const rg=new THREE.Mesh(new THREE.RingGeometry(0.92,1.0,36).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0.5,depthWrite:false}));rg.position.set(x0+p[0],WL+0.004,z0+p[1]);rg.renderOrder=3;S.add(rg);CRX.rp.push({m:rg,r:r*0.95,ph:k*0.5+i*0.23})}});
+ // หินบนเนิน
+ for(let i=0;i<26;i++){const u=1+hv(i,11)*(w-2),v=1+hv(i,12)*(d-2),y=hg(u,v);if(y<0.5||PT.some(p=>Math.hypot(u-p[0],v-p[1])<p[2]*1.6)||segd(u,v)<0.9)continue;
+  const s=0.08+hv(i,13)*0.16,m=M(new THREE.DodecahedronGeometry(s,0),[0x8d939b,0x757c85,0xa09a8c][i%3],x0+u,y+s*0.4,z0+v);m.rotation.set(hv(i,14)*3,hv(i,15)*3,0);m.scale.y=0.7}
+ // รั้วเชือกรอบลาน + ป้าย
+ const post=(u,v)=>M(new THREE.CylinderGeometry(0.04,0.04,0.9,6),0xf2c200,x0+u,0.1+0.45,z0+v,0);
+ const rope=(ua,va,ub,vb)=>{const L=Math.hypot(ub-ua,vb-va),m=M(bx(0.025,0.03,L),0xd62818,x0+(ua+ub)/2,0.1+0.75,z0+(va+vb)/2,0);m.rotation.y=Math.atan2(ub-ua,vb-va)};
+ for(let k=0;k<=10;k++)[0.12,d-0.12].forEach(v=>{post(k*w/10,v);if(k<10)rope(k*w/10,v,(k+1)*w/10,v)});
+ for(let k=1;k<5;k++)[0.12,w-0.12].forEach(u=>{post(u,k*d/5);rope(u,(k-1)*d/5,u,k*d/5)});[0.12,w-0.12].forEach(u=>rope(u,(4)*d/5,u,d-0.12));
+ [0.12,w-0.12].forEach(u=>rope(u,0.12,u,d/5));
+ [3.2,w-3.2].forEach(u=>[0,1].forEach(()=>0));
+ [x0+3.0,x0+w-3.0].forEach(x=>M(new THREE.CylinderGeometry(0.05,0.05,1.9,8),0x555c66,x,0.1+0.95,z0+0.35,0));
+ SGN2('ลานเทสยางตีนตะขาบ','#1f4e9a',3.4,0.5,cx,0.1+1.6,z0+0.3,Math.PI);
+ // กรวยจราจร
+ [[1.2,1.0],[1.2,d-1.2],[w-1.2,d-1.2],[w-1.2,1.0],[9,0.9]].forEach(p=>{const y=hg(p[0],p[1]);M(new THREE.ConeGeometry(0.13,0.4,10),0xff6a00,x0+p[0],y+0.2,z0+p[1],0);M(bx(0.3,0.03,0.3),0x30353b,x0+p[0],y+0.015,z0+p[1],0)});
+ // ===== รถตีนตะขาบ (มินิขุด) ติดโลโก้ Tokai ที่สายพาน =====
+ const crawler=()=>{const G=new THREE.Group(),up=new THREE.Group(),a=(grp,geo,c,x,y,z)=>{const m=new THREE.Mesh(geo,c.isMaterial?c:mt(c));m.position.set(x,y,z);m.castShadow=true;grp.add(m);return m};
+  [-1,1].forEach(s=>{a(G,bx(0.34,0.38,1.7),0x1b1b1e,s*0.52,0.2,0);a(G,new THREE.CylinderGeometry(0.2,0.2,0.34,14).rotateZ(Math.PI/2),0x24262a,s*0.52,0.2,0.85);a(G,new THREE.CylinderGeometry(0.2,0.2,0.34,14).rotateZ(Math.PI/2),0x24262a,s*0.52,0.2,-0.85);
+   for(let k=0;k<12;k++)a(G,bx(0.36,0.04,0.07),0x303236,s*0.52,0.4,-0.95+k*0.173);for(let k=0;k<12;k++)a(G,bx(0.36,0.04,0.07),0x303236,s*0.52,0.0,-0.95+k*0.173);
+   const lg=new THREE.Mesh(new THREE.PlaneGeometry(0.5,0.316),LM);lg.position.set(s*0.702,0.2,0.0);lg.rotation.y=s*Math.PI/2;G.add(lg)});
+  a(G,bx(1.0,0.12,1.4),0x30353b,0,0.46,0);G.add(up);up.position.y=0.52;
+  a(up,bx(0.95,0.4,1.0),0xf2a900,0,0.2,-0.1);a(up,bx(0.92,0.36,0.3),0xd98a00,0,0.2,-0.72);
+  a(up,bx(0.5,0.55,0.5),0xf2a900,0.22,0.65,0.1);a(up,new THREE.MeshLambertMaterial({color:0x8ec5e8,transparent:true,opacity:0.55}).isMaterial?bx(0.46,0.38,0.46):0,new THREE.MeshLambertMaterial({color:0x8ec5e8,transparent:true,opacity:0.55}),0.22,0.68,0.1);
+  a(up,bx(0.58,0.04,0.58),0x30353b,0.22,0.95,0.1);const bc=new THREE.MeshBasicMaterial({color:0xffb000});a(up,new THREE.SphereGeometry(0.05,8,6),bc,0.22,1.0,-0.1);
+  const bm=new THREE.Group();bm.position.set(-0.2,0.35,0.35);bm.rotation.x=-0.5;up.add(bm);a(bm,bx(0.11,0.12,1.0),0xf2a900,0,0,0.5);
+  const sk=new THREE.Group();sk.position.set(0,0,1.0);sk.rotation.x=1.2;bm.add(sk);a(sk,bx(0.08,0.09,0.7),0xd98a00,0,0,0.35);
+  const bk=new THREE.Group();bk.position.set(0,0,0.7);bk.rotation.x=0.9;sk.add(bk);a(bk,bx(0.3,0.04,0.2),0x555c66,0,-0.08,0.08);a(bk,bx(0.3,0.16,0.03),0x555c66,0,0,0.0);
+  return{G,up,bm,sk,bc}};
+ let m1=null,m2=null;
+ const pz=(m,u,v,h)=>{const L=1.0,W=0.5,y=(hg(u+Math.sin(h)*L,v+Math.cos(h)*L)),yb=hg(u-Math.sin(h)*L,v-Math.cos(h)*L),yr=hg(u+Math.cos(h)*W,v-Math.sin(h)*W),yl=hg(u-Math.cos(h)*W,v+Math.sin(h)*W);
+  m.G.position.set(x0+u,(y+yb+yr+yl)/4,z0+v);m.G.rotation.order='YXZ';m.G.rotation.set(-Math.atan2(y-yb,2*L),h,Math.atan2(yr-yl,2*W))};
+ // รถคันที่ 2 จอดบนเนินใหญ่ ขุดอยู่กับที่
+ const segs=[];let TL=0;for(let i=0;i<RT.length-1;i++){const a=RT[i],b=RT[i+1],l=Math.hypot(b[0]-a[0],b[1]-a[1]);segs.push([a,b,l,TL]);TL+=l}
+ const at=s=>{for(const g2 of segs)if(s<=g2[3]+g2[2]+1e-6){const f=(s-g2[3])/g2[2];return[g2[0][0]+(g2[1][0]-g2[0][0])*f,g2[0][1]+(g2[1][1]-g2[0][1])*f,Math.atan2(g2[1][0]-g2[0][0],g2[1][1]-g2[0][1])]}const l=segs[segs.length-1];return[l[1][0],l[1][1],Math.atan2(l[1][0]-l[0][0],l[1][1]-l[0][1])]};
+ const S1={s:0.5,dir:1,hd:at(0.5)[2],wait:0,lt:0};
+ CRX.tick=t=>{if(!m1){m1=crawler();S.add(m1.G);m2=crawler();S.add(m2.G);pz(m2,8.6,7.2,2.4);S1.lt=t}const dt=Math.min(0.1,t-S1.lt);S1.lt=t;if(dt<=0)return;
+  const w2=Math.atan2(Math.sin(1),Math.cos(1));
+  if(S1.wait>0){S1.wait-=dt}else{const p=at(S1.s),tg=S1.dir>0?p[2]:p[2]+Math.PI,er=Math.atan2(Math.sin(tg-S1.hd),Math.cos(tg-S1.hd));S1.hd+=er*Math.min(1,dt*3);
+   if(Math.abs(er)<0.25){S1.s+=S1.dir*dt*0.85;if(S1.s>=TL){S1.s=TL;S1.dir=-1;S1.wait=1.4}else if(S1.s<=0){S1.s=0;S1.dir=1;S1.wait=1.4}}}
+  const p=at(S1.s);pz(m1,p[0],p[1],S1.hd);m1.up.rotation.y=0;m1.bm.rotation.x=-0.5+Math.sin(t*0.8)*0.06;
+  m2.up.rotation.y=Math.sin(t*0.45)*0.7;m2.bm.rotation.x=-0.5+Math.sin(t*0.9)*0.25;m2.sk.rotation.x=1.2+Math.sin(t*0.9+1)*0.3;
+  m1.bc.color.setHex(Math.floor(t*3)%2?0xffb000:0x553300);m2.bc.color.setHex(Math.floor(t*3)%2?0x553300:0xffb000);
+  CRX.wt.forEach(o=>{o.m.position.y=0.28+Math.sin(t*1.3+o.ph)*0.006;o.m.material.opacity=0.7+Math.sin(t*0.9+o.ph)*0.06});
+  CRX.rp.forEach(o=>{const f=((t*0.35+o.ph)%1);o.m.scale.setScalar(Math.max(0.05,f*o.r));o.m.material.opacity=0.45*(1-f)})}}
 function SGN2(t,c,W,Hh,x,y,z,ry){const cv=document.createElement('canvas');cv.width=512;cv.height=Math.round(512*Hh/W);const q=cv.getContext('2d');q.fillStyle=c;q.fillRect(0,0,512,cv.height);q.fillStyle='#fff';q.font='bold '+Math.round(cv.height*0.55)+'px Tahoma,Sarabun,sans-serif';q.textAlign='center';q.textBaseline='middle';q.fillText(t,256,cv.height/2+2,490);
  const tx=new THREE.CanvasTexture(cv);tx.encoding=THREE.sRGBEncoding;const m=new THREE.Mesh(new THREE.PlaneGeometry(W,Hh),new THREE.MeshBasicMaterial({map:tx}));m.position.set(x,y,z);m.rotation.y=ry;S.add(m);return m}
 function SHD(w,d,cx,cz,H,AC,nu,dc){dc=dc||w/2;const x0=cx-w/2,z0=cz-d/2,FL=0.1,a=0.17,G=0x4a4f57;
@@ -1283,6 +1354,7 @@ B.forEach((b,i)=>{
  else if(t==='rawmat'){RAWM(w,d,cx,cz);top=5.2;solids.push({x0:b[1],x1:b[1]+b[3],y0:b[2],y1:b[2]+b[4],h:4.4})}
  else if(t==='chem'){CHEM(w,d,cx,cz);top=5.4;solids.push({x0:b[1],x1:b[1]+b[3],y0:b[2],y1:b[2]+b[4],h:4.6})}
  else if(t==='canvas'){CANV(w,d,cx,cz);top=5.4;solids.push({x0:b[1],x1:b[1]+b[3],y0:b[2],y1:b[2]+b[4],h:4.6})}
+ else if(t==='trackyard'){TRKY(w,d,cx,cz);top=0.3}
  else if(t==='carbon'){CARB(w,d,cx,cz);top=5.4;solids.push({x0:b[1],x1:b[1]+b[3],y0:b[2],y1:b[2]+b[4],h:4.6})}
  else if(t==='crusher'){CRSH(w,d,cx,cz);top=4.6;solids.push({x0:b[1],x1:b[1]+b[3],y0:b[2],y1:b[2]+b[4],h:3.9})}
  else if(t==='cyard'){CYARD(w,d,cx,cz);top=0.5;solids.push({x0:b[1]+60,x1:b[1]+84,y0:b[2]+2,y1:b[2]+22,h:2.5})}
@@ -1739,7 +1811,7 @@ let BEAR=null;
   [-1,1].forEach(s=>{bulb(head,s*0.17,0.3,0.02);[-0.55,-0.82,-1.1].forEach(z=>bulb(L,s*0.445,0.82,z))});
   return{body,head,arms,bl}})();
  g.position.set((268-450)*K,0.1,(510-300)*K);g.rotation.y=Math.PI;S.add(g)}
-function bearAnim(){const t0=performance.now()/1000;OP.forEach(o=>{const s=t0*8+o.ph;o.pe.ar[0].rotation.x=-0.95+Math.sin(s)*0.1;o.pe.ar[1].rotation.x=-0.95+Math.sin(s+2)*0.1});MA.forEach(m=>m.rotation.x=t0*16);RPX.tick&&RPX.tick(t0);CVX.tick&&CVX.tick(t0);RP1X.tick&&RP1X.tick(t0);RJX.tick&&RJX.tick(t0);RUX.tick&&RUX.tick(t0);RVX.tick&&RVX.tick(t0);WBX.tick&&WBX.tick(t0);M2X.tick&&M2X.tick(t0);P1X.tick&&P1X.tick(t0);T10X.tick&&T10X.tick(t0);FVX.tick&&FVX.tick(t0);PMX.tick&&PMX.tick(t0);if(WSX.cr){WSX.cr.br.position.x=WSX.cr.xc+Math.sin(t0*0.25)*WSX.cr.amp;WSX.sp.forEach((s,i)=>{const q=WSX.wp[i%2];s.visible=Math.random()<0.7;s.position.set(q[0]+(Math.random()-0.5)*0.5,q[1]+Math.random()*0.5,q[2]+(Math.random()-0.5)*0.4)});WSX.wl.intensity=Math.random()<0.6?1.4:0.2}if(!BEAR)return;const t=performance.now()/1000,B=BEAR;B.body.rotation.z=Math.sin(t*5)*0.1;B.body.position.y=Math.abs(Math.sin(t*5))*0.04;B.head.rotation.z=Math.sin(t*5+1)*0.15;B.arms[0].rotation.z=-(2.2+Math.sin(t*6)*0.5);B.arms[1].rotation.z=2.2+Math.sin(t*6+1.5)*0.5;
+function bearAnim(){const t0=performance.now()/1000;OP.forEach(o=>{const s=t0*8+o.ph;o.pe.ar[0].rotation.x=-0.95+Math.sin(s)*0.1;o.pe.ar[1].rotation.x=-0.95+Math.sin(s+2)*0.1});MA.forEach(m=>m.rotation.x=t0*16);RPX.tick&&RPX.tick(t0);CRX.tick&&CRX.tick(t0);CVX.tick&&CVX.tick(t0);RP1X.tick&&RP1X.tick(t0);RJX.tick&&RJX.tick(t0);RUX.tick&&RUX.tick(t0);RVX.tick&&RVX.tick(t0);WBX.tick&&WBX.tick(t0);M2X.tick&&M2X.tick(t0);P1X.tick&&P1X.tick(t0);T10X.tick&&T10X.tick(t0);FVX.tick&&FVX.tick(t0);PMX.tick&&PMX.tick(t0);if(WSX.cr){WSX.cr.br.position.x=WSX.cr.xc+Math.sin(t0*0.25)*WSX.cr.amp;WSX.sp.forEach((s,i)=>{const q=WSX.wp[i%2];s.visible=Math.random()<0.7;s.position.set(q[0]+(Math.random()-0.5)*0.5,q[1]+Math.random()*0.5,q[2]+(Math.random()-0.5)*0.4)});WSX.wl.intensity=Math.random()<0.6?1.4:0.2}if(!BEAR)return;const t=performance.now()/1000,B=BEAR;B.body.rotation.z=Math.sin(t*5)*0.1;B.body.position.y=Math.abs(Math.sin(t*5))*0.04;B.head.rotation.z=Math.sin(t*5+1)*0.15;B.arms[0].rotation.z=-(2.2+Math.sin(t*6)*0.5);B.arms[1].rotation.z=2.2+Math.sin(t*6+1.5)*0.5;
  const P=[0xff2244,0xffd400,0x22dd66,0x2299ff,0xff44cc],f=Math.floor(t*4);B.bl.forEach((m,i)=>m.material.color.setHex((f+i)%2?P[(i+f)%5]:0x2a2a2a))}
 function anim(dt){bearAnim();const on=$('act').checked;AG.forEach(a=>{a.g.visible=on});
  if(DR.l){let nr=false;if(on)AG.forEach(a=>{if(a.door&&Math.hypot(a.pos.x-DR.x,a.pos.z-DR.z)<1.8)nr=true});DR.t+=((nr?1:0)-DR.t)*Math.min(1,dt*6);DR.l.forEach((m,i)=>m.position.x=DR.x+(i?1:-1)*(DR.w/4+DR.t*0.5))}
