@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/send-task",
+      "destination": "/AMS/Tasks/api/send-task"
+    }
+  ]
+}
