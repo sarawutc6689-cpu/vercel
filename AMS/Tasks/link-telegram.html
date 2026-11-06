@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ผูกบัญชี Telegram</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-100 p-8 flex items-center justify-center min-h-screen">
+    <div class="max-w-md w-full bg-white p-6 rounded-lg shadow-md">
+        <h1 class="text-2xl font-bold mb-2 text-gray-800 text-center">🔗 ผูกบัญชี Telegram</h1>
+        <p class="text-sm text-gray-500 text-center mb-6">กรอก Chat ID ของคุณเพื่อรับการแจ้งเตือนงาน</p>
+        
+        <!-- วิธีหา Chat ID -->
+        <div class="bg-blue-50 p-4 rounded-md mb-6 text-sm text-blue-800">
+            <p class="font-bold mb-1">วิธีหา Chat ID:</p>
+            <ol class="list-decimal pl-5 space-y-1">
+                <li>ค้นหาบอทของบริษัทใน Telegram แล้วกด <b>Start</b></li>
+                <li>พิมพ์ข้อความอะไรก็ได้ส่งไปหาบอท 1 ครั้ง</li>
+                <li>ระบบจะดึง Chat ID ของคุณอัตโนมัติ (หรือติดต่อแอดมินเพื่อขอรับ ID)</li>
+            </ol>
+        </div>
+
+        <form id="linkForm" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700">เลือกชื่อของคุณ</label>
+                <select id="employeeSelect" class="mt-1 block w-full border border-gray-300 rounded-md p-2" required>
+                    <option value="">-- กำลังโหลดรายชื่อ... --</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Telegram Chat ID</label>
+                <input type="text" id="chatIdInput" class="mt-1 block w-full border border-gray-300 rounded-md p-2" 
+                       required placeholder="เช่น 123456789" pattern="[0-9-]+" title="กรุณากรอกตัวเลขเท่านั้น">
+            </div>
+            <button type="submit" id="submitBtn" class="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition">
+                บันทึกข้อมูล
+            </button>
+        </form>
+        <div id="statusMessage" class="mt-4 text-center font-bold text-sm"></div>
+        
+        <div class="mt-6 text-center">
+            <a href="index.html" class="text-blue-600 hover:underline text-sm">&larr; กลับหน้าแรก</a>
+        </div>
+    </div>
+
+    <script>
+        // ==== ตั้งค่า Supabase ====
+        const SUPABASE_URL = 'https://clowvcraydxpvwdbpkhi.supabase.co'; // ใส่ URL ของคุณ
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNsb3d2Y3JheWR4cHZ3ZGJwa2hpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3NTA3NTAsImV4cCI6MjEwMzMyNjc1MH0.pXV0g3JfakqNRgKjgCe87Reie5ZhXzqYXpZ3OVkluHk'; // ใส่ ANON KEY ของคุณ
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const employeeSelect = document.getElementById('employeeSelect');
+        const linkForm = document.getElementById('linkForm');
+        const statusMessage = document.getElementById('statusMessage');
+        const submitBtn = document.getElementById('submitBtn');
+
+        // 1. ดึงรายชื่อพนักงานทั้งหมดมาแสดง
+        async function loadEmployees() {
+            const { data, error } = await supabaseClient
+                .from('employees')
+                .select('id, name, telegram_chat_id')
+                .order('name', { ascending: true }); // เรียงตามชื่อ
+
+            if (error) {
+                console.error('Error loading employees:', error);
+                statusMessage.innerHTML = '<span class="text-red-600">❌ โหลดรายชื่อไม่สำเร็จ</span>';
+                return;
+            }
+
+            employeeSelect.innerHTML = '<option value="">-- เลือกชื่อของคุณ --</option>';
+            data.forEach(emp => {
+                const option = document.createElement('option');
+                option.value = emp.id;
+                option.textContent = emp.name + (emp.telegram_chat_id ? ' (ผูกแล้ว)' : '');
+                // แนบข้อมูล chat_id เดิมไว้ใน dataset เผื่อต้องการแสดง
+                option.dataset.currentChatId = emp.telegram_chat_id || ''; 
+                employeeSelect.appendChild(option);
+            });
+        }
+
+        // 2. เมื่อเลือกชื่อ ให้ดึง chat_id เดิมมาใส่ในช่องกรอก (ถ้ามี)
+        employeeSelect.addEventListener('change', (e) => {
+            const selectedOption = e.target.options[e.target.selectedIndex];
+            const currentChatId = selectedOption.dataset.currentChatId;
+            document.getElementById('chatIdInput').value = currentChatId || '';
+        });
+
+        // 3. จัดการเมื่อกดปุ่มบันทึก
+        linkForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'กำลังบันทึก...';
+            statusMessage.textContent = '';
+
+            const employeeId = employeeSelect.value;
+            const chatId = document.getElementById('chatIdInput').value.trim();
+
+            if (!employeeId) {
+                statusMessage.innerHTML = '<span class="text-red-600">❌ กรุณาเลือกชื่อของคุณ</span>';
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'บันทึกข้อมูล';
+                return;
+            }
+
+            try {
+                // อัปเดตข้อมูลลงตาราง employees
+                const { error } = await supabaseClient
+                    .from('employees')
+                    .update({ telegram_chat_id: chatId })
+                    .eq('id', employeeId);
+
+                if (error) throw error;
+
+                statusMessage.innerHTML = '<span class="text-green-600">✅ บันทึก Chat ID สำเร็จ! คุณพร้อมรับแจ้งเตือนแล้ว</span>';
+                
+                // อัปเดต Dropdown ใหม่ให้แสดงคำว่า (ผูกแล้ว)
+                await loadEmployees(); 
+                // ล้างค่าในช่องกรอก
+                document.getElementById('chatIdInput').value = '';
+
+            } catch (error) {
+                console.error(error);
+                statusMessage.innerHTML = `<span class="text-red-600">❌ ผิดพลาด: ${error.message}</span>`;
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'บันทึกข้อมูล';
+            }
+        });
+
+        // เริ่มทำงาน
+        loadEmployees();
+    </script>
+</body>
+</html>
