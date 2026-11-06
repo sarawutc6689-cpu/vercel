@@ -65,7 +65,7 @@ canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
    <label><input type="checkbox" id="bn" checked>ชื่ออาคาร</label>
    <label><input type="checkbox" id="auto">หมุนอัตโนมัติ</label>
    <label><input type="checkbox" id="act" checked>คน/รถ</label>
-   <button class="btn" id="rst">มุมเริ่มต้น</button><button class="btn" id="top">มุมบน</button><button class="btn" id="eb" style="display:none">✏ แก้ไขกล้อง</button><button class="btn" id="ex" style="display:none">⬇ ส่งออก</button><button class="btn" id="im" style="display:none">⬆ นำเข้า</button><input type="file" id="imf" accept=".json" style="display:none">
+   <button class="btn" id="rst">มุมเริ่มต้น</button><button class="btn" id="top">มุมบน</button><button class="btn" id="svb">🚶 Street View</button><button class="btn" id="eb" style="display:none">✏ แก้ไขกล้อง</button><button class="btn" id="ex" style="display:none">⬇ ส่งออก</button><button class="btn" id="im" style="display:none">⬆ นำเข้า</button><input type="file" id="imf" accept=".json" style="display:none">
   </div>
   <div id="edh">โหมดแก้ไข · ลากกล้องเพื่อย้าย · ลากพื้นที่ว่างเพื่อหมุนมุมมอง</div><div id="toast"></div>
   <div id="povb">กำลังดูจากมุมกล้อง · ลากเพื่อกวาดมองรอบ ๆ · เลื่อนล้อเพื่อซูม</div>
@@ -1272,7 +1272,7 @@ function CYARD(w,d,cx,cz){const x0=cx-w/2,z0=cz-d/2,FL=0.1,
  bb(ou-0.55,fz+0.25,0.9,0.5,0,0.1,0xcfcac0,0);
  SGN2('ออฟฟิศ','#1f4e9a',1.0,0.2,x0+ou-0.55,FL+2.25,z0+fz+0.04,0);
  const pl=new THREE.PointLight(0xfff2dd,0.5,5);pl.position.set(x0+ou,FL+1.6,z0+fz+0.8);S.add(pl)}
-const lbEl=$('lbl'),bl=[],solids=[];
+const lbEl=$('lbl'),bl=[],solids=[],CLOSED=[];
 B.forEach((b,i)=>{
  const w=b[3]*K,d=b[4]*K,cx=(b[1]+b[3]/2-450)*K,cz=(b[2]+b[4]/2-300)*K,t=b[5]||'solid';
  const h=3+((i*3)%7)*0.55,col=PAL[i%4];let top=0.2;
@@ -1315,7 +1315,7 @@ else if(t==='drums'){const n0=S.children.length,g=new THREE.Group();DRM(w,d,cx,c
  else if(b[0]==='สำนักงาน'){OFF(w,d,cx,cz);top=5.7;solids.push({x0:b[1],x1:b[1]+b[3],y0:b[2],y1:b[2]+b[4],h:top})}
  else{
   const big=w*d>=120;top=h+(big?1.3:0.25);
-  M(bx(w,h,d),col,cx,h/2,cz);
+  M(bx(w,h,d),col,cx,h/2,cz);CLOSED.push([cx-w/2-0.3,cx+w/2+0.3,cz-d/2-0.3,cz+d/2+0.3]);
   (big?[h*0.62]:[h*0.35,h*0.72]).forEach(y=>M(bx(w+0.06,0.7,d+0.06),0x5f86ad,cx,y,cz,0));
   M(bx(w+0.1,0.3,d+0.1),0xb9c2cc,cx,0.15,cz);
   const nd=big?Math.max(1,Math.floor(w/7)):1;
@@ -1336,7 +1336,7 @@ function dl(x1,y1,x2,y2){const hz=y1===y2,L=Math.abs(hz?x2-x1:y2-y1);for(let s=0
 [[34,25,887,25],[887,25,887,585],[34,585,887,585],[34,25,34,446],[34,470,34,585],[314,28,624,28],[314,108,624,108],[314,28,314,108],[624,28,624,108]].forEach(l=>dl(...l));
 // cameras
 const CS=[],picks=[],PL=new THREE.Plane(V(0,1,0),0);
-let sel=-1,filt='all',pov=-1,yaw=0,pit=0,edit=false,drag=null,DB=null,canE=false,svT=0,tT=0,goal=null;
+let sel=-1,filt='all',pov=-1,svOn=false,yaw=0,pit=0,edit=false,drag=null,DB=null,canE=false,svT=0,tT=0,goal=null;
 const st={th:0.5,ph:1.0,r:78,t:V(0,0,0)},home={th:0.5,ph:1.0,r:78},wrap=a=>Math.atan2(Math.sin(a),Math.cos(a));
 const esc=s=>String(s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
 function mk(row){
@@ -1381,12 +1381,12 @@ function detail(){const o=sel>=0&&C[sel];$('dE').style.display=o?'none':'';$('dB
 function pick(i,nf){sel=i;if(pov>=0){pov=i;yaw=pit=0}else if(!nf){const d=CS[i].dir;
  goal={th:st.th+wrap(Math.atan2(-d.x,-d.z)-st.th),ph:1.2,r:24,t:CS[i].head.clone()}}
  vis();list();detail();povUI()}
-function povUI(){$('povb').style.display=pov>=0?'block':'none';$('edh').style.display=edit&&pov<0?'block':'none';cam.fov=pov>=0?65:50;cam.updateProjectionMatrix();$('pov').textContent=pov>=0&&pov===sel?'ออกจากมุมกล้อง':'ดูจากมุมกล้อง'}
+function povUI(){$('povb').style.display=(pov>=0||svOn)?'block':'none';$('edh').style.display=edit&&pov<0&&!svOn?'block':'none';cam.fov=svOn?70:pov>=0?65:50;cam.updateProjectionMatrix();$('pov').textContent=pov>=0&&pov===sel?'ออกจากมุมกล้อง':'ดูจากมุมกล้อง'}
 $('pov').onclick=()=>{if(sel<0)return;if(pov>=0){pov=-1}else{pov=sel;yaw=pit=0}vis();povUI()};
 $('fts').onclick=e=>{const f=e.target.dataset.f;if(!f)return;filt=f;[...$('fts').children].forEach(b=>b.classList.toggle('on',b===e.target));vis();list()};
 $('fov').onchange=vis;
 $('bn').onchange=()=>lbEl.style.display=$('bn').checked?'':'none';
-function go(o){pov=-1;vis();povUI();goal=Object.assign({th:st.th,ph:st.ph,r:st.r,t:st.t.clone()},o);sel=-1;list();detail();vis()}
+function go(o){if(svOn){svOn=false;svRing.visible=false;cv.style.cursor='';$('svb').textContent='🚶 Street View'}pov=-1;vis();povUI();goal=Object.assign({th:st.th,ph:st.ph,r:st.r,t:st.t.clone()},o);sel=-1;list();detail();vis()}
 $('rst').onclick=()=>go({th:home.th,ph:home.ph,r:home.r,t:V(0,0,0)});
 $('top').onclick=()=>go({ph:0.15,r:95,t:V(0,0,0)});
 
@@ -1425,27 +1425,49 @@ const ptr=new Map(),rc=new THREE.Raycaster(),nd=new THREE.Vector2(),tip=$('tip')
 function ray(e){const r=cv.getBoundingClientRect();nd.set((e.clientX-r.left)/r.width*2-1,-((e.clientY-r.top)/r.height)*2+1);rc.setFromCamera(nd,cam)}
 function hover(e){ray(e);return rc.intersectObjects(picks.filter(p=>p.parent.visible))[0]}
 cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);
- if(edit&&pov<0&&e.isPrimary&&!ptr.size){const h=hover(e);if(h){drag=h.object.userData.o;pick(CS.indexOf(drag),true);tip.style.display='none';return}}
+ if(edit&&pov<0&&!svOn&&e.isPrimary&&!ptr.size){const h=hover(e);if(h){drag=h.object.userData.o;pick(CS.indexOf(drag),true);tip.style.display='none';return}}
  ptr.set(e.pointerId,{x:e.clientX,y:e.clientY});goal=null;pinch=0;moved=0});
 cv.addEventListener('pointerup',e=>{
  if(drag){drag=null;save();return}
  ptr.delete(e.pointerId);
+ if(svOn){if(moved<5)svGo(e);return}
  if(moved<5&&pov<0){const h=hover(e);if(h)pick(CS.indexOf(h.object.userData.o))}});
 cv.addEventListener('pointercancel',e=>{drag=null;ptr.delete(e.pointerId)});
 cv.addEventListener('pointermove',e=>{
  if(drag){ray(e);const p=V(0,0,0);if(rc.ray.intersectPlane(PL,p)){const w=drag.d;
   w[3]=+Math.min(99,Math.max(1,(p.x/K+450)/9)).toFixed(2);w[4]=+Math.min(99,Math.max(1,(p.z/K+300)/6)).toFixed(2);upd(drag)}return}
  const o=ptr.get(e.pointerId);
- if(!o){if(pov>=0)return;const h=hover(e);
+ if(!o){if(svOn){svHover(e);return}if(pov>=0)return;const h=hover(e);
   if(h){const c=h.object.userData.o.d,r=cv.getBoundingClientRect();tip.style.display='block';tip.textContent=c[0]+' · '+c[1];tip.style.left=(e.clientX-r.left+12)+'px';tip.style.top=(e.clientY-r.top+12)+'px';cv.style.cursor=edit?'move':'pointer'}
   else{tip.style.display='none';cv.style.cursor=''}return}
  const dx=e.clientX-o.x,dy=e.clientY-o.y;moved+=Math.abs(dx)+Math.abs(dy);
- if(ptr.size===1){if(pov>=0){yaw+=dx*0.004;pit=Math.max(-0.9,Math.min(0.9,pit-dy*0.004))}
+ if(ptr.size===1){if(svOn){yaw-=dx*0.004;pit=Math.max(-1.3,Math.min(1.3,pit-dy*0.004))}
+  else if(pov>=0){yaw+=dx*0.004;pit=Math.max(-0.9,Math.min(0.9,pit-dy*0.004))}
   else{st.th-=dx*0.007;st.ph=Math.min(1.5,Math.max(0.1,st.ph-dy*0.006))}}
  o.x=e.clientX;o.y=e.clientY;
  if(ptr.size===2){const[a,b]=[...ptr.values()],d=Math.hypot(a.x-b.x,a.y-b.y);if(pinch)zoom(pinch/d);pinch=d}});
-function zoom(f){if(pov>=0){cam.fov=Math.min(90,Math.max(25,cam.fov*f));cam.updateProjectionMatrix()}else st.r=Math.min(150,Math.max(6,st.r*f))}
+function zoom(f){if(pov>=0||svOn){cam.fov=Math.min(90,Math.max(25,cam.fov*f));cam.updateProjectionMatrix()}else st.r=Math.min(150,Math.max(6,st.r*f))}
 cv.addEventListener('wheel',e=>{e.preventDefault();goal=null;zoom(Math.exp(e.deltaY*0.001))},{passive:false});
+
+// ===== Street View: คลิกพื้นเพื่อเดินไปยืนตรงนั้น ลากเพื่อมองรอบตัว 360° =====
+const svp=V(0,1.35,0),svt=V(0,1.35,0),EYE=1.35,SVB=[(34-450)*K+1,(887-450)*K-1,(25-300)*K+1,(585-300)*K-1],
+ svRing=new THREE.Mesh(new THREE.RingGeometry(0.38,0.52,32).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0.85,depthTest:false}));
+svRing.renderOrder=10;svRing.visible=false;S.add(svRing);
+const svBlocked=(x,z)=>CLOSED.some(r=>x>r[0]&&x<r[1]&&z>r[2]&&z<r[3]);
+function svGround(e){ray(e);const p=V(0,0,0);if(!rc.ray.intersectPlane(PL,p)||rc.ray.origin.distanceTo(p)>120)return null;
+ p.x=Math.min(SVB[1],Math.max(SVB[0],p.x));p.z=Math.min(SVB[3],Math.max(SVB[2],p.z));return p}
+function svHover(e){const p=svGround(e);if(p&&!svBlocked(p.x,p.z)){svRing.position.set(p.x,0.16,p.z);svRing.visible=true;cv.style.cursor='pointer'}else{svRing.visible=false;cv.style.cursor=''}}
+function svGo(e){const p=svGround(e);if(!p)return;if(svBlocked(p.x,p.z)){msg('อาคารนี้ไม่มีพื้นที่ภายในให้เข้า');return}svt.set(p.x,EYE,p.z)}
+function svStep(f){const x=svt.x+Math.cos(yaw)*f,z=svt.z+Math.sin(yaw)*f;if(x<SVB[0]||x>SVB[1]||z<SVB[2]||z>SVB[3]||svBlocked(x,z))return;svt.x=x;svt.z=z}
+function svToggle(){
+ if(svOn){svOn=false;svRing.visible=false;cv.style.cursor='';st.t.set(svp.x,0,svp.z);st.r=Math.max(st.r,26);goal=null;$('povb').textContent='กำลังดูจากมุมกล้อง · ลากเพื่อกวาดมองรอบ ๆ · เลื่อนล้อเพื่อซูม';$('svb').textContent='🚶 Street View';povUI();return}
+ const cx=cam.position.x,cz=cam.position.z;let x=st.t.x,z=st.t.z;if(svBlocked(x,z)||x<SVB[0]||x>SVB[1]||z<SVB[2]||z>SVB[3]){x=(21-450)*K;z=0}
+ pov=-1;goal=null;svOn=true;svp.set(x,EYE,z);svt.copy(svp);yaw=Math.atan2(st.t.z-cz,st.t.x-cx);if(!isFinite(yaw)||Math.hypot(st.t.x-x,st.t.z-z)<0.5)yaw=0;pit=0;
+ $('povb').textContent='Street View · คลิกพื้นเพื่อเดินไปตรงนั้น · ลากเพื่อมองรอบตัว 360° · เลื่อนล้อเพื่อซูม · W/S เดินหน้า-ถอย · Esc ออก';$('svb').textContent='⬆ ออกจาก Street View';vis();povUI()}
+$('svb').onclick=svToggle;
+addEventListener('keydown',e=>{if(!svOn||/INPUT|TEXTAREA|SELECT/.test(e.target.tagName))return;const k=e.key;
+ if(k==='Escape')svToggle();else if(k==='w'||k==='W'||k==='ArrowUp'){svStep(2);e.preventDefault()}else if(k==='s'||k==='S'||k==='ArrowDown'){svStep(-2);e.preventDefault()}
+ else if(k==='ArrowLeft'||k==='a'||k==='A')yaw-=0.15;else if(k==='ArrowRight'||k==='d'||k==='D')yaw+=0.15});
 function resize(){const w=cv.clientWidth,h=cv.clientHeight;R.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix()}
 addEventListener('resize',resize);
 
@@ -1734,12 +1756,13 @@ function frame(){
  const nt=performance.now(),dt=Math.min(0.1,(nt-lt)/1000);lt=nt;anim(dt);
  if(goal){const k=0.09;st.th+=(goal.th-st.th)*k;st.ph+=(goal.ph-st.ph)*k;st.r+=(goal.r-st.r)*k;st.t.lerp(goal.t,k);
   if(Math.abs(goal.th-st.th)+Math.abs(goal.r-st.r)<0.02)goal=null}
- else if($('auto').checked&&!ptr.size&&pov<0)st.th+=0.003;
- if(pov>=0){const o=CS[pov],a=o.a+yaw,p=0.4+pit;cam.position.copy(o.head);
+ else if($('auto').checked&&!ptr.size&&pov<0&&!svOn)st.th+=0.003;
+ if(svOn){svp.lerp(svt,0.12);cam.position.copy(svp);cam.lookAt(svp.x+Math.cos(yaw)*Math.cos(pit),svp.y-Math.sin(pit),svp.z+Math.sin(yaw)*Math.cos(pit))}
+ else if(pov>=0){const o=CS[pov],a=o.a+yaw,p=0.4+pit;cam.position.copy(o.head);
   cam.lookAt(o.head.x+Math.cos(a)*Math.cos(p),o.head.y-Math.sin(p),o.head.z+Math.sin(a)*Math.cos(p))}
  else{const sp=Math.sin(st.ph);cam.position.set(st.t.x+st.r*sp*Math.sin(st.th),st.t.y+st.r*Math.cos(st.ph),st.t.z+st.r*sp*Math.cos(st.th));cam.lookAt(st.t)}
  if($('bn').checked){const w=cv.clientWidth,h=cv.clientHeight;
-  bl.forEach(o=>{pv.copy(o.p).project(cam);const v=pv.z<1&&pov<0;o.el.style.display=v?'':'none';
+  bl.forEach(o=>{pv.copy(o.p).project(cam);const v=pv.z<1&&pov<0&&!svOn;o.el.style.display=v?'':'none';
    if(v)o.el.style.transform='translate('+((pv.x+1)/2*w)+'px,'+((1-pv.y)/2*h)+'px) translate(-50%,-100%)'})}
  R.render(S,cam);requestAnimationFrame(frame)}
 resize();stats();vis();list();frame();
