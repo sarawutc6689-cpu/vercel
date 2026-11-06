@@ -48,8 +48,8 @@ assignForm.addEventListener('submit', async (e) => {
         // await supabaseClient.from('repair_jobs').insert([...]);
 
         // 3. เรียกใช้ Vercel API
-        const response = await fetch('/AMS/Tasks/api/send-task', {
-            method: 'POST',
+        const response = await fetch('/api/send-task', { 
+    method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ chatId, taskTitle, taskDetail })
         });
