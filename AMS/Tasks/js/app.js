@@ -1,19 +1,22 @@
 // ==== ตั้งค่า Supabase ====
 const SUPABASE_URL = 'https://clowvcraydxpvwdbpkhi.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNsb3d2Y3JheWR4cHZ3ZGJwa2hpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3NTA3NTAsImV4cCI6MjEwMzMyNjc1MH0.pXV0g3JfakqNRgKjgCe87Reie5ZhXzqYXpZ3OVkluHk';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// เปลี่ยนชื่อตัวแปรตรงนี้ ไม่ให้ซ้ำกับตัว Global ของ CDN
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const employeeSelect = document.getElementById('employeeSelect');
 const assignForm = document.getElementById('assignForm');
 const statusMessage = document.getElementById('statusMessage');
 const submitBtn = document.getElementById('submitBtn');
 
-// 1. ดึงรายชื่อพนักงานที่มี Telegram Chat ID ขึ้นมาแสดงใน Dropdown
+// 1. ดึงรายชื่อพนักงาน
 async function loadEmployees() {
-    const { data, error } = await supabase
+    // เปลี่ยนจากการเรียก supabase เป็น supabaseClient
+    const { data, error } = await supabaseClient
         .from('employees')
         .select('id, name, telegram_chat_id')
-        .not('telegram_chat_id', 'is', null); // เอาเฉพาะคนที่ผูก Telegram แล้ว
+        .not('telegram_chat_id', 'is', null);
 
     if (error) {
         console.error('Error loading employees:', error);
@@ -23,7 +26,7 @@ async function loadEmployees() {
     employeeSelect.innerHTML = '<option value="">-- เลือกพนักงาน --</option>';
     data.forEach(emp => {
         const option = document.createElement('option');
-        option.value = emp.telegram_chat_id; // ใช้ chat_id เป็น value
+        option.value = emp.telegram_chat_id;
         option.textContent = emp.name;
         employeeSelect.appendChild(option);
     });
@@ -42,9 +45,9 @@ assignForm.addEventListener('submit', async (e) => {
 
     try {
         // (Optional) บันทึกข้อมูลลงตาราง repair_jobs ก่อน
-        // await supabase.from('repair_jobs').insert([...]);
+        // await supabaseClient.from('repair_jobs').insert([...]);
 
-        // 3. เรียกใช้ Vercel API (ไฟล์ api/send-task.js)
+        // 3. เรียกใช้ Vercel API
         const response = await fetch('/api/send-task', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
