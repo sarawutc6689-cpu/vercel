@@ -36,6 +36,24 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--gate);outline-o
 .card,.row,.sum div,.scroll,.slot{box-shadow:0 2px 12px rgba(31,139,242,.09)}
 header{box-shadow:0 4px 16px rgba(31,139,242,.25)}
 footer{text-align:center;padding:16px 12px;color:var(--mute);font-size:.85rem;border-top:1px solid var(--line);background:var(--card)}
+
+#cfm{border:0;border-radius:22px;padding:26px 22px 20px;background:var(--card);color:var(--ink);width:min(380px,92vw);text-align:center;box-shadow:0 20px 60px rgba(18,48,79,.35)}
+#cfm::backdrop{background:rgba(18,48,79,.45);backdrop-filter:blur(3px)}
+#cfm[open]{animation:cfIn .18s ease-out}
+@keyframes cfIn{from{opacity:0;transform:translateY(10px) scale(.96)}to{opacity:1;transform:none}}
+.cf-ico{width:64px;height:64px;border-radius:50%;margin:0 auto 12px;display:grid;place-items:center;background:#e3f1ff;color:var(--gate)}
+.cf-ico.danger{background:#fde8e8;color:var(--bad)}
+.cf-ico svg{width:32px;height:32px}
+#cfm h3{margin:0 0 6px;font-size:1.2rem;font-weight:800}
+.cf-val{font-size:2.2rem;font-weight:800;color:var(--gate);font-variant-numeric:tabular-nums;line-height:1.2;margin:4px 0}
+.cf-val.danger{color:var(--bad)}
+.cf-val small{font-size:1rem;font-weight:600;color:var(--mute)}
+#cfm p{margin:6px 0 0;color:var(--mute);font-size:.95rem;white-space:pre-line}
+.cf-row{display:flex;flex-direction:column;gap:8px;margin-top:18px}
+.cf-row button{height:50px;border:0;border-radius:14px;font:inherit;font-weight:800;font-size:1rem;cursor:pointer}
+.cf-ok{background:var(--gate);color:#fff}.cf-ok.danger{background:var(--bad)}
+.cf-no{background:transparent;color:var(--mute)}
+.cf-row button:focus-visible{outline:3px solid var(--gate);outline-offset:2px}
 </style>
 </head>
 <body>
@@ -45,6 +63,10 @@ footer{text-align:center;padding:16px 12px;color:var(--mute);font-size:.85rem;bo
   <div id="list"></div>
 </div>
 
+<dialog id="cfm" aria-labelledby="cfTitle">
+  <div class="cf-ico" id="cfIco"></div><h3 id="cfTitle"></h3><div class="cf-val" id="cfVal"></div><p id="cfBody"></p>
+  <div class="cf-row"><button type="button" class="cf-ok" id="cfOk">ยืนยัน</button><button type="button" class="cf-no" id="cfNo">ยกเลิก</button></div>
+</dialog>
 <footer>ระบบการขอใช้รถบริษัท © 2026 | พัฒนาโดย Sarawut.C</footer>
 
 <dialog id="adminDlg">
@@ -75,6 +97,26 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+const CF_ICO = {
+  ask: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5.5M12 16.5v.01"/></svg>',
+  danger: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/></svg>'
+};
+function askConfirm({ title, val = '', unit = '', body = '', ok = 'ยืนยัน', cancel = 'ยกเลิก', danger = false }){
+  return new Promise(res => {
+    const d = $('#cfm');
+    $('#cfIco').className = 'cf-ico' + (danger ? ' danger' : ''); $('#cfIco').innerHTML = CF_ICO[danger ? 'danger' : 'ask'];
+    $('#cfTitle').textContent = title;
+    $('#cfVal').className = 'cf-val' + (danger ? ' danger' : ''); $('#cfVal').innerHTML = val ? `${esc(val)} <small>${esc(unit)}</small>` : '';
+    $('#cfVal').hidden = !val; $('#cfBody').textContent = body; $('#cfBody').hidden = !body;
+    $('#cfOk').textContent = ok; $('#cfOk').className = 'cf-ok' + (danger ? ' danger' : '');
+    $('#cfNo').textContent = cancel || ''; $('#cfNo').hidden = !cancel;
+    const done = v => { d.close(); res(v); };
+    $('#cfOk').onclick = () => done(true); $('#cfNo').onclick = () => done(false);
+    d.oncancel = e => { e.preventDefault(); done(false); };
+    d.showModal(); $('#cfOk').focus();
+  });
+}
 let admin = sessionStorage.getItem('admin_pin') || '', rows = [], editId = null;
 
 async function askAdmin(msg){
@@ -125,9 +167,9 @@ $('#editForm').addEventListener('submit', async e => {
 
 async function del(id){
   const g = rows.find(x => x.id === id);
-  if (!confirm(`ลบ "${g.name}" ?\nประวัติเลขไมล์ที่เคยบันทึกไว้ยังอยู่ แต่ PIN นี้จะเข้าใช้งานไม่ได้`)) return;
+  if (!await askConfirm({ title: 'ลบรายชื่อ รปภ.', val: g.name, body: 'ประวัติเลขไมล์ที่เคยบันทึกไว้ยังอยู่\nแต่ PIN นี้จะเข้าใช้งานไม่ได้', ok: 'ลบ', danger: true })) return;
   const { error } = await sb.rpc('guard_admin_delete', { p_admin: admin, p_id: id });
-  if (error){ alert(error.message); return; }
+  if (error){ await askConfirm({ title: 'ลบไม่สำเร็จ', body: error.message, ok: 'ตกลง', cancel: null, danger: true }); return; }
   load();
 }
 load();
