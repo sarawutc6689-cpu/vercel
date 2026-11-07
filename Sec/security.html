@@ -121,12 +121,14 @@ async function load(){
 }
 
 function render(){
-  const done = rows.filter(r => r.odometer_before != null && r.odometer_after != null).length;
-  $('#summary').textContent = rows.length ? `สำเร็จ ${done} จาก ${rows.length} คัน` : '';
-  if (!rows.length){ $('#list').innerHTML = '<div class="empty">วันนี้ไม่มีรถที่อนุมัติ (รถบรรทุก / กระบะ / รถยนต์)</div>'; return; }
-  $('#list').innerHTML = rows.map(r => {
+  const isDone = r => r.odometer_before != null && r.odometer_after != null;
+  const pending = rows.filter(r => !isDone(r)), done = rows.length - pending.length;
+  $('#summary').textContent = rows.length ? `สำเร็จ ${done} จาก ${rows.length} คัน · เหลือ ${pending.length} คัน` : '';
+  if (!rows.length){ $('#list').innerHTML = '<div class="empty">วันนี้ไม่มีรถที่อนุมัติ (รถบรรทุก / กระบะ / รถตู้)</div>'; return; }
+  if (!pending.length){ $('#list').innerHTML = '<div class="empty">ตรวจเลขไมล์ครบทุกคันแล้ว</div>'; return; }
+  $('#list').innerHTML = pending.map(r => {
     const hasB = r.odometer_before != null, hasA = r.odometer_after != null;
-    const st = hasB && hasA ? ['done','สำเร็จ'] : (hasB || hasA ? ['half','รอเลขไมล์'+(hasB?'หลัง':'ก่อน')] : ['','ยังไม่บันทึก']);
+    const st = hasB || hasA ? ['half','รอเลขไมล์'+(hasB?'หลัง':'ก่อน')] : ['','ยังไม่บันทึก'];
     return `<div class="card ${st[0]}" data-id="${r.id}">
       <div class="top"><div><div class="plate">${esc(r.car_name)}</div>
         <div class="meta">${esc(r.car_type)}<br>${esc(r.employee_name||'')}${r.department?' ('+esc(r.department)+')':''}<br>${esc(r.reason||'-')}<br>${time(r.start_at)}${r.end_at?' – '+time(r.end_at):''}</div></div>
