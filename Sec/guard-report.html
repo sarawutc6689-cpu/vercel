@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>รายงาน รปภ. - เลขไมล์รถ</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<style>
+:root{--bg:#eef6ff;--top:#d9ecff;--card:#fff;--ink:#12304f;--mute:#5f7791;--line:#dbe9f7;--edge:#9cc5ee;--gate:#1f8bf2;--ok:#1a7f55;--okbg:#ddf5e9;--warn:#a05a00;--warnbg:#fff1d6;--bad:#c62828}
+@media(prefers-color-scheme:dark){:root{--bg:#0f1b2a;--top:#14304a;--card:#172a3f;--ink:#eaf3fc;--mute:#9bb2c9;--line:#2a4560;--edge:#3f6a93;--gate:#2f86e0;--ok:#6fd49b;--okbg:#17372a;--warn:#f2b95a;--warnbg:#41300f;--bad:#ff8a80}}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:flex;flex-direction:column;background:linear-gradient(180deg,var(--top) 0,var(--bg) 300px) var(--bg);color:var(--ink);font-family:'Noto Sans Thai',system-ui,sans-serif;line-height:1.5}
+header{background:linear-gradient(135deg,#1f8bf2,#5bbcff);color:#fff;padding:16px}
+header h1{margin:0;font-size:1.15rem;font-weight:800}
+.wrap{width:100%;flex:1;max-width:980px;margin:0 auto;padding:12px}
+.tabs{display:flex;gap:6px;margin-bottom:10px}
+.tabs button{flex:1;height:44px;border:2px solid var(--edge);background:var(--card);color:var(--ink);border-radius:10px;font:inherit;font-weight:600;cursor:pointer}
+.tabs button.on{background:var(--gate);border-color:var(--gate);color:#fff}
+.ctl{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.ctl input,.ctl select{height:44px;border:2px solid var(--edge);border-radius:10px;background:var(--card);color:var(--ink);font:inherit;padding:0 10px}
+.btn{height:44px;padding:0 16px;border:0;border-radius:10px;font:inherit;font-weight:800;cursor:pointer;background:var(--gate);color:#fff}
+.btn.sec{background:var(--line);color:var(--ink)}
+.sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+.sum div{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 14px}
+.sum b{display:block;font-size:1.6rem;font-variant-numeric:tabular-nums}
+.sum span{color:var(--mute);font-size:.9rem}
+h2{font-size:1.05rem;margin:18px 0 8px}
+.scroll{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:12px}
+table{border-collapse:collapse;width:100%;font-size:.92rem}
+th,td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:var(--bg);white-space:nowrap}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+tr:last-child td{border-bottom:0}
+.badge{font-size:.8rem;font-weight:600;padding:2px 10px;border-radius:99px;white-space:nowrap;background:var(--line)}
+.badge.done{background:var(--okbg);color:var(--ok)}.badge.half{background:var(--warnbg);color:var(--warn)}
+.mute{color:var(--mute)}.empty{text-align:center;color:var(--mute);padding:30px}
+dialog{border:0;border-radius:14px;padding:20px;background:var(--card);color:var(--ink);width:min(320px,92vw)}
+dialog input{width:100%;height:46px;margin:10px 0;border:2px solid var(--edge);border-radius:10px;background:var(--card);color:var(--ink);font:inherit;padding:0 10px}
+.err{color:var(--bad);margin:0 0 8px;min-height:1.3em}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--gate);outline-offset:2px}
+@media print{header,.tabs,.ctl{display:none}body{background:#fff;color:#000}.scroll,.sum div{border-color:#999}}
+
+.card,.row,.sum div,.scroll,.slot{box-shadow:0 2px 12px rgba(31,139,242,.09)}
+header{box-shadow:0 4px 16px rgba(31,139,242,.25)}
+footer{text-align:center;padding:16px 12px;color:var(--mute);font-size:.85rem;border-top:1px solid var(--line);background:var(--card)}
+</style>
+</head>
+<body>
+<header><h1>รายงาน รปภ. เลขไมล์รถ</h1></header>
+<div class="wrap">
+  <div class="tabs" role="tablist">
+    <button data-m="day" class="on">รายวัน</button><button data-m="month">รายเดือน</button><button data-m="year">รายปี</button>
+  </div>
+  <div class="ctl">
+    <input type="date" id="vDay"><input type="month" id="vMonth" hidden><select id="vYear" hidden></select>
+    <button class="btn sec" id="csv">ดาวน์โหลด CSV</button><button class="btn sec" id="print">พิมพ์</button>
+  </div>
+  <div id="out"><div class="empty">กำลังโหลด…</div></div>
+</div>
+
+<footer>ระบบการขอใช้รถบริษัท © 2026 | พัฒนาโดย Sarawut.C</footer>
+
+<dialog id="dlg"><form method="dialog" id="f">
+  <strong>กรอกรหัสผู้ดูแล</strong><input type="password" id="pw" autocomplete="off">
+  <p class="err" id="pe"></p><button class="btn" style="width:100%">เข้าใช้งาน</button>
+</form></dialog>
+
+<script>
+/* ===== ตั้งค่า ===== */
+const SUPABASE_URL = 'https://clowvcraydxpvwdbpkhi.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNsb3d2Y3JheWR4cHZ3ZGJwa2hpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3NTA3NTAsImV4cCI6MjEwMzMyNjc1MH0.pXV0g3JfakqNRgKjgCe87Reie5ZhXzqYXpZ3OVkluHk';
+/* ================== */
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const pad = n => String(n).padStart(2, '0');
+const num = n => Number(n).toLocaleString('th-TH');
+const MONTHS = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+const bkkDay = t => new Date(t).toLocaleDateString('sv-SE', { timeZone: 'Asia/Bangkok' });
+const bkkTime = t => t ? new Date(t).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Bangkok' }) : '';
+const thDate = d => { const [y, m, dd] = d.split('-'); return `${+dd} ${MONTHS[m-1]} ${+y + 543}`; };
+let admin = sessionStorage.getItem('admin_pin') || '', mode = 'day', rows = [], title = '';
+
+const now = new Date(), today = bkkDay(now);
+$('#vDay').value = today; $('#vMonth').value = today.slice(0, 7);
+for (let y = now.getFullYear(); y >= now.getFullYear() - 4; y--) $('#vYear').insertAdjacentHTML('beforeend', `<option value="${y}">พ.ศ. ${y+543}</option>`);
+
+document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => {
+  mode = b.dataset.m;
+  document.querySelectorAll('.tabs button').forEach(x => x.classList.toggle('on', x === b));
+  $('#vDay').hidden = mode !== 'day'; $('#vMonth').hidden = mode !== 'month'; $('#vYear').hidden = mode !== 'year';
+  load();
+});
+['#vDay', '#vMonth', '#vYear'].forEach(s => $(s).onchange = load);
+$('#print').onclick = () => window.print();
+
+function range(){
+  if (mode === 'day'){ const d = $('#vDay').value; return [d, d, thDate(d)]; }
+  if (mode === 'month'){ const [y, m] = $('#vMonth').value.split('-').map(Number);
+    return [`${y}-${pad(m)}-01`, `${y}-${pad(m)}-${pad(new Date(y, m, 0).getDate())}`, `${MONTHS[m-1]} ${y+543}`]; }
+  const y = $('#vYear').value; return [`${y}-01-01`, `${y}-12-31`, `ปี พ.ศ. ${+y + 543}`];
+}
+
+async function askAdmin(msg){
+  $('#pe').textContent = msg || ''; $('#dlg').showModal();
+  await new Promise(r => $('#f').addEventListener('submit', r, {once:true}));
+  admin = $('#pw').value.trim(); $('#pw').value = '';
+}
+
+async function fetchAll(from, to){
+  let all = [], off = 0;
+  for (;;){
+    const { data, error } = await sb.rpc('guard_report', { p_admin: admin, p_from: from, p_to: to }).range(off, off + 999);
+    if (error) throw error;
+    all = all.concat(data); if (data.length < 1000) return all; off += 1000;
+  }
+}
+
+async function load(msg){
+  if (!admin) await askAdmin(msg);
+  const [from, to, label] = range(); title = label;
+  $('#out').innerHTML = '<div class="empty">กำลังโหลด…</div>';
+  try { rows = await fetchAll(from, to); }
+  catch(e){
+    if (/admin pin/i.test(e.message)){ admin = ''; sessionStorage.removeItem('admin_pin'); return load('รหัสผู้ดูแลไม่ถูกต้อง'); }
+    $('#out').innerHTML = `<div class="empty">โหลดไม่สำเร็จ: ${esc(e.message)}</div>`; return;
+  }
+  sessionStorage.setItem('admin_pin', admin);
+  render();
+}
+
+const state = r => r.odometer_before != null && r.odometer_after != null ? ['done', 'สำเร็จ']
+  : r.odometer_before != null ? ['half', 'รอเลขหลัง'] : ['', 'ยังไม่บันทึก'];
+const dist = r => r.odometer_before != null && r.odometer_after != null ? r.odometer_after - r.odometer_before : null;
+
+function render(){
+  const done = rows.filter(r => dist(r) !== null), km = done.reduce((a, r) => a + dist(r), 0);
+  let h = `<h2 style="margin-top:0">${esc(title)}</h2><div class="sum">
+    <div><b>${num(rows.length)}</b><span>รายการที่อนุมัติ</span></div>
+    <div><b>${num(done.length)}</b><span>สำเร็จ (ครบก่อน-หลัง)</span></div>
+    <div><b>${num(rows.length - done.length)}</b><span>ยังไม่ครบ</span></div>
+    <div><b>${num(km)}</b><span>ระยะทางรวม (กม.)</span></div></div>`;
+  if (!rows.length){ $('#out').innerHTML = h + '<div class="empty">ไม่มีรายการในช่วงนี้</div>'; return; }
+
+  if (mode === 'year'){
+    const by = Array.from({length: 12}, () => ({ n: 0, ok: 0, km: 0 }));
+    rows.forEach(r => { const m = +bkkDay(r.start_at).slice(5, 7) - 1, d = dist(r); by[m].n++; if (d !== null){ by[m].ok++; by[m].km += d; } });
+    h += `<h2>สรุปรายเดือน</h2><div class="scroll"><table><tr><th>เดือน</th><th class="n">รายการ</th><th class="n">สำเร็จ</th><th class="n">ไม่ครบ</th><th class="n">กม.</th></tr>`
+      + by.map((x, i) => `<tr><td>${MONTHS[i]}</td><td class="n">${x.n}</td><td class="n">${x.ok}</td><td class="n">${x.n - x.ok}</td><td class="n">${num(x.km)}</td></tr>`).join('') + '</table></div>';
+  }
+  if (mode !== 'day'){
+    const cars = {};
+    rows.forEach(r => { const c = cars[r.car_name] ||= { t: r.car_type, n: 0, ok: 0, km: 0 }, d = dist(r); c.n++; if (d !== null){ c.ok++; c.km += d; } });
+    h += `<h2>สรุปรายคัน</h2><div class="scroll"><table><tr><th>รถ</th><th>ประเภท</th><th class="n">รายการ</th><th class="n">สำเร็จ</th><th class="n">กม.</th></tr>`
+      + Object.entries(cars).sort((a, b) => b[1].km - a[1].km).map(([k, c]) => `<tr><td>${esc(k)}</td><td>${esc(c.t)}</td><td class="n">${c.n}</td><td class="n">${c.ok}</td><td class="n">${num(c.km)}</td></tr>`).join('') + '</table></div>';
+  }
+  if (mode !== 'year'){
+    h += `<h2>รายการ</h2><div class="scroll"><table><tr><th>วันที่</th><th>รถ</th><th>ผู้ใช้รถ</th><th>เวลา</th><th class="n">ไมล์ก่อน</th><th class="n">ไมล์หลัง</th><th class="n">ระยะ (กม.)</th><th>สถานะ</th><th>ผู้บันทึก</th></tr>`
+      + rows.map(r => { const s = state(r), d = dist(r), by = [...new Set([r.odometer_before_by, r.odometer_after_by].filter(Boolean))].join(', ');
+        return `<tr><td>${thDate(bkkDay(r.start_at))}</td><td>${esc(r.car_name)}<div class="mute">${esc(r.car_type)}</div></td>
+        <td>${esc(r.employee_name)}<div class="mute">${esc(r.reason || '')}</div></td><td>${bkkTime(r.start_at)}${r.end_at ? '–' + bkkTime(r.end_at) : ''}</td>
+        <td class="n">${r.odometer_before != null ? num(r.odometer_before) : '-'}</td><td class="n">${r.odometer_after != null ? num(r.odometer_after) : '-'}</td>
+        <td class="n">${d !== null ? num(d) : '-'}</td><td><span class="badge ${s[0]}">${s[1]}</span></td><td>${esc(by) || '-'}</td></tr>`; }).join('') + '</table></div>';
+  }
+  $('#out').innerHTML = h;
+}
+
+$('#csv').onclick = () => {
+  if (!rows.length) return;
+  const q = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+  const head = ['วันที่','เลขที่เอกสาร','รถ','ประเภท','ผู้ใช้รถ','แผนก','เหตุผล','เวลาเริ่ม','เวลาสิ้นสุด','ไมล์ก่อน','ไมล์หลัง','ระยะทาง(กม.)','สถานะ','ผู้บันทึกก่อน','ผู้บันทึกหลัง'];
+  const lines = rows.map(r => [bkkDay(r.start_at), r.doc_number, r.car_name, r.car_type, r.employee_name, r.department, r.reason, bkkTime(r.start_at), bkkTime(r.end_at),
+    r.odometer_before, r.odometer_after, dist(r), state(r)[1], r.odometer_before_by, r.odometer_after_by].map(q).join(','));
+  const blob = new Blob(['\ufeff' + [head.map(q).join(','), ...lines].join('\r\n')], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = `guard-report-${range()[0]}_${range()[1]}.csv`; a.click();
+};
+load();
+</script>
+</body>
+</html>
