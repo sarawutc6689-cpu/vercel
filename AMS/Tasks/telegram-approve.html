@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>อนุมัติการผูก Telegram</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<style>
+:root{--bg:#eef6ff;--top:#d9ecff;--card:#fff;--ink:#12304f;--mute:#5f7791;--line:#dbe9f7;--edge:#9cc5ee;--gate:#1f8bf2;--ok:#1a7f55;--okbg:#ddf5e9;--bad:#c62828}
+@media(prefers-color-scheme:dark){:root{--bg:#0f1b2a;--top:#14304a;--card:#172a3f;--ink:#eaf3fc;--mute:#9bb2c9;--line:#2a4560;--edge:#3f6a93;--gate:#2f86e0;--ok:#6fd49b;--okbg:#17372a;--bad:#ff8a80}}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:flex;flex-direction:column;background:linear-gradient(180deg,var(--top) 0,var(--bg) 300px) var(--bg);color:var(--ink);font-family:'Noto Sans Thai',system-ui,sans-serif;line-height:1.5}
+header{background:linear-gradient(135deg,#1f8bf2,#5bbcff);color:#fff;padding:16px;box-shadow:0 4px 16px rgba(31,139,242,.25);display:flex;justify-content:space-between;align-items:center;gap:8px}
+header h1{margin:0;font-size:1.15rem;font-weight:800}
+header button{background:rgba(255,255,255,.2);color:#fff;border:0;border-radius:8px;padding:6px 12px;font:inherit;cursor:pointer}
+.wrap{width:100%;flex:1;max-width:760px;margin:0 auto;padding:14px 12px}
+.panel,.req{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:0 2px 12px rgba(31,139,242,.09)}
+.sum{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}
+.sum div{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 14px}
+.sum b{display:block;font-size:1.7rem}.sum span{color:var(--mute);font-size:.9rem}
+label{display:block;font-weight:600;margin-top:10px}
+input{width:100%;height:48px;margin-top:4px;border:2px solid var(--edge);border-radius:10px;background:var(--card);color:var(--ink);font:inherit;padding:0 12px}
+.btn{height:48px;padding:0 18px;border:0;border-radius:12px;font:inherit;font-weight:800;cursor:pointer;background:var(--gate);color:#fff}
+.btn.no{background:transparent;color:var(--bad);border:2px solid var(--bad)}
+.nm{font-size:1.15rem;font-weight:800}.mute{color:var(--mute);font-size:.92rem}
+.tg{margin:8px 0;padding:8px 12px;background:var(--bg);border-radius:10px}
+.row{display:flex;gap:8px;margin-top:10px}.row .btn{flex:1}
+.err{color:var(--bad);min-height:1.3em;margin:8px 0 0}
+.empty{text-align:center;color:var(--mute);padding:30px}
+code{background:var(--bg);padding:2px 6px;border-radius:6px}
+#cfm{border:0;border-radius:22px;padding:26px 22px 20px;background:var(--card);color:var(--ink);width:min(380px,92vw);text-align:center;box-shadow:0 20px 60px rgba(18,48,79,.35)}
+#cfm::backdrop{background:rgba(18,48,79,.45);backdrop-filter:blur(3px)}
+#cfm h3{margin:0 0 6px;font-size:1.2rem}#cfm p{margin:6px 0 0;color:var(--mute);white-space:pre-line}
+.cf-row{display:flex;flex-direction:column;gap:8px;margin-top:18px}.cf-row .btn.no{border:0;color:var(--mute)}
+footer{text-align:center;padding:16px 12px;color:var(--mute);font-size:.85rem;border-top:1px solid var(--line);background:var(--card)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--gate);outline-offset:2px}
+</style>
+</head>
+<body>
+<header><h1>อนุมัติการผูก Telegram</h1><button id="out" hidden>ออกจากระบบ</button></header>
+<div class="wrap">
+  <div class="panel" id="login">
+    <strong>ล็อกอินผู้ดูแลระบบ</strong>
+    <label>อีเมล<input type="text" id="em" autocomplete="username"></label>
+    <label>รหัสผ่าน<input type="password" id="pw" autocomplete="current-password"></label>
+    <p class="err" id="le"></p><button class="btn" id="go" style="width:100%">เข้าสู่ระบบ</button>
+  </div>
+  <div id="app" hidden>
+    <div class="sum"><div><b id="sTot">-</b><span>พนักงานทั้งหมด</span></div><div><b id="sLink">-</b><span>ผูกแล้ว</span></div><div><b id="sPend">-</b><span>รออนุมัติ</span></div></div>
+    <div class="panel"><span class="mute">ให้พนักงานเปิดลิงก์นี้ กด Start แล้วพิมพ์รหัสพนักงาน</span><br><b id="botLink"></b></div>
+    <div id="list"></div>
+  </div>
+</div>
+<dialog id="cfm"><h3 id="cfT"></h3><p id="cfB"></p>
+  <div class="cf-row"><button class="btn" id="cfOk">ยืนยัน</button><button class="btn no" id="cfNo">ยกเลิก</button></div></dialog>
+<footer>ระบบการขอใช้รถบริษัท © 2026 | พัฒนาโดย Sarawut.C</footer>
+
+<script>
+/* ===== ตั้งค่า ===== */
+const SUPABASE_URL = 'https://clowvcraydxpvwdbpkhi.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNsb3d2Y3JheWR4cHZ3ZGJwa2hpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3NTA3NTAsImV4cCI6MjEwMzMyNjc1MH0.pXV0g3JfakqNRgKjgCe87Reie5ZhXzqYXpZ3OVkluHk';
+const BOT_USERNAME = 'mouldmate_task_bot';   // ไม่ต้องใส่ @
+/* ================== */
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let reqs = [];
+
+function ask(title, body, ok, danger){
+  return new Promise(res => {
+    const d = $('#cfm'); $('#cfT').textContent = title; $('#cfB').textContent = body; $('#cfOk').textContent = ok;
+    $('#cfOk').style.background = danger ? 'var(--bad)' : '';
+    const done = v => { d.close(); res(v); };
+    $('#cfOk').onclick = () => done(true); $('#cfNo').onclick = () => done(false);
+    d.oncancel = e => { e.preventDefault(); done(false); }; d.showModal();
+  });
+}
+
+$('#go').onclick = async () => {
+  $('#le').textContent = '';
+  const { error } = await sb.auth.signInWithPassword({ email: $('#em').value.trim(), password: $('#pw').value });
+  if (error){ $('#le').textContent = 'อีเมลหรือรหัสผ่านไม่ถูกต้อง'; return; }
+  start();
+};
+$('#out').onclick = async () => { await sb.auth.signOut(); location.reload(); };
+
+async function start(){
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) return;
+  const { data: p } = await sb.from('profiles').select('role').eq('id', user.id).maybeSingle();
+  if (p && p.role !== 'admin'){ $('#le').textContent = 'บัญชีนี้ไม่มีสิทธิ์ (ต้องเป็น admin)'; await sb.auth.signOut(); return; }
+  $('#login').hidden = true; $('#app').hidden = false; $('#out').hidden = false;
+  $('#botLink').textContent = `https://t.me/${BOT_USERNAME}`;
+  load();
+}
+
+async function load(){
+  const [t, l, r] = await Promise.all([
+    sb.from('employees').select('id', { count: 'exact', head: true }),
+    sb.from('employees').select('id', { count: 'exact', head: true }).not('telegram_chat_id', 'is', null),
+    sb.from('telegram_link_requests').select('id,chat_id,telegram_username,telegram_name,code_text,created_at,employees(code,name,department,position)')
+      .eq('status', 'pending').order('created_at')
+  ]);
+  if (r.error){ $('#list').innerHTML = `<div class="empty">โหลดไม่สำเร็จ: ${esc(r.error.message)}</div>`; return; }
+  reqs = r.data || [];
+  $('#sTot').textContent = t.count ?? '-'; $('#sLink').textContent = l.count ?? '-'; $('#sPend').textContent = reqs.length;
+  $('#list').innerHTML = reqs.length ? reqs.map(q => { const e = q.employees || {};
+    return `<div class="req"><div class="nm">${esc(e.name)} <span class="mute">(รหัส ${esc(e.code)})</span></div>
+      <div class="mute">${esc(e.department || '-')}${e.position ? ' · ' + esc(e.position) : ''}</div>
+      <div class="tg">Telegram: <b>${esc(q.telegram_name || '-')}</b> ${q.telegram_username ? '@' + esc(q.telegram_username) : '<span class="mute">(ไม่มี username)</span>'}<br>
+        <span class="mute">ส่งคำขอ ${new Date(q.created_at).toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })}</span></div>
+      <div class="row"><button class="btn no" onclick="decide('${q.id}',false)">ไม่อนุมัติ</button><button class="btn" onclick="decide('${q.id}',true)">อนุมัติ</button></div></div>`; }).join('')
+    : '<div class="empty">ไม่มีคำขอที่รออนุมัติ</div>';
+}
+
+async function decide(id, approve){
+  const q = reqs.find(x => x.id === id), e = q.employees || {};
+  if (!await ask(approve ? 'อนุมัติการผูก Telegram' : 'ไม่อนุมัติคำขอ',
+    `${e.name} (รหัส ${e.code})\nTelegram: ${q.telegram_name || '-'} ${q.telegram_username ? '@' + q.telegram_username : ''}\n\n${approve ? 'ตรวจสอบว่าชื่อ Telegram เป็นของพนักงานคนนี้จริง' : 'บอทจะแจ้งพนักงานว่าไม่ได้รับอนุมัติ'}`,
+    approve ? 'อนุมัติ' : 'ไม่อนุมัติ', !approve)) return;
+  const { error } = await sb.functions.invoke('tg-approve', { body: { id, approve } });
+  if (error){
+    let m = error.message; try { m = (await error.context.json()).error || m; } catch (_) {}
+    await ask('ไม่สำเร็จ', m, 'ตกลง', true); return;
+  }
+  load();
+}
+sb.auth.getSession().then(({ data }) => { if (data.session) start(); });
+</script>
+</body>
+</html>
