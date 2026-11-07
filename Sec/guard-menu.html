@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ระบบ รปภ. - เมนูหลัก</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef6ff;--top:#d9ecff;--card:#fff;--ink:#12304f;--mute:#5f7791;--line:#dbe9f7;--edge:#9cc5ee;--gate:#1f8bf2;--chip:#e3f1ff}
+@media(prefers-color-scheme:dark){:root{--bg:#0f1b2a;--top:#14304a;--card:#172a3f;--ink:#eaf3fc;--mute:#9bb2c9;--line:#2a4560;--edge:#3f6a93;--gate:#2f86e0;--chip:#1f3a56}}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:flex;flex-direction:column;background:linear-gradient(180deg,var(--top) 0,var(--bg) 300px) var(--bg);color:var(--ink);font-family:'Noto Sans Thai',system-ui,sans-serif;line-height:1.5}
+header{background:linear-gradient(135deg,#1f8bf2,#5bbcff);color:#fff;padding:22px 16px;box-shadow:0 4px 16px rgba(31,139,242,.25)}
+header h1{margin:0;font-size:1.3rem;font-weight:800}
+header p{margin:2px 0 0;opacity:.92;font-size:.95rem}
+.wrap{width:100%;flex:1;max-width:720px;margin:0 auto;padding:16px 12px}
+.menu{display:grid;gap:12px}
+a.item{display:flex;gap:14px;align-items:center;padding:16px;background:var(--card);border:1px solid var(--line);border-radius:14px;color:inherit;text-decoration:none;box-shadow:0 2px 12px rgba(31,139,242,.09);transition:transform .12s,border-color .12s}
+a.item:hover{transform:translateY(-2px);border-color:var(--gate)}
+a.item:focus-visible{outline:3px solid var(--gate);outline-offset:2px}
+.ico{flex:0 0 56px;height:56px;border-radius:14px;background:var(--chip);display:grid;place-items:center;color:var(--gate)}
+.ico svg{width:30px;height:30px}
+.tx{flex:1}.tx b{display:block;font-size:1.1rem}.tx span{color:var(--mute);font-size:.92rem}
+.tag{display:inline-block;margin-top:4px;font-size:.78rem;font-weight:600;padding:1px 10px;border-radius:99px;background:var(--chip);color:var(--gate)}
+.arr{color:var(--edge);font-size:1.6rem}
+footer{text-align:center;padding:16px 12px;color:var(--mute);font-size:.85rem;border-top:1px solid var(--line);background:var(--card)}
+</style>
+</head>
+<body>
+<header><h1>ระบบตรวจเลขไมล์รถ รปภ.</h1><p>เลือกหน้าที่ต้องการใช้งาน</p></header>
+<div class="wrap">
+  <nav class="menu">
+    <a class="item" href="security.html">
+      <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 4.5-3.2 8-8 9-4.8-1-8-4.5-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg></div>
+      <div class="tx"><b>ตรวจเลขไมล์รถ</b><span>บันทึกเลขไมล์ก่อนออกและหลังกลับ รายวัน</span><br><span class="tag">สำหรับ รปภ.</span></div><div class="arr">›</div>
+    </a>
+    <a class="item" href="guard-report.html">
+      <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></div>
+      <div class="tx"><b>รายงาน</b><span>สรุปรายวัน รายเดือน รายปี ดาวน์โหลด CSV และพิมพ์ได้</span><br><span class="tag">ต้องใช้รหัสผู้ดูแล</span></div><div class="arr">›</div>
+    </a>
+    <a class="item" href="guards-admin.html">
+      <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><path d="M19 8v6M16 11h6"/></svg></div>
+      <div class="tx"><b>จัดการรายชื่อ รปภ.</b><span>เพิ่ม แก้ไข ลบ และกำหนด PIN เข้าใช้งาน</span><br><span class="tag">ต้องใช้รหัสผู้ดูแล</span></div><div class="arr">›</div>
+    </a>
+  </nav>
+</div>
+<footer>ระบบการขอใช้รถบริษัท © 2026 | พัฒนาโดย Sarawut.C</footer>
+</body>
+</html>
