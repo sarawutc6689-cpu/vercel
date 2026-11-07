@@ -79,6 +79,7 @@ const num = n => Number(n).toLocaleString('th-TH');
 const MONTHS = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
 const bkkDay = t => new Date(t).toLocaleDateString('sv-SE', { timeZone: 'Asia/Bangkok' });
 const bkkTime = t => t ? new Date(t).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Bangkok' }) : '';
+const stamp = t => t ? `${thDate(bkkDay(t))} ${new Date(t).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'Asia/Bangkok' })}` : '-';
 const thDate = d => { const [y, m, dd] = d.split('-'); return `${+dd} ${MONTHS[m-1]} ${+y + 543}`; };
 let admin = sessionStorage.getItem('admin_pin') || '', mode = 'day', rows = [], title = '';
 
@@ -156,22 +157,23 @@ function render(){
       + Object.entries(cars).sort((a, b) => b[1].km - a[1].km).map(([k, c]) => `<tr><td>${esc(k)}</td><td>${esc(c.t)}</td><td class="n">${c.n}</td><td class="n">${c.ok}</td><td class="n">${num(c.km)}</td></tr>`).join('') + '</table></div>';
   }
   if (mode !== 'year'){
-    h += `<h2>รายการ</h2><div class="scroll"><table><tr><th>วันที่</th><th>รถ</th><th>ผู้ใช้รถ</th><th>เวลา</th><th class="n">ไมล์ก่อน</th><th class="n">ไมล์หลัง</th><th class="n">ระยะ (กม.)</th><th>สถานะ</th><th>ผู้บันทึก</th></tr>`
+    h += `<h2>รายการ</h2><div class="scroll"><table><tr><th>วันที่</th><th>รถ</th><th>ผู้ใช้รถ</th><th>เวลา</th><th class="n">ไมล์ก่อน</th><th>วัน-เวลาบันทึกก่อน</th><th class="n">ไมล์หลัง</th><th>วัน-เวลาบันทึกหลัง</th><th class="n">ระยะ (กม.)</th><th>สถานะ</th><th>ผู้บันทึก</th></tr>`
       + rows.map(r => { const s = state(r), d = dist(r), by = [...new Set([r.odometer_before_by, r.odometer_after_by].filter(Boolean))].join(', ');
         return `<tr><td>${thDate(bkkDay(r.start_at))}</td><td>${esc(r.car_name)}<div class="mute">${esc(r.car_type)}</div></td>
         <td>${esc(r.employee_name)}<div class="mute">${esc(r.reason || '')}</div></td><td>${bkkTime(r.start_at)}${r.end_at ? '–' + bkkTime(r.end_at) : ''}</td>
-        <td class="n">${r.odometer_before != null ? num(r.odometer_before) : '-'}</td><td class="n">${r.odometer_after != null ? num(r.odometer_after) : '-'}</td>
+        <td class="n">${r.odometer_before != null ? num(r.odometer_before) : '-'}</td><td style="white-space:nowrap">${stamp(r.odometer_before_at)}</td><td class="n">${r.odometer_after != null ? num(r.odometer_after) : '-'}</td><td style="white-space:nowrap">${stamp(r.odometer_after_at)}</td>
         <td class="n">${d !== null ? num(d) : '-'}</td><td><span class="badge ${s[0]}">${s[1]}</span></td><td>${esc(by) || '-'}</td></tr>`; }).join('') + '</table></div>';
   }
   $('#out').innerHTML = h;
 }
 
+const stampCsv = t => t ? `${bkkDay(t)} ${new Date(t).toLocaleTimeString('en-GB', { timeZone: 'Asia/Bangkok' })}` : '';
 $('#csv').onclick = () => {
   if (!rows.length) return;
   const q = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
-  const head = ['วันที่','เลขที่เอกสาร','รถ','ประเภท','ผู้ใช้รถ','แผนก','เหตุผล','เวลาเริ่ม','เวลาสิ้นสุด','ไมล์ก่อน','ไมล์หลัง','ระยะทาง(กม.)','สถานะ','ผู้บันทึกก่อน','ผู้บันทึกหลัง'];
+  const head = ['วันที่','เลขที่เอกสาร','รถ','ประเภท','ผู้ใช้รถ','แผนก','เหตุผล','เวลาเริ่ม','เวลาสิ้นสุด','ไมล์ก่อน','วัน-เวลาบันทึกก่อน','ไมล์หลัง','วัน-เวลาบันทึกหลัง','ระยะทาง(กม.)','สถานะ','ผู้บันทึกก่อน','ผู้บันทึกหลัง'];
   const lines = rows.map(r => [bkkDay(r.start_at), r.doc_number, r.car_name, r.car_type, r.employee_name, r.department, r.reason, bkkTime(r.start_at), bkkTime(r.end_at),
-    r.odometer_before, r.odometer_after, dist(r), state(r)[1], r.odometer_before_by, r.odometer_after_by].map(q).join(','));
+    r.odometer_before, stampCsv(r.odometer_before_at), r.odometer_after, stampCsv(r.odometer_after_at), dist(r), state(r)[1], r.odometer_before_by, r.odometer_after_by].map(q).join(','));
   const blob = new Blob(['\ufeff' + [head.map(q).join(','), ...lines].join('\r\n')], { type: 'text/csv;charset=utf-8' });
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
   a.download = `guard-report-${range()[0]}_${range()[1]}.csv`; a.click();
