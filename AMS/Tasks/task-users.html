@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>จัดการผู้ใช้ระบบสั่งงาน</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<style>
+:root{--bg:#eef6ff;--top:#d9ecff;--card:#fff;--ink:#12304f;--mute:#5f7791;--line:#dbe9f7;--edge:#9cc5ee;--gate:#1f8bf2;--ok:#1a7f55;--okbg:#ddf5e9;--bad:#c62828;--badbg:#fde8e8}
+@media(prefers-color-scheme:dark){:root{--bg:#0f1b2a;--top:#14304a;--card:#172a3f;--ink:#eaf3fc;--mute:#9bb2c9;--line:#2a4560;--edge:#3f6a93;--gate:#2f86e0;--ok:#6fd49b;--okbg:#17372a;--bad:#ff8a80;--badbg:#42201f}}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:flex;flex-direction:column;background:linear-gradient(180deg,var(--top) 0,var(--bg) 300px) var(--bg);color:var(--ink);font-family:'Noto Sans Thai',system-ui,sans-serif;line-height:1.5}
+header{background:linear-gradient(135deg,#1f8bf2,#5bbcff);color:#fff;padding:16px;box-shadow:0 4px 16px rgba(31,139,242,.25);display:flex;justify-content:space-between;align-items:center}
+header h1{margin:0;font-size:1.15rem;font-weight:800}
+header button{background:rgba(255,255,255,.2);color:#fff;border:0;border-radius:8px;padding:6px 12px;font:inherit;cursor:pointer}
+.wrap{width:100%;flex:1;max-width:760px;margin:0 auto;padding:14px 12px}
+.panel,.u{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:0 2px 12px rgba(31,139,242,.09)}
+label{display:block;font-weight:600;margin-top:10px}
+input[type=text],input[type=password]{width:100%;height:46px;margin-top:4px;border:2px solid var(--edge);border-radius:10px;background:var(--card);color:var(--ink);font:inherit;padding:0 12px}
+.btn{height:46px;padding:0 18px;border:0;border-radius:12px;font:inherit;font-weight:800;cursor:pointer;background:var(--gate);color:#fff}
+.btn.sec{background:var(--line);color:var(--ink)}.btn.no{background:transparent;border:2px solid var(--bad);color:var(--bad)}.btn.sm{height:38px;padding:0 14px;font-size:.9rem}
+.bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.u{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.u .who{flex:1;min-width:180px}.u .nm{font-weight:800}.u.off .nm{color:var(--mute);text-decoration:line-through}
+.acts{display:flex;gap:8px}
+.chip{font-size:.78rem;font-weight:600;padding:2px 10px;border-radius:99px;background:var(--line)}.chip.ok{background:var(--okbg);color:var(--ok)}
+.mute{color:var(--mute);font-size:.92rem}.err{color:var(--bad);min-height:1.3em;margin:8px 0 0}
+.chk{display:flex;gap:8px;align-items:center;margin-top:12px;font-weight:600}.chk input{width:20px;height:20px}
+dialog{border:0;border-radius:22px;padding:24px 22px 20px;background:var(--card);color:var(--ink);width:min(400px,92vw);box-shadow:0 20px 60px rgba(18,48,79,.35)}
+dialog::backdrop{background:rgba(18,48,79,.45);backdrop-filter:blur(3px)}
+dialog h3{margin:0 0 4px}#cfm{text-align:center}#cfm p{margin:6px 0 0;color:var(--mute);white-space:pre-line}
+.cf-row{display:flex;flex-direction:column;gap:8px;margin-top:18px}.cf-row .btn.sec{background:transparent;color:var(--mute)}
+.pwrow{display:flex;gap:8px}.pwrow .btn{margin-top:4px;flex:none}
+footer{text-align:center;padding:16px 12px;color:var(--mute);font-size:.85rem;border-top:1px solid var(--line);background:var(--card)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--gate);outline-offset:2px}
+</style>
+</head>
+<body>
+<header><h1>จัดการผู้ใช้ระบบสั่งงาน</h1><button id="out" hidden>ออกจากระบบ</button></header>
+<div class="wrap">
+  <div class="panel" id="login">
+    <strong>ล็อกอินผู้สั่งงาน</strong>
+    <label>ชื่อผู้ใช้<input type="text" id="em" autocomplete="username" autocapitalize="none"></label>
+    <label>รหัสผ่าน<input type="password" id="pw" autocomplete="current-password"></label>
+    <p class="err" id="le"></p><button class="btn" id="go" style="width:100%">เข้าสู่ระบบ</button>
+  </div>
+  <div id="app" hidden>
+    <div class="bar"><span class="mute" id="count"></span><button class="btn" id="add">เพิ่มผู้ใช้</button></div>
+    <div id="list"></div>
+  </div>
+</div>
+
+<dialog id="fm"><h3 id="fT"></h3>
+  <label id="fuL">ชื่อผู้ใช้ (a-z 0-9 . _ -)<input type="text" id="fu" autocapitalize="none" autocomplete="off"></label>
+  <label>ชื่อที่แสดง<input type="text" id="fn" maxlength="60"></label>
+  <label id="fpL">รหัสผ่าน (อย่างน้อย 8 ตัว)<div class="pwrow"><input type="text" id="fp" autocomplete="new-password"><button type="button" class="btn sec sm" id="gen">สุ่ม</button></div></label>
+  <label class="chk" id="faL"><input type="checkbox" id="fa"> เปิดใช้งาน</label>
+  <p class="err" id="fe"></p>
+  <div class="cf-row"><button class="btn" id="fOk">บันทึก</button><button type="button" class="btn sec" id="fNo">ยกเลิก</button></div>
+</dialog>
+<dialog id="cfm"><h3 id="cfT"></h3><p id="cfB"></p>
+  <div class="cf-row"><button class="btn" id="cfOk">ยืนยัน</button><button class="btn sec" id="cfNo">ยกเลิก</button></div></dialog>
+<footer>ระบบการขอใช้รถบริษัท © 2026 | พัฒนาโดย Sarawut.C</footer>
+
+<script>
+/* ===== ตั้งค่า ===== */
+const SUPABASE_URL = 'https://clowvcraydxpvwdbpkhi.supabase.co';
+const SUPABASE_ANON_KEY = 'YOUR_ANON_KEY';
+const EMAIL_DOMAIN = '@tokai.local';
+/* ================== */
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let users = [], meId = '', editing = null;
+
+function ask(title, body, ok = 'ยืนยัน', cancel = 'ยกเลิก', danger = false){
+  return new Promise(res => {
+    const d = $('#cfm'); $('#cfT').textContent = title; $('#cfB').textContent = body;
+    $('#cfOk').textContent = ok; $('#cfOk').style.background = danger ? 'var(--bad)' : '';
+    $('#cfNo').textContent = cancel || ''; $('#cfNo').hidden = !cancel;
+    const done = v => { d.close(); res(v); };
+    $('#cfOk').onclick = () => done(true); $('#cfNo').onclick = () => done(false);
+    d.oncancel = e => { e.preventDefault(); done(false); }; d.showModal();
+  });
+}
+async function call(body){
+  const { data, error } = await sb.functions.invoke('manage-task-users', { body });
+  if (error){ let m = error.message; try { m = (await error.context.json()).error || m; } catch (_) {} throw new Error(m); }
+  return data;
+}
+
+$('#go').onclick = async () => {
+  $('#le').textContent = '';
+  const { error } = await sb.auth.signInWithPassword({ email: (v => v.includes('@') ? v : v + EMAIL_DOMAIN)($('#em').value.trim().toLowerCase()), password: $('#pw').value });
+  if (error){ $('#le').textContent = 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง'; return; }
+  start();
+};
+$('#out').onclick = async () => { await sb.auth.signOut(); location.reload(); };
+
+async function start(){
+  const { data: { user } } = await sb.auth.getUser(); if (!user) return;
+  const { data: a } = await sb.from('task_admins').select('user_id').eq('user_id', user.id).eq('active', true).maybeSingle();
+  if (!a){ $('#le').textContent = 'บัญชีนี้ไม่ได้อยู่ในรายชื่อผู้สั่งงาน'; await sb.auth.signOut(); return; }
+  $('#login').hidden = true; $('#app').hidden = false; $('#out').hidden = false;
+  load();
+}
+async function load(){
+  try {
+    const r = await call({ action: 'list' }); users = r.users; meId = r.me;
+    $('#count').textContent = `${users.length} บัญชี`;
+    $('#list').innerHTML = users.map(u => `
+      <div class="u ${u.active ? '' : 'off'}"><div class="who"><div class="nm">${esc(u.display_name)} ${u.user_id === meId ? '<span class="chip">คุณ</span>' : ''}</div>
+        <div class="mute">ชื่อผู้ใช้: ${esc(u.username)}</div></div>
+        <span class="chip ${u.active ? 'ok' : ''}">${u.active ? 'ใช้งาน' : 'ปิดใช้งาน'}</span>
+        <div class="acts"><button class="btn sec sm" onclick="openForm('${u.user_id}')">แก้ไข</button>
+        ${u.user_id === meId ? '' : `<button class="btn no sm" onclick="del('${u.user_id}')">ลบ</button>`}</div></div>`).join('');
+  } catch (e){ $('#list').innerHTML = `<div class="u">โหลดไม่สำเร็จ: ${esc(e.message)}</div>`; }
+}
+
+function openForm(id){
+  editing = id; const u = users.find(x => x.user_id === id);
+  $('#fT').textContent = u ? 'แก้ไขผู้ใช้' : 'เพิ่มผู้ใช้';
+  $('#fuL').hidden = !!u; $('#faL').hidden = !u || id === meId;
+  $('#fpL').firstChild.textContent = u ? 'รหัสผ่านใหม่ (เว้นว่าง = ไม่เปลี่ยน)' : 'รหัสผ่าน (อย่างน้อย 8 ตัว)';
+  $('#fu').value = ''; $('#fn').value = u ? u.display_name : ''; $('#fp').value = ''; $('#fa').checked = u ? u.active : true; $('#fe').textContent = '';
+  $('#fm').showModal();
+}
+$('#add').onclick = () => openForm(null);
+$('#fNo').onclick = () => $('#fm').close();
+$('#gen').onclick = () => { const c = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789'; $('#fp').value = Array.from(crypto.getRandomValues(new Uint8Array(10)), n => c[n % c.length]).join(''); };
+$('#fOk').onclick = async () => {
+  $('#fe').textContent = ''; $('#fOk').disabled = true;
+  try {
+    if (editing === null){
+      const username = $('#fu').value.trim().toLowerCase(), pw = $('#fp').value;
+      await call({ action: 'create', username, display_name: $('#fn').value, password: pw });
+      $('#fm').close();
+      await ask('สร้างบัญชีแล้ว', `ชื่อผู้ใช้: ${username}\nรหัสผ่าน: ${pw}\n\nจดรหัสผ่านและแจ้งผู้ใช้ จะดูซ้ำไม่ได้`, 'ตกลง', null);
+    } else {
+      const u = users.find(x => x.user_id === editing), body = { action: 'update', user_id: editing, display_name: $('#fn').value };
+      if ($('#fp').value) body.password = $('#fp').value;
+      if (editing !== meId) body.active = $('#fa').checked;
+      await call(body); $('#fm').close();
+      if (body.password) await ask('เปลี่ยนรหัสผ่านแล้ว', `${u.display_name}\nรหัสผ่านใหม่: ${body.password}`, 'ตกลง', null);
+    }
+    load();
+  } catch (e){ $('#fe').textContent = e.message; }
+  $('#fOk').disabled = false;
+};
+async function del(id){
+  const u = users.find(x => x.user_id === id);
+  if (!await ask('ลบผู้ใช้นี้?', `${u.display_name} (${u.username})\nบัญชีจะถูกลบถาวรและล็อกอินไม่ได้อีก`, 'ลบ', 'ยกเลิก', true)) return;
+  try { await call({ action: 'delete', user_id: id }); load(); } catch (e){ await ask('ไม่สำเร็จ', e.message, 'ตกลง', null); }
+}
+sb.auth.getSession().then(({ data }) => { if (data.session) start(); });
+</script>
+</body>
+</html>
