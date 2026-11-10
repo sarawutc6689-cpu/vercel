@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ระบบสั่งงาน</title>
+<style>
+:root{--bg:#eef6ff;--card:#fff;--ink:#12304f;--mute:#5f7791;--line:#dbe9f7;--gate:#1f8bf2}
+@media(prefers-color-scheme:dark){:root{--bg:#0f1b2a;--card:#172a3f;--ink:#eaf3fc;--mute:#9bb2c9;--line:#2a4560;--gate:#2f86e0}}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);font-family:'Noto Sans Thai',system-ui,sans-serif}
+#side{position:fixed;top:0;left:0;bottom:0;width:232px;background:var(--card);border-right:1px solid var(--line);z-index:60;display:flex;flex-direction:column;padding:14px 10px;overflow:auto}
+.brand{font-weight:800;font-size:1.05rem;padding:6px 10px 14px}.brand small{display:block;font-weight:400;color:var(--mute);font-size:.8rem}
+#side a{display:flex;gap:10px;align-items:center;padding:11px 12px;border-radius:12px;color:var(--ink);text-decoration:none;font-weight:600;margin-bottom:4px}
+#side a svg{width:20px;height:20px;flex:none;color:var(--mute)}
+#side a:hover{background:var(--bg)}#side a.on{background:var(--gate);color:#fff}#side a.on svg{color:#fff}
+a:focus-visible,button:focus-visible{outline:3px solid var(--gate);outline-offset:2px}
+#fr{position:fixed;top:0;left:232px;width:calc(100% - 232px);height:100%;border:0;background:var(--bg)}
+#top,#shade{display:none}
+@media(max-width:900px){
+  #side{transform:translateX(-100%);transition:transform .2s;box-shadow:0 0 30px rgba(0,0,0,.25)}
+  body.open #side{transform:none}
+  #top{display:flex;align-items:center;gap:10px;position:fixed;top:0;left:0;right:0;height:52px;padding:0 10px;background:linear-gradient(135deg,#1f8bf2,#5bbcff);color:#fff;z-index:50;font-weight:800}
+  #burger{width:40px;height:40px;border:0;border-radius:10px;background:rgba(255,255,255,.25);color:#fff;cursor:pointer;display:grid;place-items:center}
+  #burger svg{width:24px;height:24px}
+  #fr{top:52px;left:0;width:100%;height:calc(100% - 52px)}
+  body.open #shade{display:block;position:fixed;inset:0;background:rgba(18,48,79,.4);z-index:55}
+}
+</style>
+</head>
+<body>
+<aside id="side" aria-label="เมนูระบบสั่งงาน"><div class="brand">ระบบสั่งงาน<small>มอบหมายงานผ่าน Telegram</small></div></aside>
+<div id="top"><button id="burger" aria-label="เปิดเมนู"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button><span id="ttl"></span></div>
+<div id="shade"></div>
+<iframe id="fr" title="เนื้อหา"></iframe>
+<script>
+const I = p => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+/* รายการเมนู: [รหัสใน #, ชื่อ, ไฟล์หน้า, ไอคอน] — เพิ่มหน้าใหม่แก้ที่นี่ที่เดียว */
+const ROUTES = [
+  ['dashboard', 'ภาพรวม', 'task-dashboard.html', I('<rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/>')],
+  ['assign', 'สั่งงาน', 'task-assign.html', I('<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/>')],
+  ['report', 'รายงาน', 'task-report.html', I('<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>')],
+  ['approve', 'อนุมัติผูก Telegram', 'telegram-approve.html', I('<path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4z"/>')],
+  ['users', 'ผู้ใช้ระบบ', 'task-users.html', I('<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><path d="M19 8v6M16 11h6"/>')],
+];
+const $ = s => document.querySelector(s), fr = $('#fr');
+$('#side').insertAdjacentHTML('beforeend', ROUTES.map(([k, t, , ic]) => `<a href="#${k}" data-k="${k}">${ic}<span>${t}</span></a>`).join(''));
+function go(){
+  const r = ROUTES.find(x => x[0] === location.hash.slice(1)) || ROUTES[0];
+  document.querySelectorAll('#side a').forEach(a => a.classList.toggle('on', a.dataset.k === r[0]));
+  if (!fr.src.endsWith(r[2])) fr.src = r[2];
+  $('#ttl').textContent = r[1]; document.title = r[1] + ' - ระบบสั่งงาน';
+  document.body.classList.remove('open');
+}
+addEventListener('hashchange', go); go();
+$('#burger').onclick = $('#shade').onclick = () => document.body.classList.toggle('open');
+</script>
+</body>
+</html>
