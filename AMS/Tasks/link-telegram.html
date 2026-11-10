@@ -1,182 +1,207 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ผูกบัญชี Telegram</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ผูกบัญชี Telegram</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--bg:#eef6ff;--top:#d9ecff;--card:#fff;--ink:#12304f;--mute:#5f7791;--line:#dbe9f7;--edge:#9cc5ee;--gate:#1f8bf2;--ok:#1a7f55;--okbg:#ddf5e9;--bad:#c62828;--info:#e3f1ff}
+@media(prefers-color-scheme:dark){:root{--bg:#0f1b2a;--top:#14304a;--card:#172a3f;--ink:#eaf3fc;--mute:#9bb2c9;--line:#2a4560;--edge:#3f6a93;--gate:#2f86e0;--ok:#6fd49b;--okbg:#17372a;--bad:#ff8a80;--info:#1c3a58}}
+*{box-sizing:border-box}
+.hidden{display:none !important}
+body{margin:0;min-height:100vh;display:flex;flex-direction:column;background:linear-gradient(180deg,var(--top) 0,var(--bg) 300px) var(--bg);color:var(--ink);font-family:'Noto Sans Thai',system-ui,sans-serif;line-height:1.5}
+header{background:linear-gradient(135deg,#1f8bf2,#5bbcff);color:#fff;padding:16px;box-shadow:0 4px 16px rgba(31,139,242,.25)}
+header h1{margin:0;font-size:1.15rem;font-weight:800}
+.wrap{width:100%;flex:1;max-width:520px;margin:0 auto;padding:16px 14px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:14px;box-shadow:0 2px 12px rgba(31,139,242,.09)}
+.lead{color:var(--mute);text-align:center;margin:0 0 14px;font-size:.95rem}
+.howto{background:var(--info);border-radius:12px;padding:12px 14px;margin-bottom:16px;font-size:.92rem}
+.howto b{display:block;margin-bottom:4px}.howto ol{margin:0;padding-left:20px}.howto li{margin:3px 0}
+label{display:block;font-weight:600;margin-top:12px}
+input{width:100%;height:46px;margin-top:4px;border:2px solid var(--edge);border-radius:10px;background:var(--card);color:var(--ink);font:inherit;padding:0 12px}
+#employeeCodeInput{text-transform:uppercase}
+.row{display:flex;gap:8px}.row input{margin-top:0}
+.btn{height:46px;padding:0 18px;border:0;border-radius:12px;font:inherit;font-weight:800;cursor:pointer;background:var(--gate);color:#fff}
+.btn.dark{background:var(--ink);color:var(--card);flex:none}
+.btn:disabled{opacity:.55}
+#submitBtn{width:100%;margin-top:14px}
+.st{font-size:.85rem;margin:6px 0 0}.st.red{color:var(--bad)}.st.green{color:var(--ok)}.st.blue{color:var(--gate)}
+.found{background:var(--okbg);border:1px solid var(--ok);border-radius:12px;padding:10px 14px;margin-top:14px}
+.found small{color:var(--ok)}.found b{display:block;font-size:1.15rem;color:var(--ok)}
+.hint{font-size:.82rem;color:var(--mute);margin:6px 0 0}
+#statusMessage{margin-top:14px;text-align:center;font-weight:600;font-size:.95rem}
+.t-red{color:var(--bad)}.t-green{color:var(--ok)}
+footer{text-align:center;padding:16px 12px;color:var(--mute);font-size:.85rem;border-top:1px solid var(--line);background:var(--card)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--gate);outline-offset:2px}
+</style>
 </head>
-<body class="bg-gray-100 p-8 flex items-center justify-center min-h-screen">
-    <div class="max-w-md w-full bg-white p-6 rounded-lg shadow-md">
-        <h1 class="text-2xl font-bold mb-2 text-gray-800 text-center">🔗 ผูกบัญชี Telegram</h1>
-        <p class="text-sm text-gray-500 text-center mb-6">กรอกรหัสพนักงานและ Chat ID เพื่อรับการแจ้งเตือน</p>
-        
-        <!-- วิธีหา Chat ID -->
-        <div class="bg-blue-50 p-4 rounded-md mb-6 text-sm text-blue-800">
-            <p class="font-bold mb-1">วิธีหา Chat ID:</p>
-            <ol class="list-decimal pl-5 space-y-1">
-                
-                <li>ค้นหาบอทของบริษัทใน Telegram กรอก  @mouldmate_task_bot (ต้องมี@) แล้วกด <b>Start</b></li>
-                <li>พิมพ์ข้อความอะไรก็ได้ส่งไปหาบอท 1 ครั้ง</li>
-                <li>ระบบจะดึง Chat ID ของคุณอัตโนมัติ (หรือติดต่อแอดมินเพื่อขอรับ ID)</li>
-            </ol>
-        </div>
+<body>
+<header><h1>🔗 ผูกบัญชี Telegram</h1></header>
+<div class="wrap">
+  <div class="panel">
+    <p class="lead">กรอกรหัสพนักงานและ Chat ID เพื่อรับการแจ้งเตือน</p>
 
-        <form id="linkForm" class="space-y-4">
-            <!-- ช่องค้นหารหัสพนักงาน -->
-            <div>
-                <label class="block text-sm font-medium text-gray-700">รหัสพนักงาน (Code)</label>
-                <div class="flex gap-2 mt-1">
-                    <input type="text" id="employeeCodeInput" class="block w-full border border-gray-300 rounded-md p-2 uppercase" 
-                           required placeholder="">
-                    <button type="button" id="searchBtn" class="bg-gray-800 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition">
-                        ค้นหา
-                    </button>
-                </div>
-                <p id="searchStatus" class="text-xs mt-1 text-gray-500"></p>
-            </div>
-
-            <!-- แสดงชื่อที่ค้นเจอ (ซ่อนไว้ก่อน) -->
-            <div id="employeeInfo" class="hidden bg-green-50 p-3 rounded-md border border-green-200">
-                <p class="text-sm text-green-800">พบข้อมูลพนักงาน:</p>
-                <p class="font-bold text-green-900 text-lg" id="foundEmployeeName"></p>
-            </div>
-
-            <!-- ช่องกรอก Chat ID (จะแสดงเมื่อค้นเจอ) -->
-            <div id="chatIdSection" class="hidden">
-                <label class="block text-sm font-medium text-gray-700">Telegram Chat ID</label>
-               <input type="text" id="chatIdInput" class="mt-1 block w-full border border-gray-300 rounded-md p-2" 
-       placeholder="เช่น 123456789" pattern="\d+" title="กรุณากรอกเฉพาะตัวเลข 0-9 เท่านั้น">
-                <p class="text-xs text-gray-500 mt-1">หากเคยผูกไว้แล้ว ระบบจะดึงข้อมูลเดิมมาให้</p>
-            </div>
-
-            <button type="submit" id="submitBtn" class="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition hidden">
-                บันทึกข้อมูล
-            </button>
-        </form>
-        <div id="statusMessage" class="mt-4 text-center font-bold text-sm"></div>
-        
+    <!-- วิธีหา Chat ID -->
+    <div class="howto">
+      <b>วิธีหา Chat ID:</b>
+      <ol>
+        <li>ค้นหาบอทของบริษัทใน Telegram กรอก @mouldmate_task_bot (ต้องมี@) แล้วกด <b style="display:inline">Start</b></li>
+        <li>พิมพ์ข้อความอะไรก็ได้ส่งไปหาบอท 1 ครั้ง</li>
+        <li>ระบบจะดึง Chat ID ของคุณอัตโนมัติ (หรือติดต่อแอดมินเพื่อขอรับ ID)</li>
+      </ol>
     </div>
 
-    <script>
-        // ==== ตั้งค่า Supabase ====
-        const SUPABASE_URL = 'https://clowvcraydxpvwdbpkhi.supabase.co'; // ใส่ URL ของคุณ
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNsb3d2Y3JheWR4cHZ3ZGJwa2hpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3NTA3NTAsImV4cCI6MjEwMzMyNjc1MH0.pXV0g3JfakqNRgKjgCe87Reie5ZhXzqYXpZ3OVkluHk'; // ใส่ ANON KEY ของคุณ
-        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    <form id="linkForm">
+      <!-- ช่องค้นหารหัสพนักงาน -->
+      <div>
+        <label for="employeeCodeInput" style="margin-top:0">รหัสพนักงาน (Code)</label>
+        <div class="row" style="margin-top:4px">
+          <input type="text" id="employeeCodeInput" required placeholder="">
+          <button type="button" id="searchBtn" class="btn dark">ค้นหา</button>
+        </div>
+        <p id="searchStatus" class="st"></p>
+      </div>
 
-        // ==== Element References ====
-        const searchBtn = document.getElementById('searchBtn');
-        const employeeCodeInput = document.getElementById('employeeCodeInput');
-        const searchStatus = document.getElementById('searchStatus');
-        const employeeInfo = document.getElementById('employeeInfo');
-        const foundEmployeeName = document.getElementById('foundEmployeeName');
-        const chatIdSection = document.getElementById('chatIdSection');
-        const chatIdInput = document.getElementById('chatIdInput');
-        const submitBtn = document.getElementById('submitBtn');
-        const linkForm = document.getElementById('linkForm');
-        const statusMessage = document.getElementById('statusMessage');
+      <!-- แสดงชื่อที่ค้นเจอ (ซ่อนไว้ก่อน) -->
+      <div id="employeeInfo" class="found hidden">
+        <small>พบข้อมูลพนักงาน:</small>
+        <b id="foundEmployeeName"></b>
+      </div>
 
-        let currentEmployeeId = null; // เก็บ ID พนักงานที่ค้นเจอ
+      <!-- ช่องกรอก Chat ID (จะแสดงเมื่อค้นเจอ) -->
+      <div id="chatIdSection" class="hidden">
+        <label for="chatIdInput">Telegram Chat ID</label>
+        <input type="text" id="chatIdInput" placeholder="เช่น 123456789" pattern="\d+" title="กรุณากรอกเฉพาะตัวเลข 0-9 เท่านั้น">
+        <p class="hint">หากเคยผูกไว้แล้ว ระบบจะดึงข้อมูลเดิมมาให้</p>
+      </div>
 
-        // 1. ฟังก์ชันค้นหาพนักงานจากรหัส (Code)
-        async function searchEmployee() {
-            const code = employeeCodeInput.value.trim().toUpperCase();
-            
-            // รีเซ็ตสถานะก่อนค้นหา
-            statusMessage.textContent = '';
-            employeeInfo.classList.add('hidden');
-            chatIdSection.classList.add('hidden');
-            submitBtn.classList.add('hidden');
-            currentEmployeeId = null;
+      <button type="submit" id="submitBtn" class="btn hidden">บันทึกข้อมูล</button>
+    </form>
+    <div id="statusMessage"></div>
+  </div>
+</div>
+<footer>ระบบการขอใช้รถบริษัท © 2026 | พัฒนาโดย Sarawut.C</footer>
 
-            if (!code) {
-                searchStatus.textContent = 'กรุณากรอกรหัสพนักงาน';
-                searchStatus.className = 'text-xs mt-1 text-red-500';
-                return;
-            }
+<script>
+// ==== ตั้งค่า Supabase ====
+const SUPABASE_URL = 'https://clowvcraydxpvwdbpkhi.supabase.co'; // ใส่ URL ของคุณ
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNsb3d2Y3JheWR4cHZ3ZGJwa2hpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3NTA3NTAsImV4cCI6MjEwMzMyNjc1MH0.pXV0g3JfakqNRgKjgCe87Reie5ZhXzqYXpZ3OVkluHk'; // ใส่ ANON KEY ของคุณ
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-            searchStatus.textContent = 'กำลังค้นหา...';
-            searchStatus.className = 'text-xs mt-1 text-blue-500';
+// ==== Element References ====
+const searchBtn = document.getElementById('searchBtn');
+const employeeCodeInput = document.getElementById('employeeCodeInput');
+const searchStatus = document.getElementById('searchStatus');
+const employeeInfo = document.getElementById('employeeInfo');
+const foundEmployeeName = document.getElementById('foundEmployeeName');
+const chatIdSection = document.getElementById('chatIdSection');
+const chatIdInput = document.getElementById('chatIdInput');
+const submitBtn = document.getElementById('submitBtn');
+const linkForm = document.getElementById('linkForm');
+const statusMessage = document.getElementById('statusMessage');
 
-            // ค้นหาในตาราง employees โดยใช้คอลัมน์ code
-            const { data, error } = await supabaseClient
-                .from('employees')
-                .select('id, name, telegram_chat_id')
-                .eq('code', code)
-                .single(); // คาดหวังผลลัพธ์แค่ 1 แถว
+let currentEmployeeId = null; // เก็บ ID พนักงานที่ค้นเจอ
 
-            if (error || !data) {
-                searchStatus.textContent = '❌ ไม่พบรหัสพนักงานนี้ในระบบ';
-                searchStatus.className = 'text-xs mt-1 text-red-500';
-                return;
-            }
+// 1. ฟังก์ชันค้นหาพนักงานจากรหัส (Code)
+async function searchEmployee() {
+  const code = employeeCodeInput.value.trim().toUpperCase();
 
-            // เมื่อค้นเจอ
-            searchStatus.textContent = '✅ พบข้อมูล';
-            searchStatus.className = 'text-xs mt-1 text-green-500';
-            
-            currentEmployeeId = data.id;
-            foundEmployeeName.textContent = data.name;
-            employeeInfo.classList.remove('hidden');
-            
-            // แสดงช่องกรอก Chat ID และปุ่มบันทึก
-            chatIdSection.classList.remove('hidden');
-            submitBtn.classList.remove('hidden');
-            
-            // ถ้าเคยมี chat_id อยู่แล้ว ให้ดึงมาใส่ในช่อง
-            chatIdInput.value = data.telegram_chat_id || '';
-        }
+  // รีเซ็ตสถานะก่อนค้นหา
+  statusMessage.textContent = '';
+  employeeInfo.classList.add('hidden');
+  chatIdSection.classList.add('hidden');
+  submitBtn.classList.add('hidden');
+  currentEmployeeId = null;
 
-        // กดปุ่มค้นหา หรือกด Enter ในช่องรหัส
-        searchBtn.addEventListener('click', searchEmployee);
-        employeeCodeInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                searchEmployee();
-            }
-        });
+  if (!code) {
+    searchStatus.textContent = 'กรุณากรอกรหัสพนักงาน';
+    searchStatus.className = 'st red';
+    return;
+  }
 
-        // 2. ฟังก์ชันบันทึก Chat ID
-        linkForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            if (!currentEmployeeId) {
-                statusMessage.innerHTML = '<span class="text-red-600">❌ กรุณาค้นหารหัสพนักงานก่อน</span>';
-                return;
-            }
+  searchStatus.textContent = 'กำลังค้นหา...';
+  searchStatus.className = 'st blue';
 
-            const chatId = chatIdInput.value.trim();
-            if (!chatId) {
-                statusMessage.innerHTML = '<span class="text-red-600">❌ กรุณากรอก Chat ID</span>';
-                return;
-            }
+  // ค้นหาในตาราง employees โดยใช้คอลัมน์ code
+  const { data, error } = await supabaseClient
+    .from('employees')
+    .select('id, name, telegram_chat_id')
+    .eq('code', code)
+    .single(); // คาดหวังผลลัพธ์แค่ 1 แถว
 
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'กำลังบันทึก...';
-            statusMessage.textContent = '';
+  if (error || !data) {
+    searchStatus.textContent = '❌ ไม่พบรหัสพนักงานนี้ในระบบ';
+    searchStatus.className = 'st red';
+    return;
+  }
 
-            try {
-                const { error } = await supabaseClient
-                    .from('employees')
-                    .update({ telegram_chat_id: chatId })
-                    .eq('id', currentEmployeeId);
+  // เมื่อค้นเจอ
+  searchStatus.textContent = '✅ พบข้อมูล';
+  searchStatus.className = 'st green';
 
-                if (error) throw error;
+  currentEmployeeId = data.id;
+  foundEmployeeName.textContent = data.name;
+  employeeInfo.classList.remove('hidden');
 
-                statusMessage.innerHTML = '<span class="text-green-600">✅ บันทึก Chat ID สำเร็จ! คุณพร้อมรับแจ้งเตือนแล้ว</span>';
-                
-                // อัปเดตข้อมูลในฟอร์มให้เป็นค่าใหม่
-                await searchEmployee(); 
+  // แสดงช่องกรอก Chat ID และปุ่มบันทึก
+  chatIdSection.classList.remove('hidden');
+  submitBtn.classList.remove('hidden');
 
-            } catch (error) {
-                console.error(error);
-                statusMessage.innerHTML = `<span class="text-red-600">❌ ผิดพลาด: ${error.message}</span>`;
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'บันทึกข้อมูล';
-            }
-        });
-    </script>
+  // ถ้าเคยมี chat_id อยู่แล้ว ให้ดึงมาใส่ในช่อง
+  chatIdInput.value = data.telegram_chat_id || '';
+}
+
+// กดปุ่มค้นหา หรือกด Enter ในช่องรหัส
+searchBtn.addEventListener('click', searchEmployee);
+employeeCodeInput.addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    searchEmployee();
+  }
+});
+
+// 2. ฟังก์ชันบันทึก Chat ID
+linkForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  if (!currentEmployeeId) {
+    statusMessage.innerHTML = '<span class="t-red">❌ กรุณาค้นหารหัสพนักงานก่อน</span>';
+    return;
+  }
+
+  const chatId = chatIdInput.value.trim();
+  if (!chatId) {
+    statusMessage.innerHTML = '<span class="t-red">❌ กรุณากรอก Chat ID</span>';
+    return;
+  }
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'กำลังบันทึก...';
+  statusMessage.textContent = '';
+
+  try {
+    const { error } = await supabaseClient
+      .from('employees')
+      .update({ telegram_chat_id: chatId })
+      .eq('id', currentEmployeeId);
+
+    if (error) throw error;
+
+    statusMessage.innerHTML = '<span class="t-green">✅ บันทึก Chat ID สำเร็จ! คุณพร้อมรับแจ้งเตือนแล้ว</span>';
+
+    // อัปเดตข้อมูลในฟอร์มให้เป็นค่าใหม่
+    await searchEmployee();
+
+  } catch (error) {
+    console.error(error);
+    statusMessage.innerHTML = `<span class="t-red">❌ ผิดพลาด: ${error.message}</span>`;
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'บันทึกข้อมูล';
+  }
+});
+</script>
 </body>
 </html>
