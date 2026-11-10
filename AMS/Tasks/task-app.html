@@ -29,7 +29,7 @@ a:focus-visible,button:focus-visible{outline:3px solid var(--gate);outline-offse
 </style>
 </head>
 <body>
-<aside id="side" aria-label="เมนูระบบสั่งงาน"><div class="brand">ระบบสั่งงาน<small>มอบหมายงาน</small></div></aside>
+<aside id="side" aria-label="เมนูระบบสั่งงาน"><div class="brand">ระบบสั่งงาน<small>มอบหมายงานผ่าน Telegram</small></div></aside>
 <div id="top"><button id="burger" aria-label="เปิดเมนู"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button><span id="ttl"></span></div>
 <div id="shade"></div>
 <iframe id="fr" title="เนื้อหา"></iframe>
@@ -43,6 +43,7 @@ const ROUTES = [
   ['approve', 'อนุมัติผูก Telegram', 'telegram-approve.html', I('<path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4z"/>')],
   ['link', 'เพิ่มไอดี Telegram', 'link-telegram.html', I('<path d="M10 13a5 5 0 007.1 0l3-3a5 5 0 00-7.1-7.1l-1.7 1.7"/><path d="M14 11a5 5 0 00-7.1 0l-3 3a5 5 0 007.1 7.1l1.7-1.7"/>')],
   ['users', 'ผู้ใช้ระบบ', 'task-users.html', I('<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><path d="M19 8v6M16 11h6"/>')],
+  ['manual', 'คู่มือการใช้งาน', 'task-manual.html', I('<path d="M4 19.5A2.5 2.5 0 016.5 17H20V3H6.5A2.5 2.5 0 004 5.5z"/><path d="M4 19.5A2.5 2.5 0 006.5 22H20v-5"/>')],
 ];
 const $ = s => document.querySelector(s), fr = $('#fr');
 $('#side').insertAdjacentHTML('beforeend', ROUTES.map(([k, t, , ic]) => `<a href="#${k}" data-k="${k}">${ic}<span>${t}</span></a>`).join(''));
