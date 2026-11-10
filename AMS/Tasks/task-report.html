@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>รายงานงานมอบหมาย</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<style>
+:root{--bg:#eef6ff;--top:#d9ecff;--card:#fff;--ink:#12304f;--mute:#5f7791;--line:#dbe9f7;--edge:#9cc5ee;--gate:#1f8bf2;--ok:#1a7f55;--okbg:#ddf5e9;--warn:#a05a00;--warnbg:#fff1d6;--bad:#c62828;--badbg:#fde8e8}
+@media(prefers-color-scheme:dark){:root{--bg:#0f1b2a;--top:#14304a;--card:#172a3f;--ink:#eaf3fc;--mute:#9bb2c9;--line:#2a4560;--edge:#3f6a93;--gate:#2f86e0;--ok:#6fd49b;--okbg:#17372a;--warn:#f2b95a;--warnbg:#41300f;--bad:#ff8a80;--badbg:#42201f}}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:flex;flex-direction:column;background:linear-gradient(180deg,var(--top) 0,var(--bg) 300px) var(--bg);color:var(--ink);font-family:'Noto Sans Thai',system-ui,sans-serif;line-height:1.5}
+header{background:linear-gradient(135deg,#1f8bf2,#5bbcff);color:#fff;padding:16px;box-shadow:0 4px 16px rgba(31,139,242,.25);display:flex;justify-content:space-between;align-items:center}
+header h1{margin:0;font-size:1.15rem;font-weight:800}
+header button{background:rgba(255,255,255,.2);color:#fff;border:0;border-radius:8px;padding:6px 12px;font:inherit;cursor:pointer}
+.wrap{width:100%;flex:1;max-width:1200px;margin:0 auto;padding:16px 14px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px;box-shadow:0 2px 12px rgba(31,139,242,.09)}
+h2{margin:0 0 10px;font-size:1.05rem}
+.kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:14px}
+.kpi div{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;box-shadow:0 2px 12px rgba(31,139,242,.09)}
+.kpi b{display:block;font-size:2rem;line-height:1.2;font-variant-numeric:tabular-nums}.kpi span{color:var(--mute);font-size:.92rem}
+.kpi .bad b{color:var(--bad)}.kpi .ok b{color:var(--ok)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media(max-width:1000px){.grid2{grid-template-columns:1fr}}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.95rem}
+th,td{padding:9px 10px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}th{white-space:nowrap;color:var(--mute);font-weight:600}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}tr:last-child td{border-bottom:0}
+.bar{height:8px;border-radius:99px;background:var(--line);overflow:hidden;min-width:70px}.bar i{display:block;height:100%;background:var(--ok)}
+.chart{display:flex;align-items:flex-end;gap:6px;height:190px;overflow-x:auto;padding-top:8px}
+.col{flex:1;min-width:30px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}
+.pair{display:flex;align-items:flex-end;gap:2px;height:150px;width:100%;justify-content:center}
+.pair i{display:block;width:44%;max-width:18px;border-radius:4px 4px 0 0;min-height:2px}.pair .a{background:var(--gate)}.pair .b{background:var(--ok)}
+.col small{font-size:.72rem;color:var(--mute);margin-top:4px;white-space:nowrap}
+.legend{display:flex;gap:14px;font-size:.85rem;color:var(--mute);margin-top:6px}.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px}
+.chip{font-size:.78rem;font-weight:600;padding:2px 10px;border-radius:99px;background:var(--line);white-space:nowrap}
+.chip.ok{background:var(--okbg);color:var(--ok)}.chip.warn{background:var(--warnbg);color:var(--warn)}.chip.bad{background:var(--badbg);color:var(--bad)}
+.mute{color:var(--mute)}.empty{text-align:center;color:var(--mute);padding:26px}.err{color:var(--bad);min-height:1.3em;margin:8px 0 0}
+label{display:block;font-weight:600;margin-top:10px}
+input,select{width:100%;margin-top:4px;height:46px;border:2px solid var(--edge);border-radius:10px;background:var(--card);color:var(--ink);font:inherit;padding:0 12px}
+.btn{height:46px;padding:0 18px;border:0;border-radius:12px;font:inherit;font-weight:800;cursor:pointer;background:var(--gate);color:#fff}.btn.sec{background:var(--line);color:var(--ink)}
+.tabs{display:flex;gap:6px;margin-bottom:10px}.tabs button{flex:1;height:44px;border:2px solid var(--edge);background:var(--card);color:var(--ink);border-radius:10px;font:inherit;font-weight:600;cursor:pointer}.tabs button.on{background:var(--gate);border-color:var(--gate);color:#fff}
+.ctl{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px}.ctl input,.ctl select{width:auto;margin:0}
+footer{text-align:center;padding:16px 12px;color:var(--mute);font-size:.85rem;border-top:1px solid var(--line);background:var(--card)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--gate);outline-offset:2px}
+@media print{header,.tabs,.ctl,footer{display:none}body{background:#fff;color:#000}}
+
+</style>
+</head>
+<body>
+<header><h1>รายงานงานมอบหมาย</h1><button id="out" hidden>ออกจากระบบ</button></header>
+<div class="wrap">
+  <div class="panel" id="login" style="max-width:420px">
+    <strong>ล็อกอินผู้สั่งงาน</strong>
+    <label>ชื่อผู้ใช้<input type="text" id="em" autocomplete="username" autocapitalize="none"></label>
+    <label>รหัสผ่าน<input type="password" id="pw" autocomplete="current-password"></label>
+    <p class="err" id="le"></p><button class="btn" id="go" style="width:100%">เข้าสู่ระบบ</button>
+  </div>
+  <div id="app" hidden>
+    <div class="tabs"><button data-m="day" class="on">รายวัน</button><button data-m="month">รายเดือน</button><button data-m="year">รายปี</button></div>
+    <div class="ctl"><input type="date" id="vDay"><input type="month" id="vMonth" hidden><select id="vYear" hidden></select>
+      <button class="btn sec" id="csv">ดาวน์โหลด CSV</button><button class="btn sec" id="print">พิมพ์</button></div>
+    <div id="out2"></div>
+  </div>
+</div>
+<footer>ระบบการขอใช้รถบริษัท © 2026 | พัฒนาโดย Sarawut.C</footer>
+<script>
+/* ===== ตั้งค่า ===== */
+const SUPABASE_URL = 'https://clowvcraydxpvwdbpkhi.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNsb3d2Y3JheWR4cHZ3ZGJwa2hpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3NTA3NTAsImV4cCI6MjEwMzMyNjc1MH0.pXV0g3JfakqNRgKjgCe87Reie5ZhXzqYXpZ3OVkluHk';
+const EMAIL_DOMAIN = '@tokai.local';
+/* ================== */
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const num = n => Number(n ?? 0).toLocaleString('th-TH');
+const bkk = d => d.toLocaleDateString('sv-SE', { timeZone: 'Asia/Bangkok' });
+const addDays = (s, n) => { const d = new Date(s + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+const MONTHS = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+const thDate = d => { const [y, m, dd] = d.split('-'); return `${+dd} ${MONTHS[m-1]} ${+y + 543}`; };
+const fdt = t => t ? new Date(t).toLocaleString('th-TH', { timeZone: 'Asia/Bangkok', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '-';
+const pct = (a, b) => b ? Math.round(a * 100 / b) : 0;
+const ST = { pending: ['รอรับทราบ', 'warn'], acknowledged: ['รับทราบแล้ว', ''], done: ['เสร็จแล้ว', 'ok'], cancelled: ['ยกเลิก', 'bad'] };
+async function rpc(fn, args){ const { data, error } = await sb.rpc(fn, args); if (error) throw new Error(error.message); return data; }
+function bars(el, labels, a, b){
+  const mx = Math.max(1, ...a, ...b);
+  el.innerHTML = labels.map((l, i) => `<div class="col"><div class="pair"><i class="a" style="height:${a[i] * 100 / mx}%" title="สั่ง ${a[i]}"></i><i class="b" style="height:${b[i] * 100 / mx}%" title="เสร็จ ${b[i]}"></i></div><small>${l}</small></div>`).join('');
+}
+function deptTable(rows){
+  return rows.length ? `<table><tr><th>แผนก</th><th class="n">งาน</th><th class="n">เสร็จ</th><th class="n">เกินกำหนด</th><th>สำเร็จ</th></tr>` +
+    rows.map(r => `<tr><td>${esc(r.dept)}</td><td class="n">${num(r.total)}</td><td class="n">${num(r.done)}</td><td class="n">${r.overdue ? `<span class="chip bad">${r.overdue}</span>` : '0'}</td>
+      <td><div class="bar"><i style="width:${pct(r.done, r.total)}%"></i></div><span class="mute">${pct(r.done, r.total)}%</span></td></tr>`).join('') + '</table>'
+    : '<div class="empty">ไม่มีข้อมูล</div>';
+}
+$('#go').onclick = async () => {
+  $('#le').textContent = '';
+  const { error } = await sb.auth.signInWithPassword({ email: (v => v.includes('@') ? v : v + EMAIL_DOMAIN)($('#em').value.trim().toLowerCase()), password: $('#pw').value });
+  if (error){ $('#le').textContent = 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง'; return; }
+  boot();
+};
+$('#out').onclick = async () => { await sb.auth.signOut(); location.reload(); };
+async function boot(){
+  const { data: { user } } = await sb.auth.getUser(); if (!user) return;
+  const { data: a } = await sb.from('task_admins').select('user_id').eq('user_id', user.id).eq('active', true).maybeSingle();
+  if (!a){ $('#le').textContent = 'บัญชีนี้ไม่ได้อยู่ในรายชื่อผู้สั่งงาน'; await sb.auth.signOut(); return; }
+  $('#login').hidden = true; $('#app').hidden = false; $('#out').hidden = false;
+  init();
+}
+sb.auth.getSession().then(({ data }) => { if (data.session) boot(); });
+
+let mode = 'day', rows = [], label = '';
+function init(){
+  const now = new Date(), today = bkk(now);
+  $('#vDay').value = today; $('#vMonth').value = today.slice(0, 7);
+  for (let y = now.getFullYear(); y >= now.getFullYear() - 4; y--) $('#vYear').insertAdjacentHTML('beforeend', `<option value="${y}">พ.ศ. ${y + 543}</option>`);
+  document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => {
+    mode = b.dataset.m; document.querySelectorAll('.tabs button').forEach(x => x.classList.toggle('on', x === b));
+    $('#vDay').hidden = mode !== 'day'; $('#vMonth').hidden = mode !== 'month'; $('#vYear').hidden = mode !== 'year'; load();
+  });
+  ['#vDay', '#vMonth', '#vYear'].forEach(s => $(s).onchange = load);
+  $('#print').onclick = () => window.print(); $('#csv').onclick = csv;
+  load();
+}
+function range(){
+  if (mode === 'day'){ const d = $('#vDay').value; return [d, d, thDate(d)]; }
+  if (mode === 'month'){ const [y, m] = $('#vMonth').value.split('-').map(Number); const p = n => String(n).padStart(2, '0');
+    return [`${y}-${p(m)}-01`, `${y}-${p(m)}-${p(new Date(y, m, 0).getDate())}`, `${MONTHS[m-1]} ${y + 543}`]; }
+  const y = $('#vYear').value; return [`${y}-01-01`, `${y}-12-31`, `ปี พ.ศ. ${+y + 543}`];
+}
+async function load(){
+  const [from, to, lb] = range(); label = lb; $('#out2').innerHTML = '<div class="empty">กำลังโหลด…</div>';
+  try {
+    const [st, list] = await Promise.all([rpc('task_stats', { p_from: from, p_to: to }), mode === 'year' ? [] : rpc('task_rows', { p_from: from, p_to: to })]);
+    rows = list; render(st);
+  } catch (e){ $('#out2').innerHTML = `<div class="empty">โหลดไม่สำเร็จ: ${esc(e.message)}<br>ตรวจว่ารัน task-report-setup.sql แล้ว</div>`; }
+}
+function render(st){
+  const s = st.summary, decided = s.on_time + s.late;
+  let h = `<h2>${esc(label)}</h2><div class="kpi">
+    <div><b>${num(s.total)}</b><span>งานที่สั่งทั้งหมด (ด่วน ${num(s.urgent)})</span></div>
+    <div class="ok"><b>${num(s.done)}</b><span>เสร็จแล้ว (${pct(s.done, s.total - s.cancelled)}%)</span></div>
+    <div><b>${num(s.pending + s.acknowledged)}</b><span>ค้างอยู่ (รอรับทราบ ${num(s.pending)} · กำลังทำ ${num(s.acknowledged)})</span></div>
+    <div class="bad"><b>${num(s.overdue)}</b><span>เกินกำหนด</span></div>
+    <div><b>${decided ? pct(s.on_time, decided) + '%' : '-'}</b><span>เสร็จทันกำหนด (${num(s.on_time)} ทัน · ${num(s.late)} ช้า)</span></div>
+    <div><b>${s.avg_ack_min ?? '-'}</b><span>รับทราบเฉลี่ย (นาที)</span></div>
+    <div><b>${s.avg_done_hr ?? '-'}</b><span>ทำเสร็จเฉลี่ย (ชั่วโมง)</span></div>
+    <div><b>${num(s.cancelled)}</b><span>ยกเลิก · ส่งไม่สำเร็จ ${num(s.notify_failed)}</span></div></div>`;
+  if (mode !== 'day' && st.series.length){
+    let lbl, a, b;
+    if (mode === 'month'){ lbl = st.series.map(x => x.d.slice(8)); a = st.series.map(x => x.total); b = st.series.map(x => x.done); }
+    else { a = Array(12).fill(0); b = Array(12).fill(0); st.series.forEach(x => { const i = +x.d.slice(5, 7) - 1; a[i] += x.total; b[i] += x.done; }); lbl = MONTHS; }
+    h += `<div class="panel"><h2>${mode === 'month' ? 'รายวัน' : 'รายเดือน'}</h2><div class="chart" id="ch"></div>
+      <div class="legend"><span><i style="background:var(--gate)"></i>สั่งงาน</span><span><i style="background:var(--ok)"></i>เสร็จแล้ว</span></div></div>`;
+    $('#out2').innerHTML = h; bars($('#ch'), lbl, a, b); h = null;
+  }
+  const rest = `<div class="grid2"><div class="panel"><h2>ตามแผนก</h2><div class="scroll">${deptTable(st.by_dept)}</div></div>
+    <div class="panel"><h2>ตามผู้รับงาน (สูงสุด 50 คน)</h2><div class="scroll">${st.by_person.length ? `<table><tr><th>ชื่อ</th><th>แผนก</th><th class="n">งาน</th><th class="n">เสร็จ</th><th class="n">เกิน</th></tr>` +
+      st.by_person.map(r => `<tr><td>${esc(r.name)}</td><td class="mute">${esc(r.dept)}</td><td class="n">${num(r.total)}</td><td class="n">${num(r.done)}</td><td class="n">${r.overdue ? `<span class="chip bad">${r.overdue}</span>` : 0}</td></tr>`).join('') + '</table>' : '<div class="empty">ไม่มีข้อมูล</div>'}</div></div></div>`;
+  const list = mode === 'year' ? '' : `<div class="panel"><h2>รายการงาน${rows.length >= 3000 ? ' (แสดง 3,000 รายการล่าสุด)' : ''}</h2><div class="scroll">${rows.length ? `<table><tr><th>สั่งเมื่อ</th><th>งาน</th><th>ผู้รับ</th><th>กำหนด</th><th>รับทราบ</th><th>เสร็จ</th><th>สถานะ</th></tr>` +
+    rows.map(r => `<tr><td>${fdt(r.created_at)}</td><td>${esc(r.title)}${r.priority === 'urgent' ? ' <span class="chip bad">ด่วน</span>' : ''}</td><td>${esc(r.assignee_name)}<div class="mute">${esc(r.dept || '')}</div></td>
+      <td>${fdt(r.due_at)}</td><td>${fdt(r.acknowledged_at)}</td><td>${fdt(r.done_at)}</td>
+      <td><span class="chip ${r.overdue ? 'bad' : ST[r.status][1]}">${r.overdue ? 'เกินกำหนด' : ST[r.status][0]}</span></td></tr>`).join('') + '</table>' : '<div class="empty">ไม่มีงานในช่วงนี้</div>'}</div></div>`;
+  if (h === null) $('#out2').insertAdjacentHTML('beforeend', rest + list); else $('#out2').innerHTML = h + rest + list;
+}
+function csv(){
+  if (!rows.length) return;
+  const q = v => `"${String(v ?? '').replace(/"/g, '""')}"`, d = t => t ? new Date(t).toLocaleString('sv-SE', { timeZone: 'Asia/Bangkok' }) : '';
+  const head = ['สั่งเมื่อ', 'งาน', 'ผู้รับ', 'แผนก', 'ความเร่งด่วน', 'สถานะ', 'กำหนดส่ง', 'รับทราบเมื่อ', 'เสร็จเมื่อ', 'ผู้สั่ง', 'เกินกำหนด'];
+  const lines = rows.map(r => [d(r.created_at), r.title, r.assignee_name, r.dept, r.priority === 'urgent' ? 'ด่วน' : 'ปกติ', ST[r.status][0], d(r.due_at), d(r.acknowledged_at), d(r.done_at), r.assigned_by_name, r.overdue ? 'ใช่' : ''].map(q).join(','));
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['\ufeff' + [head.map(q).join(','), ...lines].join('\r\n')], { type: 'text/csv;charset=utf-8' }));
+  a.download = `task-report-${range()[0]}_${range()[1]}.csv`; a.click();
+}
+
+</script>
+<script src="task-nav.js"></script>
+</body>
+</html>
