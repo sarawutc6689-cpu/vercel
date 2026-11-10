@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>คู่มือการใช้งาน - ระบบสั่งงาน</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef6ff;--top:#d9ecff;--card:#fff;--ink:#12304f;--mute:#5f7791;--line:#dbe9f7;--edge:#9cc5ee;--gate:#1f8bf2;--ok:#1a7f55;--okbg:#ddf5e9;--warn:#a05a00;--warnbg:#fff1d6;--info:#e3f1ff}
+@media(prefers-color-scheme:dark){:root{--bg:#0f1b2a;--top:#14304a;--card:#172a3f;--ink:#eaf3fc;--mute:#9bb2c9;--line:#2a4560;--edge:#3f6a93;--gate:#2f86e0;--ok:#6fd49b;--okbg:#17372a;--warn:#f2b95a;--warnbg:#41300f;--info:#1c3a58}}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;min-height:100vh;display:flex;flex-direction:column;background:linear-gradient(180deg,var(--top) 0,var(--bg) 300px) var(--bg);color:var(--ink);font-family:'Noto Sans Thai',system-ui,sans-serif;line-height:1.7}
+header{background:linear-gradient(135deg,#1f8bf2,#5bbcff);color:#fff;padding:16px;box-shadow:0 4px 16px rgba(31,139,242,.25);display:flex;justify-content:space-between;align-items:center;gap:8px}
+header h1{margin:0;font-size:1.15rem;font-weight:800}
+header button{background:rgba(255,255,255,.2);color:#fff;border:0;border-radius:8px;padding:6px 12px;font:inherit;cursor:pointer}
+.wrap{width:100%;flex:1;max-width:860px;margin:0 auto;padding:16px 14px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-bottom:14px;box-shadow:0 2px 12px rgba(31,139,242,.09)}
+h2{margin:0 0 6px;font-size:1.2rem;scroll-margin-top:12px}
+h2 .n{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--gate);color:#fff;font-size:.9rem;margin-right:8px}
+h3{margin:16px 0 4px;font-size:1rem}
+p{margin:6px 0}ul,ol{margin:6px 0;padding-left:22px}li{margin:3px 0}
+.toc{columns:2;column-gap:24px;padding-left:20px}@media(max-width:600px){.toc{columns:1}}
+.toc a{color:var(--gate);text-decoration:none;font-weight:600}.toc a:hover{text-decoration:underline}
+.who{display:inline-block;font-size:.78rem;font-weight:600;padding:2px 10px;border-radius:99px;background:var(--info);color:var(--gate);margin:0 4px 6px 0}
+.note,.warn{border-radius:12px;padding:10px 14px;margin:10px 0;font-size:.95rem}
+.note{background:var(--info)}.warn{background:var(--warnbg);color:var(--warn)}
+.flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0}
+.flow span{background:var(--info);border-radius:10px;padding:6px 12px;font-weight:600;font-size:.92rem}.flow i{color:var(--mute);font-style:normal}
+table{border-collapse:collapse;width:100%;font-size:.93rem;margin:8px 0}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{color:var(--mute);font-weight:600}
+.scroll{overflow-x:auto}
+.chip{font-size:.78rem;font-weight:600;padding:2px 10px;border-radius:99px;background:var(--line);white-space:nowrap}
+.chip.ok{background:var(--okbg);color:var(--ok)}.chip.warn{background:var(--warnbg);color:var(--warn)}
+code{background:var(--bg);padding:1px 7px;border-radius:6px;font-size:.92em}
+details{border-top:1px solid var(--line);padding:8px 0}details:first-of-type{border-top:0}
+summary{cursor:pointer;font-weight:600}summary:focus-visible,a:focus-visible,button:focus-visible{outline:3px solid var(--gate);outline-offset:2px}
+details p{color:var(--mute);margin:6px 0 2px}
+footer{text-align:center;padding:16px 12px;color:var(--mute);font-size:.85rem;border-top:1px solid var(--line);background:var(--card)}
+@media print{header,footer{display:none}body{background:#fff;color:#000}.panel{box-shadow:none;break-inside:avoid}details{display:block}}
+</style>
+</head>
+<body>
+<header><h1>📖 คู่มือการใช้งานระบบสั่งงาน</h1><button onclick="window.print()">พิมพ์คู่มือ</button></header>
+<div class="wrap">
+
+<div class="panel">
+  <h2>สารบัญ</h2>
+  <ol class="toc">
+    <li><a href="#s1">ภาพรวมระบบ</a></li>
+    <li><a href="#s2">บทบาทและสิทธิ์</a></li>
+    <li><a href="#s3">การเข้าสู่ระบบ</a></li>
+    <li><a href="#s4">พนักงาน: ลงทะเบียน Telegram</a></li>
+    <li><a href="#s5">พนักงาน: รับงานและรายงานผล</a></li>
+    <li><a href="#s6">ผู้สั่งงาน: อนุมัติผูก Telegram</a></li>
+    <li><a href="#s7">ผู้สั่งงาน: สั่งงาน</a></li>
+    <li><a href="#s8">ผู้สั่งงาน: ภาพรวม (Dashboard)</a></li>
+    <li><a href="#s9">ผู้สั่งงาน: รายงาน</a></li>
+    <li><a href="#s10">เจ้าของระบบ: จัดการผู้ใช้</a></li>
+    <li><a href="#s11">เพิ่มไอดี Telegram (กรณีพิเศษ)</a></li>
+    <li><a href="#s12">คำถามที่พบบ่อยและการแก้ปัญหา</a></li>
+  </ol>
+</div>
+
+<div class="panel" id="s1">
+  <h2><span class="n">1</span>ภาพรวมระบบ</h2>
+  <p>ระบบนี้ใช้มอบหมายงานให้พนักงานผ่าน Telegram โดยผู้สั่งงานสร้างงานในหน้าเว็บ พนักงานได้รับข้อความในแชตส่วนตัวและกดปุ่มตอบกลับได้ทันที ผู้สั่งงานดูความคืบหน้าและสถิติได้ในหน้าเว็บ</p>
+  <div class="flow"><span>ผู้สั่งงานสร้างงาน</span><i>→</i><span>บอทส่งข้อความหาพนักงาน</span><i>→</i><span>พนักงานกด รับทราบ / เสร็จแล้ว</span><i>→</i><span>ดูผลใน Dashboard และรายงาน</span></div>
+  <div class="note">พนักงานจะรับงานได้ต้อง <b>ลงทะเบียน Telegram กับบอทก่อน</b> (ดูหัวข้อ 4) พนักงานที่ยังไม่ลงทะเบียนจะถูกเลือกรับงานไม่ได้</div>
+</div>
+
+<div class="panel" id="s2">
+  <h2><span class="n">2</span>บทบาทและสิทธิ์</h2>
+  <div class="scroll"><table>
+    <tr><th>บทบาท</th><th>ใช้ระบบอย่างไร</th><th>เข้าหน้าเว็บอะไรได้</th></tr>
+    <tr><td><b>พนักงาน</b></td><td>รับงานและกดตอบใน Telegram เท่านั้น ไม่ต้องล็อกอินเว็บ</td><td>ไม่มี</td></tr>
+    <tr><td><b>ผู้สั่งงาน</b></td><td>ล็อกอินเว็บ สั่งงาน ดูสถิติ อนุมัติการผูก Telegram</td><td>ภาพรวม, สั่งงาน, รายงาน, อนุมัติผูก Telegram, เพิ่มไอดี Telegram</td></tr>
+    <tr><td><b>เจ้าของระบบ</b></td><td>ทุกอย่างของผู้สั่งงาน และเพิ่ม/แก้ไข/ลบบัญชีผู้สั่งงาน</td><td>ทุกหน้า รวมถึง "ผู้ใช้ระบบ"</td></tr>
+  </table></div>
+</div>
+
+<div class="panel" id="s3">
+  <h2><span class="n">3</span>การเข้าสู่ระบบ</h2>
+  <span class="who">ผู้สั่งงาน</span>
+  <ol>
+    <li>เปิดหน้าระบบสั่งงาน เลือกเมนูที่ต้องการทางด้านซ้าย (บนมือถือกดปุ่มสามขีดมุมซ้ายบน)</li>
+    <li>กรอก <b>ชื่อผู้ใช้</b> และ <b>รหัสผ่าน</b> พิมพ์เฉพาะชื่อผู้ใช้ ไม่ต้องพิมพ์ <code>@tokai.local</code></li>
+    <li>กดเข้าสู่ระบบ ล็อกอินครั้งเดียวใช้ได้ทุกหน้าในระบบ</li>
+  </ol>
+  <p>หากล็อกอินไม่ได้ ตรวจชื่อผู้ใช้และรหัสผ่าน หรือติดต่อเจ้าของระบบให้ตั้งรหัสใหม่ ปุ่ม "ออกจากระบบ" อยู่มุมขวาบนของแต่ละหน้า</p>
+</div>
+
+<div class="panel" id="s4">
+  <h2><span class="n">4</span>พนักงาน: ลงทะเบียน Telegram</h2>
+  <span class="who">พนักงาน</span>
+  <p>ทำครั้งเดียว ใช้เวลาไม่ถึงนาที ผู้สั่งงานต้องอนุมัติก่อนจึงจะเริ่มรับงานได้</p>
+  <ol>
+    <li>เปิดลิงก์ <code>https://t.me/mouldmate_task_bot</code> หรือค้นหา <code>@mouldmate_task_bot</code> ใน Telegram</li>
+    <li>กด <b>Start</b> บอทจะขอรหัสพนักงาน</li>
+    <li>พิมพ์ <b>รหัสพนักงาน</b> ของตัวเองส่งไป</li>
+    <li>บอทตอบว่า "ส่งคำขอลงทะเบียนแล้ว รอผู้ดูแลอนุมัติ"</li>
+    <li>เมื่อผู้สั่งงานอนุมัติ บอทจะส่งข้อความ "✅ ผู้ดูแลอนุมัติแล้ว" กลับมา จากนั้นพร้อมรับงาน</li>
+  </ol>
+  <h3>ข้อความที่บอทอาจตอบ</h3>
+  <div class="scroll"><table>
+    <tr><th>ข้อความ</th><th>ความหมาย / ต้องทำอะไร</th></tr>
+    <tr><td>ไม่พบรหัสพนักงานนี้</td><td>พิมพ์รหัสผิด ตรวจรหัสแล้วพิมพ์ใหม่</td></tr>
+    <tr><td>รหัสนี้ถูกผูกกับบัญชี Telegram อื่นแล้ว</td><td>รหัสนี้มีบัญชีอื่นผูกอยู่ ติดต่อผู้ดูแลระบบ</td></tr>
+    <tr><td>บัญชี Telegram นี้ลงทะเบียนกับระบบเรียบร้อยแล้ว</td><td>ลงทะเบียนสำเร็จไปแล้ว ไม่ต้องทำซ้ำ</td></tr>
+    <tr><td>พิมพ์รหัสหลายครั้งเกินไป</td><td>พิมพ์ผิดเกิน 8 ครั้งใน 1 ชั่วโมง รอ 1 ชั่วโมงแล้วลองใหม่</td></tr>
+    <tr><td>❌ คำขอไม่ได้รับการอนุมัติ</td><td>ผู้สั่งงานปฏิเสธ ติดต่อผู้ดูแลเพื่อตรวจสอบ</td></tr>
+  </table></div>
+  <div class="warn">ใช้รหัสพนักงานของตัวเองเท่านั้น ผู้สั่งงานจะเทียบชื่อ Telegram กับชื่อพนักงานก่อนอนุมัติ</div>
+</div>
+
+<div class="panel" id="s5">
+  <h2><span class="n">5</span>พนักงาน: รับงานและรายงานผล</h2>
+  <span class="who">พนักงาน</span>
+  <p>เมื่อมีงานใหม่ บอทส่งข้อความมีหัวข้อ รายละเอียด กำหนดส่ง และชื่อผู้สั่ง (ถ้าเป็นงานด่วนจะมีป้าย 🔴 ด่วน) ใต้ข้อความมี 2 ปุ่ม</p>
+  <ul>
+    <li><b>✅ รับทราบ</b> กดเมื่ออ่านและรับงานแล้ว ข้อความจะต่อท้ายด้วยเวลาที่รับทราบ และเหลือปุ่ม "เสร็จแล้ว"</li>
+    <li><b>🏁 เสร็จแล้ว</b> กดเมื่อทำงานเสร็จ ข้อความจะต่อท้ายด้วยเวลาที่เสร็จ และปุ่มหายไป</li>
+  </ul>
+  <div class="note">ถ้ากดเสร็จแล้วโดยไม่เคยกดรับทราบ ระบบจะบันทึกเวลารับทราบให้พร้อมกัน งานที่ผู้สั่งยกเลิกแล้ว กดปุ่มจะขึ้นว่า "งานนี้ถูกยกเลิกแล้ว"</div>
+</div>
+
+<div class="panel" id="s6">
+  <h2><span class="n">6</span>ผู้สั่งงาน: อนุมัติผูก Telegram</h2>
+  <span class="who">ผู้สั่งงาน</span>
+  <p>เมนู <b>อนุมัติผูก Telegram</b> แสดงจำนวนพนักงานทั้งหมด จำนวนที่ผูกแล้ว จำนวนรออนุมัติ และลิงก์บอทสำหรับส่งให้พนักงาน</p>
+  <ol>
+    <li>เปิดเมนู ดูรายการคำขอ แต่ละรายการแสดงชื่อ รหัส แผนก ตำแหน่ง ชื่อ Telegram และเวลาที่ส่งคำขอ</li>
+    <li><b>เทียบชื่อ Telegram กับชื่อพนักงาน</b> ถ้าไม่แน่ใจ ให้สอบถามหัวหน้าแผนกหรือตัวพนักงานก่อน</li>
+    <li>กด <b>อนุมัติ</b> หรือ <b>ไม่อนุมัติ</b> แล้วยืนยันในกล่องที่ขึ้นมา</li>
+    <li>บอทจะแจ้งผลให้พนักงานทาง Telegram เอง</li>
+  </ol>
+  <div class="warn">การอนุมัติคือด่านป้องกันไม่ให้คนอื่นใช้รหัสพนักงานของเราไปรับงานแทน กรุณาตรวจทุกครั้ง</div>
+</div>
+
+<div class="panel" id="s7">
+  <h2><span class="n">7</span>ผู้สั่งงาน: สั่งงาน</h2>
+  <span class="who">ผู้สั่งงาน</span>
+  <h3>ขั้นตอน</h3>
+  <ol>
+    <li>เปิดเมนู <b>สั่งงาน</b></li>
+    <li>กรอก <b>หัวข้อ</b> (จำเป็น) <b>รายละเอียด</b> <b>กำหนดส่ง</b> (ไม่บังคับ) และเลือก <b>ความเร่งด่วน</b> ปกติหรือด่วน</li>
+    <li>เลือกผู้รับงาน ค้นหาด้วยชื่อหรือรหัส หรือกรองตามแผนก ติ๊กทีละคน หรือกด "เลือกทั้งหมดในรายการ"</li>
+    <li>กด <b>ส่งงาน</b> ตรวจสอบในกล่องยืนยัน แล้วกดส่ง</li>
+    <li>ระบบแสดงผล: สร้างงานกี่รายการ ส่งสำเร็จกี่ราย ส่งไม่สำเร็จกี่ราย</li>
+  </ol>
+  <div class="note">รายชื่อเริ่มต้นแสดงเฉพาะพนักงานที่ผูก Telegram แล้ว ถ้าเอาเครื่องหมายออก จะเห็นคนที่ยังไม่ผูกด้วย แต่เลือกไม่ได้ ระบบสร้างงานแยกรายคน จึงติดตามได้ว่าใครรับทราบหรือเสร็จแล้ว</div>
+  <h3>งานที่สั่งล่าสุด</h3>
+  <p>ด้านล่างของหน้าแสดงงานล่าสุดพร้อมสถานะ</p>
+  <p><span class="chip warn">รอรับทราบ</span> <span class="chip">รับทราบแล้ว</span> <span class="chip ok">เสร็จแล้ว</span> <span class="chip">ยกเลิก</span></p>
+  <p>ถ้าสั่งผิด กด <b>ยกเลิก</b> ที่งานนั้นได้ (ทำได้กับงานที่ยังไม่เสร็จ) ข้อความเดิมยังค้างในแชตของพนักงาน แต่กดปุ่มไม่ได้แล้ว หากเห็นป้าย "ส่ง Telegram ไม่สำเร็จ" แปลว่าข้อความไม่ถึงพนักงานคนนั้น ให้ตรวจว่าพนักงานบล็อกบอทหรือไม่</p>
+</div>
+
+<div class="panel" id="s8">
+  <h2><span class="n">8</span>ผู้สั่งงาน: ภาพรวม (Dashboard)</h2>
+  <span class="who">ผู้สั่งงาน</span>
+  <p>หน้าแรกสำหรับดูสถานการณ์ปัจจุบันของงานทั้งหมด</p>
+  <ul>
+    <li><b>การ์ดตัวเลข</b> สั่งงานวันนี้ เสร็จแล้วจากงานที่สั่งวันนี้ งานค้างทั้งหมด งานเกินกำหนด และอัตราเสร็จ 30 วัน</li>
+    <li><b>กราฟแท่ง 14 วันล่าสุด</b> เทียบจำนวนงานที่สั่งกับจำนวนที่เสร็จในแต่ละวัน</li>
+    <li><b>งานเกินกำหนด</b> รายการงานที่ยังไม่เสร็จและเลยกำหนดส่ง (แสดง 10 รายการแรก)</li>
+    <li><b>สรุปตามแผนก 30 วันล่าสุด</b> จำนวนงาน เสร็จ เกินกำหนด และอัตราสำเร็จ</li>
+  </ul>
+</div>
+
+<div class="panel" id="s9">
+  <h2><span class="n">9</span>ผู้สั่งงาน: รายงาน</h2>
+  <span class="who">ผู้สั่งงาน</span>
+  <ol>
+    <li>เลือกแท็บ <b>รายวัน</b> <b>รายเดือน</b> หรือ <b>รายปี</b> แล้วเลือกวัน เดือน หรือปี (ปีแสดงเป็น พ.ศ.)</li>
+    <li>อ่านตัวเลขสรุป กราฟ ตารางตามแผนก และตารางตามผู้รับงาน</li>
+    <li>รายวันและรายเดือนมีตาราง <b>รายการงาน</b> ให้ดูรายละเอียดรายงาน กด <b>ดาวน์โหลด CSV</b> เปิดใน Excel ได้ หรือกด <b>พิมพ์</b></li>
+  </ol>
+  <h3>ความหมายของตัวเลข</h3>
+  <div class="scroll"><table>
+    <tr><th>ตัวเลข</th><th>ความหมาย</th></tr>
+    <tr><td>งานที่สั่งทั้งหมด</td><td>งานที่สร้างในช่วงเวลานั้น (นับตามวันที่สั่ง เวลาไทย)</td></tr>
+    <tr><td>เสร็จแล้ว</td><td>งานที่พนักงานกด "เสร็จแล้ว" แล้ว (ไม่นับงานที่ยกเลิกในฐานคิดเปอร์เซ็นต์)</td></tr>
+    <tr><td>เกินกำหนด</td><td>งานที่ยังไม่เสร็จ และเลยกำหนดส่งแล้ว (งานที่ไม่ได้ตั้งกำหนดส่งไม่ถูกนับ)</td></tr>
+    <tr><td>เสร็จทันกำหนด</td><td>งานที่เสร็จก่อนหรือตรงกำหนดส่ง เทียบกับที่เสร็จเลยกำหนด</td></tr>
+    <tr><td>รับทราบเฉลี่ย (นาที)</td><td>เวลาเฉลี่ยจากสั่งงานถึงพนักงานกดรับทราบ</td></tr>
+    <tr><td>ทำเสร็จเฉลี่ย (ชั่วโมง)</td><td>เวลาเฉลี่ยจากสั่งงานถึงกดเสร็จแล้ว</td></tr>
+  </table></div>
+  <div class="note">สถานะที่แสดงคือสถานะ ณ ปัจจุบัน เช่น งานที่สั่งต้นเดือนและเพิ่งเสร็จวันนี้ จะนับเป็น "เสร็จ" ของเดือนนั้น และชื่อแผนกมาจากข้อมูลพนักงาน ถ้าชื่อแผนกไม่ตรงกัน ตารางอาจแยกเป็นหลายบรรทัด</div>
+</div>
+
+<div class="panel" id="s10">
+  <h2><span class="n">10</span>เจ้าของระบบ: จัดการผู้ใช้</h2>
+  <span class="who">เจ้าของระบบเท่านั้น</span>
+  <p>เมนู <b>ผู้ใช้ระบบ</b> ใช้เพิ่มและดูแลบัญชีของผู้สั่งงาน ผู้ใช้อื่นเปิดหน้านี้จะเห็นข้อความไม่มีสิทธิ์</p>
+  <ul>
+    <li><b>เพิ่มผู้ใช้</b> กดปุ่ม "เพิ่มผู้ใช้" กรอกชื่อผู้ใช้ (a-z 0-9 จุด ขีดล่าง ขีดกลาง ยาว 3-30 ตัว) ชื่อที่แสดง และรหัสผ่านอย่างน้อย 8 ตัว (กด "สุ่ม" ให้ระบบสร้างให้ได้) <b>จดรหัสผ่านที่ขึ้นในกล่องสุดท้ายและแจ้งผู้ใช้ เพราะดูซ้ำไม่ได้</b></li>
+    <li><b>แก้ไข</b> เปลี่ยนชื่อที่แสดง ตั้งรหัสผ่านใหม่ (เว้นว่างถ้าไม่เปลี่ยน) หรือเปิด/ปิดใช้งานบัญชี</li>
+    <li><b>ลบ</b> ลบบัญชีถาวร ผู้ใช้นั้นล็อกอินไม่ได้อีก</li>
+  </ul>
+  <div class="warn">ลบหรือปิดบัญชีของตัวเองไม่ได้ และต้องเหลือผู้สั่งงานที่ใช้งานได้อย่างน้อย 1 คนเสมอ</div>
+</div>
+
+<div class="panel" id="s11">
+  <h2><span class="n">11</span>เพิ่มไอดี Telegram (กรณีพิเศษ)</h2>
+  <span class="who">ผู้สั่งงาน</span>
+  <p>ปกติให้พนักงานลงทะเบียนผ่านบอทตามหัวข้อ 4 หน้า "เพิ่มไอดี Telegram" ใช้เมื่อพนักงานผูกผ่านบอทไม่ได้ หรือต้องแก้ Chat ID ของบางคน</p>
+  <ol>
+    <li>กรอกรหัสพนักงานแล้วกด <b>ค้นหา</b> ระบบแสดงชื่อพนักงาน</li>
+    <li>กรอกหรือแก้ <b>Telegram Chat ID</b> (ตัวเลขเท่านั้น)</li>
+    <li>กด <b>บันทึกข้อมูล</b></li>
+  </ol>
+  <div class="note">หากพนักงานเคยผูกไว้แล้ว ระบบจะแสดง Chat ID เดิมให้</div>
+</div>
+
+<div class="panel" id="s12">
+  <h2><span class="n">12</span>คำถามที่พบบ่อยและการแก้ปัญหา</h2>
+  <details><summary>พนักงานไม่ได้รับข้อความงาน</summary>
+    <p>ตรวจตามลำดับ 1) พนักงานผูก Telegram และได้รับอนุมัติแล้วหรือยัง 2) พนักงานกดบล็อกหรือลบแชตกับบอทหรือไม่ ถ้าบล็อก ต้องปลดบล็อกแล้วกด Start ใหม่ 3) ดูในหน้าสั่งงานว่างานนั้นมีป้าย "ส่ง Telegram ไม่สำเร็จ" หรือไม่</p></details>
+  <details><summary>เลือกพนักงานบางคนไม่ได้ในหน้าสั่งงาน</summary>
+    <p>คนที่ติดป้าย "ยังไม่ผูก" ยังไม่ได้ลงทะเบียน Telegram ให้เขาลงทะเบียนตามหัวข้อ 4 แล้วผู้สั่งงานอนุมัติ</p></details>
+  <details><summary>พนักงานเปลี่ยนเครื่องหรือเปลี่ยนบัญชี Telegram</summary>
+    <p>ติดต่อผู้ดูแลระบบให้ล้างการผูกเดิมก่อน แล้วลงทะเบียนใหม่ผ่านบอท หรือให้ผู้สั่งงานแก้ Chat ID ในหน้า "เพิ่มไอดี Telegram"</p></details>
+  <details><summary>สั่งงานผิดคนหรือผิดรายละเอียด</summary>
+    <p>กด "ยกเลิก" งานนั้นในรายการงานที่สั่งล่าสุด แล้วสั่งงานใหม่ ข้อความเดิมยังอยู่ในแชตของพนักงาน แต่ปุ่มจะใช้ไม่ได้</p></details>
+  <details><summary>ลืมรหัสผ่านเข้าเว็บ</summary>
+    <p>ติดต่อเจ้าของระบบให้ตั้งรหัสผ่านใหม่ในหน้า "ผู้ใช้ระบบ"</p></details>
+  <details><summary>ตัวเลขในรายงานไม่ตรงกับที่คาด</summary>
+    <p>รายงานนับตามวันที่สั่งงาน และแสดงสถานะ ณ ปัจจุบัน ดูรายละเอียดในหัวข้อ 9 ถ้าดูรายเดือน ตรวจว่าเลือกเดือนถูกต้อง</p></details>
+  <details><summary>ติดต่อใคร</summary>
+    <p>ปัญหาการใช้งานทั่วไป ติดต่อผู้ดูแลระบบของหน่วยงาน ปัญหาด้านระบบ ติดต่อผู้พัฒนา (Sarawut.C)</p></details>
+</div>
+
+</div>
+<footer>ระบบการขอใช้รถบริษัท © 2026 | พัฒนาโดย Sarawut.C</footer>
+</body>
+</html>
