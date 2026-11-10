@@ -145,7 +145,7 @@
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
         }
 
-        /* Card Icon Styles - แก้ไขตรงนี้ */
+        /* Card Icon Styles */
         .card-icon {
             width: 60px;
             height: 60px;
@@ -389,11 +389,17 @@
                     </a>
                 </div>
 
-           
-
-              
-
-               
+                <!-- Card 4: มอบหมายงาน -->
+                <div class="card">
+                    <div class="card-icon">
+                        <i class="fas fa-tasks"></i>
+                    </div>
+                    <h3>มอบหมายงาน</h3>
+                    <p>มอบหมายงานให้ทีม พร้อมติดตามความคืบหน้าและสถานะงาน</p>
+                    <a href="https://mouldmate.vercel.app/AMS/Tasks/task-app.html" class="card-link" target="_blank">
+                        เข้าสู่ระบบ <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
             </div>
         </main>
 
@@ -402,7 +408,6 @@
             <p>AMS HelpDesk System &copy; 2026 - ศูนย์บริการยานยนต์ | พัฒนาโดย Sarawut.C</p>
             <p>หากมีปัญหาในการใช้งาน กรุณาติดต่อแผนก IT</p>
             <p>สำหรับใช้ภายในองค์กรเท่านั้น</p>
-            
 
             <div class="footer-links">
                 <a href="mailto:itsupport@tokaisolidtire.com">
@@ -416,30 +421,30 @@
         // ฟังก์ชันอัพเดทวันที่และเวลา
         function updateDateTime() {
             const now = new Date();
-            
+
             // จัดรูปแบบวันที่แบบไทย
             const thaiMonths = [
                 'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
                 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
             ];
-            
+
             const thaiDays = [
                 'อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'
             ];
-            
+
             const day = thaiDays[now.getDay()];
             const date = now.getDate();
             const month = thaiMonths[now.getMonth()];
             const year = now.getFullYear() + 543; // แปลงเป็นปี พ.ศ.
-            
+
             const thaiDate = `วัน${day}ที่ ${date} ${month} ${year}`;
-            
+
             // จัดรูปแบบเวลา
             const hours = String(now.getHours()).padStart(2, '0');
             const minutes = String(now.getMinutes()).padStart(2, '0');
             const seconds = String(now.getSeconds()).padStart(2, '0');
             const timeString = `${hours}:${minutes}:${seconds} น.`;
-            
+
             // อัพเดทค่าใน DOM
             document.getElementById('current-date').textContent = thaiDate;
             document.getElementById('current-time').textContent = timeString;
