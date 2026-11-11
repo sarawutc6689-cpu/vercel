@@ -118,7 +118,7 @@ async function boot() {
   if (!a) { document.getElementById('le').textContent = 'บัญชีนี้ไม่ได้อยู่ในรายชื่อผู้สั่งงาน'; await supabaseClient.auth.signOut(); return; }
   document.getElementById('out').classList.remove('hidden');
   if ((user.email || '').toLowerCase() !== OWNER_EMAIL) {
-    document.getElementById('login').innerHTML = '<strong>ไม่มีสิทธิ์เข้าหน้านี้</strong><p class="hint">หน้านี้ใช้ได้เฉพาะเจ้าของระบบเท่านั้น</p>';
+    document.getElementById('login').innerHTML = '<strong>ไม่มีสิทธิ์เข้าหน้านี้</strong><p class="hint">หน้านี้ใช้ได้เฉพาะผู้ดูแลระบบเท่านั้น</p>';
     return;
   }
   document.getElementById('login').classList.add('hidden');
