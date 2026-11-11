@@ -128,21 +128,22 @@ button.nb-out:hover:not(:disabled){background:rgba(192,57,43,.1)}
 <div class="wrap">
   <h2 style="text-align:center">🔎 ติดตามสถานะคำขอเอกสาร</h2>
   <div class="card">
-    <div class="sbox"><input id="q" type="text" placeholder="รหัสพนักงาน หรือ เลขที่คำขอ " autocomplete="off"><button id="go">ค้นหา</button></div>
-
+    <div class="sbox"><input id="q" type="text" placeholder="รหัสพนักงาน หรือ เลขที่คำขอ (เช่น 104058 หรือ #25)" autocomplete="off"><button id="go">ค้นหา</button></div>
+    <div class="hint">ค้นหาได้จาก <b>รหัสพนักงาน</b> (ดูทุกคำขอของคุณ) · <b>เลขที่คำขอ</b> (ขึ้นต้นด้วย # เช่น #25) · <b>เลขที่เอกสาร</b> (เช่น HR-CE-261017-0001)</div>
   </div>
   <div id="msg"></div>
   <div id="out"></div>
+  <p class="hint" style="text-align:center;margin-top:18px"><a href="index.html">← กลับแบบฟอร์มขอเอกสาร</a> &nbsp;·&nbsp; <a href="guide-user.html">📖 คู่มือการใช้งาน</a><br>หน้านี้แสดงเฉพาะสถานะการดำเนินการ ไม่แสดงวัตถุประสงค์หรือเหตุผลการพิจารณา หากต้องการทราบเหตุผล โปรดสอบถามผู้จัดการหรือฝ่ายบุคคล</p>
 </div>
 <footer class="site-footer">
-  <div>แบบฟอร์มคำร้องขอเอกสาร<span class="sep">|</span>ใช้สำหรับภายในบริษัทเท่านั้น<span class="sep">|</span>พัฒนาโดย Sarawut.C</div>
-  <div class="cp">© <span id="cpYear">2026</span> สงวนลิขสิทธิ์ · All rights reserved.</div>
+  <div>แบบฟอร์มคำร้องขอเอกสาร<span class="sep">|</span>ใช้สำหรับภายในบริษัทเท่านั้น<span class="sep">|</span>พัฒนาโดย <b>Sarawut.C</b></div>
+  <div class="cp">© <span id="cpYear">2026</span> Sarawut.C. สงวนลิขสิทธิ์ · All rights reserved.</div>
 </footer>
 <script>document.getElementById("cpYear").textContent=new Date().getFullYear();</script>
 
 <script>
 const SUPABASE_URL = "https://ppzdyvomrfiitahxwrwz.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBwemR5dm9tcmZpaXRhaHh3cnd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwMjQ0MjIsImV4cCI6MjEwNDYwMDQyMn0.iArUz6swMfwhFT_1qEvCwK1B3aiCxdWt46_FBjT6_Y0";
+const SUPABASE_ANON_KEY = "วางค่า_anon_public_key_ที่นี่";
 
 const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const $ = id => document.getElementById(id);
@@ -173,11 +174,7 @@ function steps(r){
       :s==="pending"?{t:"ผู้จัดการบุคคลอนุมัติ",c:"current",n:"กำลังรอพิจารณา"}
       :s==="rejected"?{t:"ผู้จัดการบุคคลอนุมัติ",c:"rejected",n:"ไม่อนุมัติ",d:r.decided_at}
       :{t:"ผู้จัดการบุคคลอนุมัติ",c:"done",n:"อนุมัติแล้ว",d:r.decided_at});
-    const pr=r.printed||{}, need=(r.cert_types||[]).filter(t=>["work","salary","pass"].includes(t));
-  const got=need.filter(t=>pr[t]).length, all=(s==="approved"||s==="done")&&need.length>0&&got===need.length;
-  const last=need.map(t=>pr[t]).filter(Boolean).sort().pop();
-  a.push(s==="done"||all?{t:"ฝ่ายบุคคลออกเอกสาร",c:"done",n:"ออกเอกสารเรียบร้อย",d:last||null}
-      :s==="approved"&&got>0?{t:"ฝ่ายบุคคลออกเอกสาร",c:"current",n:`ออกเอกสารแล้ว ${got}/${need.length} ฉบับ`}
+  a.push(s==="done"?{t:"ฝ่ายบุคคลออกเอกสาร",c:"done",n:"ออกเอกสารแล้ว"}
       :s==="approved"?{t:"ฝ่ายบุคคลออกเอกสาร",c:"current",n:"อนุมัติครบแล้ว ฝ่ายบุคคลกำลังดำเนินการออกเอกสาร"}
       :{t:"ฝ่ายบุคคลออกเอกสาร",c:"wait"});
   return a;
@@ -185,9 +182,7 @@ function steps(r){
 const ICON={done:"✓",current:"●",rejected:"✕",skip:"–",wait:""};
 function card(r,mode){
   const [k,txt]=SUMMARY[r.status]||["cur",r.status];
-    const pr=r.printed||{};
-  const docs=(r.cert_types||[]).filter(t=>t!=="slip"&&(pr[t]||(r.doc_numbers&&r.doc_numbers[t]))).map(t=>
-    `${esc(CERT[t]||t)}${r.doc_numbers&&r.doc_numbers[t]?`: <b>${esc(r.doc_numbers[t])}</b>`:""}${pr[t]?` · <span style="color:var(--ok)">✓ ออกเอกสารแล้ว ${dt(pr[t],true)}</span>`:""}`).join("<br>");
+  const docs=r.doc_numbers?Object.entries(r.doc_numbers).map(([t,v])=>`${esc(CERT[t]||t)}: <b>${esc(v)}</b>`).join("<br>"):"";
   return `<div class="card req"><div class="rh"><span class="rid">คำขอ #${r.id}</span><span class="pill ${k}">${esc(txt)}</span></div>
    <div class="chips">${(r.cert_types||[]).map(t=>`<span>${esc(CERT[t]||t)}</span>`).join("")}</div>
    <div class="meta"><span>ขอเมื่อ ${dt(r.request_date)}</span>${r.use_date?`<span>วันที่ต้องการใช้ ${dt(r.use_date)}</span>`:""}${mode!=="emp"?`<span>ผู้ขอ ${esc(r.name_masked)}</span>`:""}</div>
@@ -202,11 +197,6 @@ async function search(){
   const {data,error}=await db.rpc("track_requests",{p_q:q});
   if(error){ $("msg").className="bad"; $("msg").textContent="ค้นหาไม่สำเร็จ: "+error.message; return; }
   if(!data||!data.length){ $("msg").className="bad"; $("msg").textContent="ไม่พบคำขอ ตรวจสอบรหัสพนักงานหรือเลขที่คำขอ (เลขที่คำขอให้ใส่ # นำหน้า เช่น #25) อีกครั้ง"; return; }
-    try{
-    const {data:pr}=await db.rpc("track_printed",{p_ids:data.map(r=>r.id)});
-    const m={}; (pr||[]).forEach(x=>m[x.id]=x.printed||{});
-    data.forEach(r=>r.printed=m[r.id]||{});
-  }catch(e){}
   const mode=data[0].found_by;
   $("msg").textContent = mode==="emp" ? `พบ ${data.length} คำขอของรหัสพนักงาน ${q} (เรียงจากล่าสุด)` : `พบ ${data.length} คำขอ`;
   $("out").innerHTML=data.map(r=>card(r,mode)).join("");
