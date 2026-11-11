@@ -105,7 +105,7 @@ async function start(){
   $('#out').hidden = false;
   if ((user.email || '').toLowerCase() !== OWNER_EMAIL){
     $('#login').hidden = false;
-    $('#login').innerHTML = '<strong>ไม่มีสิทธิ์เข้าหน้านี้</strong><p class="mute">หน้านี้ใช้ได้เฉพาะเจ้าของระบบเท่านั้น</p>';
+    $('#login').innerHTML = '<strong>ไม่มีสิทธิ์เข้าหน้านี้</strong><p class="mute">หน้านี้ใช้ได้เฉพาะผู้ดูแลระบบเท่านั้น</p>';
     return;
   }
   $('#login').hidden = true; $('#app').hidden = false;
