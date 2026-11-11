@@ -142,6 +142,7 @@ table.t{width:100%;border-collapse:collapse;font-size:.92rem;margin:8px 0}
 <tr><td>ผู้จัดการบุคคล</td><td>hr-manager.html</td><td>อนุมัติ/ไม่อนุมัติขั้นสุดท้าย ออกเลขที่เอกสาร และจัดการระบบ</td></tr>
 <tr><td>เจ้าหน้าที่บุคคล</td><td>admin.html</td><td>พิมพ์เอกสารที่อนุมัติแล้ว (ไม่มีสิทธิ์อนุมัติ)</td></tr></table>
 <div class="callout">ฝ่ายที่ไม่มีผู้จัดการในระบบ หรือผู้ขอเป็นผู้จัดการของฝ่ายนั้นเอง จะข้ามขั้นผู้จัดการฝ่ายไปที่ผู้จัดการบุคคลโดยอัตโนมัติ ทุกการเปลี่ยนสถานะมีการแจ้งเตือนทาง Telegram</div>
+<div class="callout"><b>🔔 อนุมัติจาก Telegram:</b> ข้อความที่รออนุมัติมีปุ่ม ✅ อนุมัติ / ❌ ไม่อนุมัติ กดแล้วจะเปิดหน้า approve.html ให้ล็อกอิน ตรวจรายละเอียด และ <b>ยืนยันด้วยรหัสผ่านอีกครั้ง</b> ก่อนบันทึก (ผู้จัดการฝ่ายอนุมัติได้เฉพาะคำขอของฝ่ายตนเอง ผู้จัดการบุคคลอนุมัติได้เฉพาะคำขอที่ผ่านผู้จัดการฝ่ายแล้ว) ปุ่มในกลุ่มทุกคนเห็นได้ แต่คนที่ไม่มีสิทธิ์กดแล้วอนุมัติไม่ได้</div>
 <div class="callout warn">แต่ละหน้าเข้าได้เฉพาะบัญชีที่มีบทบาทตรงกัน หากเข้าแล้วขึ้นว่า "บัญชีนี้ไม่มีสิทธิ์เข้าหน้านี้" ให้แจ้งผู้จัดการบุคคลเพื่อตั้งสิทธิ์</div></section>
 
 <section class="card sec" id="manager"><h3>2. ผู้จัดการฝ่าย</h3>
@@ -205,8 +206,8 @@ table.t{width:100%;border-collapse:collapse;font-size:.92rem;margin:8px 0}
   </div>
 </div>
 <footer class="site-footer">
-  <div>แบบฟอร์มคำร้องขอเอกสาร<span class="sep">|</span>ใช้สำหรับภายในบริษัทเท่านั้น<span class="sep">|</span>พัฒนาโดย Sarawut.C</div>
-  <div class="cp">© <span id="cpYear">2026</span> สงวนลิขสิทธิ์ · All rights reserved.</div>
+  <div>แบบฟอร์มคำร้องขอเอกสาร<span class="sep">|</span>ใช้สำหรับภายในบริษัทเท่านั้น<span class="sep">|</span>พัฒนาโดย <b>Sarawut.C</b></div>
+  <div class="cp">© <span id="cpYear">2026</span> Sarawut.C. สงวนลิขสิทธิ์ · All rights reserved.</div>
 </footer>
 <script>document.getElementById("cpYear").textContent=new Date().getFullYear();</script>
 </body>
