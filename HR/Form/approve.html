@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>อนุมัติคำขอเอกสาร</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<style>
+:root{--bg:#f4f5f7;--card:#fff;--tx:#1d2330;--mut:#667085;--bd:#d0d5dd;--pri:#1f5fbf;--ok:#067647;--err:#b42318;--warn:#b54708}
+@media (prefers-color-scheme:dark){:root{--bg:#14171c;--card:#1d2128;--tx:#e8eaee;--mut:#9aa3b2;--bd:#3a414d;--pri:#6ea2f5;--ok:#47cd89;--err:#f97066;--warn:#fdb022}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:"Sarabun","Noto Sans Thai",system-ui,sans-serif;line-height:1.55}
+.wrap{max-width:960px;margin:0 auto;padding:16px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:16px;margin-bottom:12px}
+input,select{width:100%;padding:9px 10px;border:1px solid var(--bd);border-radius:8px;background:var(--card);color:var(--tx);font:inherit}
+button{font:inherit;padding:7px 14px;border-radius:8px;border:1px solid var(--pri);background:var(--pri);color:#fff;cursor:pointer}
+button.sec{background:transparent;color:var(--pri)}
+button.no{background:var(--err);border-color:var(--err)}
+button.go{background:var(--ok);border-color:var(--ok)}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.bar input{flex:1;min-width:180px;width:auto}
+.chip.on{background:var(--pri);color:#fff}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.tag{display:inline-block;padding:1px 10px;border-radius:99px;font-size:.85rem;border:1px solid currentColor}
+.pending{color:var(--warn)}.approved{color:var(--pri)}.rejected{color:var(--err)}.done{color:var(--ok)}
+.mut{color:var(--mut);font-size:.9rem}
+.act{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.hide{display:none}
+label{display:block;font-size:.9rem;color:var(--mut);margin:8px 0 2px}
+#err{color:var(--err);min-height:1.4em}
+</style>
+<style id="theme">
+/* ===== ธีมฟ้า-ขาว (ใช้ร่วมทุกหน้า) ===== */
+:root{--bg:#eef4ff;--glow:#cfe3ff;--card:#fff;--tx:#0f1f3d;--mut:#5b6b86;--bd:#d6e3fa;--pri:#1d6fe8;--pri2:#0ea5e9;--prisoft:#eaf2ff;--ok:#0a7d4f;--err:#c0392b;--warn:#b45309;--shadow:0 6px 24px rgba(29,111,232,.10)}
+@media (prefers-color-scheme:dark){:root{--bg:#0a1428;--glow:rgba(56,189,248,.14);--card:#111f3b;--tx:#e8f0ff;--mut:#9db0d0;--bd:#25375e;--pri:#5aa2ff;--pri2:#38bdf8;--prisoft:#16284a;--ok:#4ade80;--err:#ff8a80;--warn:#fbbf24;--shadow:0 6px 24px rgba(0,0,0,.35)}}
+html{background:var(--bg)}
+body{background:radial-gradient(1100px 460px at 50% -140px,var(--glow) 0%,transparent 70%),var(--bg);min-height:100vh;display:flex;flex-direction:column}
+.wrap{flex:1;width:100%;padding:20px 16px}
+.wrap>h1,.wrap>h2{background:linear-gradient(135deg,#1d4ed8 0%,#2563eb 45%,#0ea5e9 100%);color:#fff;padding:18px 22px;border-radius:18px;box-shadow:0 10px 28px rgba(37,99,235,.28);margin:0 0 18px;font-size:1.4rem;font-weight:700}
+.wrap>h1{text-align:center}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:16px;box-shadow:var(--shadow)}
+.card h2{color:var(--pri);border-left:4px solid var(--pri2);padding-left:10px}
+input[type=text],input[type=date],input[type=month],input[type=password],input[type=number],select,textarea{border:1.5px solid var(--bd);border-radius:10px;background:var(--card);color:var(--tx);transition:border-color .15s,box-shadow .15s}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--pri);box-shadow:0 0 0 3px rgba(29,111,232,.18)}
+input[readonly]{background:var(--prisoft)}
+input[type=checkbox],input[type=radio]{accent-color:var(--pri)}
+button{background:linear-gradient(135deg,var(--pri),var(--pri2));border:none;color:#fff;border-radius:10px;font-weight:600;box-shadow:0 4px 12px rgba(29,111,232,.25);transition:transform .12s,box-shadow .12s}
+button:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 6px 16px rgba(29,111,232,.32)}
+button.sec{background:var(--card);color:var(--pri);border:1.5px solid var(--pri);box-shadow:none}
+button.sec:hover:not(:disabled){background:var(--prisoft)}
+button.go{background:linear-gradient(135deg,#059669,#10b981);color:#fff;border:none}
+button.no{background:linear-gradient(135deg,#dc2626,#ef4444);color:#fff;border:none}
+.chip{border-radius:999px;padding:6px 16px}
+.chip.on{background:linear-gradient(135deg,var(--pri),var(--pri2));color:#fff;border-color:transparent}
+.tag{font-weight:600;background:var(--card)}
+.opt{padding:8px 12px;border:1px solid var(--bd);border-radius:10px;background:var(--card);cursor:pointer;transition:background .12s,border-color .12s}
+.opt:hover{background:var(--prisoft)}
+.opt:has(input:checked){border-color:var(--pri);background:var(--prisoft)}
+.opt:has(input:disabled){opacity:.5;cursor:not-allowed}
+a{color:var(--pri)}
+dialog{border-radius:16px!important;box-shadow:0 20px 50px rgba(15,31,61,.35)}
+dialog::backdrop{background:rgba(10,20,40,.45)}
+.site-footer{margin-top:24px;padding:18px 16px;text-align:center;font-size:.85rem;color:var(--mut);border-top:1px solid var(--bd);background:linear-gradient(180deg,transparent,var(--prisoft))}
+.site-footer b{color:var(--pri)}
+.site-footer .sep{opacity:.5;margin:0 6px}
+.site-footer .cp{margin-top:4px;font-size:.8rem}
+/* กล่องเข้าสู่ระบบ: จัดกึ่งกลางหน้า */
+#login{margin:7vh auto 0;max-width:380px;width:100%;padding:26px 24px}
+#login p{margin:0 0 12px}
+#login button{width:100%;padding:11px}
+#login #err{text-align:center}
+/* กล่องโต้ตอบตามธีม (แทน confirm/prompt/alert ของเบราว์เซอร์) */
+dialog.ui-modal{border:none;border-radius:20px;padding:0;max-width:min(420px,92vw);width:100%;background:var(--card);color:var(--tx);box-shadow:0 24px 60px rgba(15,31,61,.35);animation:uiPop .16s ease-out}
+dialog.ui-modal::backdrop{background:rgba(10,20,40,.5);backdrop-filter:blur(3px)}
+.ui-box{padding:26px 24px 20px;text-align:center}
+.ui-icon{width:54px;height:54px;margin:0 auto 12px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.6rem;font-weight:700;color:#fff;background:linear-gradient(135deg,var(--pri),var(--pri2));box-shadow:0 6px 16px rgba(29,111,232,.3)}
+.ui-icon.danger{background:linear-gradient(135deg,#dc2626,#f87171);box-shadow:0 6px 16px rgba(220,38,38,.3)}
+.ui-title{font-weight:700;font-size:1.1rem;margin-bottom:6px}
+.ui-msg{color:var(--mut);margin-bottom:12px;white-space:pre-line}
+.ui-in{width:100%;font:inherit;padding:9px 10px;border:1.5px solid var(--bd);border-radius:10px;background:var(--card);color:var(--tx);resize:vertical;text-align:left}
+.ui-err{color:var(--err);min-height:1.2em;font-size:.9rem}
+.ui-act{display:flex;gap:10px;margin-top:6px}
+.ui-act button{flex:1;padding:10px}
+@keyframes uiPop{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:none}}
+/* แถบเมนูด้านบน (navbar) */
+.navbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:10px 12px;box-shadow:var(--shadow);margin-bottom:6px}
+.nb-user{display:flex;align-items:center;gap:10px;min-width:0;flex:1 1 220px;color:var(--mut);font-size:.9rem}
+.nb-user::before{content:"👤";flex:0 0 36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--prisoft);border:1px solid var(--bd);font-size:1.05rem}
+.nb-user #who{flex:1;min-width:0;word-break:break-word}
+.nb-links{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+a.nb-link{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;text-decoration:none;font-weight:600;font-size:.92rem;color:var(--pri);background:var(--prisoft);border:1px solid transparent;transition:border-color .12s,transform .12s}
+a.nb-link:hover{border-color:var(--pri);transform:translateY(-1px)}
+a.nb-link.home{background:linear-gradient(135deg,var(--pri),var(--pri2));color:#fff}
+button.nb-out{flex:0 0 auto;white-space:nowrap;padding:8px 16px;border-radius:999px;background:var(--card);color:var(--err);border:1.5px solid var(--err);box-shadow:none;font-weight:600}
+button.nb-out:hover:not(:disabled){background:rgba(192,57,43,.1)}
+@media(max-width:640px){.nb-links{order:3;width:100%}.navbar .nb-out{margin-left:auto}}
+</style>
+<style>
+.big{display:flex;gap:12px;flex-wrap:wrap;margin-top:14px}.big button{flex:1 1 180px;padding:14px 20px;font-size:1.05rem}
+.kv{display:grid;grid-template-columns:140px 1fr;gap:6px 12px;margin:10px 0}.kv .k{color:var(--mut)}
+@media(max-width:560px){.kv{grid-template-columns:1fr}.kv .k{margin-top:6px}}
+.pill{display:inline-block;padding:3px 14px;border-radius:999px;font-weight:600;font-size:.88rem;border:1.5px solid currentColor}
+.pill.cur{color:var(--pri)}.pill.ok{color:var(--ok)}.pill.no{color:var(--err)}
+.rid{font-size:1.25rem;font-weight:700;color:var(--pri)}
+#info{margin:10px 2px}.bad{color:var(--err)}.good{color:var(--ok)}
+dialog.ui-modal label{text-align:left;margin:10px 0 3px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h2>อนุมัติคำขอเอกสาร</h2>
+
+  <div id="login" class="card" style="max-width:380px">
+    <p class="mut" id="loginHint" style="margin-top:0">กรุณาเข้าสู่ระบบเพื่อดูรายละเอียดและอนุมัติคำขอ</p>
+    <p><input id="em" type="text" placeholder="อีเมล" autocomplete="username"></p>
+    <p><input id="pw" type="password" placeholder="รหัสผ่าน" autocomplete="current-password"></p>
+    <button id="loginBtn">เข้าสู่ระบบ</button>
+    <div id="err"></div>
+  </div>
+
+  <div id="app" class="hide">
+    <div class="navbar">
+      <div class="nb-user"><span id="who"></span></div>
+      <button class="nb-out" id="out">🚪 ออกจากระบบ</button>
+    </div>
+    <div id="info"></div>
+    <div id="req"></div>
+  </div>
+</div>
+
+<dialog id="pwDlg" class="ui-modal"><div class="ui-box">
+  <div class="ui-icon" id="pwIcon">?</div>
+  <div class="ui-title" id="pwTitle"></div>
+  <div class="ui-msg" id="pwMsg"></div>
+  <div id="pwFields" style="text-align:left">
+    <div id="pwAuth"><label for="pwEmail">อีเมล</label><input class="ui-in" id="pwEmail" readonly style="resize:none">
+      <label for="pwPass">รหัสผ่าน</label><input class="ui-in" id="pwPass" type="password" autocomplete="current-password" style="resize:none"></div>
+    <div id="pwReasonBox"><label for="pwReason">เหตุผลที่ไม่อนุมัติ (ไม่บังคับ)</label><textarea class="ui-in" id="pwReason" rows="3"></textarea></div>
+  </div>
+  <div class="ui-err" id="pwErr"></div>
+  <div class="ui-act"><button type="button" class="sec" id="pwCancel">ยกเลิก</button><button type="button" id="pwOk">ยืนยัน</button></div>
+</div></dialog>
+<footer class="site-footer">
+  <div>แบบฟอร์มคำร้องขอเอกสาร<span class="sep">|</span>ใช้สำหรับภายในบริษัทเท่านั้น<span class="sep">|</span>พัฒนาโดย <b>Sarawut.C</b></div>
+  <div class="cp">© <span id="cpYear">2026</span> Sarawut.C. สงวนลิขสิทธิ์ · All rights reserved.</div>
+</footer>
+<script>document.getElementById("cpYear").textContent=new Date().getFullYear();</script>
+
+<script>
+const SUPABASE_URL = "https://ppzdyvomrfiitahxwrwz.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBwemR5dm9tcmZpaXRhaHh3cnd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwMjQ0MjIsImV4cCI6MjEwNDYwMDQyMn0.iArUz6swMfwhFT_1qEvCwK1B3aiCxdWt46_FBjT6_Y0";
+
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const $ = id => document.getElementById(id);
+const esc = s => String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const CERT={work:"หนังสือรับรองการทำงาน",salary:"หนังสือรับรองเงินเดือน",pass:"หนังสือผ่านงาน",slip:"สลิปเงินเดือน"};
+const ST={mgr_pending:["cur","รอผู้จัดการฝ่ายอนุมัติ"],mgr_rejected:["no","ผู้จัดการฝ่ายไม่อนุมัติ"],pending:["cur","รอผู้จัดการบุคคลอนุมัติ"],approved:["ok","ผู้จัดการบุคคลอนุมัติแล้ว"],rejected:["no","ผู้จัดการบุคคลไม่อนุมัติ"],done:["ok","ออกเอกสารแล้ว"]};
+const MTH=["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+const d=s=>{ if(!s) return "-"; const x=new Date(typeof s==="string"&&s.length===10?s+"T00:00:00":s); return isNaN(x)?s:`${x.getDate()} ${MTH[x.getMonth()]} ${x.getFullYear()+543}`; };
+
+const P=new URLSearchParams(location.search), RID=Number(P.get("id")), ACT=P.get("a")||"view";
+let me="", roles={}, REQ=null, lastAuth=0;
+
+async function show(session){
+  $("login").classList.toggle("hide",!!session);
+  $("app").classList.toggle("hide",!session);
+  if(!session) return;
+  me=session.user.email; $("who").textContent="เข้าสู่ระบบ: "+me;
+  const r=await db.rpc("my_roles");
+  roles=(r&&r.data)||{};
+  if(r.error || (!roles.division_manager && !roles.hr_manager)){
+    await db.auth.signOut(); $("login").classList.remove("hide"); $("app").classList.add("hide");
+    $("err").textContent=r.error?("ตรวจสอบสิทธิ์ไม่สำเร็จ: "+r.error.message):"บัญชีนี้ไม่มีสิทธิ์อนุมัติ (สำหรับผู้จัดการฝ่ายและผู้จัดการบุคคลเท่านั้น)"; return;
+  }
+  load(true);
+}
+function stageOf(r){ return r.status==="mgr_pending"?"mgr":r.status==="pending"?"hr":null; }
+function canAct(r){ const s=stageOf(r); return (s==="mgr"&&roles.division_manager)||(s==="hr"&&roles.hr_manager); }
+
+async function load(auto){
+  $("info").innerHTML=""; $("req").innerHTML="";
+  if(!RID){ $("info").innerHTML='<p class="bad">ลิงก์ไม่ถูกต้อง (ไม่พบเลขที่คำขอ)</p>'; return; }
+  const {data:r,error}=await db.from("certificate_requests").select("*").eq("id",RID).maybeSingle();
+  if(error){ $("info").innerHTML=`<p class="bad">โหลดไม่สำเร็จ: ${esc(error.message)}</p>`; return; }
+  if(!r){ $("info").innerHTML=`<p class="bad">ไม่พบคำขอ #${RID} หรือบัญชีนี้ไม่มีสิทธิ์ดูคำขอนี้ (ผู้จัดการฝ่ายเห็นเฉพาะฝ่ายของตนเอง)</p>`; return; }
+  REQ=r; render();
+  if(auto && canAct(r) && (ACT==="approve"||ACT==="reject")) doAction(ACT);
+}
+function render(){
+  const r=REQ, [k,txt]=ST[r.status]||["cur",r.status], ok=canAct(r), stage=stageOf(r);
+  const docs=r.doc_numbers?Object.entries(r.doc_numbers).map(([t,v])=>`${esc(CERT[t]||t)} <b>${esc(v)}</b>`).join(" · "):"";
+  let act="";
+  if(ok) act=`<div class="big"><button class="go" id="bA">✅ อนุมัติ${stage==="mgr"?" (ส่งต่อผู้จัดการบุคคล)":""}</button><button class="no" id="bR">❌ ไม่อนุมัติ</button></div>`;
+  else if(stage) act=`<p class="mut">คำขอนี้อยู่ในขั้น "${esc(txt)}" บัญชีของคุณไม่มีสิทธิ์ตัดสินในขั้นตอนนี้</p>`;
+  else act=`<p class="mut">คำขอนี้ดำเนินการไปแล้ว (${esc(txt)}) ไม่สามารถอนุมัติซ้ำจากหน้านี้ได้</p>`;
+  $("req").innerHTML=`<div class="card"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center"><span class="rid">คำขอ #${r.id}</span><span class="pill ${k}">${esc(txt)}</span></div>
+    <div class="kv"><span class="k">ผู้ขอ</span><span><b>${esc(r.emp_code)} ${esc(r.full_name)}</b></span>
+    <span class="k">ตำแหน่ง</span><span>${esc(r.position)}</span>
+    <span class="k">แผนก / ฝ่าย</span><span>${esc(r.department)} · ${esc(r.division)}</span>
+    <span class="k">วันเริ่มงาน</span><span>${d(r.start_date)}</span>
+    <span class="k">ประเภทเอกสาร</span><span>${(r.cert_types||[]).map(c=>esc(CERT[c]||c)).join(", ")}${r.slip_from?` (${esc(r.slip_from)} – ${esc(r.slip_to)})`:""}</span>
+    <span class="k">วัตถุประสงค์</span><span>${esc(r.purpose)}</span>
+    <span class="k">วันที่ต้องการใช้</span><span>${d(r.use_date)}</span>
+    <span class="k">วันที่ขอ</span><span>${d(r.request_date)}${r.prev_requested?` · เคยขอ ${d(r.prev_date)}`:" · ไม่เคยขอประเภทนี้"}</span>
+    ${r.mgr_decided_by?`<span class="k">ผู้จัดการฝ่าย</span><span>${esc(r.mgr_decided_by)} · ${d(r.mgr_decided_at)}</span>`:""}
+    ${r.decided_by?`<span class="k">ผู้จัดการบุคคล</span><span>${esc(r.decided_by)} · ${d(r.decided_at)}</span>`:""}
+    ${docs?`<span class="k">เลขที่เอกสาร</span><span>${docs}</span>`:""}</div>${act}</div>`;
+  if($("bA")) $("bA").onclick=()=>doAction("approve");
+  if($("bR")) $("bR").onclick=()=>doAction("reject");
+}
+
+/* กล่องยืนยัน: ต้องกรอกรหัสผ่านทุกครั้ง (ยกเว้นเพิ่งล็อกอินภายใน 3 นาที) */
+function confirmModal(act){
+  return new Promise(res=>{
+    const dlg=$("pwDlg"), needPw=(Date.now()-lastAuth)>180000, rej=act==="reject";
+    $("pwIcon").textContent=rej?"!":"?"; $("pwIcon").className="ui-icon"+(rej?" danger":"");
+    $("pwTitle").textContent=(rej?"ไม่อนุมัติ":"อนุมัติ")+`คำขอ #${REQ.id}`;
+    $("pwMsg").textContent=`${REQ.emp_code} ${REQ.full_name}`+(needPw?" · กรุณายืนยันตัวตนด้วยรหัสผ่านของคุณ":" · กรุณากดยืนยัน");
+    $("pwAuth").style.display=needPw?"block":"none"; $("pwReasonBox").style.display=rej?"block":"none";
+    $("pwEmail").value=me; $("pwPass").value=""; $("pwReason").value=""; $("pwErr").textContent="";
+    $("pwOk").className=rej?"no":"go"; $("pwOk").textContent=rej?"ยืนยันไม่อนุมัติ":"ยืนยันอนุมัติ"; $("pwOk").disabled=false;
+    let done=false; const fin=v=>{ if(done) return; done=true; dlg.close(); res(v); };
+    $("pwCancel").onclick=()=>fin(null);
+    dlg.oncancel=e=>{ e.preventDefault(); fin(null); };
+    $("pwOk").onclick=async()=>{
+      if(needPw){
+        const pw=$("pwPass").value; if(!pw){ $("pwErr").textContent="กรุณากรอกรหัสผ่าน"; return; }
+        $("pwOk").disabled=true; $("pwErr").textContent="กำลังตรวจสอบ...";
+        const {error}=await db.auth.signInWithPassword({email:me,password:pw});
+        if(error){ $("pwOk").disabled=false; $("pwErr").textContent="รหัสผ่านไม่ถูกต้อง"; return; }
+        lastAuth=Date.now();
+      }
+      fin({reason:$("pwReason").value.trim()||null});
+    };
+    dlg.showModal(); (needPw?$("pwPass"):$("pwOk")).focus();
+    $("pwPass").onkeydown=e=>{ if(e.key==="Enter") $("pwOk").click(); };
+  });
+}
+
+async function doAction(act){
+  if(!REQ||!canAct(REQ)) return;
+  const stage=stageOf(REQ), rej=act==="reject", c=await confirmModal(act);
+  if(!c) return;
+  document.querySelectorAll(".big button").forEach(b=>b.disabled=true);
+  let q;
+  if(stage==="mgr") q=db.from("certificate_requests").update({status:rej?"mgr_rejected":"pending",mgr_reject_reason:c.reason}).eq("id",REQ.id).eq("status","mgr_pending");
+  else q=db.from("certificate_requests").update({status:rej?"rejected":"approved",reject_reason:c.reason,decided_by:me,decided_at:new Date().toISOString()}).eq("id",REQ.id).eq("status","pending");
+  const {data,error}=await q.select("id");
+  history.replaceState(null,"","?id="+REQ.id);          // กันเปิด modal ซ้ำเมื่อรีเฟรช
+  if(error||!data||!data.length){
+    $("info").innerHTML=`<p class="bad">ดำเนินการไม่สำเร็จ${error?": "+esc(error.message):" (คำขอนี้อาจถูกดำเนินการไปแล้ว หรือคุณไม่มีสิทธิ์ เช่น อนุมัติคำขอของตัวเอง)"}</p>`;
+  } else {
+    $("info").innerHTML=`<p class="good"><b>${rej?"บันทึกการไม่อนุมัติแล้ว":"อนุมัติเรียบร้อยแล้ว"}</b> · ระบบแจ้งเตือนไปที่ Telegram แล้ว</p>`;
+  }
+  load(false);
+}
+
+$("out").onclick=async()=>{ await db.auth.signOut(); show(null); };
+$("loginBtn").onclick=async()=>{
+  $("err").textContent="";
+  const {data,error}=await db.auth.signInWithPassword({email:$("em").value.trim(),password:$("pw").value});
+  if(error) return $("err").textContent="เข้าสู่ระบบไม่สำเร็จ: "+error.message;
+  lastAuth=Date.now(); show(data.session);
+};
+$("pw").addEventListener("keydown",e=>{ if(e.key==="Enter") $("loginBtn").click(); });
+db.auth.getSession().then(({data})=>show(data.session));
+</script>
+</body>
+</html>
