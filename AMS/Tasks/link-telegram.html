@@ -38,9 +38,15 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--gate);outline-o
 </style>
 </head>
 <body>
-<header><h1>🔗 ผูกบัญชี Telegram</h1></header>
+<header style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h1>🔗 ผูกบัญชี Telegram</h1><button id="out" class="hidden" style="background:rgba(255,255,255,.2);color:#fff;border:0;border-radius:8px;padding:6px 12px;font:inherit;cursor:pointer">ออกจากระบบ</button></header>
 <div class="wrap">
-  <div class="panel">
+  <div class="panel" id="login">
+    <strong>ล็อกอินเจ้าของระบบ</strong>
+    <label for="em">ชื่อผู้ใช้</label><input type="text" id="em" autocomplete="username" autocapitalize="none">
+    <label for="pw">รหัสผ่าน</label><input type="password" id="pw" autocomplete="current-password">
+    <p class="st red" id="le"></p><button type="button" class="btn" id="go" style="width:100%;margin-top:10px">เข้าสู่ระบบ</button>
+  </div>
+  <div class="panel hidden" id="app">
     <p class="lead">กรอกรหัสพนักงานและ Chat ID เพื่อรับการแจ้งเตือน</p>
 
     <!-- วิธีหา Chat ID -->
@@ -48,7 +54,7 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--gate);outline-o
       <b>วิธีหา Chat ID:</b>
       <ol>
         <li>ค้นหาบอทของบริษัทใน Telegram กรอก @mouldmate_task_bot (ต้องมี@) แล้วกด <b style="display:inline">Start</b></li>
-        <li>พิมพ์ รหัสพนักงาน ส่งไปหาบอท 1 ครั้ง</li>
+        <li>พิมพ์ข้อความอะไรก็ได้ส่งไปหาบอท 1 ครั้ง</li>
         <li>ระบบจะดึง Chat ID ของคุณอัตโนมัติ (หรือติดต่อแอดมินเพื่อขอรับ ID)</li>
       </ol>
     </div>
@@ -82,13 +88,43 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--gate);outline-o
     <div id="statusMessage"></div>
   </div>
 </div>
-<footer>ระบบมอบหมายงานบริษัท © 2026 | พัฒนาโดย Sarawut.C</footer>
+<footer>ระบบการขอใช้รถบริษัท © 2026 | พัฒนาโดย Sarawut.C</footer>
 
 <script>
 // ==== ตั้งค่า Supabase ====
 const SUPABASE_URL = 'https://clowvcraydxpvwdbpkhi.supabase.co'; // ใส่ URL ของคุณ
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNsb3d2Y3JheWR4cHZ3ZGJwa2hpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3NTA3NTAsImV4cCI6MjEwMzMyNjc1MH0.pXV0g3JfakqNRgKjgCe87Reie5ZhXzqYXpZ3OVkluHk'; // ใส่ ANON KEY ของคุณ
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ==== สิทธิ์: เฉพาะเจ้าของระบบ (ฝั่งเซิร์ฟเวอร์ตรวจซ้ำที่ฟังก์ชัน manage-task-users) ====
+const EMAIL_DOMAIN = '@tokai.local';
+const OWNER_EMAIL = 'sarawut@tokai.local';
+async function call(body) {
+  const { data, error } = await supabaseClient.functions.invoke('manage-task-users', { body });
+  if (error) { let m = error.message; try { m = (await error.context.json()).error || m; } catch (_) {} throw new Error(m); }
+  return data;
+}
+document.getElementById('go').onclick = async () => {
+  document.getElementById('le').textContent = '';
+  const v = document.getElementById('em').value.trim().toLowerCase();
+  const { error } = await supabaseClient.auth.signInWithPassword({ email: v.includes('@') ? v : v + EMAIL_DOMAIN, password: document.getElementById('pw').value });
+  if (error) { document.getElementById('le').textContent = 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง'; return; }
+  boot();
+};
+document.getElementById('out').onclick = async () => { await supabaseClient.auth.signOut(); location.reload(); };
+async function boot() {
+  const { data: { user } } = await supabaseClient.auth.getUser(); if (!user) return;
+  const { data: a } = await supabaseClient.from('task_admins').select('user_id').eq('user_id', user.id).eq('active', true).maybeSingle();
+  if (!a) { document.getElementById('le').textContent = 'บัญชีนี้ไม่ได้อยู่ในรายชื่อผู้สั่งงาน'; await supabaseClient.auth.signOut(); return; }
+  document.getElementById('out').classList.remove('hidden');
+  if ((user.email || '').toLowerCase() !== OWNER_EMAIL) {
+    document.getElementById('login').innerHTML = '<strong>ไม่มีสิทธิ์เข้าหน้านี้</strong><p class="hint">หน้านี้ใช้ได้เฉพาะเจ้าของระบบเท่านั้น</p>';
+    return;
+  }
+  document.getElementById('login').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+}
+supabaseClient.auth.getSession().then(({ data }) => { if (data.session) boot(); });
 
 // ==== Element References ====
 const searchBtn = document.getElementById('searchBtn');
@@ -125,11 +161,8 @@ async function searchEmployee() {
   searchStatus.className = 'st blue';
 
   // ค้นหาในตาราง employees โดยใช้คอลัมน์ code
-  const { data, error } = await supabaseClient
-    .from('employees')
-    .select('id, name, telegram_chat_id')
-    .eq('code', code)
-    .single(); // คาดหวังผลลัพธ์แค่ 1 แถว
+  let data = null, error = null;
+  try { data = (await call({ action: 'emp_find', code })).employee; } catch (e) { error = e; }
 
   if (error || !data) {
     searchStatus.textContent = '❌ ไม่พบรหัสพนักงานนี้ในระบบ';
@@ -182,12 +215,7 @@ linkForm.addEventListener('submit', async (e) => {
   statusMessage.textContent = '';
 
   try {
-    const { error } = await supabaseClient
-      .from('employees')
-      .update({ telegram_chat_id: chatId })
-      .eq('id', currentEmployeeId);
-
-    if (error) throw error;
+    await call({ action: 'emp_set_chat', employee_id: currentEmployeeId, chat_id: chatId });
 
     statusMessage.innerHTML = '<span class="t-green">✅ บันทึก Chat ID สำเร็จ! คุณพร้อมรับแจ้งเตือนแล้ว</span>';
 
