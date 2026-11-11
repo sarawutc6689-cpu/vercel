@@ -35,7 +35,7 @@ button:disabled{opacity:.5}
 <style id="theme">
 /* ===== ธีมฟ้า-ขาว (ใช้ร่วมทุกหน้า) ===== */
 :root{--bg:#eef4ff;--glow:#cfe3ff;--card:#fff;--tx:#0f1f3d;--mut:#5b6b86;--bd:#d6e3fa;--pri:#1d6fe8;--pri2:#0ea5e9;--prisoft:#eaf2ff;--ok:#0a7d4f;--err:#c0392b;--warn:#b45309;--shadow:0 6px 24px rgba(29,111,232,.10)}
-@media (prefers-color-scheme:dark){:root{--bg:#0a1428;--glow:rgba(56,189,248,.14);--card:#111f3b;--tx:#e8f0ff;--mut:#9db0d0;--bd:#25375e;--pri:#5aa2ff;--pri2:#38bdf8;--prisoft:#16284a;--ok:#4ade80;--err:#ff8a80;--warn:#fbbf24;--shadow:0 6px 24px rgba(0,0,0,.35)}}}
+@media (prefers-color-scheme:dark){:root{--bg:#0a1428;--glow:rgba(56,189,248,.14);--card:#111f3b;--tx:#e8f0ff;--mut:#9db0d0;--bd:#25375e;--pri:#5aa2ff;--pri2:#38bdf8;--prisoft:#16284a;--ok:#4ade80;--err:#ff8a80;--warn:#fbbf24;--shadow:0 6px 24px rgba(0,0,0,.35)}}
 html{background:var(--bg)}
 body{background:radial-gradient(1100px 460px at 50% -140px,var(--glow) 0%,transparent 70%),var(--bg);min-height:100vh;display:flex;flex-direction:column}
 .wrap{flex:1;width:100%;padding:20px 16px}
@@ -68,85 +68,13 @@ dialog::backdrop{background:rgba(10,20,40,.45)}
 .site-footer .sep{opacity:.5;margin:0 6px}
 .site-footer .cp{margin-top:4px;font-size:.8rem}
 </style>
-<!-- สไตล์เพิ่มเติมสำหรับ modal แจ้งเตือนสำเร็จ -->
-<style>
-  .success-modal {
-    border: none;
-    border-radius: 20px;
-    padding: 32px 28px 28px;
-    max-width: 380px;
-    width: calc(100% - 32px);
-    text-align: center;
-    background: var(--card);
-    color: var(--tx);
-    box-shadow: 0 30px 60px rgba(0,0,0,.3);
-    margin: auto;
-  }
-  .success-modal::backdrop {
-    background: rgba(10,20,40,.55);
-    backdrop-filter: blur(3px);
-  }
-  .success-icon {
-    width: 72px;
-    height: 72px;
-    margin: 0 auto 16px;
-    background: linear-gradient(135deg, #10b981, #34d399);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 10px 22px rgba(16,185,129,.35);
-    animation: pop .35s cubic-bezier(.2,1.4,.6,1);
-  }
-  .success-icon svg {
-    width: 40px;
-    height: 40px;
-    stroke: #fff;
-    stroke-width: 3;
-    fill: none;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-  }
-  @keyframes pop {
-    0% { transform: scale(.4); opacity: 0; }
-    70% { transform: scale(1.06); }
-    100% { transform: scale(1); opacity: 1; }
-  }
-  .success-modal h3 {
-    margin: 0 0 8px;
-    font-size: 1.35rem;
-    color: var(--ok);
-    font-weight: 700;
-  }
-  .success-modal p {
-    margin: 0 0 20px;
-    font-size: .95rem;
-    color: var(--mut);
-    line-height: 1.55;
-  }
-  .success-modal .btn-ok {
-    display: inline-block;
-    width: 100%;
-    padding: 12px 20px;
-    border: none;
-    border-radius: 12px;
-    background: linear-gradient(135deg, #10b981, #34d399);
-    color: #fff;
-    font-weight: 700;
-    font-size: 1rem;
-    cursor: pointer;
-    box-shadow: 0 6px 16px rgba(16,185,129,.35);
-    transition: transform .12s, box-shadow .12s;
-  }
-  .success-modal .btn-ok:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 8px 22px rgba(16,185,129,.45);
-  }
-</style>
 </head>
 <body>
 <div class="wrap">
   <h1>แบบขอหนังสือรับรอง</h1>
+  <p style="text-align:center;margin:-6px 0 14px"><a href="guide-user.html">📖 คู่มือการใช้งาน</a> &nbsp;·&nbsp; <a href="track.html">🔎 ติดตามสถานะคำขอ</a></p>
+
+  <div id="doneBox" class="card hide" style="border-left:4px solid var(--ok)"></div>
 
   <form id="f" class="card" autocomplete="off">
     <h2>ข้อมูลพนักงาน</h2>
@@ -163,8 +91,8 @@ dialog::backdrop{background:rgba(10,20,40,.45)}
     <div id="msg"></div>
 
     <h2 style="margin-top:16px">ประเภทหนังสือรับรอง (เลือกได้มากกว่า 1)</h2>
-    <label class="opt"><input type="checkbox" name="cert" value="work"> หนังสือรับรองการทำงาน (ยังมีสภาพเป็นพนักงาน ไม่ระบุเงินเดือน)</label>
-    <label class="opt"><input type="checkbox" name="cert" value="salary"> หนังสือรับรองเงินเดือน (ยังมีสภาพเป็นพนักงาน ระบุเงินเดือน)</label>
+    <label class="opt"><input type="checkbox" name="cert" value="work"> หนังสือรับรองการทำงาน (ยังมีสภาพเป็นพนักงาน)</label>
+    <label class="opt"><input type="checkbox" name="cert" value="salary"> หนังสือรับรองเงินเดือน (ยังมีสภาพเป็นพนักงาน)</label>
     <label class="opt"><input type="checkbox" name="cert" value="pass"> หนังสือผ่านงาน (พ้นสภาพพนักงานแล้ว)</label>
     <label class="opt"><input type="checkbox" name="cert" value="slip" id="slipChk"> สลิปเงินเดือน</label>
     <div class="grid hide" id="slipBox">
@@ -193,19 +121,10 @@ dialog::backdrop{background:rgba(10,20,40,.45)}
   </form>
 </div>
 
-<!-- ===== Modal แจ้งเตือนสำเร็จ ===== -->
-<dialog id="successModal" class="success-modal">
-  <div class="success-icon">
-    <svg viewBox="0 0 24 24"><polyline points="4 12 10 18 20 6"/></svg>
-  </div>
-  <h3>ส่งคำขอสำเร็จ</h3>
-  <p>ระบบได้รับคำขอออกหนังสือรับรองของท่านแล้ว<br>กรุณารอการอนุมัติจากผู้จัดการฝ่ายและฝ่ายบุคคล</p>
-  <button type="button" class="btn-ok" id="successOk">ตกลง</button>
-</dialog>
 
 <footer class="site-footer">
-  <div>แบบฟอร์มคำร้องขอเอกสาร<span class="sep">|</span>ใช้สำหรับภายในบริษัทเท่านั้น<span class="sep">|</span>พัฒนาโดย Sarawut.C</div>
-  <div class="cp">© <span id="cpYear">2026</span> สงวนลิขสิทธิ์ · All rights reserved.</div>
+  <div>แบบฟอร์มคำร้องขอเอกสาร<span class="sep">|</span>ใช้สำหรับภายในบริษัทเท่านั้น<span class="sep">|</span>พัฒนาโดย <b>Sarawut.C</b></div>
+  <div class="cp">© <span id="cpYear">2026</span> Sarawut.C. สงวนลิขสิทธิ์ · All rights reserved.</div>
 </footer>
 <script>document.getElementById("cpYear").textContent=new Date().getFullYear();</script>
 
@@ -339,29 +258,6 @@ function collect(){
   };
 }
 
-/* ===== Modal สำเร็จ ===== */
-const successModal = $("successModal");
-function showSuccessModal() {
-  if (typeof successModal.showModal === "function") {
-    successModal.showModal();
-  } else {
-    // fallback สำหรับเบราว์เซอร์เก่ามาก
-    alert("ส่งคำขอเรียบร้อยแล้ว");
-    location.reload();
-  }
-}
-$("successOk").addEventListener("click", () => {
-  successModal.close();
-  location.reload();
-});
-// ปิด modal เมื่อคลิก backdrop
-successModal.addEventListener("click", (e) => {
-  if (e.target === successModal) {
-    successModal.close();
-    location.reload();
-  }
-});
-
 $("f").addEventListener("submit", async e=>{
   e.preventDefault();
   if(!$("full_name").value) return msg("กรุณาค้นหารหัสพนักงานก่อนส่ง","err");
@@ -371,10 +267,25 @@ $("f").addEventListener("submit", async e=>{
   $("submitBtn").disabled=true; msg("กำลังบันทึก...");
   const {error} = await db.from("certificate_requests").insert(r);
   if(error){ $("submitBtn").disabled=false; return msg("บันทึกไม่สำเร็จ: "+error.message,"err"); }
-  msg("ส่งคำขอเรียบร้อยแล้ว","ok");
-  showSuccessModal();
+  msg("ส่งคำขอเรียบร้อยแล้ว กำลังรีโหลดหน้า...","ok");
+  let rid=null;   // หาหมายเลขคำขอล่าสุดของรหัสนี้ เพื่อแสดงให้พนักงานเก็บไว้ติดตามสถานะ
+  try{ const t=await db.rpc("track_requests",{p_q:r.emp_code}); const f=(t.data||[])[0]; if(f) rid=f.id; }catch(e){}
+  try{ sessionStorage.setItem("lastSubmit",JSON.stringify({id:rid,code:r.emp_code})); }catch(e){}
+  setTimeout(()=>location.reload(),1200);
 });
 
+
+/* แสดงหมายเลขคำขอหลังส่งสำเร็จและรีโหลดหน้า */
+try{
+  const ls=sessionStorage.getItem("lastSubmit");
+  if(ls){
+    sessionStorage.removeItem("lastSubmit");
+    const o=JSON.parse(ls), idn=Number(o.id)||null;
+    const q=encodeURIComponent(idn?("#"+idn):String(o.code||""));
+    $("doneBox").innerHTML=`<b style="color:var(--ok)">✓ ส่งคำขอเรียบร้อยแล้ว</b>${idn?` · หมายเลขคำขอของคุณคือ <b>#${idn}</b>`:""}<br><span class="note">ติดตามสถานะได้ที่ <a href="track.html?q=${q}">หน้าติดตามสถานะคำขอ</a> (ค้นหาด้วยรหัสพนักงานหรือเลขที่คำขอ)</span>`;
+    $("doneBox").classList.remove("hide");
+  }
+}catch(e){}
 </script>
 </body>
 </html>
