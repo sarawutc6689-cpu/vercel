@@ -208,11 +208,12 @@ $("fab").onclick=()=>{
   $("ci").focus();
 };
 $("cx").onclick=()=>{$("chat").hidden=true;$("fab").hidden=false};
-$("cf").onsubmit=e=>{
+$("cf").onsubmit=async e=>{
   e.preventDefault();
   const t=$("ci").value.trim();
   if(!t||busy)return;
   $("ci").value="";addMsg("me",t);
+  if(!sample&&window.claude){try{sample=await claude.use("sample")}catch(e){}}
   if(!sample){addMsg("bot","ผู้ช่วย AI ยังใช้ไม่ได้ในหน้านี้ (อาจยังโหลดไม่เสร็จหรือยังไม่ได้รับอนุญาต) ลองรีเฟรชหน้า หรือเปิดลิงค์ผ่าน claude.ai โดยตรงอีกครั้ง");return}
   ask(t);
 };
