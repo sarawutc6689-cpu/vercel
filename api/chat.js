@@ -1,16 +1,16 @@
-// Vercel Serverless Function: POST /api/chat
-// ต้องตั้ง Environment Variable ชื่อ GEMINI_API_KEY ใน Vercel (ห้ามใส่คีย์ในโค้ด)
-// เลือกโมเดลได้ด้วย GEMINI_MODEL (ค่าเริ่มต้น gemini-2.5-flash) ถ้าโมเดลถูกเลิกใช้ให้เปลี่ยนค่านี้
+// Vercel Serverless Function: POST /api/chat (สำหรับ Groq API - ฟรีและเร็วมาก)
+// ตั้งค่า Environment Variable ชื่อ GROQ_API_KEY ใน Vercel (หรือใส่ใน GEMINI_API_KEY เดิมก็ได้)
+// เปลี่ยนรุ่นโมเดลได้ที่ GROQ_MODEL (ค่าเริ่มต้น llama-3.3-70b-versatile)
 
-const MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+const MODEL = process.env.GROQ_MODEL || "llama-3.3-70b-versatile";
 const MAX_MESSAGES = 10;
 const MAX_CHARS = 2000;
 const MAX_LINKS = 30;
 
-// จำกัดจำนวนครั้งต่อ IP แบบง่าย ๆ (ทำงานในหน่วยความจำของแต่ละ instance เท่านั้น)
+// จำกัดจำนวนครั้งต่อ IP แบบง่าย ๆ
 const hits = new Map();
 const WINDOW_MS = 60 * 1000;
-const LIMIT = 12;
+const LIMIT = 15;
 
 function rateLimited(ip) {
   const now = Date.now();
@@ -25,7 +25,7 @@ function systemPrompt(links) {
   const list = links.map((l) => `- ${l.name}: ${l.url}`).join("\n");
   return (
     "คุณคือ “น้องมูลด์” เลขาส่วนตัวที่ใจดีและเป็นกันเองประจำหน้ารวมลิงค์ของฝ่าย IT " +
-    "พูดภาษาไทยแบบเป็นกันเอง เหมือนเพื่อนร่วมงานที่สนิท ใช้คำลงท้ายที่เป็นกลางทางเพศ เช่น นะ เลย จ้า " +
+    "พูดภาษาไทยที่เป็นธรรมชาติแบบเป็นกันเอง เหมือนเพื่อนร่วมงานที่สนิท ใช้คำลงท้ายที่เป็นกลางทางเพศ เช่น นะ เลย จ้า " +
     "หลีกเลี่ยง ครับ/ค่ะ ไม่หยาบคาย ตอบกระชับตรงประเด็น เป็นข้อความธรรมดา ไม่ใช้ markdown ใช้อีโมจิได้เล็กน้อย " +
     "ตอบได้ทุกเรื่อง เช่น ความรู้ทั่วไป ไอทีเบื้องต้น ร่างอีเมลหรือประกาศ สรุปประเด็น แปลภาษา วางแผนงาน ช่วยคิดไอเดีย " +
     "และชี้ลิงค์ที่เกี่ยวข้องจากรายการนี้เมื่อผู้ใช้ถามหา:\n" +
@@ -45,7 +45,8 @@ module.exports = async (req, res) => {
     return res.status(405).json({ error: "method_not_allowed" });
   }
 
-  const key = process.env.GEMINI_API_KEY;
+  // รองรับทั้งชื่อ GROQ_API_KEY และ GEMINI_API_KEY (เผื่อไม่อยากสร้างตัวแปรใหม่ในหน้าเว็บ)
+  const key = process.env.GROQ_API_KEY || process.env.GEMINI_API_KEY;
   if (!key) return res.status(500).json({ error: "missing_api_key" });
 
   const ip =
@@ -56,14 +57,15 @@ module.exports = async (req, res) => {
 
   const body = typeof req.body === "string" ? safeParse(req.body) : req.body || {};
 
-  // เตรียมข้อความสนทนา: ตัดให้เหลือล่าสุด ต้องขึ้นต้นด้วย user และสลับบทบาทกัน
+  // เตรียมประวัติข้อความสนทนาตามรูปแบบ OpenAI / Groq
   let msgs = (Array.isArray(body.messages) ? body.messages : [])
     .filter((m) => m && (m.role === "user" || m.role === "assistant") && typeof m.content === "string")
     .slice(-MAX_MESSAGES)
     .map((m) => ({
-      role: m.role === "assistant" ? "model" : "user",
-      parts: [{ text: m.content.slice(0, MAX_CHARS) }],
+      role: m.role,
+      content: m.content.slice(0, MAX_CHARS),
     }));
+
   while (msgs.length && msgs[0].role !== "user") msgs.shift();
   if (!msgs.length || msgs[msgs.length - 1].role !== "user") {
     return res.status(400).json({ error: "bad_request" });
@@ -75,30 +77,31 @@ module.exports = async (req, res) => {
     .map((l) => ({ name: l.name.slice(0, 60), url: l.url.slice(0, 300) }));
 
   try {
-    const r = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(MODEL)}:generateContent`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "x-goog-api-key": key },
-        body: JSON.stringify({
-          systemInstruction: { parts: [{ text: systemPrompt(links) }] },
-          contents: msgs,
-          generationConfig: { maxOutputTokens: 1024 },
-        }),
-      }
-    );
+    const r = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${key}`,
+      },
+      body: JSON.stringify({
+        model: MODEL,
+        messages: [
+          { role: "system", content: systemPrompt(links) },
+          ...msgs,
+        ],
+        max_tokens: 1024,
+        temperature: 0.6,
+      }),
+    });
 
     if (r.status === 429) return res.status(429).json({ error: "rate_limited" });
     if (!r.ok) {
-      console.error("Gemini error", r.status, await r.text());
+      console.error("Groq error", r.status, await r.text());
       return res.status(502).json({ error: "upstream_error" });
     }
 
     const data = await r.json();
-    const text = (data.candidates?.[0]?.content?.parts || [])
-      .map((p) => p.text || "")
-      .join("")
-      .trim();
+    const text = (data.choices?.[0]?.message?.content || "").trim();
 
     if (!text) return res.status(502).json({ error: "empty_response" });
     return res.status(200).json({ text });
