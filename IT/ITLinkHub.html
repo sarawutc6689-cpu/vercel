@@ -46,6 +46,17 @@ dialog input[type=text],dialog input[type=url]{width:100%;padding:10px 12px;bord
 .icons button[aria-pressed=true]{border-color:var(--accent);background:var(--tile);box-shadow:0 0 0 2px var(--accent)}
 .actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}
 .err{color:var(--danger);font-size:.85rem;min-height:1.2em;margin-top:8px}
+.fab{position:fixed;right:18px;bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:20;display:flex;align-items:center;gap:8px;padding:12px 18px;border-radius:999px;border:0;background:var(--accent);color:var(--accent-ink);font-weight:500;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.22)}
+.fab[hidden],.chat[hidden]{display:none}
+.chat{position:fixed;right:18px;bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:21;width:min(380px,calc(100vw - 36px));height:min(540px,calc(100% - 36px));display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:0 12px 40px rgba(0,0,0,.28);overflow:hidden}
+.chat-head{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--tile);border-bottom:1px solid var(--line);font-weight:600}
+.chat-head button{border:0;background:transparent;font-size:1.1rem;cursor:pointer;color:var(--muted)}
+.msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px}
+.m{max-width:86%;padding:9px 13px;border-radius:14px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:.95rem}
+.m.bot{align-self:flex-start;background:var(--tile)}
+.m.me{align-self:flex-end;background:var(--accent);color:var(--accent-ink)}
+.chat-in{display:flex;gap:8px;padding:10px;border-top:1px solid var(--line)}
+.chat-in input{flex:1;min-width:0;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
 </style>
 </head>
 <body>
@@ -62,6 +73,16 @@ dialog input[type=text],dialog input[type=url]{width:100%;padding:10px 12px;bord
   </header>
   <main class="grid" id="grid"></main>
 </div>
+
+<button class="fab" id="fab" type="button" hidden>💬 ถามเลขา IT</button>
+<section class="chat" id="chat" hidden aria-label="แชตเลขา IT">
+  <div class="chat-head"><span>💬 เลขา IT</span><button type="button" id="cx" aria-label="ปิดแชต">✕</button></div>
+  <div class="msgs" id="msgs" aria-live="polite"></div>
+  <form class="chat-in" id="cf">
+    <input type="text" id="ci" placeholder="พิมพ์คำถามที่นี่…" autocomplete="off" aria-label="พิมพ์คำถาม">
+    <button class="btn primary" type="submit" id="cs">ส่ง</button>
+  </form>
+</section>
 
 <dialog id="dlg">
   <form method="dialog" id="f" novalidate>
@@ -144,6 +165,54 @@ $("f").onsubmit=e=>{
   links.push({name,url,icon});save();render();$("dlg").close();
 };
 render();
+
+/* ---- เลขา IT (AI) ---- */
+let sample=null,hist=[],busy=false;
+(async()=>{
+  try{if(window.claude)sample=await claude.use("sample")}catch(e){}
+  if(sample)$("fab").hidden=false;
+})();
+function addMsg(cls,text){
+  const d=document.createElement("div");d.className="m "+cls;d.textContent=text;
+  $("msgs").appendChild(d);$("msgs").scrollTop=1e9;return d;
+}
+function sysPrompt(){
+  return "คุณคือเลขา IT ผู้ช่วยประจำหน้ารวมลิงค์ของฝ่าย IT ตอบเป็นภาษาไทย สุภาพ กระชับ ตรงประเด็น เป็นข้อความธรรมดา ไม่ใช้ markdown "
+   +"ช่วยแนะนำวิธีแก้ปัญหาไอทีเบื้องต้น ร่างอีเมลหรือประกาศ อธิบายศัพท์เทคนิค และชี้ลิงค์ที่เกี่ยวข้องจากรายการนี้เมื่อผู้ใช้ถามหา:\n"
+   +links.map(l=>"- "+l.name+": "+l.url).join("\n")
+   +"\nคุณไม่สามารถเข้าถึงข้อมูลจริงในระบบเหล่านี้ (เช่น จำนวนงานแจ้งซ่อม ทะเบียนทรัพย์สิน) ถ้าถูกถามให้บอกตรง ๆ และแนะนำให้เปิดลิงค์ที่เกี่ยวข้อง";
+}
+async function ask(text){
+  hist.push({role:"user",content:text});
+  const bubble=addMsg("bot","…");
+  let recent=hist.slice(-10);
+  while(recent.length&&recent[0].role!=="user")recent.shift();
+  const msgs=recent.map((m,i)=>i===0?{role:"user",content:sysPrompt()+"\n\nข้อความของผู้ใช้: "+m.content}:m);
+  busy=true;$("cs").disabled=true;
+  try{
+    const r=await sample(msgs,{cache:false,modelTier:"quick",onText:({text})=>{bubble.textContent=text;$("msgs").scrollTop=1e9}});
+    const out=(r&&r.text)||bubble.textContent;
+    bubble.textContent=out;hist.push({role:"assistant",content:out});
+  }catch(e){
+    hist.pop();
+    bubble.textContent=e&&e.code==="not_granted"?"ยังไม่ได้รับอนุญาตให้ใช้ผู้ช่วย AI ในหน้านี้"
+      :e&&e.code==="rate_limited"?"ใช้งานถี่เกินไป ลองใหม่อีกครั้งในอีกสักครู่"
+      :"ขออภัย ตอนนี้ตอบไม่ได้ ลองใหม่อีกครั้ง";
+  }
+  busy=false;$("cs").disabled=false;$("ci").focus();
+}
+$("fab").onclick=()=>{
+  $("chat").hidden=false;$("fab").hidden=true;
+  if(!$("msgs").children.length)addMsg("bot","สวัสดีครับ ผมเป็นเลขา IT ถามเรื่องไอที ให้ช่วยร่างข้อความ หรือให้หาลิงค์ในหน้านี้ได้เลยครับ");
+  $("ci").focus();
+};
+$("cx").onclick=()=>{$("chat").hidden=true;$("fab").hidden=false};
+$("cf").onsubmit=e=>{
+  e.preventDefault();
+  const t=$("ci").value.trim();
+  if(!t||busy||!sample)return;
+  $("ci").value="";addMsg("me",t);ask(t);
+};
 </script>
 </body>
 </html>
