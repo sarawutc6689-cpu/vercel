@@ -106,7 +106,7 @@ dialog input[type=text],dialog input[type=url]{width:100%;padding:10px 12px;bord
 <script>
 const KEY="it-link-hub:v1";
 const ICONS=["🛠️","📊","📹","💻","🖥️","🖨️","🌐","📡","🔒","📁","📧","📝","🗓️","🧰","☁️","🔗"];
-const AI={name:"ถามน้องมูลด์",url:"https://claude.ai/project/01a1cead-5e22-7082-9c3b-fd4fc5265460",icon:"🤖"};
+const AI={name:"ถามน้องมูลด์",url:"#chat",icon:"🤖"};
 const DEFAULTS=[
   AI,
   {name:"Helpdesk Dashboard",url:"https://mouldmate.vercel.app/IT/Helpdesk/dashboard.html",icon:"🛠️"},
@@ -117,14 +117,36 @@ let links=load(), icon=ICONS[0];
 const $=id=>document.getElementById(id);
 
 function load(){
-  try{const s=localStorage.getItem(KEY);if(s){const a=JSON.parse(s);if(Array.isArray(a)){
-    if(!localStorage.getItem(KEY+":ai")&&!a.some(l=>l.url===AI.url)){a.unshift(AI);localStorage.setItem(KEY,JSON.stringify(a))}
-    try{localStorage.setItem(KEY+":ai","1")}catch(e){}
-    return a}}}catch(e){}
+  try{
+    const s=localStorage.getItem(KEY);
+    if(s){
+      const a=JSON.parse(s);
+      if(Array.isArray(a)){
+        if(!localStorage.getItem(KEY+":ai")&&!a.some(l=>l.name===AI.name)){
+          a.unshift(AI);
+          localStorage.setItem(KEY,JSON.stringify(a));
+        }
+        try{localStorage.setItem(KEY+":ai","1")}catch(e){}
+        return a;
+      }
+    }
+  }catch(e){}
   return DEFAULTS.slice();
 }
 function save(){try{localStorage.setItem(KEY,JSON.stringify(links))}catch(e){}}
-function host(u){try{return new URL(u).hostname}catch(e){return u}}
+function host(u){
+  if(u==="#chat"||u.includes("claude.ai")) return "ผู้ช่วย AI ประจำฝ่าย IT";
+  try{return new URL(u).hostname}catch(e){return u}
+}
+
+function openChat(){
+  $("chat").hidden=false;
+  $("fab").hidden=true;
+  if(!$("msgs").children.length){
+    addMsg("bot","สวัสดีจ้า น้องมูลด์เองนะ 😊 ถามอะไรก็ได้เลย จะให้ช่วยร่างข้อความ สรุปเรื่อง หรือหาลิงค์ในหน้านี้ก็บอกได้เลย");
+  }
+  $("ci").focus();
+}
 
 function render(){
   const q=$("q").value.trim().toLowerCase(), g=$("grid");
@@ -137,7 +159,12 @@ function render(){
   }
   shown.forEach(({l,i})=>{
     const a=document.createElement("a");
-    a.className="card";a.href=l.url;a.target="_blank";a.rel="noopener noreferrer";
+    a.className="card";a.href=l.url;
+    if(l.url==="#chat"||l.name==="ถามน้องมูลด์"){
+      a.onclick=e=>{e.preventDefault();openChat()};
+    }else{
+      a.target="_blank";a.rel="noopener noreferrer";
+    }
     const ic=document.createElement("div");ic.className="ico";ic.textContent=l.icon;
     const t=document.createElement("div");t.className="txt";
     const n=document.createElement("div");n.className="name";n.textContent=l.name;
@@ -173,65 +200,72 @@ $("f").onsubmit=e=>{
 };
 render();
 
-/* ---- เลขา IT (AI) ---- */
-let sample=null,hist=[],busy=false;
-(async()=>{
-  try{if(window.claude)sample=await claude.use("sample")}catch(e){}
-})();
+/* ---- เลขา IT (AI - เชื่อมต่อ /api/chat) ---- */
+let hist=[], busy=false;
+
 function addMsg(cls,text){
-  const d=document.createElement("div");d.className="m "+cls;d.textContent=text;
-  $("msgs").appendChild(d);$("msgs").scrollTop=1e9;return d;
+  const d=document.createElement("div");
+  d.className="m "+cls;
+  d.textContent=text;
+  $("msgs").appendChild(d);
+  $("msgs").scrollTop=1e9;
+  return d;
 }
-function sysPrompt(){
-  return "คุณคือ “น้องมูลด์” เลขาส่วนตัวใจดีประจำหน้ารวมลิงค์ของฝ่าย IT พูดภาษาไทยแบบเป็นกันเอง เหมือนเพื่อนร่วมงานสนิท ใช้คำลงท้ายที่เป็นกลางทางเพศ เช่น นะ เลย จ้า หลีกเลี่ยงครับ/ค่ะ ไม่หยาบคาย ตอบกระชับตรงประเด็น เป็นข้อความธรรมดา ไม่ใช้ markdown ใช้อีโมจิได้เล็กน้อย "
-   +"ตอบได้ทุกเรื่อง เช่น ความรู้ทั่วไป ไอทีเบื้องต้น ร่างอีเมลหรือประกาศ สรุปประเด็น แปลภาษา วางแผนงาน ช่วยคิดไอเดีย และชี้ลิงค์ที่เกี่ยวข้องจากรายการนี้เมื่อผู้ใช้ถามหา:\n"
-   +links.map(l=>"- "+l.name+": "+l.url).join("\n")
-   +"\nคุณเข้าอินเทอร์เน็ตหรือดูข้อมูลสดไม่ได้ (เช่น ข่าว ราคา อากาศวันนี้) และไม่เห็นข้อมูลจริงในระบบเหล่านี้ (เช่น จำนวนงานแจ้งซ่อม ทะเบียนทรัพย์สิน) ถ้าถูกถามให้บอกตรง ๆ ว่าทำไม่ได้ ห้ามเดาข้อมูล และแนะนำให้เปิดลิงค์ที่เกี่ยวข้อง ถ้าไม่แน่ใจให้บอกว่าไม่แน่ใจ";
-}
+
 async function ask(text){
   hist.push({role:"user",content:text});
-  const bubble=addMsg("bot","…");
-  let recent=hist.slice(-10);
-  while(recent.length&&recent[0].role!=="user")recent.shift();
-  const msgs=recent.map((m,i)=>i===0?{role:"user",content:sysPrompt()+"\n\nข้อความของผู้ใช้: "+m.content}:m);
-  busy=true;$("cs").disabled=true;
+  const bubble=addMsg("bot","กำลังคิดคำตอบแป๊บนึงนะ…");
+  busy=true;
+  $("cs").disabled=true;
+
   try{
-    const r=await sample(msgs,{cache:false,modelTier:"quick",onText:({text})=>{bubble.textContent=text;$("msgs").scrollTop=1e9}});
-    const out=(r&&r.text)||bubble.textContent;
-    bubble.textContent=out;hist.push({role:"assistant",content:out});
+    const cleanLinks=links
+      .filter(l=>l.url&&l.url!=="#chat"&&!l.url.includes("claude.ai"))
+      .map(l=>({name:l.name,url:l.url}));
+
+    const res=await fetch("/api/chat",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        messages:hist.slice(-10),
+        links:cleanLinks
+      })
+    });
+
+    const data=await res.json().catch(()=>({}));
+
+    if(!res.ok){
+      hist.pop();
+      if(res.status===429){
+        bubble.textContent="ถามรัวเกินไปแล้วจ้า พักสักครู่แล้วลองถามใหม่นะ 😅";
+      }else if(data.error==="missing_api_key"){
+        bubble.textContent="ยังไม่ได้ตั้งค่า GROQ_API_KEY ในระบบ Vercel เลยจ้า";
+      }else{
+        bubble.textContent="ขออภัย ระบบขัดข้อง (" + res.status + "): " + (data.error || "ไม่ทราบสาเหตุ");
+      }
+    }else{
+      bubble.textContent=data.text;
+      hist.push({role:"assistant",content:data.text});
+    }
   }catch(e){
     hist.pop();
-    bubble.textContent=e&&e.code==="not_granted"?"ยังไม่ได้รับอนุญาตให้ใช้ผู้ช่วย AI ในหน้านี้"
-      :e&&e.code==="rate_limited"?"ใช้งานถี่เกินไป ลองใหม่อีกครั้งในอีกสักครู่"
-      :"ขออภัย ตอนนี้ตอบไม่ได้ ลองใหม่อีกครั้ง";
+    bubble.textContent="เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ลองเช็กอินเทอร์เน็ตหรือลองใหม่อีกครั้งนะ";
   }
-  busy=false;$("cs").disabled=false;$("ci").focus();
-}
-function fallback(t){
-  const d=addMsg("bot","หน้านี้ยังเรียก AI โดยตรงไม่ได้ แต่กดลิงค์ด้านล่างเพื่อถามต่อใน Claude ได้เลยนะ\n");
-  const a=document.createElement("a");
-  a.href="https://claude.ai/new?q="+encodeURIComponent("ตอบเป็นภาษาไทยแบบเป็นกันเอง ในบทบาทน้องมูลด์ เลขาฝ่าย IT: "+t);
-  a.target="_blank";a.rel="noopener noreferrer";a.textContent="เปิดถามใน Claude →";
-  a.style.cssText="color:var(--accent);font-weight:600";
-  d.appendChild(a);
-  const p=document.createElement("a");
-  p.href="https://claude.ai/project/01a1cead-5e22-7082-9c3b-fd4fc5265460";p.target="_blank";p.rel="noopener noreferrer";
-  p.textContent="หรือเปิด Project น้องมูลด์ →";p.style.cssText="color:var(--accent);font-weight:600;display:block;margin-top:6px";
-  d.appendChild(p);$("msgs").scrollTop=1e9;
-}
-$("fab").onclick=()=>{
-  $("chat").hidden=false;$("fab").hidden=true;
-  if(!$("msgs").children.length)addMsg("bot","สวัสดีจ้า น้องมูลด์เองนะ 😊 ถามอะไรก็ได้เลย จะให้ช่วยร่างข้อความ สรุปเรื่อง หรือหาลิงค์ในหน้านี้ก็บอกได้เลย");
+
+  busy=false;
+  $("cs").disabled=false;
   $("ci").focus();
-};
+  $("msgs").scrollTop=1e9;
+}
+
+$("fab").onclick=openChat;
 $("cx").onclick=()=>{$("chat").hidden=true;$("fab").hidden=false};
-$("cf").onsubmit=async e=>{
+$("cf").onsubmit=e=>{
   e.preventDefault();
   const t=$("ci").value.trim();
   if(!t||busy)return;
-  $("ci").value="";addMsg("me",t);
-  if(!sample&&window.claude){try{sample=await claude.use("sample")}catch(e){}}
-  if(!sample){fallback(t);return}
+  $("ci").value="";
+  addMsg("me",t);
   ask(t);
 };
 </script>
