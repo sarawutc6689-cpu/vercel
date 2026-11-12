@@ -1,4 +1,4 @@
-// Vercel Serverless Function: POST /api/chat (รุ่นคลีน เร็วพิเศษ ป้องกัน Timeout 500)
+// Vercel Serverless Function: POST /api/chat (อัปเดตโมเดล Groq ล่าสุดปี 2026)
 
 module.exports = async function handler(req, res) {
   try {
@@ -59,12 +59,12 @@ module.exports = async function handler(req, res) {
 
     const fullMessages = [{ role: "system", content: sysPrompt }, ...msgs];
 
-    // 3. ลองเรียกเฉพาะ 3 โมเดลหลักที่เสถียรที่สุด (ไม่เกิน 3 ครั้ง ป้องกัน Timeout 100%)
+    // 3. รายชื่อโมเดล Production ล่าสุดของ Groq (อัปเดต ต.ค.-พ.ย. 2026)
     const modelsToTry = [
       process.env.GROQ_MODEL,
-      "llama-3.3-70b-versatile",
-      "llama-3.1-8b-instant",
-      "gemma2-9b-it",
+      "openai/gpt-oss-120b",
+      "openai/gpt-oss-20b",
+      "qwen/qwen3.8-27b",
     ].filter(Boolean);
 
     let lastStatus = 500;
@@ -80,7 +80,7 @@ module.exports = async function handler(req, res) {
         body: JSON.stringify({
           model: model,
           messages: fullMessages,
-          max_tokens: 800,
+          max_tokens: 1024,
           temperature: 0.6,
         }),
       });
@@ -95,14 +95,13 @@ module.exports = async function handler(req, res) {
       lastStatus = r.status;
       lastErr = await r.text();
 
-      // ถ้าคีย์ผิด (401) หรือถามรัวเกิน (429) ให้หยุดทันทีไม่ต้องลองโมเดลอื่น
       if (r.status === 401 || r.status === 429) {
         break;
       }
     }
 
     return res.status(502).json({
-      error: `Groq ปฏิเสธคำขอ (${lastStatus}): ${lastErr.slice(0, 200)}`,
+      error: `Groq ปฏิเสธคำขอ (${lastStatus}): ${lastErr.slice(0, 250)}`,
     });
   } catch (err) {
     return res.status(500).json({
