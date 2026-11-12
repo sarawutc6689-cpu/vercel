@@ -273,8 +273,161 @@ function openChat(){
 }
 
 function render(){
-  const q=\$("q").value.trim().toLowerCase(), g=\$("grid");
+  const q=$("q").value.trim().toLowerCase(), g=$("grid");
   g.textContent="";
   const shown=links.map((l,i)=>({l,i})).filter(({l})=>!q||(l.name+" "+l.url).toLowerCase().includes(q));
   if(!shown.length){
-    const d=document.creat
+    const d=document.createElement("div");d.className="empty";
+    d.textContent=links.length?"ไม่พบลิงค์ที่ตรงกับคำค้นหา":"ยังไม่มีลิงค์ กด “เพิ่มลิงค์” เพื่อเริ่มต้น";
+    g.appendChild(d);return;
+  }
+  shown.forEach(({l,i})=>{
+    const a=document.createElement("a");
+    a.className="card";a.href=l.url;
+    const isMould = l.url==="#chat"||l.name==="ถามน้องมูลด์";
+    if(isMould){
+      a.onclick=e=>{e.preventDefault();openChat()};
+    }else{
+      a.target="_blank";a.rel="noopener noreferrer";
+    }
+    const ic=document.createElement("div");ic.className="ico";
+    if(isMould){
+      ic.innerHTML = getMonkeySVG(true);
+    }else{
+      ic.textContent=l.icon;
+    }
+    const t=document.createElement("div");t.className="txt";
+    const n=document.createElement("div");n.className="name";n.textContent=l.name;
+    const h=document.createElement("div");h.className="host";h.textContent=host(l.url);
+    t.append(n,h);
+    const x=document.createElement("button");
+    x.className="del";x.type="button";x.textContent="✕";x.setAttribute("aria-label","ลบ "+l.name);
+    x.onclick=e=>{e.preventDefault();e.stopPropagation();
+      if(confirm("ลบ “"+l.name+"” ออกจากรายการ?")){links.splice(i,1);save();render()}};
+    a.append(ic,t,x);g.appendChild(a);
+  });
+}
+
+function drawIcons(){
+  const box=$("icons");box.textContent="";
+  ICONS.forEach(e=>{
+    const b=document.createElement("button");b.type="button";b.textContent=e;
+    b.setAttribute("aria-pressed",e===icon);b.setAttribute("aria-label","ไอคอน "+e);
+    b.onclick=()=>{icon=e;drawIcons()};box.appendChild(b);
+  });
+}
+
+$("add").onclick=()=>{$("n").value="";$("u").value="";$("err").textContent="";icon=ICONS[0];drawIcons();$("dlg").showModal();$("n").focus()};
+$("cancel").onclick=()=>$("dlg").close();
+$("q").oninput=render;
+$("f").onsubmit=e=>{
+  e.preventDefault();
+  let name=$("n").value.trim(), url=$("u").value.trim();
+  if(url&&!/^https?:\/\//i.test(url))url="https://"+url;
+  try{new URL(url)}catch(x){$("err").textContent="กรุณากรอก URL ให้ถูกต้อง";return}
+  if(!name)name=host(url);
+  links.push({name,url,icon});save();render();$("dlg").close();
+};
+render();
+
+/* ---- เลขา IT (AI - เชื่อมต่อ /api/chat) ---- */
+let hist=[], busy=false;
+
+function setTextWithLinks(el, text){
+  el.textContent="";
+  const urlRegex=/(https?:\/\/[^\s]+)/g;
+  const parts=String(text).split(urlRegex);
+  parts.forEach(part=>{
+    if(/^https?:\/\/[^\s]+$/.test(part)){
+      const a=document.createElement("a");
+      a.href=part;
+      a.target="_blank";
+      a.rel="noopener noreferrer";
+      a.textContent=part;
+      el.appendChild(a);
+    }else{
+      el.appendChild(document.createTextNode(part));
+    }
+  });
+}
+
+function addMsg(cls,text){
+  const row=document.createElement("div");
+  row.className="msg-row "+cls;
+
+  if(cls==="bot"){
+    const ava=document.createElement("div");
+    ava.className="bot-ava";
+    ava.innerHTML=getMonkeySVG(true);
+    row.appendChild(ava);
+  }
+
+  const d=document.createElement("div");
+  d.className="m "+cls;
+  setTextWithLinks(d, text);
+  row.appendChild(d);
+
+  $("msgs").appendChild(row);
+  $("msgs").scrollTop=1e9;
+  return d;
+}
+
+async function ask(text){
+  hist.push({role:"user",content:text});
+  const bubble=addMsg("bot","กำลังคิดคำตอบแป๊บนึงนะ… 🍌");
+  busy=true;
+  $("cs").disabled=true;
+
+  try{
+    const cleanLinks=links
+      .filter(l=>l.url&&l.url!=="#chat"&&!l.url.includes("claude.ai"))
+      .map(l=>({name:l.name,url:l.url}));
+
+    const res=await fetch("/api/chat",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        messages:hist.slice(-10),
+        links:cleanLinks
+      })
+    });
+
+    const data=await res.json().catch(()=>({}));
+
+    if(!res.ok){
+      hist.pop();
+      if(res.status===429){
+        bubble.textContent="ถามรัวเกินไปแล้วจ้า พักสักครู่แล้วลองถามใหม่นะ 😅";
+      }else if(data.error==="missing_api_key"){
+        bubble.textContent="ยังไม่ได้ตั้งค่า GROQ_API_KEY ในระบบ Vercel เลยจ้า";
+      }else{
+        bubble.textContent="ขออภัย ระบบขัดข้อง (" + res.status + "): " + (data.error || "ไม่ทราบสาเหตุ");
+      }
+    }else{
+      setTextWithLinks(bubble, data.text);
+      hist.push({role:"assistant",content:data.text});
+    }
+  }catch(e){
+    hist.pop();
+    bubble.textContent="เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ลองเช็กอินเทอร์เน็ตหรือลองใหม่อีกครั้งนะ";
+  }
+
+  busy=false;
+  $("cs").disabled=false;
+  $("ci").focus();
+  $("msgs").scrollTop=1e9;
+}
+
+$("fab").onclick=openChat;
+$("cx").onclick=()=>{$("chat").hidden=true;$("fab").hidden=false};
+$("cf").onsubmit=e=>{
+  e.preventDefault();
+  const t=$("ci").value.trim();
+  if(!t||busy)return;
+  $("ci").value="";
+  addMsg("me",t);
+  ask(t);
+};
+</script>
+</body>
+</html>
