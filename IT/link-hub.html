@@ -106,7 +106,7 @@ dialog input[type=text],dialog input[type=url]{width:100%;padding:10px 12px;bord
 <script>
 const KEY="it-link-hub:v1";
 const ICONS=["🛠️","📊","📹","💻","🖥️","🖨️","🌐","📡","🔒","📁","📧","📝","🗓️","🧰","☁️","🔗"];
-const AI={name:"ถามน้องมูลด์",url:"https://claude.ai/project/01a1cead-5e22-7082-9c3b-fd4fc5265460",icon:"🤖"};
+const AI={name:"ถามน้องมูลด์",url:"#chat",icon:"🤖"};
 const DEFAULTS=[
   AI,
   {name:"Helpdesk Dashboard",url:"https://mouldmate.vercel.app/IT/Helpdesk/dashboard.html",icon:"🛠️"},
@@ -117,14 +117,36 @@ let links=load(), icon=ICONS[0];
 const $=id=>document.getElementById(id);
 
 function load(){
-  try{const s=localStorage.getItem(KEY);if(s){const a=JSON.parse(s);if(Array.isArray(a)){
-    if(!localStorage.getItem(KEY+":ai")&&!a.some(l=>l.url===AI.url)){a.unshift(AI);localStorage.setItem(KEY,JSON.stringify(a))}
-    try{localStorage.setItem(KEY+":ai","1")}catch(e){}
-    return a}}}catch(e){}
+  try{
+    const s=localStorage.getItem(KEY);
+    if(s){
+      const a=JSON.parse(s);
+      if(Array.isArray(a)){
+        if(!localStorage.getItem(KEY+":ai")&&!a.some(l=>l.name===AI.name)){
+          a.unshift(AI);
+          localStorage.setItem(KEY,JSON.stringify(a));
+        }
+        try{localStorage.setItem(KEY+":ai","1")}catch(e){}
+        return a;
+      }
+    }
+  }catch(e){}
   return DEFAULTS.slice();
 }
 function save(){try{localStorage.setItem(KEY,JSON.stringify(links))}catch(e){}}
-function host(u){try{return new URL(u).hostname}catch(e){return u}}
+function host(u){
+  if(u==="#chat"||u.includes("claude.ai")) return "ผู้ช่วย AI ประจำฝ่าย IT";
+  try{return new URL(u).hostname}catch(e){return u}
+}
+
+function openChat(){
+  $("chat").hidden=false;
+  $("fab").hidden=true;
+  if(!$("msgs").children.length){
+    addMsg("bot","สวัสดีจ้า น้องมูลด์เองนะ 😊 ถามอะไรก็ได้เลย จะให้ช่วยร่างข้อความ สรุปเรื่อง หรือหาลิงค์ในหน้านี้ก็บอกได้เลย");
+  }
+  $("ci").focus();
+}
 
 function render(){
   const q=$("q").value.trim().toLowerCase(), g=$("grid");
@@ -137,7 +159,12 @@ function render(){
   }
   shown.forEach(({l,i})=>{
     const a=document.createElement("a");
-    a.className="card";a.href=l.url;a.target="_blank";a.rel="noopener noreferrer";
+    a.className="card";a.href=l.url;
+    if(l.url==="#chat"||l.name==="ถามน้องมูลด์"){
+      a.onclick=e=>{e.preventDefault();openChat()};
+    }else{
+      a.target="_blank";a.rel="noopener noreferrer";
+    }
     const ic=document.createElement("div");ic.className="ico";ic.textContent=l.icon;
     const t=document.createElement("div");t.className="txt";
     const n=document.createElement("div");n.className="name";n.textContent=l.name;
@@ -173,45 +200,73 @@ $("f").onsubmit=e=>{
 };
 render();
 
-/* ---- น้องมูลด์ (Gemini ผ่าน /api/chat บน Vercel) ---- */
-let hist=[],busy=false;
+/* ---- เลขา IT (AI - เชื่อมต่อ /api/chat ของ Gemini) ---- */
+let hist=[], busy=false;
+
 function addMsg(cls,text){
-  const d=document.createElement("div");d.className="m "+cls;d.textContent=text;
-  $("msgs").appendChild(d);$("msgs").scrollTop=1e9;return d;
+  const d=document.createElement("div");
+  d.className="m "+cls;
+  d.textContent=text;
+  $("msgs").appendChild(d);
+  $("msgs").scrollTop=1e9;
+  return d;
 }
+
 async function ask(text){
   hist.push({role:"user",content:text});
-  const bubble=addMsg("bot","…");
-  busy=true;$("cs").disabled=true;
+  const bubble=addMsg("bot","กำลังคิดคำตอบแป๊บนึงนะ…");
+  busy=true;
+  $("cs").disabled=true;
+
   try{
-    const r=await fetch("/api/chat",{
+    const cleanLinks=links
+      .filter(l=>l.url&&l.url!=="#chat"&&!l.url.includes("claude.ai"))
+      .map(l=>({name:l.name,url:l.url}));
+
+    const res=await fetch("/api/chat",{
       method:"POST",
       headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({messages:hist.slice(-10),links:links.map(l=>({name:l.name,url:l.url}))})
+      body:JSON.stringify({
+        messages:hist.slice(-10),
+        links:cleanLinks
+      })
     });
-    const data=await r.json().catch(()=>({}));
-    if(!r.ok)throw new Error(data.error||("http_"+r.status));
-    bubble.textContent=data.text;
-    hist.push({role:"assistant",content:data.text});
+
+    const data=await res.json().catch(()=>({}));
+
+    if(!res.ok){
+      hist.pop();
+      if(res.status===429){
+        bubble.textContent="ถามรัวเกินไปแล้วจ้า พักสักครู่แล้วลองถามใหม่นะ 😅";
+      }else if(data.error==="missing_api_key"){
+        bubble.textContent="ยังไม่ได้ตั้งค่า GEMINI_API_KEY ในระบบ Vercel เลยจ้า";
+      }else{
+        bubble.textContent="ขออภัย ตอนนี้ระบบขัดข้องชั่วคราว ลองใหม่อีกครั้งนะ";
+      }
+    }else{
+      bubble.textContent=data.text;
+      hist.push({role:"assistant",content:data.text});
+    }
   }catch(e){
     hist.pop();
-    bubble.textContent=e.message==="rate_limited"
-      ?"ตอนนี้มีคนถามเยอะ รอสักครู่แล้วลองใหม่อีกครั้งนะ"
-      :"ขออภัย ตอนนี้ตอบไม่ได้ ลองใหม่อีกครั้งนะ";
+    bubble.textContent="เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ลองเช็กอินเทอร์เน็ตหรือลองใหม่อีกครั้งนะ";
   }
-  busy=false;$("cs").disabled=false;$("ci").focus();
-}
-$("fab").onclick=()=>{
-  $("chat").hidden=false;$("fab").hidden=true;
-  if(!$("msgs").children.length)addMsg("bot","สวัสดีจ้า น้องมูลด์เองนะ 😊 ถามอะไรก็ได้เลย จะให้ช่วยร่างข้อความ สรุปเรื่อง หรือหาลิงค์ในหน้านี้ก็บอกได้เลย");
+
+  busy=false;
+  $("cs").disabled=false;
   $("ci").focus();
-};
+  $("msgs").scrollTop=1e9;
+}
+
+$("fab").onclick=openChat;
 $("cx").onclick=()=>{$("chat").hidden=true;$("fab").hidden=false};
 $("cf").onsubmit=e=>{
   e.preventDefault();
   const t=$("ci").value.trim();
   if(!t||busy)return;
-  $("ci").value="";addMsg("me",t);ask(t);
+  $("ci").value="";
+  addMsg("me",t);
+  ask(t);
 };
 </script>
 </body>
