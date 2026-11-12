@@ -1,13 +1,18 @@
-// Vercel Serverless Function: POST /api/chat (สำหรับ Groq API - ฟรีและเร็วมาก)
-// ตั้งค่า Environment Variable ชื่อ GROQ_API_KEY ใน Vercel (หรือใส่ใน GEMINI_API_KEY เดิมก็ได้)
-// เปลี่ยนรุ่นโมเดลได้ที่ GROQ_MODEL (ค่าเริ่มต้น llama-3.3-70b-versatile)
+// Vercel Serverless Function: POST /api/chat (Groq API พร้อมระบบสลับโมเดลอัตโนมัติเมื่อเจอ 404)
 
-const MODEL = process.env.GROQ_MODEL || "llama-3.3-70b-versatile";
+const PREFERRED_MODELS = [
+  process.env.GROQ_MODEL,
+  "llama-3.3-70b-versatile",
+  "llama-3.1-8b-instant",
+  "llama3-70b-8192",
+  "llama3-8b-8192",
+  "gemma2-9b-it",
+].filter(Boolean);
+
 const MAX_MESSAGES = 10;
 const MAX_CHARS = 2000;
 const MAX_LINKS = 30;
 
-// จำกัดจำนวนครั้งต่อ IP แบบง่าย ๆ
 const hits = new Map();
 const WINDOW_MS = 60 * 1000;
 const LIMIT = 15;
@@ -37,6 +42,22 @@ function systemPrompt(links) {
   );
 }
 
+async function callGroq(key, model, messages) {
+  return fetch("https://api.groq.com/openai/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${key}`,
+    },
+    body: JSON.stringify({
+      model,
+      messages,
+      max_tokens: 1024,
+      temperature: 0.6,
+    }),
+  });
+}
+
 module.exports = async (req, res) => {
   res.setHeader("Cache-Control", "no-store");
 
@@ -45,8 +66,9 @@ module.exports = async (req, res) => {
     return res.status(405).json({ error: "method_not_allowed" });
   }
 
-  // รองรับทั้งชื่อ GROQ_API_KEY และ GEMINI_API_KEY (เผื่อไม่อยากสร้างตัวแปรใหม่ในหน้าเว็บ)
-  const key = process.env.GROQ_API_KEY || process.env.GEMINI_API_KEY;
+  // ล้างอักขระแปลกปลอมหรือภาษาไทยที่อาจเผลอติดมาใน API Key (ป้องกัน ByteString error)
+  const rawKey = process.env.GROQ_API_KEY || process.env.GEMINI_API_KEY || "";
+  const key = rawKey.replace(/[^\x21-\x7E]/g, "").trim();
   if (!key) return res.status(500).json({ error: "missing_api_key" });
 
   const ip =
@@ -57,7 +79,6 @@ module.exports = async (req, res) => {
 
   const body = typeof req.body === "string" ? safeParse(req.body) : req.body || {};
 
-  // เตรียมประวัติข้อความสนทนาตามรูปแบบ OpenAI / Groq
   let msgs = (Array.isArray(body.messages) ? body.messages : [])
     .filter((m) => m && (m.role === "user" || m.role === "assistant") && typeof m.content === "string")
     .slice(-MAX_MESSAGES)
@@ -76,27 +97,43 @@ module.exports = async (req, res) => {
     .filter((l) => l && typeof l.name === "string" && typeof l.url === "string")
     .map((l) => ({ name: l.name.slice(0, 60), url: l.url.slice(0, 300) }));
 
+  const fullMessages = [
+    { role: "system", content: systemPrompt(links) },
+    ...msgs,
+  ];
+
   try {
-    const r = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${key}`,
-      },
-      body: JSON.stringify({
-        model: MODEL,
-        messages: [
-          { role: "system", content: systemPrompt(links) },
-          ...msgs,
-        ],
-        max_tokens: 1024,
-        temperature: 0.6,
-      }),
-    });
+    let r = null;
+    let lastErrorText = "";
+
+    // 1. ลองเรียกตามลำดับโมเดลยอดนิยม
+    for (const model of PREFERRED_MODELS) {
+      r = await callGroq(key, model, fullMessages);
+      if (r.ok || r.status === 429 || r.status === 401) break;
+      lastErrorText = await r.text();
+      console.warn(`Model ${model} unavailable (${r.status}):`, lastErrorText);
+    }
+
+    // 2. ถ้ายังไม่ได้อีก ให้ดึงรายชื่อโมเดลที่บัญชีนี้มีสิทธิ์ใช้งานจริงจาก Groq มาใช้โดยอัตโนมัติ
+    if (!r || (!r.ok && r.status !== 429 && r.status !== 401)) {
+      const modelsRes = await fetch("https://api.groq.com/openai/v1/models", {
+        headers: { "Authorization": `Bearer ${key}` },
+      });
+      if (modelsRes.ok) {
+        const modelsData = await modelsRes.json();
+        const available = (modelsData.data || [])
+          .map((m) => m.id)
+          .filter((id) => id && !id.includes("whisper") && !id.includes("guard") && !id.includes("tts"));
+        if (available.length > 0) {
+          r = await callGroq(key, available[0], fullMessages);
+          if (!r.ok) lastErrorText = await r.text();
+        }
+      }
+    }
 
     if (r.status === 429) return res.status(429).json({ error: "rate_limited" });
     if (!r.ok) {
-      console.error("Groq error", r.status, await r.text());
+      console.error("Groq final error", r.status, lastErrorText);
       return res.status(502).json({ error: "upstream_error" });
     }
 
