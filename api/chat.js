@@ -1,17 +1,11 @@
-// Vercel Serverless Function: POST /api/chat (Groq API พร้อมระบบสลับโมเดลอัตโนมัติเมื่อเจอ 404)
-
-const PREFERRED_MODELS = [
-  process.env.GROQ_MODEL,
-  "llama-3.3-70b-versatile",
-  "llama-3.1-8b-instant",
-  "llama3-70b-8192",
-  "llama3-8b-8192",
-  "gemma2-9b-it",
-].filter(Boolean);
+// Vercel Serverless Function: POST /api/chat (สำหรับ Groq API พร้อมระบบเลือกโมเดลอัตโนมัติ)
+// ตั้งค่า Environment Variable ชื่อ GROQ_API_KEY ใน Vercel
 
 const MAX_MESSAGES = 10;
 const MAX_CHARS = 2000;
 const MAX_LINKS = 30;
+
+let workingModel = null;
 
 const hits = new Map();
 const WINDOW_MS = 60 * 1000;
@@ -58,6 +52,34 @@ async function callGroq(key, model, messages) {
   });
 }
 
+function scoreModel(id) {
+  const s = (id || "").toLowerCase();
+  if (
+    s.includes("whisper") ||
+    s.includes("tts") ||
+    s.includes("orpheus") ||
+    s.includes("playai") ||
+    s.includes("guard") ||
+    s.includes("safeguard") ||
+    s.includes("embed") ||
+    s.includes("moderation")
+  ) {
+    return -1;
+  }
+  if (process.env.GROQ_MODEL && id === process.env.GROQ_MODEL) return 200;
+  if (s.includes("llama-3.3-70b")) return 100;
+  if (s.includes("llama-4")) return 95;
+  if (s.includes("qwen")) return 90;
+  if (s.includes("deepseek")) return 85;
+  if (s.includes("gpt-oss")) return 80;
+  if (s.includes("kimi")) return 75;
+  if (s.includes("llama-3.1")) return 70;
+  if (s.includes("llama")) return 60;
+  if (s.includes("gemma")) return 50;
+  if (s.includes("compound")) return 40;
+  return 10;
+}
+
 module.exports = async (req, res) => {
   res.setHeader("Cache-Control", "no-store");
 
@@ -66,10 +88,15 @@ module.exports = async (req, res) => {
     return res.status(405).json({ error: "method_not_allowed" });
   }
 
-  // ล้างอักขระแปลกปลอมหรือภาษาไทยที่อาจเผลอติดมาใน API Key (ป้องกัน ByteString error)
   const rawKey = process.env.GROQ_API_KEY || process.env.GEMINI_API_KEY || "";
   const key = rawKey.replace(/[^\x21-\x7E]/g, "").trim();
   if (!key) return res.status(500).json({ error: "missing_api_key" });
+
+  if (!key.startsWith("gsk_")) {
+    return res.status(502).json({
+      error: `API Key ที่ระบบดึงมาไม่ได้ขึ้นต้นด้วย gsk_ (ขึ้นต้นด้วย "${key.slice(0, 4)}...") กรุณาตรวจสอบค่า GROQ_API_KEY ใน Vercel แล้วกด Redeploy`,
+    });
+  }
 
   const ip =
     (req.headers["x-forwarded-for"] || "").split(",")[0].trim() ||
@@ -104,54 +131,32 @@ module.exports = async (req, res) => {
 
   try {
     let r = null;
-    let lastErrorText = "";
+    let errors = [];
 
-    // 1. ลองเรียกตามลำดับโมเดลยอดนิยม
-    for (const model of PREFERRED_MODELS) {
-      r = await callGroq(key, model, fullMessages);
-      if (r.ok || r.status === 429 || r.status === 401) break;
-      lastErrorText = await r.text();
-      console.warn(`Model ${model} unavailable (${r.status}):`, lastErrorText);
+    if (workingModel) {
+      r = await callGroq(key, workingModel, fullMessages);
+      if (!r.ok && r.status !== 429) workingModel = null;
     }
 
-    // 2. ถ้ายังไม่ได้อีก ให้ดึงรายชื่อโมเดลที่บัญชีนี้มีสิทธิ์ใช้งานจริงจาก Groq มาใช้โดยอัตโนมัติ
-    if (!r || (!r.ok && r.status !== 429 && r.status !== 401)) {
+    if (!r || !r.ok) {
       const modelsRes = await fetch("https://api.groq.com/openai/v1/models", {
         headers: { "Authorization": `Bearer ${key}` },
       });
-      if (modelsRes.ok) {
-        const modelsData = await modelsRes.json();
-        const available = (modelsData.data || [])
-          .map((m) => m.id)
-          .filter((id) => id && !id.includes("whisper") && !id.includes("guard") && !id.includes("tts"));
-        if (available.length > 0) {
-          r = await callGroq(key, available[0], fullMessages);
-          if (!r.ok) lastErrorText = await r.text();
-        }
+
+      if (!modelsRes.ok) {
+        const errTxt = await modelsRes.text();
+        return res.status(502).json({
+          error: `ตรวจสอบรายชื่อโมเดลจาก Groq ไม่สำเร็จ (${modelsRes.status}): ${errTxt}`,
+        });
       }
-    }
 
-    if (r.status === 429) return res.status(429).json({ error: "rate_limited" });
-    if (!r.ok) {
-      console.error("Groq final error", r.status, lastErrorText);
-      return res.status(502).json({ error: "upstream_error" });
-    }
+      const modelsData = await modelsRes.json();
+      const allIds = (modelsData.data || []).map((m) => m.id).filter(Boolean);
 
-    const data = await r.json();
-    const text = (data.choices?.[0]?.message?.content || "").trim();
+      const candidates = allIds
+        .filter((id) => scoreModel(id) > 0)
+        .sort((a, b) => scoreModel(b) - scoreModel(a));
 
-    if (!text) return res.status(502).json({ error: "empty_response" });
-    return res.status(200).json({ text });
-  } catch (e) {
-    console.error("chat function error", e);
-    return res.status(500).json({ error: "server_error" });
-  }
-};
-
-function safeParse(s) {
-  try {
-    return JSON.parse(s);
-  } catch (e) {
-    return {};
-  }
-}
+      if (candidates.length === 0) {
+        return res.status(502).json({
+          e
