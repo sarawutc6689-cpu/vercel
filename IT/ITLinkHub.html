@@ -14,7 +14,7 @@ box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:en
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *,*::before,*::after{box-sizing:border-box}
 body{margin:0;min-height:100vh;background:linear-gradient(160deg,color-mix(in srgb,var(--accent) 16%,var(--bg)) 0%,var(--bg) 42%,color-mix(in srgb,#8fb89c 18%,var(--bg)) 100%) fixed,var(--bg);color:var(--ink);font-family:"IBM Plex Sans Thai",system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.5}
-.wrap{max-width:960px;margin:0 auto;padding:28px 18px 60px}
+.wrap{max-width:960px;margin:0 auto;padding:28px 18px 110px}
 header{display:flex;flex-wrap:wrap;gap:14px;align-items:end;justify-content:space-between;margin-bottom:22px}
 h1{font-size:1.9rem;font-weight:600;margin:0;letter-spacing:-.01em}
 .sub{color:var(--muted);margin:2px 0 0;font-size:.95rem}
@@ -27,7 +27,8 @@ input,button{font:inherit;color:inherit}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
 .card{position:relative;display:flex;gap:14px;align-items:center;padding:16px;background:var(--surface);border:1px solid var(--line);border-radius:14px;text-decoration:none;color:inherit;transition:border-color .15s,transform .15s}
 .card:hover{border-color:var(--accent);transform:translateY(-2px)}
-.ico{flex:none;width:52px;height:52px;border-radius:12px;background:var(--tile);display:grid;place-items:center;font-size:1.6rem}
+.ico{flex:none;width:52px;height:52px;border-radius:12px;background:var(--tile);display:grid;place-items:center;font-size:1.6rem;overflow:hidden}
+.ico svg{width:44px;height:44px}
 .txt{min-width:0}
 .name{font-weight:600;overflow-wrap:anywhere}
 .host{color:var(--muted);font-size:.82rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -46,18 +47,55 @@ dialog input[type=text],dialog input[type=url]{width:100%;padding:10px 12px;bord
 .icons button[aria-pressed=true]{border-color:var(--accent);background:var(--tile);box-shadow:0 0 0 2px var(--accent)}
 .actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}
 .err{color:var(--danger);font-size:.85rem;min-height:1.2em;margin-top:8px}
-.fab{text-decoration:none;position:fixed;right:18px;bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:20;display:flex;align-items:center;gap:8px;padding:12px 18px;border-radius:999px;border:0;background:var(--accent);color:var(--accent-ink);font-weight:500;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.22)}
-.fab[hidden],.chat[hidden]{display:none}
-.fab svg,.ttl svg{width:20px;height:20px;flex:none}
-.ttl{display:flex;align-items:center;gap:8px}
-.chat{position:fixed;right:18px;bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:21;width:min(380px,calc(100vw - 36px));height:min(540px,calc(100% - 36px));display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:0 12px 40px rgba(0,0,0,.28);overflow:hidden}
-.chat-head{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--tile);border-bottom:1px solid var(--line);font-weight:600}
-.chat-head button{border:0;background:transparent;font-size:1.1rem;cursor:pointer;color:var(--muted)}
-.msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px}
-.m{max-width:86%;padding:9px 13px;border-radius:14px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:.95rem}
-.m.bot{align-self:flex-start;background:var(--tile)}
-.m.me{align-self:flex-end;background:var(--accent);color:var(--accent-ink)}
-.chat-in{display:flex;gap:8px;padding:10px;border-top:1px solid var(--line)}
+
+/* ---- ตัวการ์ตูนมาสคอต น้องมูลด์ (มุมขวาล่าง) ---- */
+.mascot-btn{position:fixed;right:18px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:20;display:flex;align-items:center;gap:10px;background:transparent;border:0;padding:0;cursor:pointer;user-select:none}
+.mascot-btn[hidden],.chat[hidden]{display:none}
+.speech-tag{background:var(--surface);color:var(--ink);border:1.5px solid var(--accent);padding:8px 14px;border-radius:16px 16px 4px 16px;font-size:.88rem;font-weight:600;box-shadow:0 6px 18px rgba(0,0,0,.14);transition:transform .2s;white-space:nowrap}
+.mascot-wrap{position:relative;width:74px;height:74px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#ffffff,var(--tile));border:2.5px solid var(--accent);box-shadow:0 8px 24px rgba(11,110,138,.32);display:grid;place-items:center;animation:floatMascot 3s ease-in-out infinite;transition:transform .2s}
+.mascot-wrap svg{width:64px;height:64px;overflow:visible}
+.mascot-btn:hover .mascot-wrap{transform:scale(1.08) rotate(-4deg)}
+.mascot-btn:hover .speech-tag{transform:translateY(-3px)}
+.online-dot{position:absolute;bottom:3px;right:3px;width:15px;height:15px;border-radius:50%;background:#22c55e;border:2.5px solid var(--surface)}
+
+@keyframes floatMascot{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-6px)}
+}
+@keyframes blinkEye{
+  0%,92%,100%{transform:scaleY(1)}
+  96%{transform:scaleY(0.1)}
+}
+@keyframes waveAnt{
+  0%,100%{transform:rotate(0deg)}
+  50%{transform:rotate(10deg)}
+}
+.mould-eyes{transform-origin:center 52px;animation:blinkEye 4s infinite}
+.mould-ant{transform-origin:50px 22px;animation:waveAnt 2.4s ease-in-out infinite}
+
+/* ---- กล่องแชต ---- */
+.chat{position:fixed;right:18px;bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:21;width:min(390px,calc(100vw - 36px));height:min(560px,calc(100% - 36px));display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:0 14px 44px rgba(0,0,0,.28);overflow:hidden}
+.chat-head{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--tile);border-bottom:1px solid var(--line)}
+.ttl{display:flex;align-items:center;gap:10px}
+.head-ava{position:relative;width:42px;height:42px;border-radius:50%;background:var(--surface);border:2px solid var(--accent);display:grid;place-items:center;flex:none}
+.head-ava svg{width:36px;height:36px}
+.head-info{line-height:1.25}
+.head-name{font-weight:600;font-size:.98rem}
+.head-sub{font-size:.76rem;color:var(--muted);display:flex;align-items:center;gap:5px}
+.head-sub::before{content:"";width:7px;height:7px;border-radius:50%;background:#22c55e;display:inline-block}
+.chat-head button{border:0;background:transparent;font-size:1.15rem;cursor:pointer;color:var(--muted);width:32px;height:32px;border-radius:8px}
+.chat-head button:hover{background:rgba(0,0,0,.06)}
+.msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:12px}
+.msg-row{display:flex;gap:8px;align-items:flex-end}
+.msg-row.me{justify-content:flex-end}
+.bot-ava{width:32px;height:32px;border-radius:50%;background:var(--tile);border:1.5px solid var(--line);display:grid;place-items:center;flex:none}
+.bot-ava svg{width:28px;height:28px}
+.m{max-width:80%;padding:9px 13px;border-radius:14px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:.94rem}
+.m.bot{background:var(--tile);border-bottom-left-radius:4px}
+.m.me{background:var(--accent);color:var(--accent-ink);border-bottom-right-radius:4px}
+.m a{color:var(--accent);font-weight:600;text-decoration:underline}
+.m.me a{color:var(--accent-ink)}
+.chat-in{display:flex;gap:8px;padding:10px;border-top:1px solid var(--line);background:var(--surface)}
 .chat-in input{flex:1;min-width:0;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
 </style>
 </head>
@@ -76,12 +114,29 @@ dialog input[type=text],dialog input[type=url]{width:100%;padding:10px 12px;bord
   <main class="grid" id="grid"></main>
 </div>
 
-<button class="fab" id="fab" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>ถามน้องมูลด์</button>
+<!-- ปุ่มตัวการ์ตูนน้องมูลด์มุมขวาล่าง -->
+<button class="mascot-btn" id="fab" type="button" aria-label="ถามน้องมูลด์">
+  <span class="speech-tag">ทักน้องมูลด์ได้นะ 💬</span>
+  <span class="mascot-wrap" id="fab-ava">
+    <span class="online-dot"></span>
+  </span>
+</button>
+
+<!-- กล่องแชตน้องมูลด์ -->
 <section class="chat" id="chat" hidden aria-label="แชตน้องมูลด์">
-  <div class="chat-head"><span class="ttl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>น้องมูลด์</span><button type="button" id="cx" aria-label="ปิดแชต">✕</button></div>
+  <div class="chat-head">
+    <div class="ttl">
+      <div class="head-ava" id="head-ava"></div>
+      <div class="head-info">
+        <div class="head-name">น้องมูลด์ (เลขา IT)</div>
+        <div class="head-sub">พร้อมช่วยเหลือจ้า</div>
+      </div>
+    </div>
+    <button type="button" id="cx" aria-label="ปิดแชต">✕</button>
+  </div>
   <div class="msgs" id="msgs" aria-live="polite"></div>
   <form class="chat-in" id="cf">
-    <input type="text" id="ci" placeholder="พิมพ์คำถามที่นี่…" autocomplete="off" aria-label="พิมพ์คำถาม">
+    <input type="text" id="ci" placeholder="ถามน้องมูลด์ได้เลย…" autocomplete="off" aria-label="พิมพ์คำถาม">
     <button class="btn primary" type="submit" id="cs">ส่ง</button>
   </form>
 </section>
@@ -104,6 +159,39 @@ dialog input[type=text],dialog input[type=url]{width:100%;padding:10px 12px;bord
 </dialog>
 
 <script>
+// SVG ตัวการ์ตูน "น้องมูลด์" (โรบอทเลขาสาวน้อยใส่เฮดโฟนฝ่าย IT)
+const MOULD_SVG = `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <g class="mould-ant">
+    <line x1="50" y1="22" x2="50" y2="9" stroke="#0b6e8a" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="50" cy="8" r="6" fill="#ff6b8b"/>
+    <circle cx="48" cy="6" r="2" fill="#fff"/>
+  </g>
+  <!-- สายเฮดโฟน -->
+  <path d="M18 54 A32 32 0 0 1 82 54" fill="none" stroke="#0b6e8a" stroke-width="6" stroke-linecap="round"/>
+  <!-- หูฟังซ้าย-ขวา -->
+  <rect x="9" y="42" width="12" height="24" rx="6" fill="#ff6b8b" stroke="#0b6e8a" stroke-width="2.5"/>
+  <rect x="79" y="42" width="12" height="24" rx="6" fill="#ff6b8b" stroke="#0b6e8a" stroke-width="2.5"/>
+  <!-- ส่วนหัว -->
+  <rect x="20" y="24" width="60" height="52" rx="24" fill="#ffffff" stroke="#0b6e8a" stroke-width="3.5"/>
+  <!-- หน้าจอใบหน้า -->
+  <rect x="26" y="32" width="48" height="36" rx="16" fill="#e3f1f5"/>
+  <!-- ดวงตากะพริบได้ -->
+  <g class="mould-eyes">
+    <circle cx="39" cy="49" r="5.5" fill="#14212e"/>
+    <circle cx="61" cy="49" r="5.5" fill="#14212e"/>
+    <circle cx="37.2" cy="47" r="2" fill="#fff"/>
+    <circle cx="59.2" cy="47" r="2" fill="#fff"/>
+  </g>
+  <!-- แก้มชมพู -->
+  <ellipse cx="31" cy="56" rx="4.5" ry="2.5" fill="#ff8da1" opacity="0.75"/>
+  <ellipse cx="69" cy="56" rx="4.5" ry="2.5" fill="#ff8da1" opacity="0.75"/>
+  <!-- รอยยิ้ม -->
+  <path d="M44 56 Q50 62 56 56" fill="none" stroke="#14212e" stroke-width="3" stroke-linecap="round"/>
+  <!-- ไมโครโฟนเฮดเซ็ต IT -->
+  <path d="M80 60 Q72 72 58 70" fill="none" stroke="#0b6e8a" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="57" cy="70" r="3.5" fill="#ff6b8b"/>
+</svg>`;
+
 const KEY="it-link-hub:v1";
 const ICONS=["🛠️","📊","📹","💻","🖥️","🖨️","🌐","📡","🔒","📁","📧","📝","🗓️","🧰","☁️","🔗"];
 const AI={name:"ถามน้องมูลด์",url:"#chat",icon:"🤖"};
@@ -115,6 +203,10 @@ const DEFAULTS=[
 ];
 let links=load(), icon=ICONS[0];
 const $=id=>document.getElementById(id);
+
+// ใส่รูปตัวการ์ตูนในปุ่มลอยและหัวแชต
+$("fab-ava").insertAdjacentHTML("afterbegin", MOULD_SVG);
+$("head-ava").innerHTML = MOULD_SVG;
 
 function load(){
   try{
@@ -160,12 +252,18 @@ function render(){
   shown.forEach(({l,i})=>{
     const a=document.createElement("a");
     a.className="card";a.href=l.url;
-    if(l.url==="#chat"||l.name==="ถามน้องมูลด์"){
+    const isMould = l.url==="#chat"||l.name==="ถามน้องมูลด์";
+    if(isMould){
       a.onclick=e=>{e.preventDefault();openChat()};
     }else{
       a.target="_blank";a.rel="noopener noreferrer";
     }
-    const ic=document.createElement("div");ic.className="ico";ic.textContent=l.icon;
+    const ic=document.createElement("div");ic.className="ico";
+    if(isMould){
+      ic.innerHTML = MOULD_SVG;
+    }else{
+      ic.textContent=l.icon;
+    }
     const t=document.createElement("div");t.className="txt";
     const n=document.createElement("div");n.className="name";n.textContent=l.name;
     const h=document.createElement("div");h.className="host";h.textContent=host(l.url);
@@ -203,11 +301,42 @@ render();
 /* ---- เลขา IT (AI - เชื่อมต่อ /api/chat) ---- */
 let hist=[], busy=false;
 
+// แปลงข้อความที่มี URL ให้กลายเป็นลิงก์ที่คลิกได้ปลอดภัย
+function setTextWithLinks(el, text){
+  el.textContent="";
+  const urlRegex=/(https?:\/\/[^\s]+)/g;
+  const parts=String(text).split(urlRegex);
+  parts.forEach(part=>{
+    if(/^https?:\/\/[^\s]+$/.test(part)){
+      const a=document.createElement("a");
+      a.href=part;
+      a.target="_blank";
+      a.rel="noopener noreferrer";
+      a.textContent=part;
+      el.appendChild(a);
+    }else{
+      el.appendChild(document.createTextNode(part));
+    }
+  });
+}
+
 function addMsg(cls,text){
+  const row=document.createElement("div");
+  row.className="msg-row "+cls;
+
+  if(cls==="bot"){
+    const ava=document.createElement("div");
+    ava.className="bot-ava";
+    ava.innerHTML=MOULD_SVG;
+    row.appendChild(ava);
+  }
+
   const d=document.createElement("div");
   d.className="m "+cls;
-  d.textContent=text;
-  $("msgs").appendChild(d);
+  setTextWithLinks(d, text);
+  row.appendChild(d);
+
+  $("msgs").appendChild(row);
   $("msgs").scrollTop=1e9;
   return d;
 }
@@ -244,7 +373,7 @@ async function ask(text){
         bubble.textContent="ขออภัย ระบบขัดข้อง (" + res.status + "): " + (data.error || "ไม่ทราบสาเหตุ");
       }
     }else{
-      bubble.textContent=data.text;
+      setTextWithLinks(bubble, data.text);
       hist.push({role:"assistant",content:data.text});
     }
   }catch(e){
