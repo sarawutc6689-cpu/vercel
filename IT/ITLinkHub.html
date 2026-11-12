@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>IT Link Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef2f6;--surface:#fff;--ink:#14212e;--muted:#5d6b7a;--line:#d6dee7;--accent:#0b6e8a;--accent-ink:#fff;--tile:#e3f1f5;--danger:#b3261e;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10181f;--surface:#18232d;--ink:#e8eef4;--muted:#94a3b1;--line:#2a3846;--accent:#4cc2de;--accent-ink:#06222b;--tile:#1f3440;--danger:#ff8a80}}
+:root[data-theme="dark"]{--bg:#10181f;--surface:#18232d;--ink:#e8eef4;--muted:#94a3b1;--line:#2a3846;--accent:#4cc2de;--accent-ink:#06222b;--tile:#1f3440;--danger:#ff8a80}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans Thai",system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.5}
+.wrap{max-width:960px;margin:0 auto;padding:28px 18px 60px}
+header{display:flex;flex-wrap:wrap;gap:14px;align-items:end;justify-content:space-between;margin-bottom:22px}
+h1{font-size:1.9rem;font-weight:600;margin:0;letter-spacing:-.01em}
+.sub{color:var(--muted);margin:2px 0 0;font-size:.95rem}
+.tools{display:flex;gap:10px;flex-wrap:wrap}
+input,button{font:inherit;color:inherit}
+.search{padding:10px 14px;border:1px solid var(--line);border-radius:10px;background:var(--surface);min-width:200px}
+.btn{padding:10px 16px;border-radius:10px;border:1px solid var(--line);background:var(--surface);cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:500}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+.card{position:relative;display:flex;gap:14px;align-items:center;padding:16px;background:var(--surface);border:1px solid var(--line);border-radius:14px;text-decoration:none;color:inherit;transition:border-color .15s,transform .15s}
+.card:hover{border-color:var(--accent);transform:translateY(-2px)}
+.ico{flex:none;width:52px;height:52px;border-radius:12px;background:var(--tile);display:grid;place-items:center;font-size:1.6rem}
+.txt{min-width:0}
+.name{font-weight:600;overflow-wrap:anywhere}
+.host{color:var(--muted);font-size:.82rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.del{position:absolute;top:6px;right:6px;border:0;background:transparent;color:var(--muted);width:28px;height:28px;border-radius:8px;cursor:pointer;opacity:0;font-size:1rem}
+.card:hover .del,.del:focus-visible{opacity:1}
+.del:hover{color:var(--danger);background:var(--tile)}
+@media (hover:none){.del{opacity:.7}}
+.empty{grid-column:1/-1;text-align:center;color:var(--muted);padding:40px 0}
+dialog{border:1px solid var(--line);border-radius:16px;background:var(--surface);color:var(--ink);padding:22px;width:min(420px,92vw)}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+dialog h2{margin:0 0 14px;font-size:1.2rem}
+label{display:block;font-size:.85rem;color:var(--muted);margin:12px 0 4px}
+dialog input[type=text],dialog input[type=url]{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+.icons{display:grid;grid-template-columns:repeat(8,1fr);gap:6px}
+.icons button{aspect-ratio:1;border:1px solid var(--line);background:var(--bg);border-radius:10px;font-size:1.25rem;cursor:pointer}
+.icons button[aria-pressed=true]{border-color:var(--accent);background:var(--tile);box-shadow:0 0 0 2px var(--accent)}
+.actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}
+.err{color:var(--danger);font-size:.85rem;min-height:1.2em;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>IT Link Hub</h1>
+      <p class="sub">รวมลิงค์ที่ใช้งานประจำ คลิกเพื่อเปิดในแท็บใหม่</p>
+    </div>
+    <div class="tools">
+      <input class="search" id="q" type="search" placeholder="ค้นหาลิงค์…" aria-label="ค้นหาลิงค์">
+      <button class="btn primary" id="add">+ เพิ่มลิงค์</button>
+    </div>
+  </header>
+  <main class="grid" id="grid"></main>
+</div>
+
+<dialog id="dlg">
+  <form method="dialog" id="f" novalidate>
+    <h2>เพิ่มลิงค์ใหม่</h2>
+    <label for="n">ชื่อ</label>
+    <input type="text" id="n" maxlength="40" placeholder="เช่น Helpdesk Dashboard">
+    <label for="u">URL</label>
+    <input type="url" id="u" placeholder="https://…">
+    <label>ไอคอน</label>
+    <div class="icons" id="icons"></div>
+    <div class="err" id="err" role="alert"></div>
+    <div class="actions">
+      <button type="button" class="btn" id="cancel">ยกเลิก</button>
+      <button type="submit" class="btn primary">บันทึก</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+const KEY="it-link-hub:v1";
+const ICONS=["🛠️","📊","📹","💻","🖥️","🖨️","🌐","📡","🔒","📁","📧","📝","🗓️","🧰","☁️","🔗"];
+const DEFAULTS=[
+  {name:"Helpdesk Dashboard",url:"https://mouldmate.vercel.app/IT/Helpdesk/dashboard.html",icon:"🛠️"},
+  {name:"Checklist CCTV",url:"https://mouldmate.vercel.app/IT/CCTV/ChecklistCCTV.html",icon:"📹"},
+  {name:"Asset Register",url:"https://mouldmate.vercel.app/IT/Asset/asset-register.html",icon:"💻"}
+];
+let links=load(), icon=ICONS[0];
+const $=id=>document.getElementById(id);
+
+function load(){
+  try{const s=localStorage.getItem(KEY);if(s){const a=JSON.parse(s);if(Array.isArray(a))return a}}catch(e){}
+  return DEFAULTS.slice();
+}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(links))}catch(e){}}
+function host(u){try{return new URL(u).hostname}catch(e){return u}}
+
+function render(){
+  const q=$("q").value.trim().toLowerCase(), g=$("grid");
+  g.textContent="";
+  const shown=links.map((l,i)=>({l,i})).filter(({l})=>!q||(l.name+" "+l.url).toLowerCase().includes(q));
+  if(!shown.length){
+    const d=document.createElement("div");d.className="empty";
+    d.textContent=links.length?"ไม่พบลิงค์ที่ตรงกับคำค้นหา":"ยังไม่มีลิงค์ กด “เพิ่มลิงค์” เพื่อเริ่มต้น";
+    g.appendChild(d);return;
+  }
+  shown.forEach(({l,i})=>{
+    const a=document.createElement("a");
+    a.className="card";a.href=l.url;a.target="_blank";a.rel="noopener noreferrer";
+    const ic=document.createElement("div");ic.className="ico";ic.textContent=l.icon;
+    const t=document.createElement("div");t.className="txt";
+    const n=document.createElement("div");n.className="name";n.textContent=l.name;
+    const h=document.createElement("div");h.className="host";h.textContent=host(l.url);
+    t.append(n,h);
+    const x=document.createElement("button");
+    x.className="del";x.type="button";x.textContent="✕";x.setAttribute("aria-label","ลบ "+l.name);
+    x.onclick=e=>{e.preventDefault();e.stopPropagation();
+      if(confirm("ลบ “"+l.name+"” ออกจากรายการ?")){links.splice(i,1);save();render()}};
+    a.append(ic,t,x);g.appendChild(a);
+  });
+}
+
+function drawIcons(){
+  const box=$("icons");box.textContent="";
+  ICONS.forEach(e=>{
+    const b=document.createElement("button");b.type="button";b.textContent=e;
+    b.setAttribute("aria-pressed",e===icon);b.setAttribute("aria-label","ไอคอน "+e);
+    b.onclick=()=>{icon=e;drawIcons()};box.appendChild(b);
+  });
+}
+
+$("add").onclick=()=>{$("n").value="";$("u").value="";$("err").textContent="";icon=ICONS[0];drawIcons();$("dlg").showModal();$("n").focus()};
+$("cancel").onclick=()=>$("dlg").close();
+$("q").oninput=render;
+$("f").onsubmit=e=>{
+  e.preventDefault();
+  let name=$("n").value.trim(), url=$("u").value.trim();
+  if(url&&!/^https?:\/\//i.test(url))url="https://"+url;
+  try{new URL(url)}catch(x){$("err").textContent="กรุณากรอก URL ให้ถูกต้อง";return}
+  if(!name)name=host(url);
+  links.push({name,url,icon});save();render();$("dlg").close();
+};
+render();
+</script>
+</body>
+</html>
