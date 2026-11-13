@@ -1417,8 +1417,12 @@ async function sendPdfDocToTelegram(doc, filename, captionText) {
   try {
     var savedTg = {};
     try { savedTg = JSON.parse(localStorage.getItem('it-link-hub:tg:v1') || '{}'); } catch (e) {}
-    var dataUri = doc.output('datauristring');
-    var base64Data = dataUri.split(',')[1] || '';
+    var bytes = new Uint8Array(doc.output('arraybuffer'));
+    var bin = '';
+    for (var i = 0; i < bytes.length; i += 8192) {
+      bin += String.fromCharCode.apply(null, Array.from(bytes.subarray(i, Math.min(i + 8192, bytes.length))));
+    }
+    var base64Data = btoa(bin);
     var res = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
