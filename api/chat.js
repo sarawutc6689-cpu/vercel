@@ -1,4 +1,4 @@
-// Vercel Serverless Function: POST /api/chat (อัปเดตโมเดล Groq ล่าสุดปี 2026)
+// Vercel Serverless Function: POST /api/chat (รองรับทั้งลิงก์และตารางงานประจำวัน)
 
 module.exports = async function handler(req, res) {
   try {
@@ -9,7 +9,6 @@ module.exports = async function handler(req, res) {
       return res.status(405).json({ error: "อนุญาตเฉพาะ POST เท่านั้น" });
     }
 
-    // 1. ดึง API Key และตัดอักขระแปลกปลอมออกทั้งหมด
     const rawKey = process.env.GROQ_API_KEY || process.env.GEMINI_API_KEY || "";
     const key = String(rawKey).replace(/[^\x21-\x7E]/g, "").trim();
 
@@ -17,7 +16,6 @@ module.exports = async function handler(req, res) {
       return res.status(500).json({ error: "missing_api_key" });
     }
 
-    // 2. อ่านข้อมูลจากหน้าเว็บอย่างปลอดภัย
     let body = req.body;
     if (typeof body === "string") {
       try {
@@ -48,18 +46,26 @@ module.exports = async function handler(req, res) {
       .map((l) => `- ${l.name.slice(0, 60)}: ${l.url.slice(0, 300)}`)
       .join("\n");
 
+    const rawScheds = Array.isArray(body.schedules) ? body.schedules : [];
+    const schedList = rawScheds
+      .slice(0, 30)
+      .filter((s) => s && typeof s.title === "string" && typeof s.time === "string")
+      .map((s) => `- เวลา ${s.time.slice(0, 10)} น. (${(s.repeat || "").slice(0, 30)}): ${s.title.slice(0, 80)}`)
+      .join("\n");
+
     const sysPrompt =
-      "คุณคือ “น้องมูลด์” เลขาส่วนตัวที่ใจดีและเป็นกันเองประจำหน้ารวมลิงค์ของฝ่าย IT " +
+      "คุณคือ “น้องมูลด์” เลขาส่วนตัวรูปลิงน้อยเสื้อเหลืองที่ใจดีและเป็นกันเองประจำหน้ารวมลิงค์ของฝ่าย IT " +
       "พูดภาษาไทยที่เป็นธรรมชาติแบบเป็นกันเอง เหมือนเพื่อนร่วมงานที่สนิท ใช้คำลงท้ายที่เป็นกลางทางเพศ เช่น นะ เลย จ้า " +
       "หลีกเลี่ยง ครับ/ค่ะ ไม่หยาบคาย ตอบกระชับตรงประเด็น เป็นข้อความธรรมดา ไม่ใช้ markdown ใช้อีโมจิได้เล็กน้อย " +
       "ตอบได้ทุกเรื่อง เช่น ความรู้ทั่วไป ไอทีเบื้องต้น ร่างอีเมลหรือประกาศ สรุปประเด็น แปลภาษา วางแผนงาน ช่วยคิดไอเดีย " +
-      "และชี้ลิงค์ที่เกี่ยวข้องจากรายการนี้เมื่อผู้ใช้ถามหา:\n" +
-      linkList +
-      "\nคุณเข้าอินเทอร์เน็ตหรือดูข้อมูลสดไม่ได้ และไม่เห็นข้อมูลจริงในระบบเหล่านี้ ถ้าถูกถามให้บอกตรง ๆ ว่าทำไม่ได้และแนะนำให้เปิดลิงค์ที่เกี่ยวข้อง";
+      "\nรายการลิงค์ในหน้าเว็บ:\n" +
+      (linkList || "- ยังไม่มีลิงค์") +
+      "\nตารางงานและการแจ้งเตือนที่ตั้งไว้:\n" +
+      (schedList || "- ยังไม่มีตารางงานที่ตั้งเตือนไว้") +
+      "\nหากผู้ใช้ถามเรื่องตารางงานหรือคิวงานวันนี้ ให้สรุปจากรายการตารางงานด้านบนได้เลย และแนะนำว่าสามารถกดปุ่ม '🗓️ ตารางงาน' ด้านบนของหน้าเว็บเพื่อเพิ่มหรือแก้ไขเวลาแจ้งเตือนได้";
 
     const fullMessages = [{ role: "system", content: sysPrompt }, ...msgs];
 
-    // 3. รายชื่อโมเดล Production ล่าสุดของ Groq (อัปเดต ต.ค.-พ.ย. 2026)
     const modelsToTry = [
       process.env.GROQ_MODEL,
       "openai/gpt-oss-120b",
