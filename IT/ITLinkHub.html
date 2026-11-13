@@ -18,13 +18,12 @@ body{margin:0;min-height:100vh;background:linear-gradient(160deg,color-mix(in sr
 header{display:flex;flex-wrap:wrap;gap:14px;align-items:end;justify-content:space-between;margin-bottom:22px}
 h1{font-size:1.9rem;font-weight:600;margin:0;letter-spacing:-.01em}
 .sub{color:var(--muted);margin:2px 0 0;font-size:.95rem}
-.tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.tools{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 input,button,select{font:inherit;color:inherit}
-.search{padding:10px 14px;border:1px solid var(--line);border-radius:10px;background:var(--surface);min-width:180px}
-.btn{padding:10px 14px;border-radius:10px;border:1px solid var(--line);background:var(--surface);cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-weight:500}
+.search{padding:10px 14px;border:1px solid var(--line);border-radius:10px;background:var(--surface);min-width:190px}
+.btn{padding:10px 15px;border-radius:10px;border:1px solid var(--line);background:var(--surface);cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-weight:500}
 .btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .btn.tg{background:#0088cc;color:#fff;border-color:#0088cc}
-.btn.food{background:#fff8eb;border-color:#f59e0b;color:#92400e}
 .badge{background:var(--warn);color:#14212e;font-size:.75rem;font-weight:600;padding:1px 7px;border-radius:999px}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
@@ -40,7 +39,7 @@ input,button,select{font:inherit;color:inherit}
 .del:hover{color:var(--danger);background:var(--tile)}
 @media (hover:none){.del{opacity:.7}}
 .empty{grid-column:1/-1;text-align:center;color:var(--muted);padding:40px 0}
-dialog{border:1px solid var(--line);border-radius:16px;background:var(--surface);color:var(--ink);padding:22px;width:min(500px,94vw);max-height:90vh;overflow-y:auto}
+dialog{border:1px solid var(--line);border-radius:16px;background:var(--surface);color:var(--ink);padding:22px;width:min(480px,94vw);max-height:90vh;overflow-y:auto}
 dialog::backdrop{background:rgba(0,0,0,.45)}
 dialog h2{margin:0 0 12px;font-size:1.2rem;display:flex;align-items:center;justify-content:space-between}
 label{display:block;font-size:.85rem;color:var(--muted);margin:10px 0 4px}
@@ -51,7 +50,7 @@ dialog input[type=text],dialog input[type=url],dialog input[type=time],dialog in
 .actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px;flex-wrap:wrap}
 .err{color:var(--danger);font-size:.85rem;min-height:1.2em;margin-top:8px}
 
-/* ---- ระบบตารางงาน & ร้านอาหาร ---- */
+/* ---- ระบบตารางงาน & Telegram (Schedule Dialog) ---- */
 .sched-top{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 12px;background:var(--tile);border-radius:12px;margin-bottom:10px;font-size:.84rem}
 .tg-box{padding:12px;border:1.5px solid #0088cc;border-radius:12px;background:color-mix(in srgb,#0088cc 8%,var(--surface));margin-bottom:14px}
 .tg-head{display:flex;align-items:center;justify-content:space-between;gap:8px;font-weight:600;font-size:.9rem;color:#0088cc;margin-bottom:8px}
@@ -59,21 +58,17 @@ dialog input[type=text],dialog input[type=url],dialog input[type=time],dialog in
 .tg-row input{flex:1;min-width:140px;padding:7px 10px;font-size:.86rem}
 .tg-row button{padding:7px 10px;font-size:.8rem}
 .tg-msg{font-size:.8rem;margin-top:6px;min-height:1.1em;color:var(--muted)}
-.sched-list{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;max-height:210px;overflow-y:auto}
+.sched-list{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;max-height:190px;overflow-y:auto}
 .sched-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--bg)}
 .sched-item.off{opacity:.55}
 .sched-left{display:flex;align-items:center;gap:10px;min-width:0}
-.sched-time{font-weight:600;font-size:.95rem;color:var(--accent);background:var(--tile);padding:4px 9px;border-radius:8px;flex:none}
+.sched-time{font-weight:600;font-size:1rem;color:var(--accent);background:var(--tile);padding:4px 9px;border-radius:8px;flex:none}
 .sched-title{font-weight:500;font-size:.92rem;overflow-wrap:anywhere}
-.sched-meta{font-size:.78rem;color:var(--muted)}
+.sched-meta{font-size:.76rem;color:var(--muted)}
 .sched-btns{display:flex;align-items:center;gap:6px;flex:none}
 .sched-btns button{border:0;background:transparent;cursor:pointer;padding:4px 7px;border-radius:6px;color:var(--muted)}
 .sched-btns button:hover{background:var(--tile);color:var(--danger)}
 .row-2{display:grid;grid-template-columns:1fr 1.3fr;gap:10px}
-.tabs{display:flex;gap:6px;margin-bottom:10px}
-.tabs button{flex:1;padding:7px 10px;border-radius:9px;border:1px solid var(--line);background:var(--bg);cursor:pointer;font-size:.86rem;font-weight:500}
-.tabs button.active{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
-.rand-result{padding:10px 12px;border-radius:12px;background:#fef3c7;color:#92400e;border:1.5px solid #f59e0b;margin-bottom:12px;font-weight:600;font-size:.9rem;text-align:center}
 
 /* ---- ตัวการ์ตูนลิงน้อย น้องมูลด์ (มุมขวาล่าง) ---- */
 .mascot-btn{position:fixed;right:14px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:20;display:flex;align-items:center;gap:6px;background:transparent;border:0;padding:0;cursor:pointer;user-select:none}
@@ -148,11 +143,10 @@ dialog input[type=text],dialog input[type=url],dialog input[type=time],dialog in
   <header>
     <div>
       <h1>IT Link Hub</h1>
-      <p class="sub">รวมลิงค์ ตารางงาน และร้านอร่อยประจำฝ่าย IT</p>
+      <p class="sub">รวมลิงค์และตารางงานประจำฝ่าย IT</p>
     </div>
     <div class="tools">
       <input class="search" id="q" type="search" placeholder="ค้นหาลิงค์…" aria-label="ค้นหาลิงค์">
-      <button class="btn food" id="foodBtn" type="button">🍱 ร้านอาหาร & น้ำ <span class="badge" id="foodCount">0</span></button>
       <button class="btn" id="schedBtn" type="button">🗓️ ตารางงาน <span class="badge" id="schedCount">0</span></button>
       <button class="btn primary" id="add" type="button">+ เพิ่มลิงค์</button>
     </div>
@@ -173,14 +167,14 @@ dialog input[type=text],dialog input[type=url],dialog input[type=time],dialog in
       <div class="head-ava" id="head-ava"></div>
       <div class="head-info">
         <div class="head-name">น้องมูลด์ (เลขา IT)</div>
-        <div class="head-sub">ถามงาน ถามอากาศ หรือให้ช่วยเลือกร้านข้าวได้เลย 🐵</div>
+        <div class="head-sub">สั่งงานหรือส่งเข้า Telegram ได้เลย 🐵</div>
       </div>
     </div>
     <button type="button" id="cx" aria-label="ปิดแชต">✕</button>
   </div>
   <div class="msgs" id="msgs" aria-live="polite"></div>
   <form class="chat-in" id="cf">
-    <input type="text" id="ci" placeholder="เช่น เที่ยงนี้กินอะไรดี หรือ เตือนเช็ก Server 15:00" autocomplete="off" aria-label="พิมพ์คำถาม">
+    <input type="text" id="ci" placeholder="เช่น เตือนเช็ก Server ตอน 15:00 น." autocomplete="off" aria-label="พิมพ์คำถาม">
     <button class="btn primary" type="submit" id="cs">ส่ง</button>
   </form>
 </section>
@@ -203,52 +197,6 @@ dialog input[type=text],dialog input[type=url],dialog input[type=time],dialog in
   </form>
 </dialog>
 
-<!-- หน้าต่างจัดการร้านอาหารและร้านน้ำ -->
-<dialog id="foodDlg">
-  <h2>
-    <span>🍱 ร้านอาหาร & ร้านน้ำประจำแผนก</span>
-    <button type="button" class="btn" id="closeFood" style="padding:4px 10px;font-size:.85rem">ปิด</button>
-  </h2>
-
-  <div class="tabs">
-    <button type="button" class="active" data-ftab="all">ทั้งหมด</button>
-    <button type="button" data-ftab="food">🍚 ร้านอาหาร</button>
-    <button type="button" data-ftab="drink">🧋 ร้านน้ำ/คาเฟ่</button>
-  </div>
-
-  <div id="randBox" class="rand-result" hidden></div>
-
-  <div class="sched-list" id="foodList"></div>
-
-  <form id="foodForm" novalidate style="border-top:1px solid var(--line);padding-top:12px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-      <span style="font-weight:600;font-size:.95rem">+ เพิ่มร้านอร่อยเข้ารายการ</span>
-      <button type="button" class="btn food" id="randFoodBtn" style="padding:5px 12px;font-size:.82rem">🎲 สุ่มร้านวันนี้!</button>
-    </div>
-    <div class="row-2">
-      <div>
-        <label for="fcat">หมวดหมู่</label>
-        <select id="fcat">
-          <option value="food">🍚 ร้านอาหาร</option>
-          <option value="drink">🧋 ร้านน้ำ / กาแฟ</option>
-        </select>
-      </div>
-      <div>
-        <label for="fname">ชื่อร้าน</label>
-        <input type="text" id="fname" maxlength="50" placeholder="เช่น เจ๊พรอาหารตามสั่ง">
-      </div>
-    </div>
-    <label for="fmenu">เมนูแนะนำ / รายละเอียด / เบอร์โทร</label>
-    <input type="text" id="fmenu" maxlength="100" placeholder="เช่น กะเพราหมูกรอบไข่ดาว โทร 081-xxx-xxxx">
-    <label for="furl">ลิงก์แผนที่ Google Maps หรือเพจร้าน (ถ้ามี)</label>
-    <input type="url" id="furl" placeholder="https://maps.google.com/...">
-    <div class="err" id="foodErr"></div>
-    <div class="actions" style="margin-top:12px">
-      <button type="submit" class="btn primary">บันทึกร้าน</button>
-    </div>
-  </form>
-</dialog>
-
 <!-- หน้าต่างจัดการตารางงาน & Telegram -->
 <dialog id="schedDlg">
   <h2>
@@ -261,6 +209,7 @@ dialog input[type=text],dialog input[type=url],dialog input[type=time],dialog in
     <button type="button" class="btn" id="reqNotif" style="padding:5px 10px;font-size:.8rem">เปิดแจ้งเตือน Windows</button>
   </div>
 
+  <!-- กล่องตั้งค่าการแจ้งเตือนผ่าน Telegram -->
   <div class="tg-box">
     <div class="tg-head">
       <span>✈️ แจ้งเตือนเข้ามือถือผ่าน Telegram</span>
@@ -279,7 +228,7 @@ dialog input[type=text],dialog input[type=url],dialog input[type=time],dialog in
   <div class="sched-list" id="schedList"></div>
 
   <form id="schedForm" novalidate style="border-top:1px solid var(--line);padding-top:12px">
-    <div style="font-weight:600;font-size:.95rem;margin-bottom:6px">+ ตั้งเวลาแจ้งเตือนใหม่</div>
+    <div style="font-weight:600;font-size:.95rem;margin-bottom:6px">+ ตั้งเวลาแจ้งเตือนใหม่ (หรือพิมพ์สั่งในแชตน้องมูลด์ก็ได้นะ)</div>
     <label for="st">ชื่องาน / สิ่งที่ต้องทำ</label>
     <input type="text" id="st" maxlength="60" placeholder="เช่น ตรวจเช็กสถานะกล้อง CCTV ประจำวัน">
     <div class="row-2">
@@ -354,7 +303,6 @@ function getMonkeySVG(faceOnly = false) {
 
 const KEY="it-link-hub:v1";
 const SCHED_KEY="it-link-hub:sched:v1";
-const FOOD_KEY="it-link-hub:food:v1";
 const TG_KEY="it-link-hub:tg:v1";
 const ICONS=["🛠️","📊","📹","💻","🖥️","🖨️","🌐","📡","🔒","📁","📧","📝","🗓️","🧰","☁️","🔗"];
 const AI={name:"ถามน้องมูลด์",url:"#chat",icon:"🐵"};
@@ -368,17 +316,8 @@ const DEFAULT_SCHEDS=[
   {id:"s1",title:"ตรวจเช็กสถานะกล้อง CCTV ประจำวัน",time:"09:00",repeat:"weekdays",date:"",enabled:true,lastFired:""},
   {id:"s2",title:"ตรวจสอบรายการแจ้งซ่อมค้างใน Helpdesk",time:"13:30",repeat:"weekdays",date:"",enabled:true,lastFired:""}
 ];
-const DEFAULT_FOODS=[
-  {id:"f1",cat:"food",name:"ครัวป้าศรี ตามสั่งหน้าโรงงาน",menu:"กะเพราหมูกรอบไข่ดาว, ข้าวผัดต้มยำ, คะน้าหมูชิ้น",url:""},
-  {id:"f2",cat:"food",name:"เตี๋ยวเรือรสเด็ด",menu:"ก๋วยเตี๋ยวเรือน้ำตกหมู/เนื้อ, กากหมูเจียว, ลูกชิ้นปิ้ง",url:""},
-  {id:"f3",cat:"food",name:"ส้มตำแซ่บอีสาน",menu:"ส้มตำไทย/ปูปลาร้า, ไก่ย่าง, คอหมูย่าง, ลาบหมู",url:""},
-  {id:"f4",cat:"food",name:"ข้าวมันไก่ & ข้าวหมูแดงเฮียตี๋",menu:"ข้าวมันไก่ต้ม/ผสม, ข้าวหมูแดงหมูกรอบ",url:""},
-  {id:"f5",cat:"drink",name:"Café Amazon",menu:"เอสเปรสโซ่เย็นหวานน้อย, ชาเขียวเย็น, ชานมเย็น, แบล็คคอฟฟี่น้ำผึ้ง",url:""},
-  {id:"f6",cat:"drink",name:"ร้านน้ำปั่น & ชาไข่มุกหน้าออฟฟิศ",menu:"ชานมไต้หวันไข่มุก, โกโก้เข้มข้น, แตงโมปั่น, มะพร้าวนมสดปั่น",url:""},
-  {id:"f7",cat:"drink",name:"เต่าบิน (Tao Bin) / ตู้กดน้ำ",menu:"โอริโอ้ปั่นภูเขาไฟ, มัทฉะลาเต้, กาแฟส้ม, บ๊วยโซดา",url:""}
-];
 
-let links=load(), schedules=loadScheds(), foods=loadFoods(), tgConf=loadTg(), icon=ICONS[0], curFoodTab="all";
+let links=load(), schedules=loadScheds(), tgConf=loadTg(), icon=ICONS[0];
 const $=id=>document.getElementById(id);
 
 $("fab-ava").innerHTML = getMonkeySVG(false);
@@ -426,24 +365,6 @@ function updateSchedBadge(){
   $("schedCount").textContent = schedules.filter(s=>s.enabled).length;
 }
 
-function loadFoods(){
-  try{
-    const s=localStorage.getItem(FOOD_KEY);
-    if(s){
-      const a=JSON.parse(s);
-      if(Array.isArray(a)) return a;
-    }
-  }catch(e){}
-  return DEFAULT_FOODS.slice();
-}
-function saveFoods(){
-  try{localStorage.setItem(FOOD_KEY,JSON.stringify(foods))}catch(e){}
-  updateFoodBadge();
-}
-function updateFoodBadge(){
-  $("foodCount").textContent = foods.length;
-}
-
 function loadTg(){
   try{
     const s=localStorage.getItem(TG_KEY);
@@ -470,7 +391,7 @@ function openChat(){
   $("speech-tag").classList.remove("alert");
   $("speech-tag").textContent="ถามน้องมูลด์ได้นะ 🍌";
   if(!$("msgs").children.length){
-    addMsg("bot","สวัสดีจ้า น้องมูลด์เองนะ 🐵🍌 จะให้ช่วยหาลิงค์ เช็กอากาศ ตั้งเวลาเตือน หรือถามว่า “เที่ยงนี้กินอะไรดี / สั่งน้ำร้านไหนดี” ก็บอกได้เลยจ้า");
+    addMsg("bot","สวัสดีจ้า น้องมูลด์เองนะ 🐵🍌 จะให้ช่วยหาลิงค์ ตั้งเวลาแจ้งเตือน หรือสั่งส่งข้อความเข้า Telegram ก็บอกได้เลยจ้า");
   }
   $("ci").focus();
 }
@@ -533,127 +454,6 @@ $("f").onsubmit=e=>{
 };
 render();
 updateSchedBadge();
-updateFoodBadge();
-
-/* ---- ระบบจัดการร้านอาหารและร้านน้ำ (Food & Drink Directory) ---- */
-function renderFoods(){
-  const box=$("foodList");
-  box.textContent="";
-  const filtered = foods.filter(f => curFoodTab==="all" || f.cat===curFoodTab);
-  if(!filtered.length){
-    const d=document.createElement("div");
-    d.style.cssText="text-align:center;color:var(--muted);padding:18px 0;font-size:.9rem";
-    d.textContent="ยังไม่มีข้อมูลร้านในหมวดนี้";
-    box.appendChild(d);
-    return;
-  }
-  filtered.forEach(item=>{
-    const row=document.createElement("div");
-    row.className="sched-item";
-
-    const left=document.createElement("div");
-    left.className="sched-left";
-
-    const badge=document.createElement("span");
-    badge.className="sched-time";
-    badge.textContent=item.cat==="drink"?"🧋 น้ำ":"🍚 อาหาร";
-
-    const info=document.createElement("div");
-    const tt=document.createElement("div");
-    tt.className="sched-title";
-    tt.textContent=item.name;
-    const mt=document.createElement("div");
-    mt.className="sched-meta";
-    mt.textContent=item.menu || "ไม่มีรายละเอียดเมนู";
-    info.append(tt,mt);
-
-    if(item.url){
-      const a=document.createElement("a");
-      a.href=item.url;
-      a.target="_blank";
-      a.rel="noopener noreferrer";
-      a.style.cssText="font-size:.76rem;color:var(--accent);font-weight:600";
-      a.textContent="📍 เปิดแผนที่/ลิงก์ร้าน";
-      info.appendChild(a);
-    }
-
-    left.append(badge,info);
-
-    const btns=document.createElement("div");
-    btns.className="sched-btns";
-    const del=document.createElement("button");
-    del.type="button";
-    del.textContent="🗑️";
-    del.title="ลบร้านนี้";
-    del.onclick=()=>{
-      foods=foods.filter(x=>x.id!==item.id);
-      saveFoods();
-      renderFoods();
-    };
-    btns.appendChild(del);
-
-    row.append(left,btns);
-    box.appendChild(row);
-  });
-}
-
-function addFoodItem(cat, name, menu="", url=""){
-  const cleanCat = cat==="drink" ? "drink" : "food";
-  const newItem = {
-    id: "f" + Date.now() + Math.floor(Math.random()*100),
-    cat: cleanCat,
-    name: String(name).trim(),
-    menu: String(menu || "").trim(),
-    url: String(url || "").trim()
-  };
-  foods.push(newItem);
-  saveFoods();
-  if($("foodDlg").open) renderFoods();
-  return newItem;
-}
-
-$("foodBtn").onclick=()=>{
-  $("foodErr").textContent="";
-  $("randBox").hidden=true;
-  renderFoods();
-  $("foodDlg").showModal();
-};
-$("closeFood").onclick=()=>$("foodDlg").close();
-
-document.querySelectorAll("[data-ftab]").forEach(btn=>{
-  btn.onclick=()=>{
-    document.querySelectorAll("[data-ftab]").forEach(b=>b.classList.remove("active"));
-    btn.classList.add("active");
-    curFoodTab = btn.getAttribute("data-ftab");
-    renderFoods();
-  };
-});
-
-$("randFoodBtn").onclick=()=>{
-  const foodPool = foods.filter(f=>f.cat==="food");
-  const drinkPool = foods.filter(f=>f.cat==="drink");
-  const pickF = foodPool.length ? foodPool[Math.floor(Math.random()*foodPool.length)] : null;
-  const pickD = drinkPool.length ? drinkPool[Math.floor(Math.random()*drinkPool.length)] : null;
-  const rb = $("randBox");
-  rb.hidden = false;
-  rb.textContent = `🎉 น้องมูลด์สุ่มให้: ${pickF ? "🍚 "+pickF.name+" ("+pickF.menu+")" : "ไม่มีร้านข้าว"} ${pickD ? " + 🧋 "+pickD.name : ""}`;
-};
-
-$("foodForm").onsubmit=e=>{
-  e.preventDefault();
-  const cat=$("fcat").value;
-  const name=$("fname").value.trim();
-  const menu=$("fmenu").value.trim();
-  let url=$("furl").value.trim();
-  if(!name){$("foodErr").textContent="กรุณากรอกชื่อร้าน";return}
-  if(url && !/^https?:\/\//i.test(url)) url="https://"+url;
-
-  addFoodItem(cat, name, menu, url);
-  $("fname").value="";
-  $("fmenu").value="";
-  $("furl").value="";
-  $("foodErr").textContent="";
-};
 
 /* ---- ระบบจัดการตารางงาน & Telegram ---- */
 function repeatLabel(s){
@@ -760,6 +560,7 @@ $("reqNotif").onclick=async()=>{
   }
 };
 
+// ฟังก์ชันเรียกใช้งาน Telegram ผ่าน /api/chat
 async function sendTelegramMessage(text, showStatusEl){
   saveTg();
   try{
@@ -888,14 +689,17 @@ function triggerReminder(item){
   playChime();
   const msg = `⏰ ถึงเวลาแล้วจ้า (${item.time} น.): ${item.title} 🍌`;
 
+  // 1. แจ้งในห้องแชตหน้าเว็บ
   addMsg("bot remind", msg);
 
+  // 2. ป้ายคำพูดตรงตัวน้องลิง
   if($("chat").hidden){
     const tag = $("speech-tag");
     tag.textContent = `⏰ ${item.title}`;
     tag.classList.add("alert");
   }
 
+  // 3. ป๊อปอัป Windows/Browser
   if("Notification" in window && Notification.permission==="granted"){
     try{
       const n = new Notification("น้องมูลด์เตือนตารางงาน 🐵⏰", {
@@ -905,6 +709,7 @@ function triggerReminder(item){
     }catch(e){}
   }
 
+  // 4. ส่งเข้ามือถือผ่าน Telegram (ถ้าเปิดใช้งานไว้)
   if(tgConf.enabled){
     sendTelegramMessage(`🐵⏰ น้องมูลด์แจ้งเตือนตารางงาน!\n🕒 เวลา: ${item.time} น.\n📌 งาน: ${item.title}`);
   }
@@ -916,6 +721,7 @@ $("testAlert").onclick=()=>{
   $("schedDlg").close();
 };
 
+// ตรวจสอบเวลาทุกๆ 15 วินาที
 setInterval(()=>{
   const now = new Date();
   const hh = String(now.getHours()).padStart(2,"0");
@@ -949,7 +755,7 @@ setInterval(()=>{
   }
 }, 15000);
 
-/* ---- เลขา IT (AI - เชื่อมต่อ /api/chat พร้อมรู้จักร้านอาหาร & ร้านน้ำ) ---- */
+/* ---- เลขา IT (AI - เชื่อมต่อ /api/chat พร้อมสั่งเพิ่มตารางงานและส่ง Telegram ผ่านแชต) ---- */
 let hist=[], busy=false;
 
 function setTextWithLinks(el, text){
@@ -1028,21 +834,7 @@ function processBotActions(rawText){
   }
   cleanText = cleanText.replace(delRegex, "").trim();
 
-  // 3. คำสั่งเพิ่มร้านอาหาร/ร้านน้ำผ่านแชต: [[ADD_FOOD:foodหรือdrink|ชื่อร้าน|เมนูแนะนำ]]
-  const foodRegex = /\[\[ADD_FOOD:(food|drink)\|([^|\]]+)(?:\|([^\]]*))?\]\]/gi;
-  const addedFoods = [];
-  while((match = foodRegex.exec(cleanText)) !== null){
-    const cat = match[1].toLowerCase();
-    const name = match[2].trim();
-    const menu = (match[3] || "").trim();
-    if(name){
-      const fItem = addFoodItem(cat, name, menu, "");
-      addedFoods.push(fItem);
-    }
-  }
-  cleanText = cleanText.replace(foodRegex, "").trim();
-
-  // 4. คำสั่งส่งข้อความเข้า Telegram ทันที: [[SEND_TG:ข้อความที่ต้องการส่ง]]
+  // 3. คำสั่งส่งข้อความเข้า Telegram ทันที: [[SEND_TG:ข้อความที่ต้องการส่ง]]
   const tgRegex = /\[\[SEND_TG:([\s\S]*?)\]\]/g;
   const tgMessages = [];
   while((match = tgRegex.exec(cleanText)) !== null){
@@ -1051,7 +843,7 @@ function processBotActions(rawText){
   }
   cleanText = cleanText.replace(tgRegex, "").trim();
 
-  return { cleanText, addedItems, removedTitles, addedFoods, tgMessages };
+  return { cleanText, addedItems, removedTitles, tgMessages };
 }
 
 async function ask(text){
@@ -1069,12 +861,6 @@ async function ask(text){
       .filter(s=>s.enabled)
       .map(s=>({title:s.title,time:s.time,repeat:repeatLabel(s)}));
 
-    const cleanFoods=foods.map(f=>({
-      cat: f.cat==="drink"?"ร้านน้ำ/คาเฟ่":"ร้านอาหาร",
-      name: f.name,
-      menu: f.menu
-    }));
-
     const now = new Date();
     const clientNow = `${getTodayStr()} ${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")}`;
 
@@ -1085,7 +871,6 @@ async function ask(text){
         messages:hist.slice(-10),
         links:cleanLinks,
         schedules:activeScheds,
-        foods:cleanFoods,
         clientNow:clientNow
       })
     });
@@ -1102,7 +887,7 @@ async function ask(text){
         bubble.textContent="ขออภัย ระบบขัดข้อง (" + res.status + "): " + (data.error || "ไม่ทราบสาเหตุ");
       }
     }else{
-      const { cleanText, addedItems, removedTitles, addedFoods, tgMessages } = processBotActions(data.text);
+      const { cleanText, addedItems, removedTitles, tgMessages } = processBotActions(data.text);
       const displayReply = cleanText || "จัดการให้เรียบร้อยแล้วจ้า 🐵✨";
       setTextWithLinks(bubble, displayReply);
       hist.push({role:"assistant",content:displayReply});
@@ -1113,9 +898,6 @@ async function ask(text){
       if(removedTitles.length){
         addMsg("bot sys-ok", `🗑️ ลบตารางงานแล้ว: ${removedTitles.join(", ")}`);
       }
-      addedFoods.forEach(f=>{
-        addMsg("bot sys-ok", `🍱 เพิ่ม${f.cat==="drink"?"ร้านน้ำ":"ร้านอาหาร"}แล้ว: "${f.name}" ${f.menu ? "("+f.menu+")" : ""}`);
-      });
       for(const tgMsg of tgMessages){
         const r = await sendTelegramMessage(`🐵 ข้อความจากน้องมูลด์:\n${tgMsg}`);
         if(r.ok){
