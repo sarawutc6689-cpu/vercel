@@ -373,4 +373,4 @@ module.exports = async function handler(req, res) {
   } catch (err) {
     return res.status(500).json({ error: `เซิร์ฟเวอร์ขัดข้อง: ${err && err.message ? err.message : String(err)}` });
   }
-}
+};
