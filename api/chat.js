@@ -260,6 +260,41 @@ module.exports = async function handler(req, res) {
       return res.status(404).json({ error: "ไม่พบข้อความล่าสุด กรุณาทักบอทใน Telegram ก่อน 1 ครั้ง" });
     }
 
+        // ส่งไฟล์เอกสาร PDF เข้า Telegram (เรียกจากหน้า ChecklistCCTV.html)
+    if (body.action === "telegram_send_pdf") {
+      if (!tgToken) {
+        return res.status(400).json({ error: "ยังไม่ได้ตั้งค่า TELEGRAM_BOT_TOKEN ใน Vercel" });
+      }
+      const targetChatId = String(body.chatId || defaultChatId || "").trim();
+      if (!targetChatId) {
+        return res.status(400).json({ error: "ยังไม่ได้ระบุ TELEGRAM_CHAT_ID ใน Vercel หรือหน้าเว็บ" });
+      }
+      const pdfBase64 = String(body.pdfBase64 || "").replace(/^data:[^;]+;base64,/, "");
+      const filename = String(body.filename || "CCTV_Report.pdf").replace(/[^a-zA-Z0-9._-]/g, "_");
+      const caption = String(body.caption || "📋 รายงานตรวจสอบกล้องวงจรปิด (CCTV)").slice(0, 1000);
+
+      if (!pdfBase64) {
+        return res.status(400).json({ error: "ไม่พบข้อมูลไฟล์ PDF" });
+      }
+
+      const fileBuffer = Buffer.from(pdfBase64, "base64");
+      const form = new FormData();
+      form.append("chat_id", targetChatId);
+      form.append("caption", caption);
+      form.append("document", new Blob([fileBuffer], { type: "application/pdf" }), filename);
+
+      const r = await fetch(`https://api.telegram.org/bot${tgToken}/sendDocument`, {
+        method: "POST",
+        body: form,
+      });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok || !data.ok) {
+        return res.status(502).json({ error: data.description || `Telegram Error (${r.status})` });
+      }
+      return res.status(200).json({ ok: true });
+    }
+
+
     // 3. ส่งแจ้งเตือนเข้า Telegram
     if (body.action === "telegram_send") {
       if (!tgToken) return res.status(400).json({ error: "ยังไม่ได้ตั้งค่า TELEGRAM_BOT_TOKEN ใน Vercel" });
