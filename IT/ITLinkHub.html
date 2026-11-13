@@ -4,6 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>IT Link Hub</title>
+
+<meta name="theme-color" content="#0b6e8a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="IT Link Hub">
+
+  
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -928,6 +935,60 @@ $("cf").onsubmit=e=>{
   addMsg("me",t);
   ask(t);
 };
+
+  /* ---- ระบบ PWA (ทำให้ติดตั้งลงหน้าจอมือถือเหมือนแอปจริง พร้อมไอคอนน้องมูลด์) ---- */
+(function initPWA(){
+  try{
+    const svgStr = getMonkeySVG(true);
+    const svgBlob = new Blob([svgStr], {type:"image/svg+xml;charset=utf-8"});
+    const url = URL.createObjectURL(svgBlob);
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement("canvas");
+      c.width = 192; c.height = 192;
+      const ctx = c.getContext("2d");
+      // วาดพื้นหลังสีครีมอ่อนและกรอบวงกลม
+      ctx.fillStyle = "#fff8eb";
+      ctx.fillRect(0, 0, 192, 192);
+      ctx.drawImage(img, 12, 12, 168, 168);
+      URL.revokeObjectURL(url);
+
+      const iconPng = c.toDataURL("image/png");
+
+      // 1. ตั้งเป็น Favicon และ Apple Touch Icon (สำหรับ iPhone/iPad)
+      const appleIcon = document.createElement("link");
+      appleIcon.rel = "apple-touch-icon";
+      appleIcon.href = iconPng;
+      document.head.appendChild(appleIcon);
+
+      const favIcon = document.createElement("link");
+      favIcon.rel = "icon";
+      favIcon.href = iconPng;
+      document.head.appendChild(favIcon);
+
+      // 2. สร้าง Web App Manifest (สำหรับ Android / Chrome / Edge)
+      const manifest = {
+        name: "IT Link Hub & น้องมูลด์",
+        short_name: "IT Hub",
+        start_url: location.origin + location.pathname,
+        display: "standalone",
+        background_color: "#eaf2f1",
+        theme_color: "#0b6e8a",
+        icons: [
+          { src: iconPng, sizes: "192x192", type: "image/png" },
+          { src: iconPng, sizes: "512x512", type: "image/png" }
+        ]
+      };
+      const mBlob = new Blob([JSON.stringify(manifest)], {type:"application/manifest+json"});
+      const mLink = document.createElement("link");
+      mLink.rel = "manifest";
+      mLink.href = URL.createObjectURL(mBlob);
+      document.head.appendChild(mLink);
+    };
+    img.src = url;
+  }catch(e){}
+})();
+
 </script>
 </body>
 </html>
