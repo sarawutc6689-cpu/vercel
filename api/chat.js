@@ -1,5 +1,5 @@
 // Vercel Serverless Function: POST /api/chat
-// รองรับ: 1) แชตหน้าเว็บ 2) ตารางงาน 3) แจ้งเตือน & ตอบโต้ในกลุ่ม Telegram 4) พยากรณ์อากาศสด 5) ข้อมูลร้านอาหารและร้านน้ำ
+// รองรับ: 1) แชตหน้าเว็บ 2) ตารางงาน 3) แจ้งเตือน & ตอบโต้ในกลุ่ม Telegram 4) เช็กสภาพอากาศและโอกาสเกิดฝนแบบสด (Real-time Weather)
 
 const DEFAULT_LINKS = [
   { name: "IT Link Hub (หน้าหลัก)", url: "https://mouldmate.vercel.app/" },
@@ -8,17 +8,9 @@ const DEFAULT_LINKS = [
   { name: "Asset Register", url: "https://mouldmate.vercel.app/IT/Asset/asset-register.html" },
 ];
 
-const DEFAULT_FOODS_TEXT =
-  "- [ร้านอาหาร] ครัวป้าศรี ตามสั่งหน้าโรงงาน: กะเพราหมูกรอบไข่ดาว, ข้าวผัดต้มยำ, คะน้าหมูชิ้น\n" +
-  "- [ร้านอาหาร] เตี๋ยวเรือรสเด็ด: ก๋วยเตี๋ยวเรือน้ำตกหมู/เนื้อ, กากหมูเจียว, ลูกชิ้นปิ้ง\n" +
-  "- [ร้านอาหาร] ส้มตำแซ่บอีสาน: ส้มตำไทย/ปูปลาร้า, ไก่ย่าง, คอหมูย่าง, ลาบหมู\n" +
-  "- [ร้านอาหาร] ข้าวมันไก่ & ข้าวหมูแดงเฮียตี๋: ข้าวมันไก่ต้ม/ผสม, ข้าวหมูแดงหมูกรอบ\n" +
-  "- [ร้านน้ำ/คาเฟ่] Café Amazon: เอสเปรสโซ่เย็นหวานน้อย, ชาเขียวเย็น, ชานมเย็น, แบล็คคอฟฟี่น้ำผึ้ง\n" +
-  "- [ร้านน้ำ/คาเฟ่] ร้านน้ำปั่น & ชาไข่มุกหน้าออฟฟิศ: ชานมไต้หวันไข่มุก, โกโก้เข้มข้น, แตงโมปั่น, มะพร้าวนมสดปั่น\n" +
-  "- [ร้านน้ำ/คาเฟ่] เต่าบิน (Tao Bin): โอริโอ้ปั่นภูเขาไฟ, มัทฉะลาเต้, กาแฟส้ม, บ๊วยโซดา";
-
+// พิกัดจังหวัดหลักในไทย (ค่าเริ่มต้น: กรุงเทพฯ/ปริมณฑล และรองรับการถามชื่อจังหวัด)
 const TH_LOCATIONS = [
-  { keys: ["สระบุรี", "saraburi", "แก่งคอย", "หนองแค", "มวกเหล็ก", "เขาวง"], name: "สระบุรี", lat: 14.5289, lon: 100.9101 },
+  { keys: ["สระบุรี", "saraburi", "แก่งคอย", "หนองแค", "มวกเหล็ก"], name: "สระบุรี", lat: 14.5289, lon: 100.9101 },
   { keys: ["อยุธยา", "ayutthaya", "วังน้อย", "บางปะอิน"], name: "พระนครศรีอยุธยา", lat: 14.3532, lon: 100.5684 },
   { keys: ["ปทุมธานี", "pathum", "รังสิต", "คลองหลวง"], name: "ปทุมธานี", lat: 14.0208, lon: 100.5250 },
   { keys: ["นนทบุรี", "nonthaburi", "ปากเกร็ด", "บางใหญ่"], name: "นนทบุรี", lat: 13.8591, lon: 100.5217 },
@@ -58,20 +50,23 @@ function weatherCodeToThai(code) {
   return map[code] || "มีเมฆและโอกาสเกิดฝน ⛅";
 }
 
+// ตรวจจับว่าข้อความถามเรื่องอากาศ/ฝน/อุณหภูมิ หรือไม่
 function isWeatherQuery(text) {
   return /(อากาศ|ฝน|ร้อน|หนาว|อุณหภูมิ|แดด|พายุ|ร่ม|พยากรณ์|เมฆ|ฟ้าครึ้ม|weather|rain)/i.test(text || "");
 }
 
+// ดึงข้อมูลสภาพอากาศสดจาก Open-Meteo (ฟรี ไม่ต้องใช้ API Key)
 async function getLiveWeatherReport(userText) {
   try {
     const lower = String(userText || "").toLowerCase();
+    // ค่าเริ่มต้นสามารถตั้งเป็นจังหวัดของบริษัทได้ (หรือตั้งผ่านตัวแปร DEFAULT_PROVINCE ใน Vercel)
     let loc = TH_LOCATIONS.find((l) => l.keys.some((k) => lower.includes(k)));
     if (!loc) {
       const envProv = (process.env.DEFAULT_PROVINCE || "").trim();
       loc = TH_LOCATIONS.find((l) => envProv && l.name.includes(envProv)) || {
         name: "พื้นที่ภาคกลาง (กรุงเทพฯ / ปริมณฑล / สระบุรี)",
-        lat: 14.5289,
-        lon: 100.9101,
+        lat: 14.0208,
+        lon: 100.5250,
       };
     }
 
@@ -100,7 +95,8 @@ async function getLiveWeatherReport(userText) {
       `\n[ข้อมูลสภาพอากาศสด (Real-time) สำหรับ ${loc.name}]:\n` +
       `- สภาพอากาศตอนนี้: ${curDesc}, อุณหภูมิ ${cur.temperature_2m}°C (ความรู้สึกร้อนจริง ${cur.apparent_temperature}°C), ความชื้น ${cur.relative_humidity_2m}%, ลม ${cur.wind_speed_10m} km/h\n` +
       `- ภาพรวมวันนี้: อุณหภูมิต่ำสุด ${todayMin}°C / สูงสุด ${todayMax}°C, โอกาสเกิดฝนวันนี้ ${todayRainProb}% (ปริมาณฝนสะสมคาดการณ์ ${todayRainMm} มม.)\n` +
-      `- แนวโน้มพรุ่งนี้: ${tmrDesc}, โอกาสเกิดฝน ${tmrRainProb}%\n`
+      `- แนวโน้มพรุ่งนี้: ${tmrDesc}, โอกาสเกิดฝน ${tmrRainProb}%\n` +
+      `(ให้นำตัวเลขจริงนี้ไปสรุปตอบผู้ใช้แบบเป็นกันเองได้เลย และแนะนำเรื่องการพกร่มหรือดูแลสุขภาพตามความเหมาะสม)`
     );
   } catch (e) {
     return "";
@@ -129,7 +125,7 @@ async function askGroqAI(key, messages) {
         model: model,
         messages: messages,
         max_tokens: 1024,
-        temperature: 0.6,
+        temperature: 0.5,
       }),
     });
 
@@ -216,4 +212,191 @@ module.exports = async function handler(req, res) {
 
       const weatherInfo = isWeatherQuery(text) ? await getLiveWeatherReport(text) : "";
       const linkList = DEFAULT_LINKS.map((l) => `- ${l.name}: ${l.url}`).join("\n");
-      const senderName = (msg.from && (msg.from.first_name || msg.
+      const senderName = (msg.from && (msg.from.first_name || msg.from.username)) || "เพื่อนร่วมงาน";
+
+      const tgSysPrompt =
+        "คุณคือ “น้องมูลด์” เลขาส่วนตัวรูปลิงน้อยเสื้อเหลืองประจำกลุ่ม Telegram ของฝ่าย IT " +
+        "พูดภาษาไทยที่เป็นธรรมชาติแบบเป็นกันเอง ใช้คำลงท้าย เช่น นะ เลย จ้า หลีกเลี่ยง ครับ/ค่ะ " +
+        "ตอบกระชับ ตรงประเด็น เป็นข้อความธรรมดา ไม่ใช้ markdown ใช้อีโมจิได้เล็กน้อย\n" +
+        `ผู้ที่กำลังถามคุณชื่อ: ${senderName}\n` +
+        "รายการลิงค์สำคัญของฝ่าย IT:\n" +
+        linkList +
+        weatherInfo +
+        "\nช่วยตอบคำถามไอที สภาพอากาศ ร่างข้อความ สรุปประเด็น แนะนำลิงค์ หรือพูดคุยช่วยเหลือสมาชิกในกลุ่มอย่างเป็นกันเอง";
+
+      const aiRes = await askGroqAI(groqKey, [
+        { role: "system", content: tgSysPrompt },
+        { role: "user", content: text },
+      ]);
+
+      const replyText = aiRes.ok
+        ? aiRes.text
+        : `ขออภัยจ้า ตอนนี้สมองน้องมูลด์ขัดข้องชั่วคราว (${aiRes.status})`;
+
+      await fetch(`https://api.telegram.org/bot${tgToken}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: replyText,
+          reply_to_message_id: msg.message_id,
+        }),
+      });
+
+      return res.status(200).json({ ok: true });
+    }
+
+    // =========================================================================
+    // โหมดที่ 1: ตั้งค่าผูก Webhook
+    // =========================================================================
+    if (body.action === "telegram_set_webhook") {
+      if (!tgToken) {
+        return res.status(400).json({ error: "ยังไม่ได้ตั้งค่า TELEGRAM_BOT_TOKEN ใน Vercel" });
+      }
+      const host = req.headers["x-forwarded-host"] || req.headers.host || "mouldmate.vercel.app";
+      const webhookUrl = `https://${host}/api/chat`;
+
+      const r = await fetch(`https://api.telegram.org/bot${tgToken}/setWebhook`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: webhookUrl }),
+      });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok || !data.ok) {
+        return res.status(502).json({ error: data.description || "ตั้งค่า Webhook ไม่สำเร็จ" });
+      }
+      return res.status(200).json({ ok: true, webhookUrl });
+    }
+
+    // =========================================================================
+    // โหมดที่ 2: ดึง Chat ID ล่าสุด
+    // =========================================================================
+    if (body.action === "telegram_get_chat") {
+      if (!tgToken) {
+        return res.status(400).json({
+          error: "ยังไม่ได้ตั้งค่า TELEGRAM_BOT_TOKEN ใน Vercel Environment Variables",
+        });
+      }
+      const r = await fetch(`https://api.telegram.org/bot${tgToken}/getUpdates?limit=10`);
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok || !data.ok) {
+        return res.status(400).json({
+          error: "เนื่องจากเปิดโหมดบอทตอบโต้อัตโนมัติ (Webhook) แล้ว ให้พิมพ์ /id ในกลุ่ม Telegram เพื่อดูเลข Chat ID ได้เลยจ้า!",
+        });
+      }
+      const updates = Array.isArray(data.result) ? data.result : [];
+      for (let i = updates.length - 1; i >= 0; i--) {
+        const u = updates[i];
+        const chat = (u.message && u.message.chat) || (u.my_chat_member && u.my_chat_member.chat) || (u.channel_post && u.channel_post.chat);
+        if (chat && chat.id) {
+          return res.status(200).json({
+            chatId: String(chat.id),
+            title: chat.title || chat.first_name || chat.username || "แชตส่วนตัว",
+          });
+        }
+      }
+      return res.status(404).json({
+        error: "ไม่พบข้อความล่าสุด กรุณาพิมพ์ทักบอทในแอป Telegram ก่อน 1 ครั้งนะครับ",
+      });
+    }
+
+    // =========================================================================
+    // โหมดที่ 3: ส่งข้อความแจ้งเตือนเข้า Telegram จากหน้าเว็บ
+    // =========================================================================
+    if (body.action === "telegram_send") {
+      if (!tgToken) {
+        return res.status(400).json({ error: "ยังไม่ได้ตั้งค่า TELEGRAM_BOT_TOKEN ใน Vercel" });
+      }
+      const targetChatId = String(body.chatId || defaultChatId || "").trim();
+      if (!targetChatId) {
+        return res.status(400).json({ error: "ยังไม่ได้ระบุ Chat ID ในช่องตั้งค่า" });
+      }
+      const text = String(body.text || "").trim().slice(0, 3500);
+      if (!text) {
+        return res.status(400).json({ error: "ไม่มีข้อความที่จะส่ง" });
+      }
+
+      const r = await fetch(`https://api.telegram.org/bot${tgToken}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: targetChatId,
+          text: text,
+        }),
+      });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok || !data.ok) {
+        return res.status(502).json({ error: data.description || `Telegram Error (${r.status})` });
+      }
+      return res.status(200).json({ ok: true });
+    }
+
+    // =========================================================================
+    // โหมดที่ 4: คุยแชตกับน้องมูลด์ผ่านหน้าเว็บ IT Link Hub
+    // =========================================================================
+    if (!groqKey) {
+      return res.status(500).json({ error: "missing_api_key" });
+    }
+
+    const rawMsgs = Array.isArray(body.messages) ? body.messages : [];
+    const msgs = rawMsgs
+      .filter((m) => m && (m.role === "user" || m.role === "assistant") && typeof m.content === "string")
+      .slice(-10)
+      .map((m) => ({
+        role: m.role,
+        content: m.content.slice(0, 2000),
+      }));
+
+    if (msgs.length === 0) {
+      return res.status(400).json({ error: "ไม่มีข้อความส่งมา" });
+    }
+
+    const lastUserMsg = msgs[msgs.length - 1].content || "";
+    const weatherInfo = isWeatherQuery(lastUserMsg) ? await getLiveWeatherReport(lastUserMsg) : "";
+
+    const rawLinks = Array.isArray(body.links) ? body.links : [];
+    const linkList = rawLinks
+      .slice(0, 30)
+      .filter((l) => l && typeof l.name === "string" && typeof l.url === "string")
+      .map((l) => `- ${l.name.slice(0, 60)}: ${l.url.slice(0, 300)}`)
+      .join("\n");
+
+    const rawScheds = Array.isArray(body.schedules) ? body.schedules : [];
+    const schedList = rawScheds
+      .slice(0, 30)
+      .filter((s) => s && typeof s.title === "string" && typeof s.time === "string")
+      .map((s) => `- เวลา ${s.time.slice(0, 10)} น. (${(s.repeat || "").slice(0, 30)}): ${s.title.slice(0, 80)}`)
+      .join("\n");
+
+    const clientNow = typeof body.clientNow === "string" ? body.clientNow.slice(0, 30) : "ไม่ระบุ";
+
+    const sysPrompt =
+      "คุณคือ “น้องมูลด์” เลขาส่วนตัวรูปลิงน้อยเสื้อเหลืองที่ใจดีและเป็นกันเองประจำหน้ารวมลิงค์ของฝ่าย IT " +
+      "พูดภาษาไทยที่เป็นธรรมชาติแบบเป็นกันเอง เหมือนเพื่อนร่วมงานที่สนิท ใช้คำลงท้ายที่เป็นกลางทางเพศ เช่น นะ เลย จ้า " +
+      "หลีกเลี่ยง ครับ/ค่ะ ไม่หยาบคาย ตอบกระชับตรงประเด็น เป็นข้อความธรรมดา ไม่ใช้ markdown ใช้อีโมจิได้เล็กน้อย\n" +
+      `วันและเวลาปัจจุบันของผู้ใช้คือ: ${clientNow}\n` +
+      "\nรายการลิงค์ในหน้าเว็บ:\n" +
+      (linkList || "- ยังไม่มีลิงค์") +
+      "\nตารางงานและการแจ้งเตือนที่ตั้งไว้ปัจจุบัน:\n" +
+      (schedList || "- ยังไม่มีตารางงานที่ตั้งเตือนไว้") +
+      weatherInfo +
+      "\n\nคำสั่งพิเศษสำหรับน้องมูลด์ (แนบแท็กไว้ท้ายคำตอบเมื่อผู้ใช้สั่งการ):\n" +
+      "1. เมื่อผู้ใช้สั่งให้เพิ่มตารางงาน/ตั้งเวลาเตือน: ให้แนบแท็ก [[ADD_SCHED:ชื่องาน|HH:MM|ความถี่|YYYY-MM-DD]] ไว้ท้ายคำตอบ (โดย HH:MM เป็นเวลา 24 ชม., ความถี่เลือกได้คือ daily, weekdays, หรือ once, และ YYYY-MM-DD ใส่เฉพาะกรณี once)\n" +
+      "2. เมื่อผู้ใช้สั่งให้ลบตารางงาน: ให้แนบแท็ก [[DEL_SCHED:คำสำคัญของชื่องาน]] ไว้ท้ายคำตอบ\n" +
+      "3. เมื่อผู้ใช้สั่งให้ส่งข้อความ ส่งลิงค์ หรือส่งสรุปตารางงานเข้า Telegram ทันที: ให้ตอบรับและแนบแท็ก [[SEND_TG:ข้อความที่ต้องการส่งเข้า Telegram]] ไว้ท้ายคำตอบ";
+
+    const aiRes = await askGroqAI(groqKey, [{ role: "system", content: sysPrompt }, ...msgs]);
+
+    if (!aiRes.ok) {
+      return res.status(502).json({
+        error: `Groq ปฏิเสธคำขอ (${aiRes.status}): ${String(aiRes.error).slice(0, 250)}`,
+      });
+    }
+
+    return res.status(200).json({ text: aiRes.text });
+  } catch (err) {
+    return res.status(500).json({
+      error: `โค้ดฝั่งเซิร์ฟเวอร์ขัดข้อง: ${err && err.message ? err.message : String(err)}`,
+    });
+  }
+};
