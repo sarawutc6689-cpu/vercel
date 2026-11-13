@@ -123,6 +123,7 @@ dialog input[type=text],dialog input[type=url],dialog input[type=time],dialog in
 .m{max-width:80%;padding:9px 13px;border-radius:14px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:.94rem}
 .m.bot{background:var(--tile);border-bottom-left-radius:4px}
 .m.bot.remind{background:#fef3c7;color:#78350f;border:1.5px solid #f59e0b}
+.m.bot.sys-ok{background:#dcfce7;color:#14532d;border:1.5px solid #22c55e;font-size:.86rem}
 .m.me{background:var(--accent);color:var(--accent-ink);border-bottom-right-radius:4px}
 .m a{color:var(--accent);font-weight:600;text-decoration:underline}
 .m.me a{color:var(--accent-ink)}
@@ -159,14 +160,14 @@ dialog input[type=text],dialog input[type=url],dialog input[type=time],dialog in
       <div class="head-ava" id="head-ava"></div>
       <div class="head-info">
         <div class="head-name">น้องมูลด์ (เลขา IT)</div>
-        <div class="head-sub">พร้อมช่วยเหลือและแจ้งเตือนจ้า 🐵</div>
+        <div class="head-sub">สั่งเพิ่มตารางงานในแชตได้เลยจ้า 🐵</div>
       </div>
     </div>
     <button type="button" id="cx" aria-label="ปิดแชต">✕</button>
   </div>
   <div class="msgs" id="msgs" aria-live="polite"></div>
   <form class="chat-in" id="cf">
-    <input type="text" id="ci" placeholder="ถามงานหรือตารางวันนี้ได้เลย…" autocomplete="off" aria-label="พิมพ์คำถาม">
+    <input type="text" id="ci" placeholder="เช่น เตือนเช็ก Server ตอน 15:00 น." autocomplete="off" aria-label="พิมพ์คำถาม">
     <button class="btn primary" type="submit" id="cs">ส่ง</button>
   </form>
 </section>
@@ -203,7 +204,7 @@ dialog input[type=text],dialog input[type=url],dialog input[type=time],dialog in
   <div class="sched-list" id="schedList"></div>
 
   <form id="schedForm" novalidate style="border-top:1px solid var(--line);padding-top:12px">
-    <div style="font-weight:600;font-size:.95rem;margin-bottom:6px">+ ตั้งเวลาแจ้งเตือนใหม่</div>
+    <div style="font-weight:600;font-size:.95rem;margin-bottom:6px">+ ตั้งเวลาแจ้งเตือนใหม่ (หรือพิมพ์สั่งในแชตน้องมูลด์ก็ได้นะ)</div>
     <label for="st">ชื่องาน / สิ่งที่ต้องทำ</label>
     <input type="text" id="st" maxlength="60" placeholder="เช่น ตรวจเช็กสถานะกล้อง CCTV ประจำวัน">
     <div class="row-2">
@@ -297,6 +298,11 @@ const $=id=>document.getElementById(id);
 $("fab-ava").innerHTML = getMonkeySVG(false);
 $("head-ava").innerHTML = getMonkeySVG(true);
 
+function getTodayStr(){
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}-${String(now.getDate()).padStart(2,"0")}`;
+}
+
 function load(){
   try{
     const s=localStorage.getItem(KEY);
@@ -345,7 +351,7 @@ function openChat(){
   $("speech-tag").classList.remove("alert");
   $("speech-tag").textContent="ถามน้องมูลด์ได้นะ 🍌";
   if(!$("msgs").children.length){
-    addMsg("bot","สวัสดีจ้า น้องมูลด์เองนะ 🐵🍌 ถามเรื่องงาน หาลิงค์ หรือถามว่าวันนี้มีตารางงานอะไรบ้างก็บอกได้เลยจ้า");
+    addMsg("bot","สวัสดีจ้า น้องมูลด์เองนะ 🐵🍌 จะให้ช่วยหาลิงค์ ถามงาน หรือพิมพ์สั่งเช่น “เตือนเช็ก Server ตอน 15:00” เพื่อเพิ่มตารางงานก็ได้เลยจ้า");
   }
   $("ci").focus();
 }
@@ -413,7 +419,7 @@ updateSchedBadge();
 function repeatLabel(s){
   if(s.repeat==="daily") return "ทุกวัน";
   if(s.repeat==="weekdays") return "จันทร์ - ศุกร์";
-  return s.date ? "วันที่ "+s.date : "ครั้งเดียว";
+  return s.date ? "วันที่ "+s.date : "วันนี้/ครั้งเดียว";
 }
 
 function renderScheds(){
@@ -493,7 +499,7 @@ function checkNotifStatus(){
 
 $("schedBtn").onclick=()=>{
   $("schedErr").textContent="";
-  $("sdt").value = new Date().toISOString().slice(0,10);
+  $("sdt").value = getTodayStr();
   checkNotifStatus();
   renderScheds();
   $("schedDlg").showModal();
@@ -509,6 +515,28 @@ $("reqNotif").onclick=async()=>{
   }
 };
 
+function addScheduleItem(title, time, repeat = "once", date = ""){
+  const cleanTime = /^\d{1,2}:\d{2}$/.test(time)
+    ? time.split(":").map(n=>String(n).padStart(2,"0")).join(":")
+    : "09:00";
+  const cleanRepeat = ["daily","weekdays","once"].includes(repeat) ? repeat : "once";
+  const cleanDate = cleanRepeat === "once" ? (date || getTodayStr()) : "";
+
+  const newItem = {
+    id: "s" + Date.now() + Math.floor(Math.random()*100),
+    title: String(title).trim(),
+    time: cleanTime,
+    repeat: cleanRepeat,
+    date: cleanDate,
+    enabled: true,
+    lastFired: ""
+  };
+  schedules.push(newItem);
+  saveScheds();
+  if($("schedDlg").open) renderScheds();
+  return newItem;
+}
+
 $("schedForm").onsubmit=e=>{
   e.preventDefault();
   const title=$("st").value.trim();
@@ -519,22 +547,11 @@ $("schedForm").onsubmit=e=>{
   if(!time){$("schedErr").textContent="กรุณาเลือกเวลาแจ้งเตือน";return}
   if(repeat==="once"&&!date){$("schedErr").textContent="กรุณาเลือกวันที่";return}
 
-  schedules.push({
-    id:"s"+Date.now(),
-    title,
-    time,
-    repeat,
-    date:repeat==="once"?date:"",
-    enabled:true,
-    lastFired:""
-  });
-  saveScheds();
-  renderScheds();
+  addScheduleItem(title, time, repeat, date);
   $("st").value="";
   $("schedErr").textContent="";
 };
 
-// เสียงติ๊งแจ้งเตือนน่ารักๆ จากน้องมูลด์
 function playChime(){
   try{
     const Ctx = window.AudioContext || window.webkitAudioContext;
@@ -559,17 +576,14 @@ function triggerReminder(item){
   playChime();
   const msg = `⏰ ถึงเวลาแล้วจ้า (${item.time} น.): ${item.title} 🍌`;
 
-  // 1. แจ้งในห้องแชต
   addMsg("bot remind", msg);
 
-  // 2. ถ้ากล่องแชตปิดอยู่ ให้ขึ้นป้ายสีส้มกะพริบตรงตัวน้องลิง
   if($("chat").hidden){
     const tag = $("speech-tag");
     tag.textContent = `⏰ ${item.title}`;
     tag.classList.add("alert");
   }
 
-  // 3. ส่ง Browser Notification มุมจอคอมพิวเตอร์
   if("Notification" in window && Notification.permission==="granted"){
     try{
       const n = new Notification("น้องมูลด์เตือนตารางงาน 🐵⏰", {
@@ -591,8 +605,8 @@ setInterval(()=>{
   const hh = String(now.getHours()).padStart(2,"0");
   const mm = String(now.getMinutes()).padStart(2,"0");
   const curTime = `${hh}:${mm}`;
-  const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}-${String(now.getDate()).padStart(2,"0")}`;
-  const dayOfWeek = now.getDay(); // 0 = อาทิตย์, 6 = เสาร์
+  const todayStr = getTodayStr();
+  const dayOfWeek = now.getDay();
   const stamp = `${todayStr} ${curTime}`;
 
   let changed = false;
@@ -619,7 +633,7 @@ setInterval(()=>{
   }
 }, 15000);
 
-/* ---- เลขา IT (AI - เชื่อมต่อ /api/chat พร้อมส่งตารางงานให้น้องมูลด์รู้) ---- */
+/* ---- เลขา IT (AI - เชื่อมต่อ /api/chat พร้อมสั่งเพิ่ม/ลบตารางงานผ่านแชต) ---- */
 let hist=[], busy=false;
 
 function setTextWithLinks(el, text){
@@ -661,6 +675,47 @@ function addMsg(cls,text){
   return d;
 }
 
+// ฟังก์ชันตรวจจับคำสั่งเพิ่ม/ลบตารางงานจากคำตอบของน้องมูลด์
+function processBotActions(rawText){
+  let cleanText = String(rawText || "");
+
+  // 1. ตรวจจับคำสั่งเพิ่มตารางงาน: [[ADD_SCHED:ชื่องาน|HH:MM|repeat|YYYY-MM-DD]]
+  const addRegex = /\[\[ADD_SCHED:([^|\]]+)\|([0-2]?\d:[0-5]\d)(?:\|([a-zA-Z]+))?(?:\|([0-9-]+))?\]\]/g;
+  let match;
+  const addedItems = [];
+  while((match = addRegex.exec(cleanText)) !== null){
+    const title = match[1].trim();
+    const time = match[2].trim();
+    const repeat = (match[3] || "once").trim().toLowerCase();
+    const date = (match[4] || "").trim();
+    if(title && time){
+      const item = addScheduleItem(title, time, repeat, date);
+      addedItems.push(item);
+    }
+  }
+  cleanText = cleanText.replace(addRegex, "").trim();
+
+  // 2. ตรวจจับคำสั่งลบตารางงาน: [[DEL_SCHED:คำค้นชื่องาน]]
+  const delRegex = /\[\[DEL_SCHED:([^\]]+)\]\]/g;
+  const removedTitles = [];
+  while((match = delRegex.exec(cleanText)) !== null){
+    const keyword = match[1].trim().toLowerCase();
+    if(keyword){
+      schedules.forEach(s=>{
+        if(s.title.toLowerCase().includes(keyword) || s.time === keyword){
+          removedTitles.push(s.title);
+        }
+      });
+      schedules = schedules.filter(s => !(s.title.toLowerCase().includes(keyword) || s.time === keyword));
+      saveScheds();
+      if($("schedDlg").open) renderScheds();
+    }
+  }
+  cleanText = cleanText.replace(delRegex, "").trim();
+
+  return { cleanText, addedItems, removedTitles };
+}
+
 async function ask(text){
   hist.push({role:"user",content:text});
   const bubble=addMsg("bot","กำลังคิดคำตอบแป๊บนึงนะ… 🍌");
@@ -676,13 +731,17 @@ async function ask(text){
       .filter(s=>s.enabled)
       .map(s=>({title:s.title,time:s.time,repeat:repeatLabel(s)}));
 
+    const now = new Date();
+    const clientNow = `${getTodayStr()} ${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")}`;
+
     const res=await fetch("/api/chat",{
       method:"POST",
       headers:{"Content-Type":"application/json"},
       body:JSON.stringify({
         messages:hist.slice(-10),
         links:cleanLinks,
-        schedules:activeScheds
+        schedules:activeScheds,
+        clientNow:clientNow
       })
     });
 
@@ -698,8 +757,17 @@ async function ask(text){
         bubble.textContent="ขออภัย ระบบขัดข้อง (" + res.status + "): " + (data.error || "ไม่ทราบสาเหตุ");
       }
     }else{
-      setTextWithLinks(bubble, data.text);
-      hist.push({role:"assistant",content:data.text});
+      const { cleanText, addedItems, removedTitles } = processBotActions(data.text);
+      const displayReply = cleanText || "จัดการตารางงานให้เรียบร้อยแล้วจ้า 🐵✨";
+      setTextWithLinks(bubble, displayReply);
+      hist.push({role:"assistant",content:displayReply});
+
+      addedItems.forEach(item=>{
+        addMsg("bot sys-ok", `✅ บันทึกตารางงานแล้ว: "${item.title}" เวลา ${item.time} น. (${repeatLabel(item)})`);
+      });
+      if(removedTitles.length){
+        addMsg("bot sys-ok", `🗑️ ลบตารางงานแล้ว: ${removedTitles.join(", ")}`);
+      }
     }
   }catch(e){
     hist.pop();
