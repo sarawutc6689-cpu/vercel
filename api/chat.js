@@ -162,10 +162,15 @@ module.exports = async function handler(req, res) {
       const caption = String(body.caption || "📋 รายงานตรวจสอบกล้องวงจรปิด (CCTV)").slice(0, 1000);
       if (!pdfBase64) return res.status(400).json({ error: "ไม่พบข้อมูลไฟล์ PDF" });
 
+      const fileBuffer = Buffer.from(pdfBase64, "base64");
+      if (fileBuffer.length < 100 || fileBuffer.slice(0, 4).toString("latin1") !== "%PDF") {
+        return res.status(400).json({ error: `ไฟล์ PDF ไม่สมบูรณ์ (ขนาด ${fileBuffer.length} bytes)` });
+      }
+
       const form = new FormData();
       form.append("chat_id", targetChatId);
       form.append("caption", caption);
-      form.append("document", new Blob([Buffer.from(pdfBase64, "base64")], { type: "application/pdf" }), filename);
+      form.append("document", new Blob([new Uint8Array(fileBuffer)], { type: "application/pdf" }), filename);
 
       const r = await fetch(`https://api.telegram.org/bot${tgToken}/sendDocument`, { method: "POST", body: form });
       const data = await r.json().catch(() => ({}));
