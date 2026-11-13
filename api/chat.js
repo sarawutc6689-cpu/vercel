@@ -1,9 +1,8 @@
 // Vercel Serverless Function: POST /api/chat
-// รองรับครบวงจร:
-// 1) แชตกับน้องมูลด์ (Groq AI) + ค้นหาความรู้ทั่วไป (Wikipedia) + พยากรณ์อากาศสด (Open-Meteo) + แนะนำร้านอาหาร/น้ำ
-// 2) สั่งเพิ่ม/ลบตารางงานผ่านแชต
-// 3) แจ้งเตือน & ตอบโต้ในกลุ่ม Telegram อัตโนมัติ (Webhook)
-// 4) รับและส่งไฟล์ PDF รายงาน Checklist CCTV เข้า Telegram (telegram_send_pdf)
+// 1) แชตกับน้องมูลด์ (Groq) + Wikipedia + พยากรณ์อากาศ (Open-Meteo)
+// 2) สั่งเพิ่ม/ลบตารางงาน และส่ง Telegram ผ่านแท็ก
+// 3) Webhook กลุ่ม Telegram
+// 4) รับ PDF รายงาน CCTV แล้วส่งเข้า Telegram (telegram_send_pdf)
 
 const DEFAULT_LINKS = [
   { name: "IT Link Hub", url: "https://mouldmate.vercel.app/" },
@@ -13,7 +12,7 @@ const DEFAULT_LINKS = [
 ];
 
 const FOOD_AND_DRINK_INFO =
-  "\n[ข้อมูลร้านอาหารและร้านน้ำแนะนำสำหรับแผนก]:\n" +
+  "\n[ข้อมูลร้านอาหารและร้านน้ำ แนะนำสำหรับแผนก]:\n" +
   "🍚 ร้านอาหาร:\n" +
   "- ร้านอาหารตามสั่งหน้าโรงงาน: กะเพราหมูกรอบไข่ดาว, ข้าวผัดต้มยำ, คะน้าหมูน้ำมันหอย, ข้าวไข่เจียวหมูสับ\n" +
   "- ร้านก๋วยเตี๋ยวเรือรสเด็ด: ก๋วยเตี๋ยวเรือน้ำตกหมู/เนื้อ, เกาเหลา, กากหมูเจียว, ลูกชิ้นปิ้ง\n" +
@@ -43,10 +42,10 @@ const TH_LOCATIONS = [
 
 function weatherCodeToThai(code) {
   const map = {
-    0: "ท้องฟ้าแจ่มใส ☀️", 1: "มีเมฆบางส่วน 🌤️", 2: "มีเมฆเป็นส่วนมาก ⛅", 3: "เมฆครึ้ม ☁️",
-    45: "มีหมอก 🌫️", 48: "มีหมอกลงจัด 🌫️", 51: "ฝนปรอยๆ เบาบาง 🌦️", 53: "ฝนปรอยๆ ปานกลาง 🌦️",
-    55: "ฝนปรอยๆ หนัก 🌧️", 61: "ฝนตกเล็กน้อย 🌦️", 63: "ฝนตกปานกลาง 🌧️", 65: "ฝนตกหนัก 🌧️",
-    80: "ฝนฟ้าคะนองเป็นแห่งๆ 🌦️", 81: "ฝนฟ้าคะนองปานกลาง ⛈️", 82: "ฝนตกหนักมาก ⛈️",
+    0: "ท้องฟ้าแจ่มใส ☀️", 1: "มีเมฆบางส่วน 🌤", 2: "มีเมฆเป็นส่วนมาก ⛅", 3: "เมฆครึ้ม ☁️",
+    45: "มีหมอก 🌫", 48: "มีหมอกลงจัด 🌫", 51: "ฝนปรอยๆ เบาบาง 🌦", 53: "ฝนปรอยๆ ปานกลาง 🌦",
+    55: "ฝนปรอยๆ หนัก 🌧", 61: "ฝนตกเล็กน้อย 🌦", 63: "ฝนตกปานกลาง 🌧", 65: "ฝนตกหนัก 🌧",
+    80: "ฝนฟ้าคะนองเป็นแห่งๆ 🌦", 81: "ฝนฟ้าคะนองปานกลาง ⛈️", 82: "ฝนตกหนักมาก ⛈️",
     95: "พายุฝนฟ้าคะนอง ⛈️", 96: "พายุฝนฟ้าคะนองและลมแรง ⛈️", 99: "พายุฝนฟ้าคะนองรุนแรง ⛈️",
   };
   return map[code] || "มีเมฆและโอกาสเกิดฝน ⛅";
@@ -60,28 +59,23 @@ async function getLiveWeatherReport(userText) {
   try {
     const lower = String(userText || "").toLowerCase();
     const loc = TH_LOCATIONS.find((l) => l.keys.some((k) => lower.includes(k))) || {
-      name: "สระบุรี / ภาคกลาง",
-      lat: 14.5289,
-      lon: 100.9101,
+      name: "สระบุรี / ภาคกลาง", lat: 14.5289, lon: 100.9101,
     };
-
     const url =
       `https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}` +
       `&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m` +
       `&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max` +
       `&timezone=Asia%2FBangkok&forecast_days=2`;
-
     const r = await fetch(url);
     if (!r.ok) return "";
     const d = await r.json();
     const cur = d.current || {};
     const daily = d.daily || {};
-
     return (
       `\n[ข้อมูลสภาพอากาศสดสำหรับ ${loc.name}]:\n` +
-      `- ตอนนี้: ${weatherCodeToThai(cur.weather_code)}, อุณหภูมิ ${cur.temperature_2m}°C (รู้สึกเหมือน ${cur.apparent_temperature}°C), ความชื้น ${cur.relative_humidity_2m}%\n` +
-      `- วันนี้: ต่ำสุด ${daily.temperature_2m_min?.[0] ?? "-"}°C / สูงสุด ${daily.temperature_2m_max?.[0] ?? "-"}°C, โอกาสเกิดฝน ${daily.precipitation_probability_max?.[0] ?? 0}%\n` +
-      `- พรุ่งนี้: ${weatherCodeToThai(daily.weather_code?.[1])}, โอกาสเกิดฝน ${daily.precipitation_probability_max?.[1] ?? 0}%\n`
+      `- ตอนนี้: ${weatherCodeToThai(cur.weather_code)}, อุณหภูมิ ${cur.temperature_2m}°C (รู้สึกเหมือน ${cur.apparent_temperature}°C), ความชื้น ${cur.relative_humidity_2m}%, ลม ${cur.wind_speed_10m} กม./ชม.\n` +
+      `- วันนี้: ต่ำสุด ${daily.temperature_2m_min?.[0] ?? "-"}°C / สูงสุด ${daily.temperature_2m_max?.[0] ?? "-"}°C, โอกาสเกิดฝน ${daily.precipitation_probability_max?.[0] ?? "-"}%\n` +
+      `- พรุ่งนี้: ${weatherCodeToThai(daily.weather_code?.[1])}, โอกาสเกิดฝน ${daily.precipitation_probability_max?.[1] ?? "-"}%\n`
     );
   } catch (e) {
     return "";
@@ -94,18 +88,15 @@ async function searchGeneralKnowledge(query) {
       .replace(/(น้องมูลด์|มูลด์|คืออะไร|หมายถึงอะไร|อยากรู้เรื่อง|ช่วยบอก|หน่อย|จ้า|ครับ|ค่ะ|\?)/gi, " ")
       .trim();
     if (cleanQ.length < 2) return "";
-
-    const url = `https://th.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(cleanQ)}&utf8=&format=json&srlimit=2`;
+    const url =
+      `https://th.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(cleanQ)}` +
+      `&utf8=1&format=json&srlimit=3`;
     const r = await fetch(url, { headers: { "User-Agent": "MouldMateITBot/1.0" } });
     if (!r.ok) return "";
     const data = await r.json();
     const items = (data.query && data.query.search) || [];
     if (!items.length) return "";
-
-    const snippets = items.map((it) => {
-      const cleanSnippet = String(it.snippet || "").replace(/<[^>]+>/g, "");
-      return `- ${it.title}: ${cleanSnippet}`;
-    });
+    const snippets = items.map((it) => `- ${it.title}: ${String(it.snippet || "").replace(/<[^>]+>/g, "")}`);
     return `\n[ข้อมูลอ้างอิงความรู้ทั่วไปจากสารานุกรม]:\n${snippets.join("\n")}\n`;
   } catch (e) {
     return "";
@@ -118,46 +109,32 @@ async function askGroqAI(key, messages) {
     "openai/gpt-oss-120b",
     "groq/compound-mini",
     "openai/gpt-oss-20b",
-    "qwen/qwen3.8-27b",
   ].filter(Boolean);
 
   let lastStatus = 500;
   let lastErr = "";
-
   for (const model of modelsToTry) {
     const r = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + key,
-      },
-      body: JSON.stringify({
-        model: model,
-        messages: messages,
-        max_tokens: 1024,
-        temperature: 0.6,
-      }),
+      headers: { "Content-Type": "application/json", Authorization: "Bearer " + key },
+      body: JSON.stringify({ model, messages, max_tokens: 1024, temperature: 0.6 }),
     });
-
     if (r.ok) {
       const data = await r.json();
-      let text = ((data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || "").trim();
+      let text = String((data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || "").trim();
       text = text.replace(/<think>[\s\S]*?<\/think>/gi, "").trim();
       return { ok: true, text: text || "น้องมูลด์คิดคำตอบไม่ออก ลองถามใหม่อีกทีนะ" };
     }
-
     lastStatus = r.status;
     lastErr = await r.text();
     if (r.status === 401 || r.status === 429) break;
   }
-
   return { ok: false, status: lastStatus, error: lastErr };
 }
 
 module.exports = async function handler(req, res) {
   try {
     res.setHeader("Cache-Control", "no-store");
-
     if (req.method !== "POST") {
       res.setHeader("Allow", "POST");
       return res.status(405).json({ error: "อนุญาตเฉพาะ POST เท่านั้น" });
@@ -174,68 +151,46 @@ module.exports = async function handler(req, res) {
     const rawKey = process.env.GROQ_API_KEY || process.env.GEMINI_API_KEY || "";
     const groqKey = String(rawKey).replace(/[^\x21-\x7E]/g, "").trim();
 
-    // 1. ส่งไฟล์เอกสาร PDF รายงาน CCTV เข้า Telegram (เรียกจากหน้า ChecklistCCTV.html)
+    // 1. ส่งไฟล์ PDF รายงาน CCTV เข้า Telegram
     if (body.action === "telegram_send_pdf") {
-      if (!tgToken) {
-        return res.status(400).json({ error: "ยังไม่ได้ตั้งค่า TELEGRAM_BOT_TOKEN ใน Vercel" });
-      }
+      if (!tgToken) return res.status(400).json({ error: "ยังไม่ได้ตั้งค่า TELEGRAM_BOT_TOKEN ใน Vercel" });
       const targetChatId = String(body.chatId || defaultChatId || "").trim();
-      if (!targetChatId) {
-        return res.status(400).json({ error: "ยังไม่ได้ระบุ TELEGRAM_CHAT_ID ใน Vercel หรือหน้าเว็บ" });
-      }
-      const pdfBase64 = String(body.pdfBase64 || "").replace(/^data:[^;]+;base64,/, "");
+      if (!targetChatId) return res.status(400).json({ error: "ยังไม่ได้ระบุ TELEGRAM_CHAT_ID ใน Vercel หรือหน้าเว็บ" });
+
+      const pdfBase64 = String(body.pdfBase64 || "").replace(/^data:[^,]*,/, "");
       const filename = String(body.filename || "CCTV_Report.pdf").replace(/[^a-zA-Z0-9._-]/g, "_");
       const caption = String(body.caption || "📋 รายงานตรวจสอบกล้องวงจรปิด (CCTV)").slice(0, 1000);
+      if (!pdfBase64) return res.status(400).json({ error: "ไม่พบข้อมูลไฟล์ PDF" });
 
-      if (!pdfBase64) {
-        return res.status(400).json({ error: "ไม่พบข้อมูลไฟล์ PDF" });
-      }
-
-      const fileBuffer = Buffer.from(pdfBase64, "base64");
       const form = new FormData();
       form.append("chat_id", targetChatId);
       form.append("caption", caption);
-      form.append("document", new Blob([fileBuffer], { type: "application/pdf" }), filename);
+      form.append("document", new Blob([Buffer.from(pdfBase64, "base64")], { type: "application/pdf" }), filename);
 
-      const r = await fetch(`https://api.telegram.org/bot${tgToken}/sendDocument`, {
-        method: "POST",
-        body: form,
-      });
+      const r = await fetch(`https://api.telegram.org/bot${tgToken}/sendDocument`, { method: "POST", body: form });
       const data = await r.json().catch(() => ({}));
-      if (!r.ok || !data.ok) {
-        return res.status(502).json({ error: data.description || `Telegram Error (${r.status})` });
-      }
+      if (!r.ok || !data.ok) return res.status(502).json({ error: data.description || `Telegram Error (${r.status})` });
       return res.status(200).json({ ok: true });
     }
 
-    // 2. รับข้อความจากกลุ่ม Telegram (Webhook)
+    // 2. Webhook จากกลุ่ม Telegram
     if (body.update_id && (body.message || body.edited_message)) {
       const msg = body.message || body.edited_message;
       const chat = msg.chat || {};
       const chatId = chat.id;
       const text = String(msg.text || "").trim();
-
-      if (!chatId || !text || (msg.from && msg.from.is_bot)) {
-        return res.status(200).json({ ok: true });
-      }
+      if (!chatId || !text || (msg.from && msg.from.is_bot)) return res.status(200).json({ ok: true });
 
       const isGroup = chat.type === "group" || chat.type === "supergroup";
       const isReplyToBot = Boolean(msg.reply_to_message && msg.reply_to_message.from && msg.reply_to_message.from.is_bot);
-      const isMentioned = text.includes("มูลด์") || text.toLowerCase().includes("mould") || text.startsWith("/") || text.includes("@");
-
-      if (isGroup && !isReplyToBot && !isMentioned) {
-        return res.status(200).json({ ok: true });
-      }
+      const isMentioned = text.includes("มูลด์") || text.toLowerCase().includes("mould") || text.startsWith("/");
+      if (isGroup && !isReplyToBot && !isMentioned) return res.status(200).json({ ok: true });
 
       if (/^\/(id|chatid)/i.test(text)) {
         await fetch(`https://api.telegram.org/bot${tgToken}/sendMessage`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            chat_id: chatId,
-            text: `🐵 เลข Chat ID ของห้องนี้คือ: ${chatId}`,
-            reply_to_message_id: msg.message_id,
-          }),
+          body: JSON.stringify({ chat_id: chatId, text: `🐵 เลข Chat ID ของห้องนี้คือ: ${chatId}`, reply_to_message_id: msg.message_id }),
         });
         return res.status(200).json({ ok: true });
       }
@@ -246,7 +201,6 @@ module.exports = async function handler(req, res) {
         isWeatherQuery(text) ? getLiveWeatherReport(text) : Promise.resolve(""),
         searchGeneralKnowledge(text),
       ]);
-
       const linkList = DEFAULT_LINKS.map((l) => `- ${l.name}: ${l.url}`).join("\n");
       const senderName = (msg.from && (msg.from.first_name || msg.from.username)) || "เพื่อนร่วมงาน";
 
@@ -255,10 +209,8 @@ module.exports = async function handler(req, res) {
         "พูดภาษาไทยเป็นกันเอง ใช้คำลงท้าย นะ เลย จ้า หลีกเลี่ยง ครับ/ค่ะ ตอบกระชับ ไม่ใช้ markdown\n" +
         `ผู้ถามชื่อ: ${senderName}\n` +
         "ลิงค์ของฝ่าย IT:\n" + linkList +
-        FOOD_AND_DRINK_INFO +
-        weatherInfo +
-        wikiInfo +
-        "\nคุณสามารถตอบคำถามได้ทุกเรื่อง ทั้งความรู้ทั่วไป วิทยาศาสตร์ ประวัติศาสตร์ สุขภาพ กฎหมาย การคำนวณ ภาษา ไอที การเขียนโค้ด ร่างเอกสาร รวมถึงแนะนำอาหารและเครื่องดื่มอย่างอารมณ์ดี";
+        FOOD_AND_DRINK_INFO + weatherInfo + wikiInfo +
+        "\nคุณสามารถตอบคำถามได้ทุกเรื่อง ทั้งความรู้ทั่วไป วิทยาศาสตร์ ประวัติศาสตร์ สุขภาพ กฎหมาย การคำนวณ ภาษา ไอที การเขียนโค้ด";
 
       const aiRes = await askGroqAI(groqKey, [
         { role: "system", content: tgSysPrompt },
@@ -274,7 +226,6 @@ module.exports = async function handler(req, res) {
           reply_to_message_id: msg.message_id,
         }),
       });
-
       return res.status(200).json({ ok: true });
     }
 
@@ -304,18 +255,17 @@ module.exports = async function handler(req, res) {
       if (!targetChatId) return res.status(400).json({ error: "ยังไม่ได้ระบุ Chat ID" });
       const text = String(body.text || "").trim().slice(0, 3500);
       if (!text) return res.status(400).json({ error: "ไม่มีข้อความที่จะส่ง" });
-
       const r = await fetch(`https://api.telegram.org/bot${tgToken}/sendMessage`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ chat_id: targetChatId, text: text }),
+        body: JSON.stringify({ chat_id: targetChatId, text }),
       });
       const data = await r.json().catch(() => ({}));
       if (!r.ok || !data.ok) return res.status(502).json({ error: data.description || "Telegram Error" });
       return res.status(200).json({ ok: true });
     }
 
-    // 5. คุยแชตกับน้องมูลด์ผ่านหน้าเว็บ
+    // 5. แชตกับน้องมูลด์ผ่านหน้าเว็บ
     if (!groqKey) return res.status(500).json({ error: "missing_api_key" });
 
     const rawMsgs = Array.isArray(body.messages) ? body.messages : [];
@@ -323,7 +273,6 @@ module.exports = async function handler(req, res) {
       .filter((m) => m && (m.role === "user" || m.role === "assistant") && typeof m.content === "string")
       .slice(-10)
       .map((m) => ({ role: m.role, content: m.content.slice(0, 2000) }));
-
     if (msgs.length === 0) return res.status(400).json({ error: "ไม่มีข้อความส่งมา" });
 
     const lastUserMsg = msgs[msgs.length - 1].content || "";
@@ -332,18 +281,16 @@ module.exports = async function handler(req, res) {
       searchGeneralKnowledge(lastUserMsg),
     ]);
 
-    const rawLinks = Array.isArray(body.links) ? body.links : [];
-    const linkList = rawLinks
+    const linkList = (Array.isArray(body.links) ? body.links : [])
       .slice(0, 30)
       .filter((l) => l && typeof l.name === "string" && typeof l.url === "string")
       .map((l) => `- ${l.name.slice(0, 60)}: ${l.url.slice(0, 300)}`)
       .join("\n");
 
-    const rawScheds = Array.isArray(body.schedules) ? body.schedules : [];
-    const schedList = rawScheds
+    const schedList = (Array.isArray(body.schedules) ? body.schedules : [])
       .slice(0, 30)
       .filter((s) => s && typeof s.title === "string" && typeof s.time === "string")
-      .map((s) => `- เวลา ${s.time.slice(0, 10)} น. (${(s.repeat || "").slice(0, 30)}): ${s.title.slice(0, 80)}`)
+      .map((s) => `- เวลา ${s.time.slice(0, 10)} น. (${String(s.repeat || "").slice(0, 30)}): ${s.title.slice(0, 80)}`)
       .join("\n");
 
     const clientNow = typeof body.clientNow === "string" ? body.clientNow.slice(0, 30) : "ไม่ระบุ";
@@ -354,21 +301,17 @@ module.exports = async function handler(req, res) {
       `วันและเวลาปัจจุบันของผู้ใช้: ${clientNow}\n` +
       "\nรายการลิงค์ในหน้าเว็บ:\n" + (linkList || "- ยังไม่มีลิงค์") +
       "\nตารางงานปัจจุบัน:\n" + (schedList || "- ยังไม่มีตารางงาน") +
-      FOOD_AND_DRINK_INFO +
-      weatherInfo +
-      wikiInfo +
-      "\nขอบเขตความรู้: คุณสามารถตอบคำถามได้ทุกเรื่อง ทั้งความรู้รอบตัว วิทยาศาสตร์ ประวัติศาสตร์ สุขภาพ กฎหมาย การคำนวณ สูตร Excel การเขียนโค้ด ไอที การแปลภาษา รวมถึงแนะนำร้านอาหารและร้านน้ำจากข้อมูลด้านบนอย่างอารมณ์ดี" +
+      FOOD_AND_DRINK_INFO + weatherInfo + wikiInfo +
+      "\nขอบเขตความรู้: คุณสามารถตอบคำถามได้ทุกเรื่อง ทั้งความรู้รอบตัว วิทยาศาสตร์ ประวัติศาสตร์ สุขภาพ กฎหมาย การคำนวณ สูตร Excel ภาษา ไอที และการเขียนโค้ด" +
       "\n\nคำสั่งพิเศษ (แนบแท็กไว้ท้ายคำตอบเมื่อผู้ใช้สั่งการ):\n" +
       "1. สั่งเพิ่มตารางงาน/เตือนความจำ: แนบ [[ADD_SCHED:ชื่องาน|HH:MM|ความถี่|YYYY-MM-DD]] (ความถี่: daily, weekdays, once)\n" +
       "2. สั่งลบตารางงาน: แนบ [[DEL_SCHED:คำสำคัญของชื่องาน]]\n" +
       "3. สั่งส่งข้อความเข้า Telegram: แนบ [[SEND_TG:ข้อความที่ต้องการส่ง]]";
 
     const aiRes = await askGroqAI(groqKey, [{ role: "system", content: sysPrompt }, ...msgs]);
-
     if (!aiRes.ok) {
       return res.status(502).json({ error: `Groq ปฏิเสธคำขอ (${aiRes.status}): ${String(aiRes.error).slice(0, 200)}` });
     }
-
     return res.status(200).json({ text: aiRes.text });
   } catch (err) {
     return res.status(500).json({ error: `เซิร์ฟเวอร์ขัดข้อง: ${err && err.message ? err.message : String(err)}` });
