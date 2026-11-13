@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#eaf2f1;--surface:#fff;--ink:#14212e;--muted:#5d6b7a;--line:#d6dee7;--accent:#0b6e8a;--accent-ink:#fff;--tile:#e3f1f5;--danger:#b3261e;
+:root{--bg:#eaf2f1;--surface:#fff;--ink:#14212e;--muted:#5d6b7a;--line:#d6dee7;--accent:#0b6e8a;--accent-ink:#fff;--tile:#e3f1f5;--danger:#b3261e;--warn:#f59e0b;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10181f;--surface:#18232d;--ink:#e8eef4;--muted:#94a3b1;--line:#2a3846;--accent:#4cc2de;--accent-ink:#06222b;--tile:#1f3440;--danger:#ff8a80}}
 :root[data-theme="dark"]{--bg:#10181f;--surface:#18232d;--ink:#e8eef4;--muted:#94a3b1;--line:#2a3846;--accent:#4cc2de;--accent-ink:#06222b;--tile:#1f3440;--danger:#ff8a80}
@@ -18,11 +18,12 @@ body{margin:0;min-height:100vh;background:linear-gradient(160deg,color-mix(in sr
 header{display:flex;flex-wrap:wrap;gap:14px;align-items:end;justify-content:space-between;margin-bottom:22px}
 h1{font-size:1.9rem;font-weight:600;margin:0;letter-spacing:-.01em}
 .sub{color:var(--muted);margin:2px 0 0;font-size:.95rem}
-.tools{display:flex;gap:10px;flex-wrap:wrap}
-input,button{font:inherit;color:inherit}
-.search{padding:10px 14px;border:1px solid var(--line);border-radius:10px;background:var(--surface);min-width:200px}
-.btn{padding:10px 16px;border-radius:10px;border:1px solid var(--line);background:var(--surface);cursor:pointer}
-.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:500}
+.tools{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+input,button,select{font:inherit;color:inherit}
+.search{padding:10px 14px;border:1px solid var(--line);border-radius:10px;background:var(--surface);min-width:190px}
+.btn{padding:10px 15px;border-radius:10px;border:1px solid var(--line);background:var(--surface);cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-weight:500}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.badge{background:var(--warn);color:#14212e;font-size:.75rem;font-weight:600;padding:1px 7px;border-radius:999px}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
 .card{position:relative;display:flex;gap:14px;align-items:center;padding:16px;background:var(--surface);border:1px solid var(--line);border-radius:14px;text-decoration:none;color:inherit;transition:border-color .15s,transform .15s}
@@ -37,27 +38,45 @@ input,button{font:inherit;color:inherit}
 .del:hover{color:var(--danger);background:var(--tile)}
 @media (hover:none){.del{opacity:.7}}
 .empty{grid-column:1/-1;text-align:center;color:var(--muted);padding:40px 0}
-dialog{border:1px solid var(--line);border-radius:16px;background:var(--surface);color:var(--ink);padding:22px;width:min(420px,92vw)}
+dialog{border:1px solid var(--line);border-radius:16px;background:var(--surface);color:var(--ink);padding:22px;width:min(460px,94vw);max-height:88vh;overflow-y:auto}
 dialog::backdrop{background:rgba(0,0,0,.45)}
-dialog h2{margin:0 0 14px;font-size:1.2rem}
-label{display:block;font-size:.85rem;color:var(--muted);margin:12px 0 4px}
-dialog input[type=text],dialog input[type=url]{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+dialog h2{margin:0 0 12px;font-size:1.2rem;display:flex;align-items:center;justify-content:space-between}
+label{display:block;font-size:.85rem;color:var(--muted);margin:10px 0 4px}
+dialog input[type=text],dialog input[type=url],dialog input[type=time],dialog input[type=date],dialog select{width:100%;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
 .icons{display:grid;grid-template-columns:repeat(8,1fr);gap:6px}
 .icons button{aspect-ratio:1;border:1px solid var(--line);background:var(--bg);border-radius:10px;font-size:1.25rem;cursor:pointer}
 .icons button[aria-pressed=true]{border-color:var(--accent);background:var(--tile);box-shadow:0 0 0 2px var(--accent)}
-.actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}
+.actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px}
 .err{color:var(--danger);font-size:.85rem;min-height:1.2em;margin-top:8px}
+
+/* ---- ระบบตารางงาน (Schedule Dialog) ---- */
+.sched-top{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 12px;background:var(--tile);border-radius:12px;margin-bottom:14px;font-size:.84rem}
+.sched-list{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;max-height:220px;overflow-y:auto}
+.sched-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--bg)}
+.sched-item.off{opacity:.55}
+.sched-left{display:flex;align-items:center;gap:10px;min-width:0}
+.sched-time{font-weight:600;font-size:1rem;color:var(--accent);background:var(--tile);padding:4px 9px;border-radius:8px;flex:none}
+.sched-title{font-weight:500;font-size:.92rem;overflow-wrap:anywhere}
+.sched-meta{font-size:.76rem;color:var(--muted)}
+.sched-btns{display:flex;align-items:center;gap:6px;flex:none}
+.sched-btns button{border:0;background:transparent;cursor:pointer;padding:4px 7px;border-radius:6px;color:var(--muted)}
+.sched-btns button:hover{background:var(--tile);color:var(--danger)}
+.row-2{display:grid;grid-template-columns:1fr 1.3fr;gap:10px}
 
 /* ---- ตัวการ์ตูนลิงน้อย น้องมูลด์ (มุมขวาล่าง) ---- */
 .mascot-btn{position:fixed;right:14px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:20;display:flex;align-items:center;gap:6px;background:transparent;border:0;padding:0;cursor:pointer;user-select:none}
 .mascot-btn[hidden],.chat[hidden]{display:none}
-.speech-tag{background:var(--surface);color:var(--ink);border:2px solid #f59e0b;padding:8px 14px;border-radius:18px 18px 4px 18px;font-size:.9rem;font-weight:600;box-shadow:0 6px 18px rgba(0,0,0,.15);transition:transform .2s;white-space:nowrap}
+.speech-tag{background:var(--surface);color:var(--ink);border:2px solid #f59e0b;padding:8px 14px;border-radius:18px 18px 4px 18px;font-size:.9rem;font-weight:600;box-shadow:0 6px 18px rgba(0,0,0,.15);transition:transform .2s,background .2s;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.speech-tag.alert{background:#fef3c7;color:#92400e;border-color:#dc2626;animation:pulseAlert 1s ease-in-out infinite}
 .mascot-wrap{position:relative;width:96px;height:96px;display:grid;place-items:center;filter:drop-shadow(0 8px 14px rgba(0,0,0,.22));animation:monkeyBounce 2.6s ease-in-out infinite;transition:transform .2s}
 .mascot-wrap svg{width:96px;height:96px;overflow:visible}
 .mascot-btn:hover .mascot-wrap{transform:scale(1.08)}
 .mascot-btn:hover .speech-tag{transform:translateY(-4px)}
 
-/* แอนิเมชันการขยับตัวของน้องลิง */
+@keyframes pulseAlert{
+  0%,100%{transform:scale(1)}
+  50%{transform:scale(1.06)}
+}
 @keyframes monkeyBounce{
   0%,100%{transform:translateY(0)}
   50%{transform:translateY(-5px)}
@@ -103,6 +122,7 @@ dialog input[type=text],dialog input[type=url]{width:100%;padding:10px 12px;bord
 .bot-ava svg{width:32px;height:32px}
 .m{max-width:80%;padding:9px 13px;border-radius:14px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:.94rem}
 .m.bot{background:var(--tile);border-bottom-left-radius:4px}
+.m.bot.remind{background:#fef3c7;color:#78350f;border:1.5px solid #f59e0b}
 .m.me{background:var(--accent);color:var(--accent-ink);border-bottom-right-radius:4px}
 .m a{color:var(--accent);font-weight:600;text-decoration:underline}
 .m.me a{color:var(--accent-ink)}
@@ -115,11 +135,12 @@ dialog input[type=text],dialog input[type=url]{width:100%;padding:10px 12px;bord
   <header>
     <div>
       <h1>IT Link Hub</h1>
-      <p class="sub">รวมลิงค์ที่ใช้งานประจำ คลิกเพื่อเปิดในแท็บใหม่</p>
+      <p class="sub">รวมลิงค์และตารางงานประจำฝ่าย IT</p>
     </div>
     <div class="tools">
       <input class="search" id="q" type="search" placeholder="ค้นหาลิงค์…" aria-label="ค้นหาลิงค์">
-      <button class="btn primary" id="add">+ เพิ่มลิงค์</button>
+      <button class="btn" id="schedBtn" type="button">🗓️ ตารางงาน <span class="badge" id="schedCount">0</span></button>
+      <button class="btn primary" id="add" type="button">+ เพิ่มลิงค์</button>
     </div>
   </header>
   <main class="grid" id="grid"></main>
@@ -127,7 +148,7 @@ dialog input[type=text],dialog input[type=url]{width:100%;padding:10px 12px;bord
 
 <!-- ปุ่มตัวการ์ตูนลิงน้อย น้องมูลด์ ยืนโบกมือมุมขวาล่าง -->
 <button class="mascot-btn" id="fab" type="button" aria-label="ถามน้องมูลด์">
-  <span class="speech-tag">ถามน้องมูลด์ได้นะ 🍌</span>
+  <span class="speech-tag" id="speech-tag">ถามน้องมูลด์ได้นะ 🍌</span>
   <span class="mascot-wrap" id="fab-ava"></span>
 </button>
 
@@ -138,18 +159,19 @@ dialog input[type=text],dialog input[type=url]{width:100%;padding:10px 12px;bord
       <div class="head-ava" id="head-ava"></div>
       <div class="head-info">
         <div class="head-name">น้องมูลด์ (เลขา IT)</div>
-        <div class="head-sub">พร้อมช่วยเหลือจ้า 🐵</div>
+        <div class="head-sub">พร้อมช่วยเหลือและแจ้งเตือนจ้า 🐵</div>
       </div>
     </div>
     <button type="button" id="cx" aria-label="ปิดแชต">✕</button>
   </div>
   <div class="msgs" id="msgs" aria-live="polite"></div>
   <form class="chat-in" id="cf">
-    <input type="text" id="ci" placeholder="พิมพ์ถามน้องมูลด์ที่นี่…" autocomplete="off" aria-label="พิมพ์คำถาม">
+    <input type="text" id="ci" placeholder="ถามงานหรือตารางวันนี้ได้เลย…" autocomplete="off" aria-label="พิมพ์คำถาม">
     <button class="btn primary" type="submit" id="cs">ส่ง</button>
   </form>
 </section>
 
+<!-- หน้าต่างเพิ่มลิงค์ -->
 <dialog id="dlg">
   <form method="dialog" id="f" novalidate>
     <h2>เพิ่มลิงค์ใหม่</h2>
@@ -167,64 +189,95 @@ dialog input[type=text],dialog input[type=url]{width:100%;padding:10px 12px;bord
   </form>
 </dialog>
 
+<!-- หน้าต่างจัดการตารางงานและแจ้งเตือน -->
+<dialog id="schedDlg">
+  <h2>
+    <span>🗓️ ตารางงาน & แจ้งเตือน</span>
+    <button type="button" class="btn" id="closeSched" style="padding:4px 10px;font-size:.85rem">ปิด</button>
+  </h2>
+  <div class="sched-top">
+    <span id="notifStatus">🔔 แจ้งเตือนผ่านหน้าเว็บและเสียงเตือน</span>
+    <button type="button" class="btn" id="reqNotif" style="padding:5px 10px;font-size:.8rem">เปิดแจ้งเตือน Windows</button>
+  </div>
+
+  <div class="sched-list" id="schedList"></div>
+
+  <form id="schedForm" novalidate style="border-top:1px solid var(--line);padding-top:12px">
+    <div style="font-weight:600;font-size:.95rem;margin-bottom:6px">+ ตั้งเวลาแจ้งเตือนใหม่</div>
+    <label for="st">ชื่องาน / สิ่งที่ต้องทำ</label>
+    <input type="text" id="st" maxlength="60" placeholder="เช่น ตรวจเช็กสถานะกล้อง CCTV ประจำวัน">
+    <div class="row-2">
+      <div>
+        <label for="stm">เวลาแจ้งเตือน</label>
+        <input type="time" id="stm" value="09:00">
+      </div>
+      <div>
+        <label for="srp">ความถี่</label>
+        <select id="srp">
+          <option value="daily">ทุกวัน (Daily)</option>
+          <option value="weekdays">จันทร์ - ศุกร์</option>
+          <option value="once">ระบุวันที่ (ครั้งเดียว)</option>
+        </select>
+      </div>
+    </div>
+    <div id="dateWrap" hidden>
+      <label for="sdt">วันที่แจ้งเตือน</label>
+      <input type="date" id="sdt">
+    </div>
+    <div class="err" id="schedErr"></div>
+    <div class="actions" style="margin-top:12px">
+      <button type="button" class="btn" id="testAlert">🔊 ทดสอบน้องมูลด์เตือน</button>
+      <button type="submit" class="btn primary">บันทึกตารางงาน</button>
+    </div>
+  </form>
+</dialog>
+
 <script>
-// ฟังก์ชันสร้าง SVG ลิงน้อยเสื้อเหลือง "น้องมูลด์" (เลือกแสดงแบบเต็มตัวหรือเฉพาะใบหน้าได้)
+// ฟังก์ชันสร้าง SVG ลิงน้อยเสื้อเหลือง "น้องมูลด์"
 function getMonkeySVG(faceOnly = false) {
   const vb = faceOnly ? "12 4 76 62" : "0 0 100 105";
   return `<svg viewBox="${vb}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-    <!-- เงาพื้น -->
     ${faceOnly ? "" : `<ellipse cx="52" cy="97" rx="18" ry="4" fill="rgba(0,0,0,0.12)"/>`}
-    <!-- หางแกว่งได้ -->
     ${faceOnly ? "" : `<g class="mk-tail">
       <path d="M43 76 C22 76 24 34 15 34 C9 34 9 48 14 51" fill="none" stroke="#4a2e1b" stroke-width="5" stroke-linecap="round"/>
     </g>`}
-    <!-- ขาและเท้า -->
     ${faceOnly ? "" : `<g>
       <path d="M45 77 L42 93" stroke="#4a2e1b" stroke-width="6.5" stroke-linecap="round"/>
       <path d="M57 77 L60 93" stroke="#4a2e1b" stroke-width="6.5" stroke-linecap="round"/>
       <ellipse cx="39" cy="95" rx="6.5" ry="3.2" fill="#f7c894" stroke="#4a2e1b" stroke-width="1.8"/>
       <ellipse cx="64" cy="95" rx="6.5" ry="3.2" fill="#f7c894" stroke="#4a2e1b" stroke-width="1.8"/>
     </g>`}
-    <!-- แขนซ้ายเท้าเอว -->
     ${faceOnly ? "" : `<path d="M40 62 L34 70 L42 75" fill="none" stroke="#4a2e1b" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>`}
-    <!-- แขนขวาโบกมือทักทาย -->
     ${faceOnly ? "" : `<g class="mk-wave">
       <path d="M60 62 L73 65 L80 57" fill="none" stroke="#4a2e1b" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
       <circle cx="82" cy="55" r="4.5" fill="#f7c894" stroke="#4a2e1b" stroke-width="1.6"/>
       <path d="M80 52 L79 48 M83 51 L84 47 M85 53 L88 50 M85 56 L89 55" stroke="#f7c894" stroke-width="2.2" stroke-linecap="round"/>
     </g>`}
-    <!-- เสื้อสีเหลืองสดใส -->
     ${faceOnly ? "" : `<path d="M36 60 L42 56 L60 56 L67 61 L63 66 L60 64 L61 78 L41 78 L42 64 L39 66 Z" fill="#ffd600" stroke="#4a2e1b" stroke-width="2" stroke-linejoin="round"/>`}
-    <!-- ส่วนหัวและใบหน้าน้องลิง -->
     <g class="mk-head">
-      <!-- หูซ้าย-ขวา -->
       <circle cx="22" cy="36" r="11" fill="#f7c894" stroke="#4a2e1b" stroke-width="2.4"/>
       <path d="M19 32 Q23 36 19 40" fill="none" stroke="#d59b66" stroke-width="2" stroke-linecap="round"/>
       <circle cx="78" cy="36" r="11" fill="#f7c894" stroke="#4a2e1b" stroke-width="2.4"/>
       <path d="M81 32 Q77 36 81 40" fill="none" stroke="#d59b66" stroke-width="2" stroke-linecap="round"/>
-      <!-- กะโหลกศีรษะและปอยผม -->
       <path d="M48 16 C45 10 39 11 42 15 C45 12 49 8 54 15" fill="#4a2e1b" stroke="#4a2e1b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       <ellipse cx="50" cy="34" rx="22" ry="19" fill="#4a2e1b"/>
       <ellipse cx="50" cy="45" rx="23" ry="14" fill="#4a2e1b"/>
-      <!-- กรอบหน้าสีเนื้ออมส้ม -->
       <path d="M33 34 C33 23 45 23 50 28 C55 23 67 23 67 34 C72 38 72 56 50 56 C28 56 28 38 33 34 Z" fill="#f7c894" stroke="#4a2e1b" stroke-width="1.8"/>
-      <!-- ดวงตากะพริบได้ -->
       <g class="mk-eyes">
         <ellipse cx="43.5" cy="38.5" rx="2.8" ry="4" fill="#3b2212"/>
         <circle cx="42.8" cy="37" r="1.1" fill="#ffffff"/>
         <ellipse cx="56.5" cy="38.5" rx="2.8" ry="4" fill="#3b2212"/>
         <circle cx="55.8" cy="37" r="1.1" fill="#ffffff"/>
       </g>
-      <!-- จมูก -->
       <ellipse cx="50" cy="43" rx="3.2" ry="1.6" fill="#4a2e1b"/>
       <line x1="50" y1="44.5" x2="50" y2="46.5" stroke="#4a2e1b" stroke-width="1.5"/>
-      <!-- รอยยิ้มกว้างเห็นฟันขาว -->
       <path d="M37 47 Q50 50 63 47 C61 55 39 55 37 47 Z" fill="#ffffff" stroke="#4a2e1b" stroke-width="1.6" stroke-linejoin="round"/>
     </g>
   </svg>`;
 }
 
 const KEY="it-link-hub:v1";
+const SCHED_KEY="it-link-hub:sched:v1";
 const ICONS=["🛠️","📊","📹","💻","🖥️","🖨️","🌐","📡","🔒","📁","📧","📝","🗓️","🧰","☁️","🔗"];
 const AI={name:"ถามน้องมูลด์",url:"#chat",icon:"🐵"};
 const DEFAULTS=[
@@ -233,10 +286,14 @@ const DEFAULTS=[
   {name:"Checklist CCTV",url:"https://mouldmate.vercel.app/IT/CCTV/ChecklistCCTV.html",icon:"📹"},
   {name:"Asset Register",url:"https://mouldmate.vercel.app/IT/Asset/asset-register.html",icon:"💻"}
 ];
-let links=load(), icon=ICONS[0];
+const DEFAULT_SCHEDS=[
+  {id:"s1",title:"ตรวจเช็กสถานะกล้อง CCTV ประจำวัน",time:"09:00",repeat:"weekdays",date:"",enabled:true,lastFired:""},
+  {id:"s2",title:"ตรวจสอบรายการแจ้งซ่อมค้างใน Helpdesk",time:"13:30",repeat:"weekdays",date:"",enabled:true,lastFired:""}
+];
+
+let links=load(), schedules=loadScheds(), icon=ICONS[0];
 const $=id=>document.getElementById(id);
 
-// ใส่รูปตัวการ์ตูนลิงน้อยในปุ่มมุมขวาล่าง (เต็มตัว) และหัวแชต (ซูมใบหน้า)
 $("fab-ava").innerHTML = getMonkeySVG(false);
 $("head-ava").innerHTML = getMonkeySVG(true);
 
@@ -258,6 +315,25 @@ function load(){
   return DEFAULTS.slice();
 }
 function save(){try{localStorage.setItem(KEY,JSON.stringify(links))}catch(e){}}
+
+function loadScheds(){
+  try{
+    const s=localStorage.getItem(SCHED_KEY);
+    if(s){
+      const a=JSON.parse(s);
+      if(Array.isArray(a)) return a;
+    }
+  }catch(e){}
+  return DEFAULT_SCHEDS.slice();
+}
+function saveScheds(){
+  try{localStorage.setItem(SCHED_KEY,JSON.stringify(schedules))}catch(e){}
+  updateSchedBadge();
+}
+function updateSchedBadge(){
+  $("schedCount").textContent = schedules.filter(s=>s.enabled).length;
+}
+
 function host(u){
   if(u==="#chat"||u.includes("claude.ai")) return "ผู้ช่วย AI ประจำฝ่าย IT";
   try{return new URL(u).hostname}catch(e){return u}
@@ -266,8 +342,10 @@ function host(u){
 function openChat(){
   $("chat").hidden=false;
   $("fab").hidden=true;
+  $("speech-tag").classList.remove("alert");
+  $("speech-tag").textContent="ถามน้องมูลด์ได้นะ 🍌";
   if(!$("msgs").children.length){
-    addMsg("bot","สวัสดีจ้า น้องมูลด์เองนะ 🐵🍌 ถามอะไรก็ได้เลย จะให้ช่วยร่างข้อความ สรุปเรื่อง หรือหาลิงค์ในหน้านี้ก็บอกได้เลย");
+    addMsg("bot","สวัสดีจ้า น้องมูลด์เองนะ 🐵🍌 ถามเรื่องงาน หาลิงค์ หรือถามว่าวันนี้มีตารางงานอะไรบ้างก็บอกได้เลยจ้า");
   }
   $("ci").focus();
 }
@@ -329,8 +407,219 @@ $("f").onsubmit=e=>{
   links.push({name,url,icon});save();render();$("dlg").close();
 };
 render();
+updateSchedBadge();
 
-/* ---- เลขา IT (AI - เชื่อมต่อ /api/chat) ---- */
+/* ---- ระบบจัดการตารางงาน & แจ้งเตือน (Schedule & Reminder) ---- */
+function repeatLabel(s){
+  if(s.repeat==="daily") return "ทุกวัน";
+  if(s.repeat==="weekdays") return "จันทร์ - ศุกร์";
+  return s.date ? "วันที่ "+s.date : "ครั้งเดียว";
+}
+
+function renderScheds(){
+  const box=$("schedList");
+  box.textContent="";
+  if(!schedules.length){
+    const d=document.createElement("div");
+    d.style.cssText="text-align:center;color:var(--muted);padding:18px 0;font-size:.9rem";
+    d.textContent="ยังไม่มีตารางงานที่ตั้งเตือนไว้";
+    box.appendChild(d);
+    return;
+  }
+  const sorted=schedules.slice().sort((a,b)=>a.time.localeCompare(b.time));
+  sorted.forEach(item=>{
+    const row=document.createElement("div");
+    row.className="sched-item"+(item.enabled?"":" off");
+
+    const left=document.createElement("div");
+    left.className="sched-left";
+
+    const chk=document.createElement("input");
+    chk.type="checkbox";
+    chk.checked=!!item.enabled;
+    chk.title="เปิด/ปิดการแจ้งเตือนนี้";
+    chk.onchange=()=>{item.enabled=chk.checked;saveScheds();renderScheds()};
+
+    const tm=document.createElement("span");
+    tm.className="sched-time";
+    tm.textContent=item.time;
+
+    const info=document.createElement("div");
+    const tt=document.createElement("div");
+    tt.className="sched-title";
+    tt.textContent=item.title;
+    const mt=document.createElement("div");
+    mt.className="sched-meta";
+    mt.textContent=repeatLabel(item);
+    info.append(tt,mt);
+
+    left.append(chk,tm,info);
+
+    const btns=document.createElement("div");
+    btns.className="sched-btns";
+    const del=document.createElement("button");
+    del.type="button";
+    del.textContent="🗑️";
+    del.title="ลบตารางงาน";
+    del.onclick=()=>{
+      schedules=schedules.filter(x=>x.id!==item.id);
+      saveScheds();
+      renderScheds();
+    };
+    btns.appendChild(del);
+
+    row.append(left,btns);
+    box.appendChild(row);
+  });
+}
+
+function checkNotifStatus(){
+  if(!("Notification" in window)){
+    $("notifStatus").textContent="🔔 แจ้งเตือนผ่านแชตน้องมูลด์และเสียงเตือน";
+    $("reqNotif").hidden=true;
+    return;
+  }
+  if(Notification.permission==="granted"){
+    $("notifStatus").textContent="✅ เปิดการแจ้งเตือนป๊อปอัป Windows แล้ว";
+    $("reqNotif").hidden=true;
+  }else if(Notification.permission==="denied"){
+    $("notifStatus").textContent="⚠️ เบราว์เซอร์บล็อกป๊อปอัป (แจ้งเตือนผ่านหน้าเว็บแทน)";
+    $("reqNotif").hidden=true;
+  }else{
+    $("notifStatus").textContent="🔔 กดปุ่มขวาเพื่อรับป๊อปอัปแจ้งเตือนมุมจอ";
+    $("reqNotif").hidden=false;
+  }
+}
+
+$("schedBtn").onclick=()=>{
+  $("schedErr").textContent="";
+  $("sdt").value = new Date().toISOString().slice(0,10);
+  checkNotifStatus();
+  renderScheds();
+  $("schedDlg").showModal();
+};
+$("closeSched").onclick=()=>$("schedDlg").close();
+$("srp").onchange=()=>{
+  $("dateWrap").hidden = $("srp").value !== "once";
+};
+$("reqNotif").onclick=async()=>{
+  if("Notification" in window){
+    await Notification.requestPermission();
+    checkNotifStatus();
+  }
+};
+
+$("schedForm").onsubmit=e=>{
+  e.preventDefault();
+  const title=$("st").value.trim();
+  const time=$("stm").value;
+  const repeat=$("srp").value;
+  const date=$("sdt").value;
+  if(!title){$("schedErr").textContent="กรุณากรอกชื่องานที่ต้องการให้เตือน";return}
+  if(!time){$("schedErr").textContent="กรุณาเลือกเวลาแจ้งเตือน";return}
+  if(repeat==="once"&&!date){$("schedErr").textContent="กรุณาเลือกวันที่";return}
+
+  schedules.push({
+    id:"s"+Date.now(),
+    title,
+    time,
+    repeat,
+    date:repeat==="once"?date:"",
+    enabled:true,
+    lastFired:""
+  });
+  saveScheds();
+  renderScheds();
+  $("st").value="";
+  $("schedErr").textContent="";
+};
+
+// เสียงติ๊งแจ้งเตือนน่ารักๆ จากน้องมูลด์
+function playChime(){
+  try{
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if(!Ctx) return;
+    const ctx = new Ctx();
+    [587.33, 880].forEach((freq, idx)=>{
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.18, ctx.currentTime + idx*0.16);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + idx*0.16 + 0.35);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime + idx*0.16);
+      osc.stop(ctx.currentTime + idx*0.16 + 0.36);
+    });
+  }catch(e){}
+}
+
+function triggerReminder(item){
+  playChime();
+  const msg = `⏰ ถึงเวลาแล้วจ้า (${item.time} น.): ${item.title} 🍌`;
+
+  // 1. แจ้งในห้องแชต
+  addMsg("bot remind", msg);
+
+  // 2. ถ้ากล่องแชตปิดอยู่ ให้ขึ้นป้ายสีส้มกะพริบตรงตัวน้องลิง
+  if($("chat").hidden){
+    const tag = $("speech-tag");
+    tag.textContent = `⏰ ${item.title}`;
+    tag.classList.add("alert");
+  }
+
+  // 3. ส่ง Browser Notification มุมจอคอมพิวเตอร์
+  if("Notification" in window && Notification.permission==="granted"){
+    try{
+      const n = new Notification("น้องมูลด์เตือนตารางงาน 🐵⏰", {
+        body: `${item.time} น. - ${item.title}`
+      });
+      n.onclick = ()=>{ window.focus(); openChat(); };
+    }catch(e){}
+  }
+}
+
+$("testAlert").onclick=()=>{
+  triggerReminder({title:"ทดสอบแจ้งเตือนจากน้องมูลด์!", time: new Date().toTimeString().slice(0,5)});
+  $("schedDlg").close();
+};
+
+// ตรวจสอบเวลาทุกๆ 15 วินาที
+setInterval(()=>{
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2,"0");
+  const mm = String(now.getMinutes()).padStart(2,"0");
+  const curTime = `${hh}:${mm}`;
+  const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}-${String(now.getDate()).padStart(2,"0")}`;
+  const dayOfWeek = now.getDay(); // 0 = อาทิตย์, 6 = เสาร์
+  const stamp = `${todayStr} ${curTime}`;
+
+  let changed = false;
+  schedules.forEach(item=>{
+    if(!item.enabled) return;
+    if(item.time !== curTime) return;
+    if(item.lastFired === stamp) return;
+
+    let shouldFire = false;
+    if(item.repeat === "daily") shouldFire = true;
+    else if(item.repeat === "weekdays" && dayOfWeek >= 1 && dayOfWeek <= 5) shouldFire = true;
+    else if(item.repeat === "once" && item.date === todayStr) shouldFire = true;
+
+    if(shouldFire){
+      item.lastFired = stamp;
+      if(item.repeat === "once") item.enabled = false;
+      changed = true;
+      triggerReminder(item);
+    }
+  });
+  if(changed){
+    saveScheds();
+    if($("schedDlg").open) renderScheds();
+  }
+}, 15000);
+
+/* ---- เลขา IT (AI - เชื่อมต่อ /api/chat พร้อมส่งตารางงานให้น้องมูลด์รู้) ---- */
 let hist=[], busy=false;
 
 function setTextWithLinks(el, text){
@@ -353,9 +642,9 @@ function setTextWithLinks(el, text){
 
 function addMsg(cls,text){
   const row=document.createElement("div");
-  row.className="msg-row "+cls;
+  row.className="msg-row "+(cls.includes("me")?"me":"bot");
 
-  if(cls==="bot"){
+  if(cls.includes("bot")){
     const ava=document.createElement("div");
     ava.className="bot-ava";
     ava.innerHTML=getMonkeySVG(true);
@@ -383,12 +672,17 @@ async function ask(text){
       .filter(l=>l.url&&l.url!=="#chat"&&!l.url.includes("claude.ai"))
       .map(l=>({name:l.name,url:l.url}));
 
+    const activeScheds=schedules
+      .filter(s=>s.enabled)
+      .map(s=>({title:s.title,time:s.time,repeat:repeatLabel(s)}));
+
     const res=await fetch("/api/chat",{
       method:"POST",
       headers:{"Content-Type":"application/json"},
       body:JSON.stringify({
         messages:hist.slice(-10),
-        links:cleanLinks
+        links:cleanLinks,
+        schedules:activeScheds
       })
     });
 
