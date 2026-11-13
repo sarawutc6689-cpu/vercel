@@ -1,4 +1,5 @@
-// Vercel Serverless Function: POST /api/chat (รองรับการสั่งเพิ่ม/ลบตารางงานผ่านแชตน้องมูลด์)
+// Vercel Serverless Function: POST /api/chat
+// รองรับ: 1) แชตกับน้องมูลด์ (Groq) 2) สั่งเพิ่ม/ลบตารางงาน 3) ส่งแจ้งเตือนเข้า Telegram
 
 module.exports = async function handler(req, res) {
   try {
@@ -7,13 +8,6 @@ module.exports = async function handler(req, res) {
     if (req.method !== "POST") {
       res.setHeader("Allow", "POST");
       return res.status(405).json({ error: "อนุญาตเฉพาะ POST เท่านั้น" });
-    }
-
-    const rawKey = process.env.GROQ_API_KEY || process.env.GEMINI_API_KEY || "";
-    const key = String(rawKey).replace(/[^\x21-\x7E]/g, "").trim();
-
-    if (!key) {
-      return res.status(500).json({ error: "missing_api_key" });
     }
 
     let body = req.body;
@@ -25,6 +19,82 @@ module.exports = async function handler(req, res) {
       }
     }
     body = body || {};
+
+    const tgToken = String(process.env.TELEGRAM_BOT_TOKEN || "").replace(/[^\x21-\x7E]/g, "").trim();
+    const defaultChatId = String(process.env.TELEGRAM_CHAT_ID || "").replace(/[^\x21-\x7E]/g, "").trim();
+
+    // ---- โหมดที่ 1: ดึง Chat ID ล่าสุดจาก Telegram Bot อัตโนมัติ ----
+    if (body.action === "telegram_get_chat") {
+      if (!tgToken) {
+        return res.status(400).json({
+          error: "ยังไม่ได้ตั้งค่า TELEGRAM_BOT_TOKEN ใน Vercel Environment Variables",
+        });
+      }
+      const r = await fetch(`https://api.telegram.org/bot${tgToken}/getUpdates?limit=10`);
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok || !data.ok) {
+        return res.status(502).json({
+          error: `Telegram ตอบกลับว่า: ${data.description || r.status}`,
+        });
+      }
+      const updates = Array.isArray(data.result) ? data.result : [];
+      for (let i = updates.length - 1; i >= 0; i--) {
+        const u = updates[i];
+        const chat = (u.message && u.message.chat) || (u.my_chat_member && u.my_chat_member.chat) || (u.channel_post && u.channel_post.chat);
+        if (chat && chat.id) {
+          return res.status(200).json({
+            chatId: String(chat.id),
+            title: chat.title || chat.first_name || chat.username || "แชตส่วนตัว",
+          });
+        }
+      }
+      return res.status(404).json({
+        error: "ไม่พบข้อความล่าสุด กรุณาเปิดแอป Telegram แล้วพิมพ์ทักแชตบอทของคุณ 1 ครั้งก่อนกดปุ่มนี้นะครับ",
+      });
+    }
+
+    // ---- โหมดที่ 2: ส่งข้อความแจ้งเตือนเข้า Telegram ----
+    if (body.action === "telegram_send") {
+      if (!tgToken) {
+        return res.status(400).json({
+          error: "ยังไม่ได้ตั้งค่า TELEGRAM_BOT_TOKEN ใน Vercel",
+        });
+      }
+      const targetChatId = String(body.chatId || defaultChatId || "").trim();
+      if (!targetChatId) {
+        return res.status(400).json({
+          error: "ยังไม่ได้ระบุ Chat ID (กดปุ่ม '🗓️ ตารางงาน' > '🔍 ดึง Chat ID' ก่อนนะครับ)",
+        });
+      }
+      const text = String(body.text || "").trim().slice(0, 3500);
+      if (!text) {
+        return res.status(400).json({ error: "ไม่มีข้อความที่จะส่ง" });
+      }
+
+      const r = await fetch(`https://api.telegram.org/bot${tgToken}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: targetChatId,
+          text: text,
+        }),
+      });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok || !data.ok) {
+        return res.status(502).json({
+          error: data.description || `Telegram Error (${r.status})`,
+        });
+      }
+      return res.status(200).json({ ok: true });
+    }
+
+    // ---- โหมดที่ 3: คุยแชตกับน้องมูลด์ (Groq AI) ----
+    const rawKey = process.env.GROQ_API_KEY || process.env.GEMINI_API_KEY || "";
+    const key = String(rawKey).replace(/[^\x21-\x7E]/g, "").trim();
+
+    if (!key) {
+      return res.status(500).json({ error: "missing_api_key" });
+    }
 
     const rawMsgs = Array.isArray(body.messages) ? body.messages : [];
     const msgs = rawMsgs
@@ -64,18 +134,10 @@ module.exports = async function handler(req, res) {
       (linkList || "- ยังไม่มีลิงค์") +
       "\nตารางงานและการแจ้งเตือนที่ตั้งไว้ปัจจุบัน:\n" +
       (schedList || "- ยังไม่มีตารางงานที่ตั้งเตือนไว้") +
-      "\n\nคำสั่งพิเศษสำหรับการจัดการตารางงานผ่านแชต (สำคัญมาก):\n" +
-      "1. หากผู้ใช้สั่งให้เพิ่มตารางงาน ตั้งเวลาเตือน หรือนัดหมาย (เช่น 'เตือนเช็ก Server ตอนบ่าย 3', 'ตั้งเตือนทุกวัน 08:30 เปิดระบบ', 'พรุ่งนี้ 10 โมงเตือนประชุม'):\n" +
-      "   - ให้คุณตอบรับอย่างเป็นกันเอง และต้องแนบแท็กคำสั่งนี้ไว้ท้ายข้อความเสมอ:\n" +
-      "     [[ADD_SCHED:ชื่องาน|HH:MM|ความถี่|YYYY-MM-DD]]\n" +
-      "   - โดย HH:MM ต้องเป็นเวลาแบบ 24 ชั่วโมง (เช่น บ่ายโมง = 13:00, บ่ายสาม = 15:00, 9 โมงเช้า = 09:00)\n" +
-      "   - ความถี่ เลือกได้ 3 ค่าเท่านั้น คือ: daily (ทุกวัน), weekdays (จันทร์-ศุกร์), หรือ once (ครั้งเดียว/วันนี้/พรุ่งนี้/ระบุวันที่)\n" +
-      "   - YYYY-MM-DD คือวันที่ (ใส่เฉพาะกรณี once โดยอ้างอิงจากวันปัจจุบันของผู้ใช้ ถ้าเป็น daily หรือ weekdays ให้เว้นว่างไว้หลัง |)\n" +
-      "   - ตัวอย่างแท็กที่ถูกต้อง: [[ADD_SCHED:เช็ก Server|15:00|once|2026-11-13]] หรือ [[ADD_SCHED:ตรวจกล้อง CCTV|09:00|daily|]]\n" +
-      "2. หากผู้ใช้สั่งให้ลบหรือยกเลิกตารางงาน (เช่น 'ลบเตือนเช็ก Server ออกหน่อย'):\n" +
-      "   - ให้ตอบรับและแนบแท็กคำสั่งนี้ไว้ท้ายข้อความ: [[DEL_SCHED:คำสำคัญของชื่องานหรือเวลา]]\n" +
-      "   - ตัวอย่าง: [[DEL_SCHED:เช็ก Server]]\n" +
-      "3. หากผู้ใช้แค่ถามเรื่องทั่วไปหรือถามว่าวันนี้มีงานอะไรบ้าง ให้สรุปตอบตามปกติโดยไม่ต้องใส่แท็ก [[ADD_SCHED:...]]";
+      "\n\nคำสั่งพิเศษสำหรับน้องมูลด์ (แนบแท็กไว้ท้ายคำตอบเมื่อผู้ใช้สั่งการ):\n" +
+      "1. เมื่อผู้ใช้สั่งให้เพิ่มตารางงาน/ตั้งเวลาเตือน: ให้แนบแท็ก [[ADD_SCHED:ชื่องาน|HH:MM|ความถี่|YYYY-MM-DD]] ไว้ท้ายคำตอบ (โดย HH:MM เป็นเวลา 24 ชม., ความถี่เลือกได้คือ daily, weekdays, หรือ once, และ YYYY-MM-DD ใส่เฉพาะกรณี once)\n" +
+      "2. เมื่อผู้ใช้สั่งให้ลบตารางงาน: ให้แนบแท็ก [[DEL_SCHED:คำสำคัญของชื่องาน]] ไว้ท้ายคำตอบ\n" +
+      "3. เมื่อผู้ใช้สั่งให้ส่งข้อความ ส่งลิงค์ หรือส่งสรุปตารางงานเข้า Telegram ทันที: ให้ตอบรับและแนบแท็ก [[SEND_TG:ข้อความที่ต้องการส่งเข้า Telegram]] ไว้ท้ายคำตอบ";
 
     const fullMessages = [{ role: "system", content: sysPrompt }, ...msgs];
 
