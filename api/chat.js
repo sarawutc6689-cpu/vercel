@@ -1,5 +1,9 @@
 // Vercel Serverless Function: POST /api/chat
-// รองรับ: 1) แชตหน้าเว็บ 2) ตารางงาน 3) Telegram 4) พยากรณ์อากาศสด 5) ร้านอาหาร/น้ำ 6) ค้นหาความรู้ทั่วไป & เว็บสด
+// รองรับครบวงจร:
+// 1) แชตกับน้องมูลด์ (Groq AI) + ค้นหาความรู้ทั่วไป (Wikipedia) + พยากรณ์อากาศสด (Open-Meteo) + แนะนำร้านอาหาร/น้ำ
+// 2) สั่งเพิ่ม/ลบตารางงานผ่านแชต
+// 3) แจ้งเตือน & ตอบโต้ในกลุ่ม Telegram อัตโนมัติ (Webhook)
+// 4) รับและส่งไฟล์ PDF รายงาน Checklist CCTV เข้า Telegram (telegram_send_pdf)
 
 const DEFAULT_LINKS = [
   { name: "IT Link Hub", url: "https://mouldmate.vercel.app/" },
@@ -84,7 +88,6 @@ async function getLiveWeatherReport(userText) {
   }
 }
 
-// ค้นหาความรู้ทั่วไปจาก Wikipedia ภาษาไทย (ฟรี ไม่ต้องใช้ API Key)
 async function searchGeneralKnowledge(query) {
   try {
     const cleanQ = String(query || "")
@@ -171,7 +174,41 @@ module.exports = async function handler(req, res) {
     const rawKey = process.env.GROQ_API_KEY || process.env.GEMINI_API_KEY || "";
     const groqKey = String(rawKey).replace(/[^\x21-\x7E]/g, "").trim();
 
-    // 1. รับข้อความจากกลุ่ม Telegram (Webhook)
+    // 1. ส่งไฟล์เอกสาร PDF รายงาน CCTV เข้า Telegram (เรียกจากหน้า ChecklistCCTV.html)
+    if (body.action === "telegram_send_pdf") {
+      if (!tgToken) {
+        return res.status(400).json({ error: "ยังไม่ได้ตั้งค่า TELEGRAM_BOT_TOKEN ใน Vercel" });
+      }
+      const targetChatId = String(body.chatId || defaultChatId || "").trim();
+      if (!targetChatId) {
+        return res.status(400).json({ error: "ยังไม่ได้ระบุ TELEGRAM_CHAT_ID ใน Vercel หรือหน้าเว็บ" });
+      }
+      const pdfBase64 = String(body.pdfBase64 || "").replace(/^data:[^;]+;base64,/, "");
+      const filename = String(body.filename || "CCTV_Report.pdf").replace(/[^a-zA-Z0-9._-]/g, "_");
+      const caption = String(body.caption || "📋 รายงานตรวจสอบกล้องวงจรปิด (CCTV)").slice(0, 1000);
+
+      if (!pdfBase64) {
+        return res.status(400).json({ error: "ไม่พบข้อมูลไฟล์ PDF" });
+      }
+
+      const fileBuffer = Buffer.from(pdfBase64, "base64");
+      const form = new FormData();
+      form.append("chat_id", targetChatId);
+      form.append("caption", caption);
+      form.append("document", new Blob([fileBuffer], { type: "application/pdf" }), filename);
+
+      const r = await fetch(`https://api.telegram.org/bot${tgToken}/sendDocument`, {
+        method: "POST",
+        body: form,
+      });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok || !data.ok) {
+        return res.status(502).json({ error: data.description || `Telegram Error (${r.status})` });
+      }
+      return res.status(200).json({ ok: true });
+    }
+
+    // 2. รับข้อความจากกลุ่ม Telegram (Webhook)
     if (body.update_id && (body.message || body.edited_message)) {
       const msg = body.message || body.edited_message;
       const chat = msg.chat || {};
@@ -241,7 +278,7 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ ok: true });
     }
 
-    // 2. ดึง Chat ID ล่าสุด
+    // 3. ดึง Chat ID ล่าสุด
     if (body.action === "telegram_get_chat") {
       if (!tgToken) return res.status(400).json({ error: "ยังไม่ได้ตั้งค่า TELEGRAM_BOT_TOKEN ใน Vercel" });
       const r = await fetch(`https://api.telegram.org/bot${tgToken}/getUpdates?limit=10`);
@@ -260,42 +297,7 @@ module.exports = async function handler(req, res) {
       return res.status(404).json({ error: "ไม่พบข้อความล่าสุด กรุณาทักบอทใน Telegram ก่อน 1 ครั้ง" });
     }
 
-        // ส่งไฟล์เอกสาร PDF เข้า Telegram (เรียกจากหน้า ChecklistCCTV.html)
-    if (body.action === "telegram_send_pdf") {
-      if (!tgToken) {
-        return res.status(400).json({ error: "ยังไม่ได้ตั้งค่า TELEGRAM_BOT_TOKEN ใน Vercel" });
-      }
-      const targetChatId = String(body.chatId || defaultChatId || "").trim();
-      if (!targetChatId) {
-        return res.status(400).json({ error: "ยังไม่ได้ระบุ TELEGRAM_CHAT_ID ใน Vercel หรือหน้าเว็บ" });
-      }
-      const pdfBase64 = String(body.pdfBase64 || "").replace(/^data:[^;]+;base64,/, "");
-      const filename = String(body.filename || "CCTV_Report.pdf").replace(/[^a-zA-Z0-9._-]/g, "_");
-      const caption = String(body.caption || "📋 รายงานตรวจสอบกล้องวงจรปิด (CCTV)").slice(0, 1000);
-
-      if (!pdfBase64) {
-        return res.status(400).json({ error: "ไม่พบข้อมูลไฟล์ PDF" });
-      }
-
-      const fileBuffer = Buffer.from(pdfBase64, "base64");
-      const form = new FormData();
-      form.append("chat_id", targetChatId);
-      form.append("caption", caption);
-      form.append("document", new Blob([fileBuffer], { type: "application/pdf" }), filename);
-
-      const r = await fetch(`https://api.telegram.org/bot${tgToken}/sendDocument`, {
-        method: "POST",
-        body: form,
-      });
-      const data = await r.json().catch(() => ({}));
-      if (!r.ok || !data.ok) {
-        return res.status(502).json({ error: data.description || `Telegram Error (${r.status})` });
-      }
-      return res.status(200).json({ ok: true });
-    }
-
-
-    // 3. ส่งแจ้งเตือนเข้า Telegram
+    // 4. ส่งข้อความแจ้งเตือนเข้า Telegram
     if (body.action === "telegram_send") {
       if (!tgToken) return res.status(400).json({ error: "ยังไม่ได้ตั้งค่า TELEGRAM_BOT_TOKEN ใน Vercel" });
       const targetChatId = String(body.chatId || defaultChatId || "").trim();
@@ -313,7 +315,7 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ ok: true });
     }
 
-    // 4. คุยแชตกับน้องมูลด์ผ่านหน้าเว็บ
+    // 5. คุยแชตกับน้องมูลด์ผ่านหน้าเว็บ
     if (!groqKey) return res.status(500).json({ error: "missing_api_key" });
 
     const rawMsgs = Array.isArray(body.messages) ? body.messages : [];
@@ -371,4 +373,4 @@ module.exports = async function handler(req, res) {
   } catch (err) {
     return res.status(500).json({ error: `เซิร์ฟเวอร์ขัดข้อง: ${err && err.message ? err.message : String(err)}` });
   }
-};
+}
