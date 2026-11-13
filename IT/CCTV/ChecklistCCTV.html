@@ -198,6 +198,12 @@ body {
 }
 .btn-pdf:hover:not(:disabled) { background:#F8D5D5; }
 
+.btn-tg {
+  background:#E1F5FE; color:#0277BD;
+  border:1px solid #81D4FA;
+}
+.btn-tg:hover:not(:disabled) { background:#B3E5FC; }
+
 .btn-toolbar:disabled { opacity:0.55; cursor:not-allowed; }
 
 /* ── Main ── */
@@ -800,7 +806,6 @@ footer p { margin-bottom:8px; }
             <option value="เย็น">🌆 เฉพาะช่วงเย็น</option>
           </select>
         </div>
-        
       </div>
 
       <div class="toolbar-row-divider"></div>
@@ -815,10 +820,10 @@ footer p { margin-bottom:8px; }
         <button class="btn-toolbar btn-csv" onclick="doExportCsv('month')" id="btnCsv">
           📄 Export CSV
         </button>
-        <button class="btn-toolbar btn-pdf" onclick="doExportPdf('month')" id="btnPdf">
+        <button class="btn-toolbar btn-pdf" onclick="doExportPdf('month', false)" id="btnPdf">
           📋 Export PDF
         </button>
-        <button class="btn-toolbar" id="btnTgPdf" style="background:#E1F5FE;color:#0277BD;border:1px solid #81D4FA" onclick="doExportPdf('month', true)">
+        <button class="btn-toolbar btn-tg" onclick="doExportPdf('month', true)" id="btnTgMonthPdf">
           ✈️ ส่ง PDF เข้า Telegram
         </button>
       </div>
@@ -835,10 +840,10 @@ footer p { margin-bottom:8px; }
         <button class="btn-toolbar btn-csv" onclick="doExportCsv('day')" id="btnDayCsv">
           📄 Export CSV รายวัน
         </button>
-        <button class="btn-toolbar btn-pdf" onclick="doExportPdf('day')" id="btnDayPdf">
+        <button class="btn-toolbar btn-pdf" onclick="doExportPdf('day', false)" id="btnDayPdf">
           📋 Export PDF รายวัน
         </button>
-        <button class="btn-toolbar" id="btnDayTgPdf" style="background:#E1F5FE;color:#0277BD;border:1px solid #81D4FA" onclick="doExportPdf('day', true)">
+        <button class="btn-toolbar btn-tg" onclick="doExportPdf('day', true)" id="btnTgDayPdf">
           ✈️ ส่ง PDF รายวันเข้า Telegram
         </button>
       </div>
@@ -1308,7 +1313,7 @@ function showOverlay(msg){
 function hideOverlay(){ document.getElementById('overlay').classList.remove('active'); }
 
 function setToolbarBusy(busy){
-  ['btnCsv','btnPdf','btnDayCsv','btnDayPdf','btnTgPdf','btnDayTgPdf'].forEach(function(id){
+  ['btnCsv','btnPdf','btnDayCsv','btnDayPdf','btnTgMonthPdf','btnTgDayPdf'].forEach(function(id){
     var el = document.getElementById(id);
     if(el) el.disabled = busy;
   });
@@ -1412,17 +1417,21 @@ async function loadThaiFont(doc) {
   }
 }
 
-/* ── ส่งไฟล์ PDF เข้า Telegram ผ่าน /api/chat ── */
+/* ── ฟังก์ชันส่งไฟล์ PDF เข้า Telegram (ใช้ ArrayBuffer แท้ 100% ป้องกันไฟล์เสีย/Failed) ── */
 async function sendPdfDocToTelegram(doc, filename, captionText) {
   try {
     var savedTg = {};
     try { savedTg = JSON.parse(localStorage.getItem('it-link-hub:tg:v1') || '{}'); } catch (e) {}
-    var bytes = new Uint8Array(doc.output('arraybuffer'));
-    var bin = '';
-    for (var i = 0; i < bytes.length; i += 8192) {
-      bin += String.fromCharCode.apply(null, Array.from(bytes.subarray(i, Math.min(i + 8192, bytes.length))));
+
+    var buf = doc.output('arraybuffer');
+    var bytes = new Uint8Array(buf);
+    var binary = '';
+    var CHUNK = 8192;
+    for (var i = 0; i < bytes.length; i += CHUNK) {
+      binary += String.fromCharCode.apply(null, Array.from(bytes.subarray(i, Math.min(i + CHUNK, bytes.length))));
     }
-    var base64Data = btoa(bin);
+    var base64Data = btoa(binary);
+
     var res = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1435,14 +1444,16 @@ async function sendPdfDocToTelegram(doc, filename, captionText) {
       })
     });
     var data = await res.json().catch(function(){ return {}; });
-    if (!res.ok || !data.ok) throw new Error(data.error || ('HTTP ' + res.status));
+    if (!res.ok || !data.ok) {
+      throw new Error(data.error || ('HTTP ' + res.status));
+    }
     return { ok: true };
   } catch (err) {
     return { ok: false, error: err.message };
   }
 }
 
-/* ── 3. EXPORT PDF (ดาวน์โหลดปกติ หรือส่งเข้า Telegram) ── */
+/* ── 3. EXPORT PDF (รองรับดาวน์โหลดปกติ + ส่งเข้า Telegram อัตโนมัติ) ── */
 async function doExportPdf(mode, sendToTelegram, customRows, customLabel) {
   mode = mode || 'month';
   var isDay = (mode === 'day');
@@ -1456,13 +1467,12 @@ async function doExportPdf(mode, sendToTelegram, customRows, customLabel) {
     var dv = document.getElementById('exportDate').value;
     if (!dv) { showToast('⚠️ กรุณาเลือกวันที่ก่อน Export','warn'); return; }
     ym        = dv;
-    dateLabel = dayLabel(dv);
+    dateLabel = dayLabel(dv) + shiftText(sv);
   } else {
     ym = getSelectedMonth();
     if (!ym) { showToast('⚠️ กรุณาเลือกเดือนก่อน Export','warn'); return; }
-    dateLabel = monthLabel(ym);
+    dateLabel = monthLabel(ym) + shiftText(sv);
   }
-  if (!customLabel) dateLabel += shiftText(sv);
 
   showOverlay(sendToTelegram ? 'กำลังสร้างและส่งรายงาน PDF เข้า Telegram...' : 'กำลังเตรียมข้อมูล PDF...');
   setToolbarBusy(true);
@@ -1480,7 +1490,7 @@ async function doExportPdf(mode, sendToTelegram, customRows, customLabel) {
     if (!rows.length) { hideOverlay(); showToast('⚠️ ไม่มีข้อมูลใน ' + dateLabel, 'warn'); return; }
 
     try {
-      var doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4', compress: true });
+      var doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
 
       if (fontFamily === 'Sarabun' && _cachedFont.regular) {
         doc.addFileToVFS('Sarabun-Regular.ttf', _cachedFont.regular);
@@ -1562,7 +1572,7 @@ async function doExportPdf(mode, sendToTelegram, customRows, customLabel) {
           textColor: 255,
           fontSize: 8,
           cellPadding: 2.5,
-          overflow: 'visible'      /* หัวตารางไม่ตัดบรรทัด */
+          overflow: 'visible'
         },
         alternateRowStyles: { fillColor: [249, 252, 254] },
         columnStyles: {
@@ -1608,7 +1618,7 @@ async function doExportPdf(mode, sendToTelegram, customRows, customLabel) {
         margin: { left: 10, right: 10 }
       });
 
-      /* ── ข้อความสรุปท้ายรายงาน (สร้างอัตโนมัติ) ── */
+      /* ── ข้อความสรุปท้ายรายงาน ── */
       var pageH = doc.internal.pageSize.getHeight();
       var endY  = doc.lastAutoTable.finalY + 10;
       if (endY > pageH - 45) { doc.addPage(); endY = 20; }
@@ -1637,16 +1647,13 @@ async function doExportPdf(mode, sendToTelegram, customRows, customLabel) {
       doc.setTextColor(60, 80, 100);
       doc.text(sumLines, 14, endY + 13);
 
-     
-
-      /* ── Page footer ── */
+      /* ── Page footer & Watermark ── */
       var pageCount = doc.internal.getNumberOfPages();
       var pageW = doc.internal.pageSize.getWidth();
       var WM_TEXT = 'TOKAISOLIDTIRE', WM_ANGLE = 30, WM_SIZE = 60;
       for (var p = 1; p <= pageCount; p++) {
         doc.setPage(p);
 
-        /* ── ลายน้ำสีฟ้าจาง (แนวทแยง กึ่งกลางหน้า) ── */
         doc.saveGraphicsState();
         doc.setGState(new doc.GState({ opacity: 0.15 }));
         doc.setFont(F_BOLD, F_STYLE_BOLD);
@@ -1661,7 +1668,6 @@ async function doExportPdf(mode, sendToTelegram, customRows, customLabel) {
           { angle: WM_ANGLE });
         doc.restoreGraphicsState();
 
-        /* ── Footer ── */
         doc.setDrawColor(226, 234, 241);
         doc.setLineWidth(0.3);
         doc.line(10, 196, pageW - 10, 196);
@@ -1673,6 +1679,7 @@ async function doExportPdf(mode, sendToTelegram, customRows, customLabel) {
       }
 
       var pdfFilename = (isDay ? 'CCTV_Daily_' + ym : 'CCTV_Checklist_' + ym) + shiftSuffix(sv) + '.pdf';
+
       if (sendToTelegram) {
         var caption = '📹 รายงานตรวจสอบกล้องวงจรปิด (CCTV)\n'
           + '🗓 ช่วงเวลา: ' + dateLabel + '\n'
@@ -1680,8 +1687,11 @@ async function doExportPdf(mode, sendToTelegram, customRows, customLabel) {
           + '📌 สรุป: ' + summaryText;
         var tgRes = await sendPdfDocToTelegram(doc, pdfFilename, caption);
         hideOverlay();
-        if (tgRes.ok) showToast('✈️ ส่งไฟล์ PDF เข้า Telegram สำเร็จ!', 'ok');
-        else showToast('⚠️ ส่งเข้า Telegram ไม่สำเร็จ: ' + tgRes.error, 'warn');
+        if (tgRes.ok) {
+          showToast('✈️ บันทึกและส่งไฟล์ PDF เข้า Telegram สำเร็จ!', 'ok');
+        } else {
+          showToast('⚠️ ส่งเข้า Telegram ไม่สำเร็จ: ' + tgRes.error, 'warn');
+        }
       } else {
         hideOverlay();
         doc.save(pdfFilename);
@@ -1965,7 +1975,7 @@ function saveWithShiftCheck() {
   }).then(function(ok){ if (ok) doActualSave(); });
 }
 
-/* ── doActualSave: บันทึกจริง พร้อมระบุช่วงตรวจ ── */
+/* ── doActualSave: บันทึกจริง พร้อมสร้างและส่ง PDF เข้า Telegram อัตโนมัติ ── */
 function doActualSave() {
   var btn = document.getElementById('saveBtn');
   btn.disabled = true;
@@ -1991,6 +2001,7 @@ function doActualSave() {
     if (res.error) { showToast('❌ บันทึกล้มเหลว: ' + res.error.message, 'error'); return; }
     showToast('✅ บันทึกช่วง' + shiftToSave + 'สำเร็จ ' + rows.length + ' รายการ (กำลังส่ง PDF เข้า Telegram...)', 'ok');
     loadTodaySummary();
+
     var savedRows = (res.data || []).map(toRow);
     if (savedRows.length) {
       var label = dayLabel(bkkToday()) + ' (ช่วง' + shiftToSave + ')';
