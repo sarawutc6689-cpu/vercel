@@ -818,6 +818,10 @@ footer p { margin-bottom:8px; }
         <button class="btn-toolbar btn-pdf" onclick="doExportPdf('month')" id="btnPdf">
           📋 Export PDF
         </button>
+         <button class="btn-toolbar" style="background:#E1F5FE;color:#0277BD;border:1px solid #81D4FA" onclick="doExportPdf('month', true)" id="btnTgMonthPdf">
+          ✈️ ส่ง PDF เข้า Telegram
+        </button>
+
       </div>
 
       <div class="toolbar-row-divider"></div>
@@ -834,6 +838,9 @@ footer p { margin-bottom:8px; }
         </button>
         <button class="btn-toolbar btn-pdf" onclick="doExportPdf('day')" id="btnDayPdf">
           📋 Export PDF รายวัน
+        </button>
+         <button class="btn-toolbar" style="background:#E1F5FE;color:#0277BD;border:1px solid #81D4FA" onclick="doExportPdf('day', true)" id="btnTgDayPdf">
+          ✈️ ส่ง PDF รายวันเข้า Telegram
         </button>
       </div>
 
@@ -1406,39 +1413,70 @@ async function loadThaiFont(doc) {
 }
 
 /* ── 3. EXPORT PDF ── */
-async function doExportPdf(mode) {
+async function sendPdfDocToTelegram(doc, filename, captionText) {
+  try {
+    var savedTg = {};
+    try { savedTg = JSON.parse(localStorage.getItem('it-link-hub:tg:v1') || '{}'); } catch (e) {}
+
+    var dataUri = doc.output('datauristring');
+    var base64Data = dataUri.split(',')[1] || '';
+
+    var res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'telegram_send_pdf',
+        chatId: savedTg.chatId || '',
+        filename: filename,
+        caption: captionText,
+        pdfBase64: base64Data
+      })
+    });
+    var data = await res.json().catch(function(){ return {}; });
+    if (!res.ok || !data.ok) {
+      throw new Error(data.error || ('HTTP ' + res.status));
+    }
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+}
+
+/* ── 3. EXPORT PDF (รองรับดาวน์โหลดปกติ + ส่งเข้า Telegram อัตโนมัติ) ── */
+async function doExportPdf(mode, sendToTelegram, customRows, customLabel) {
   mode = mode || 'month';
   var isDay = (mode === 'day');
-  var sv    = getExportShift();
+  var sv    = customRows ? currentShift : getExportShift();
 
   var ym = '', dateLabel = '';
-  if (isDay) {
+  if (customLabel) {
+    ym = bkkToday();
+    dateLabel = customLabel;
+  } else if (isDay) {
     var dv = document.getElementById('exportDate').value;
     if (!dv) { showToast('⚠️ กรุณาเลือกวันที่ก่อน Export','warn'); return; }
     ym        = dv;
-    dateLabel = dayLabel(dv);
+    dateLabel = dayLabel(dv) + shiftText(sv);
   } else {
     ym = getSelectedMonth();
     if (!ym) { showToast('⚠️ กรุณาเลือกเดือนก่อน Export','warn'); return; }
-    dateLabel = monthLabel(ym);
+    dateLabel = monthLabel(ym) + shiftText(sv);
   }
-  dateLabel += shiftText(sv);
 
-  showOverlay('กำลังเตรียมข้อมูล PDF...');
+  showOverlay(sendToTelegram ? 'กำลังสร้างและส่งรายงาน PDF เข้า Telegram...' : 'กำลังเตรียมข้อมูล PDF...');
   setToolbarBusy(true);
 
   var jsPDF      = window.jspdf.jsPDF;
   var tempDoc    = new jsPDF();
   var fontFamily = await loadThaiFont(tempDoc);
 
-  showOverlay('กำลังสร้าง PDF ' + dateLabel + '...');
+  showOverlay((sendToTelegram ? 'กำลังส่ง PDF ' : 'กำลังสร้าง PDF ') + dateLabel + '...');
 
   async function buildPdf(res) {
-    hideOverlay();
     setToolbarBusy(false);
-    if (res.error) { showToast('❌ ' + res.error, 'error'); return; }
+    if (res.error) { hideOverlay(); showToast('❌ ' + res.error, 'error'); return; }
     var rows = res.rows || [];
-    if (!rows.length) { showToast('⚠️ ไม่มีข้อมูลใน ' + dateLabel, 'warn'); return; }
+    if (!rows.length) { hideOverlay(); showToast('⚠️ ไม่มีข้อมูลใน ' + dateLabel, 'warn'); return; }
 
     try {
       var doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
@@ -1466,6 +1504,199 @@ async function doExportPdf(mode) {
       doc.setFontSize(9);
       doc.setFont(F_NORMAL, F_STYLE_NORMAL);
       doc.text('ช่วงเวลา: ' + dateLabel + '   |   รวมทั้งหมด: ' + rows.length + ' รายการ   |   สร้างเมื่อ: ' + nowStr(), 14, 19);
+
+      /* ── Summary bar ── */
+      var online = 0, offline = 0, bad = 0;
+      rows.forEach(function (r) {
+        if (r.status === 'Online') online++; else offline++;
+        if (r.quality !== 'ปกติ' || r.recording !== 'บันทึก') bad++;
+      });
+      doc.setFontSize(9);
+      doc.setFont(F_BOLD, F_STYLE_BOLD);
+      doc.setTextColor(60, 80, 100);
+      doc.text('สรุป :', 14, 33);
+      doc.setFont(F_NORMAL, F_STYLE_NORMAL);
+      doc.setTextColor(39, 124, 96);
+      doc.text('Online: ' + online,   40, 33);
+      doc.setTextColor(195, 74, 74);
+      doc.text('Offline: ' + offline,  78, 33);
+      doc.setTextColor(201, 125, 46);
+      doc.text('มีปัญหา: ' + bad,    115, 33);
+      doc.setTextColor(60, 80, 100);
+      doc.text('ทั้งหมด: ' + rows.length, 155, 33);
+
+      /* ── Table body ── */
+      var tableRows = rows.map(function (r) {
+        return [
+          r.name,
+          r.location,
+          String(r.date || ''),
+          r.shift || '–',
+          r.status,
+          r.quality,
+          r.recording,
+          r.fixAt || '–',
+          r.fixStatus || '–',
+          r.note || '–'
+        ];
+      });
+
+      doc.autoTable({
+        startY: 39,
+        head: [['ชื่ออุปกรณ์', 'ตำแหน่ง', 'วันที่/เวลา', 'ช่วงตรวจ', 'สถานะ', 'คุณภาพภาพ', 'การบันทึก', 'แก้ไขวัน/เวลา', 'สถานะแก้ไข', 'หมายเหตุ']],
+        body: tableRows,
+        styles: {
+          font: F_NORMAL,
+          fontStyle: 'normal',
+          fontSize: 8,
+          cellPadding: 3,
+          lineColor: [226, 234, 241],
+          lineWidth: 0.3,
+          overflow: 'linebreak'
+        },
+        headStyles: {
+          font: F_BOLD,
+          fontStyle: F_STYLE_BOLD,
+          fillColor: [30, 58, 95],
+          textColor: 255,
+          fontSize: 8,
+          cellPadding: 2.5,
+          overflow: 'visible'
+        },
+        alternateRowStyles: { fillColor: [249, 252, 254] },
+        columnStyles: {
+          0: { cellWidth: 24 },
+          1: { cellWidth: 28 },
+          2: { cellWidth: 32 },
+          3: { cellWidth: 20, halign: 'center' },
+          4: { cellWidth: 18, halign: 'center' },
+          5: { cellWidth: 24, halign: 'center' },
+          6: { cellWidth: 22, halign: 'center' },
+          7: { cellWidth: 30, halign: 'center' },
+          8: { cellWidth: 26, halign: 'center' },
+          9: { cellWidth: 'auto' }
+        },
+        didParseCell: function (data) {
+          if (data.section === 'body') {
+            if (data.column.index === 3) {
+              data.cell.styles.textColor =
+                data.cell.raw === 'เช้า' ? [168, 106, 11] : [58, 74, 158];
+              data.cell.styles.fontStyle = 'bold';
+            }
+            if (data.column.index === 4) {
+              data.cell.styles.textColor =
+                data.cell.raw === 'Online' ? [39, 124, 96] : [195, 74, 74];
+              data.cell.styles.fontStyle = 'bold';
+            }
+            if (data.column.index === 5) {
+              data.cell.styles.textColor =
+                data.cell.raw === 'ปกติ' ? [39, 124, 96] : [195, 74, 74];
+            }
+            if (data.column.index === 6) {
+              data.cell.styles.textColor =
+                data.cell.raw === 'บันทึก' ? [39, 124, 96] : [201, 125, 46];
+            }
+            if (data.column.index === 8) {
+              var v = data.cell.raw;
+              if (v === 'แก้ไขแล้ว')         data.cell.styles.textColor = [39, 124, 96];
+              else if (v === 'รอดำเนินการ')  data.cell.styles.textColor = [201, 125, 46];
+              data.cell.styles.fontStyle = 'bold';
+            }
+          }
+        },
+        margin: { left: 10, right: 10 }
+      });
+
+      /* ── ข้อความสรุปท้ายรายงาน ── */
+      var pageH = doc.internal.pageSize.getHeight();
+      var endY  = doc.lastAutoTable.finalY + 10;
+      if (endY > pageH - 45) { doc.addPage(); endY = 20; }
+
+      var problems = rows.filter(function (r) {
+        return r.status !== 'Online' || r.quality !== 'ปกติ' || r.recording !== 'บันทึก';
+      });
+      var pending = problems.filter(function (r) { return r.fixStatus !== 'แก้ไขแล้ว'; }).length;
+      var summaryText = problems.length
+        ? 'พบความผิดปกติ ' + problems.length + ' รายการ: ' +
+          problems.map(function (r) { return r.name; }).filter(function (v, i, a) { return a.indexOf(v) === i; }).join(', ') +
+          '  (แก้ไขแล้ว ' + (problems.length - pending) + ' / รอดำเนินการ ' + pending + ')'
+        : 'กล้องทุกตัวทำงานปกติ ไม่พบความผิดปกติ';
+      var sumLines = doc.splitTextToSize(summaryText, 265);
+      var boxH = 12 + sumLines.length * 5;
+
+      doc.setDrawColor(200, 217, 233);
+      doc.setFillColor(244, 247, 252);
+      doc.roundedRect(10, endY, 277, boxH, 2, 2, 'FD');
+      doc.setFont(F_BOLD, F_STYLE_BOLD);
+      doc.setFontSize(9);
+      doc.setTextColor(30, 58, 95);
+      doc.text('สรุปผลการตรวจสอบ', 14, endY + 7);
+      doc.setFont(F_NORMAL, F_STYLE_NORMAL);
+      doc.setFontSize(8.5);
+      doc.setTextColor(60, 80, 100);
+      doc.text(sumLines, 14, endY + 13);
+
+      /* ── Page footer & Watermark ── */
+      var pageCount = doc.internal.getNumberOfPages();
+      var pageW = doc.internal.pageSize.getWidth();
+      var WM_TEXT = 'TOKAISOLIDTIRE', WM_ANGLE = 30, WM_SIZE = 60;
+      for (var p = 1; p <= pageCount; p++) {
+        doc.setPage(p);
+
+        doc.saveGraphicsState();
+        doc.setGState(new doc.GState({ opacity: 0.15 }));
+        doc.setFont(F_BOLD, F_STYLE_BOLD);
+        doc.setFontSize(WM_SIZE);
+        doc.setTextColor(60, 140, 220);
+        var rad = WM_ANGLE * Math.PI / 180;
+        var wmW = doc.getTextWidth(WM_TEXT);
+        var cx = pageW / 2, cy = pageH / 2;
+        doc.text(WM_TEXT,
+          cx - (wmW / 2) * Math.cos(rad) + 7 * Math.sin(rad),
+          cy + (wmW / 2) * Math.sin(rad) + 7 * Math.cos(rad),
+          { angle: WM_ANGLE });
+        doc.restoreGraphicsState();
+
+        doc.setDrawColor(226, 234, 241);
+        doc.setLineWidth(0.3);
+        doc.line(10, 196, pageW - 10, 196);
+        doc.setFont(F_NORMAL, 'normal');
+        doc.setFontSize(8);
+        doc.setTextColor(120, 135, 155);
+        doc.text('รายงานกล้องวงจรปิด | ใช้ภายในบริษัทเท่านั้น | พัฒนาโดย Sarawut.C', 10, 201);
+        doc.text('หน้า ' + p + ' / ' + pageCount, pageW - 10, 201, { align: 'right' });
+      }
+
+      var pdfFilename = (isDay ? 'CCTV_Daily_' + ym : 'CCTV_Checklist_' + ym) + shiftSuffix(sv) + '.pdf';
+
+      if (sendToTelegram) {
+        var caption = '📹 รายงานตรวจสอบกล้องวงจรปิด (CCTV)\n'
+          + '🗓 ช่วงเวลา: ' + dateLabel + '\n'
+          + '✅ Online: ' + online + ' | 🔴 Offline: ' + offline + ' | ⚠️ มีปัญหา: ' + bad + '\n'
+          + '📌 สรุป: ' + summaryText;
+        var tgRes = await sendPdfDocToTelegram(doc, pdfFilename, caption);
+        hideOverlay();
+        if (tgRes.ok) {
+          showToast('✈️ บันทึกและส่งไฟล์ PDF เข้า Telegram สำเร็จ!', 'ok');
+        } else {
+          showToast('⚠️ ส่งเข้า Telegram ไม่สำเร็จ: ' + tgRes.error, 'warn');
+        }
+      } else {
+        hideOverlay();
+        doc.save(pdfFilename);
+        showToast('✅ ดาวน์โหลด PDF สำเร็จ (' + rows.length + ' รายการ)', 'ok');
+      }
+
+    } catch (err) {
+      hideOverlay();
+      showToast('❌ สร้าง PDF ล้มเหลว: ' + err.message, 'error');
+      console.error(err);
+    }
+  }
+
+  var res = customRows ? { rows: customRows } : await (isDay ? fetchDay(ym, sv) : fetchMonth(ym, sv));
+  await buildPdf(res);
+}
 
       /* ── Summary bar ── */
       var online = 0, offline = 0, bad = 0;
@@ -1934,13 +2165,20 @@ function doActualSave() {
       fix_status:  (st && qu && re) ? null : 'รอดำเนินการ'
     };
   });
-  sb.from('checks').insert(rows).then(function(res){
+  sb.from('checks').insert(rows).select().then(function(res){
     btn.disabled = false; btn.innerHTML = '💾 บันทึกข้อมูล';
     if (res.error) { showToast('❌ บันทึกล้มเหลว: ' + res.error.message, 'error'); return; }
-    showToast('✅ บันทึกช่วง' + shiftToSave + 'สำเร็จ ' + rows.length + ' รายการ', 'ok');
+    showToast('✅ บันทึกช่วง' + shiftToSave + 'สำเร็จ ' + rows.length + ' รายการ (กำลังส่ง PDF เข้า Telegram...)', 'ok');
     loadTodaySummary();
+
+    var savedRows = (res.data || []).map(toRow);
+    if (savedRows.length) {
+      var label = dayLabel(bkkToday()) + ' (ช่วง' + shiftToSave + ')';
+      doExportPdf('day', true, savedRows, label);
+    }
   });
 }
+
 
 /* ── Boot ── */
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', initAuth);
