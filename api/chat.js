@@ -172,6 +172,7 @@ module.exports = async function handler(req, res) {
     const tgToken = String(process.env.TELEGRAM_BOT_TOKEN || "").replace(/[^\x21-\x7E]/g, "").trim();
     const defaultChatId = String(process.env.TELEGRAM_CHAT_ID || "").replace(/[^\x21-\x7E]/g, "").trim();
     const cctvChatId = String(process.env.TELEGRAM_CCTV_CHAT_ID || "").replace(/[^\x21-\x7E]/g, "").trim();
+    const cctvToken = String(process.env.TELEGRAM_CCTV_BOT_TOKEN || "").replace(/[^\x21-\x7E]/g, "").trim();
     const rawKey = process.env.GROQ_API_KEY || process.env.GEMINI_API_KEY || "";
     const groqKey = String(rawKey).replace(/[^\x21-\x7E]/g, "").trim();
 
