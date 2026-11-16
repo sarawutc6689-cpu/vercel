@@ -1311,7 +1311,8 @@ function hideOverlay(){ document.getElementById('overlay').classList.remove('act
 
 function setToolbarBusy(busy){
   ['btnCsv','btnPdf','btnDayCsv','btnDayPdf','btnTg','btnDayTg'].forEach(function(id){
-    document.getElementById(id).disabled = busy;
+    var el = document.getElementById(id);
+    if (el) el.disabled = busy;
   });
 }
 
