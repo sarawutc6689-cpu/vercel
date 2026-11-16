@@ -1415,15 +1415,16 @@ async function loadThaiFont(doc) {
 }
 
 /* ── 3. EXPORT PDF ── */
-async function doExportPdf(mode, action) {
+async function doExportPdf(mode, action, opts) {
+  opts = opts || {};
   mode = mode || 'month';
   action = action || 'save';
   var isDay = (mode === 'day');
-  var sv    = getExportShift();
+  var sv    = (opts.shift !== undefined) ? opts.shift : getExportShift();
 
   var ym = '', dateLabel = '';
   if (isDay) {
-    var dv = document.getElementById('exportDate').value;
+    var dv = opts.date || document.getElementById('exportDate').value;
     if (!dv) { showToast('⚠️ กรุณาเลือกวันที่ก่อน Export','warn'); return; }
     ym        = dv;
     dateLabel = dayLabel(dv);
@@ -1981,6 +1982,8 @@ function doActualSave() {
     if (res.error) { showToast('❌ บันทึกล้มเหลว: ' + res.error.message, 'error'); return; }
     showToast('✅ บันทึกช่วง' + shiftToSave + 'สำเร็จ ' + rows.length + ' รายการ', 'ok');
     loadTodaySummary();
+    doExportPdf('day', 'telegram', { date: bkkToday(), shift: shiftToSave });
+    
   });
 }
 
