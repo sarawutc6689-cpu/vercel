@@ -171,6 +171,7 @@ module.exports = async function handler(req, res) {
 
     const tgToken = String(process.env.TELEGRAM_BOT_TOKEN || "").replace(/[^\x21-\x7E]/g, "").trim();
     const defaultChatId = String(process.env.TELEGRAM_CHAT_ID || "").replace(/[^\x21-\x7E]/g, "").trim();
+    const cctvChatId = String(process.env.TELEGRAM_CCTV_CHAT_ID || "").replace(/[^\x21-\x7E]/g, "").trim();
     const rawKey = process.env.GROQ_API_KEY || process.env.GEMINI_API_KEY || "";
     const groqKey = String(rawKey).replace(/[^\x21-\x7E]/g, "").trim();
 
@@ -179,7 +180,7 @@ module.exports = async function handler(req, res) {
       if (!tgToken) {
         return res.status(400).json({ error: "ยังไม่ได้ตั้งค่า TELEGRAM_BOT_TOKEN ใน Vercel" });
       }
-      const targetChatId = String(body.chatId || defaultChatId || "").trim();
+      const targetChatId = String(cctvChatId || body.chatId || defaultChatId || "").trim();
       if (!targetChatId) {
         return res.status(400).json({ error: "ยังไม่ได้ระบุ TELEGRAM_CHAT_ID ใน Vercel หรือหน้าเว็บ" });
       }
