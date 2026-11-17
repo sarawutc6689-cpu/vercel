@@ -25,6 +25,9 @@
     --ok-soft:#E5F5EC;
     --warn:#B4791F;
     --warn-soft:#FDF3E0;
+    --sun-bg:#FBEBEE;   --sun-fg:#C1596A;
+    --com-bg:#FDF3E0;   --com-fg:#B4791F;
+    --spe-bg:#E5F5EC;   --spe-fg:#1F8A4C;
     --radius:16px;
     --shadow:0 1px 2px rgba(27,60,90,.04), 0 10px 30px rgba(27,60,90,.06);
   }
@@ -125,6 +128,7 @@
     header{padding:14px 20px;}
   }
 
+  main > *{min-width:0;}   /* กันตารางกว้างดันหน้าให้เลื่อนแนวนอน */
   .panel{
     background:var(--panel);
     border:1px solid var(--line);
@@ -376,8 +380,11 @@
     margin-right:5px;
     vertical-align:-1px;
   }
-  .legend .w{background:var(--ok-soft); border:1px solid var(--ok);}
-  .legend .o{background:var(--warn-soft); border:1px solid var(--warn);}
+  .legend{flex-wrap:wrap;}
+  .legend .w{background:var(--accent-soft); border:1px solid var(--accent);}
+  .legend .s{background:var(--sun-bg); border:1px solid var(--sun-fg);}
+  .legend .c{background:var(--com-bg); border:1px solid var(--com-fg);}
+  .legend .p{background:var(--spe-bg); border:1px solid var(--spe-fg);}
   .grid-wrap{
     overflow:auto;
     max-height:70vh;
@@ -408,7 +415,11 @@
     font-weight:600;
     line-height:1.25;
   }
-  table.sched thead th.sun{color:var(--danger);}
+  /* สีประเภทวัน: อาทิตย์ = แดง, วันหยุดบริษัท = เหลือง, หยุดพิเศษ 75% = เขียว */
+  table.sched thead th.sunday{background:var(--sun-bg); color:var(--sun-fg);}
+  table.sched thead th.company{background:var(--com-bg); color:var(--com-fg);}
+  table.sched thead th.special75{background:var(--spe-bg); color:var(--spe-fg);}
+  table.sched thead th.sunday .dn, table.sched thead th.company .dn, table.sched thead th.special75 .dn{color:inherit;}
   table.sched .mo{font-size:10.5px; font-weight:500; min-height:13px;}
   table.sched .dn{font-size:13px; color:var(--ink);}
   table.sched .c1, table.sched .c2{
@@ -420,9 +431,14 @@
   table.sched .c2{left:84px; min-width:190px; border-right:1.5px solid var(--line);}
   table.sched thead .c1, table.sched thead .c2{z-index:3;}
   table.sched td.cell{min-width:78px; font-weight:600;}
-  table.sched td.cell.work{background:var(--ok-soft); color:var(--ok);}
-  table.sched td.cell.off{background:var(--warn-soft); color:var(--warn);}
+  table.sched td.cell.work{background:var(--accent-soft-2); color:var(--accent-dark);}
+  table.sched td.cell.sunday{background:var(--sun-bg); color:var(--sun-fg);}
+  table.sched td.cell.company{background:var(--com-bg); color:var(--com-fg);}
+  table.sched td.cell.special75{background:var(--spe-bg); color:var(--spe-fg);}
   table.sched td.cell.empty{color:#B8C7D8; font-weight:400;}
+  table.sched td.cell.empty.sunday{background:var(--sun-bg);}
+  table.sched td.cell.empty.company{background:var(--com-bg);}
+  table.sched td.cell.empty.special75{background:var(--spe-bg);}
 
   /* ---------- banner ---------- */
   #status-banner{
@@ -506,7 +522,7 @@
 
         <div class="controls">
           <div class="field">
-            <label>ตำแหน่งพนักงาน</label>
+            <label>กลุ่มพนักงาน</label>
             <div class="seg" id="group-switch">
               <button type="button" data-group="employee" class="active">พนักงาน <span class="n" id="cnt-employee"></span></button>
               <button type="button" data-group="supervisor">หัวหน้างาน <span class="n" id="cnt-supervisor"></span></button>
@@ -531,11 +547,7 @@
         </div>
         <div class="range-label" id="range-label"></div>
 
-        <div class="field" style="margin-top:16px;">
-          <label>วันหยุดประจำสัปดาห์ (ไม่บังคับ)</label>
-          <div class="chips" id="weekday-chips"></div>
-          <div class="hint">วันที่เลือกจะบันทึกเป็นรหัสวันหยุดของกะนั้น (เช่น OFF-A000_M สำหรับรายเดือน, OFF-A000_D สำหรับรายวัน) ถ้าไม่เลือก ทุกวันในช่วงจะบันทึกเป็นรหัสกะที่เลือก</div>
-        </div>
+        <div class="hint" style="margin-top:12px;">เลือกรหัสกะหลักเพียงครั้งเดียว ระบบจะแสดงรหัสวันหยุด (เช่น OFF-A000_M รายเดือน, OFF-A000_D รายวัน) ในตารางด้านล่างให้เองตามปฏิทินวันหยุด (วันอาทิตย์ วันหยุดบริษัท วันหยุดพิเศษ 75%) ไม่ต้องเลือกวันหยุดเอง</div>
 
         <div class="emp-toolbar">
           <input id="emp-search" type="search" placeholder="ค้นหารหัส หรือ ชื่อพนักงาน...">
@@ -573,7 +585,9 @@
           <h2>ตารางกะที่บันทึกไว้</h2>
           <div class="legend">
             <span><i class="w"></i>วันทำงาน</span>
-            <span><i class="o"></i>วันหยุด</span>
+            <span><i class="s"></i>วันอาทิตย์</span>
+            <span><i class="c"></i>วันหยุดบริษัท</span>
+            <span><i class="p"></i>วันหยุดพิเศษ 75%</span>
             <button type="button" class="btn-ghost" id="grid-refresh">รีเฟรช</button>
           </div>
         </div>
@@ -585,7 +599,7 @@
     </main>
 
     <footer class="app-footer">
-      แบบฟอร์มบันทึกเวลากะทำงาน | ใช้ภายในบริษัทเท่านั้น | พัฒนาโดย Sarawut.C
+      ระบบฐานข้อมูลฝ่ายบุคคล | ใช้ภายในบริษัทเท่านั้น
     </footer>
   </div>
 
@@ -611,6 +625,15 @@
   let selected = new Set();  // employee_code ที่ติ๊กไว้
   let currentUserEmail = '';
   let gridReqId = 0;
+  let holidayMap = new Map();   // iso → {holiday_type, name} จากตาราง calendar_holidays (ไม่รวมวันอาทิตย์)
+
+  const DAY_LABEL = { sunday: 'วันอาทิตย์', company: 'วันหยุดบริษัท', special75: 'วันหยุดพิเศษ 75%' };
+  // ประเภทของวัน: อาทิตย์ → 'sunday', นอกนั้นดูจากปฏิทิน, วันทำงานปกติ → null
+  function dayInfo(iso){
+    if (parseISO(iso).getUTCDay() === 0) return { type: 'sunday', name: DAY_LABEL.sunday };
+    const h = holidayMap.get(iso);
+    return h ? { type: h.holiday_type, name: h.name } : null;
+  }
 
   // ---------------- HELPERS ----------------
   function escapeHtml(s){
@@ -759,10 +782,6 @@
     el('f-dept').innerHTML = `<option value="">ทุกแผนกที่รับผิดชอบ (${depts.length})</option>` +
       depts.map(d => `<option value="${escapeHtml(d.code)}">${escapeHtml(d.name)} (${escapeHtml(d.code)})</option>`).join('');
 
-    // วันหยุดประจำสัปดาห์
-    el('weekday-chips').innerHTML = WEEKDAYS.map((w, i) =>
-      `<label class="chip"><input type="checkbox" class="wd" value="${i}"><span>${w}</span></label>`).join('');
-
     // ค่าเริ่มต้นช่วงวันที่ = วันนี้ ถึง อีก 6 วัน
     const t = todayISO();
     el('f-start').value = t;
@@ -817,7 +836,6 @@
   });
   el('f-shift').addEventListener('change', () => { el('f-shift').classList.remove('invalid'); renderEmployees(); updateSummary(); });
   el('emp-search').addEventListener('input', renderEmployees);
-  el('weekday-chips').addEventListener('change', updateSummary);
 
   ['f-start', 'f-end'].forEach(id => el(id).addEventListener('change', () => {
     el('f-start').classList.remove('invalid');
@@ -929,28 +947,18 @@
     if (dates.length > MAX_DAYS) { showFormError(`เลือกช่วงวันที่ได้ไม่เกิน ${MAX_DAYS} วันต่อครั้ง`, ['f-end']); return; }
     if (emps.length === 0) { showFormError('กรุณาเลือกพนักงานอย่างน้อย 1 คน'); return; }
 
-    const offDays = new Set([...document.querySelectorAll('.wd:checked')].map(c => Number(c.value)));
-
-    if (offDays.size > 0) {
-      const noOff = emps.filter(e => !offCodeFor(e, shift));
-      if (noOff.length) {
-        const names = noOff.slice(0, 5).map(e => `${e.employee_code} ${e.full_name}`).join(', ');
-        showFormError(`พนักงานต่อไปนี้ยังไม่ระบุประเภทการจ้าง (รายเดือน/รายวัน) จึงกำหนดรหัสวันหยุดไม่ได้: ${names}${noOff.length > 5 ? ` และอีก ${noOff.length - 5} คน` : ''} กรุณาแจ้งฝ่ายบุคคล`);
-        return;
-      }
-    }
-
+    // บันทึกเฉพาะรหัสกะหลักของทุกวัน ส่วนวันหยุด (อาทิตย์/บริษัท/พิเศษ 75%) ระบบคำนวณแสดงจากปฏิทินให้เอง
+    // ถ้าแก้ปฏิทินภายหลัง ตารางกะที่บันทึกไว้จะเปลี่ยนตามทันที ไม่ต้องบันทึกใหม่
     const nowIso = new Date().toISOString();
     const rows = [];
     emps.forEach(emp => {
       dates.forEach(iso => {
-        const isOff = offDays.has(parseISO(iso).getUTCDay());
         rows.push({
           employee_code: emp.employee_code,
           work_date: iso,
-          shift_code: isOff ? offCodeFor(emp, shift) : shift.shift_code,
+          shift_code: shift.shift_code,
           base_shift_code: shift.shift_code,
-          is_off: isOff,
+          is_off: false,
           created_by: currentUserEmail,
           updated_at: nowIso
         });
@@ -1025,8 +1033,20 @@
 
     let rows;
     try {
+      // โหลดวันหยุดจากปฏิทินพร้อมกัน (ถ้าโหลดไม่ได้ ยังแสดงวันอาทิตย์ได้ แต่แจ้งเตือน)
+      const holRes = await sb.from('calendar_holidays')
+        .select('holiday_date, holiday_type, name')
+        .gte('holiday_date', start).lte('holiday_date', end);
+      if (myReq === gridReqId) {
+        if (holRes.error) {
+          holidayMap = new Map();
+          showBanner('โหลดปฏิทินวันหยุดไม่สำเร็จ: ' + holRes.error.message + ' (ตรวจว่ารัน calendar.sql แล้ว)', true);
+        } else {
+          holidayMap = new Map(holRes.data.map(h => [h.holiday_date, h]));
+        }
+      }
       rows = await fetchAll(() => sb.from('shift_schedules')
-        .select('employee_code, work_date, shift_code, is_off')
+        .select('employee_code, work_date, shift_code, base_shift_code, is_off')
         .gte('work_date', start).lte('work_date', end)
         .order('employee_code').order('work_date'));
     } catch (err) {
@@ -1045,15 +1065,29 @@
       const mo = (idx === 0 || day === 1)
         ? d.toLocaleDateString('th-TH', { month:'short', timeZone:'UTC' })
         : '&nbsp;';
-      const sun = d.getUTCDay() === 0 ? ' sun' : '';
-      return `<th class="${sun.trim()}" title="${escapeHtml(fmtThai(iso))}"><div class="mo">${mo}</div><div>${WEEKDAYS[d.getUTCDay()]}</div><div class="dn">${day}</div></th>`;
+      const info = dayInfo(iso);
+      const title = fmtThai(iso) + (info ? ' : ' + info.name : '');
+      return `<th class="${info ? info.type : ''}" title="${escapeHtml(title)}"><div class="mo">${mo}</div><div>${WEEKDAYS[d.getUTCDay()]}</div><div class="dn">${day}</div></th>`;
     }).join('');
 
     const body = emps.map(emp => {
       const cells = dates.map(iso => {
         const r = map.get(emp.employee_code + '|' + iso);
-        if (!r) return '<td class="cell empty">·</td>';
-        return `<td class="cell ${r.is_off ? 'off' : 'work'}" title="${escapeHtml(fmtThai(iso) + ' : ' + r.shift_code)}">${escapeHtml(r.shift_code)}</td>`;
+        const info = dayInfo(iso);
+        if (!r) return `<td class="cell empty ${info ? info.type : ''}" title="${escapeHtml(info ? fmtThai(iso) + ' : ' + info.name : '')}">·</td>`;
+        const base = r.base_shift_code || r.shift_code;
+        if (info) {
+          // วันหยุดตามปฏิทิน → แสดงรหัสวันหยุดของกะนั้นตามประเภทการจ้าง (รายเดือน/รายวัน)
+          const shiftObj = shiftCodes.find(x => x.shift_group === groupOf(emp) && x.shift_code === base);
+          const off = offCodeFor(emp, shiftObj);
+          const shown = off || 'OFF?';
+          const tip = off ? `${fmtThai(iso)} : ${info.name} (กะ ${base})`
+                          : `${fmtThai(iso)} : ${info.name} — พนักงานยังไม่ระบุประเภทการจ้าง (รายเดือน/รายวัน) จึงไม่ทราบรหัสวันหยุด`;
+          return `<td class="cell ${info.type}" title="${escapeHtml(tip)}">${escapeHtml(shown)}</td>`;
+        }
+        // ข้อมูลเก่าที่เคยบันทึกเป็นวันหยุดประจำสัปดาห์ไว้ก่อน (is_off) ยังแสดงตามที่บันทึก
+        if (r.is_off) return `<td class="cell company" title="${escapeHtml(fmtThai(iso) + ' : ' + r.shift_code)}">${escapeHtml(r.shift_code)}</td>`;
+        return `<td class="cell work" title="${escapeHtml(fmtThai(iso) + ' : ' + r.shift_code)}">${escapeHtml(r.shift_code)}</td>`;
       }).join('');
       return `<tr><td class="c1"><span class="code-cell">${escapeHtml(emp.employee_code)}</span></td><td class="c2">${escapeHtml(emp.full_name)}</td>${cells}</tr>`;
     }).join('');
