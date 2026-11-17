@@ -420,6 +420,7 @@
                 <th>แผนก</th>
                 <th>ตำแหน่ง</th>
                 <th class="nowrap">สถานที่</th>
+                <th class="nowrap">ประเภทการจ้าง</th>
                 <th class="nowrap">วันเริ่มงาน</th>
                 <th>สถานะ</th>
                 <th></th>
@@ -481,6 +482,13 @@
           <option value="" disabled selected>เลือกสถานที่ปฏิบัติงาน</option>
           <option value="กรุงเทพ">กรุงเทพ</option>
           <option value="โรงงาน">โรงงาน</option>
+        </select>
+
+        <label for="f-worktype">ประเภทการจ้าง</label>
+        <select id="f-worktype" required>
+          <option value="" disabled selected>เลือกประเภทการจ้าง</option>
+          <option value="รายเดือน">รายเดือน</option>
+          <option value="รายวัน">รายวัน</option>
         </select>
 
         <label for="f-hiredate">วันเริ่มงาน (พ.ศ.)</label>
@@ -737,6 +745,7 @@
         <td>${r.department_name} <span style="color:var(--ink-soft); font-size:12px;">(${r.department_code})</span></td>
         <td>${r.position_name}</td>
         <td class="nowrap">${escapeHtml(r.location) || '-'}</td>
+        <td class="nowrap">${escapeHtml(r.work_type) || '-'}</td>
         <td class="nowrap">${isoToThaiDate(r.hire_date) || '-'}</td>
         <td><span class="status-badge status-${r.status}">${STATUS_LABEL[r.status] ?? r.status}</span></td>
         <td class="row-actions">
@@ -766,7 +775,8 @@
     renderTable(allEmployees.filter(r =>
       r.employee_code.toLowerCase().includes(q) ||
       r.full_name.toLowerCase().includes(q) ||
-      (r.location || '').toLowerCase().includes(q)
+      (r.location || '').toLowerCase().includes(q) ||
+      (r.work_type || '').toLowerCase().includes(q)
     ));
   });
 
@@ -810,6 +820,7 @@
     el('f-section').value = '';
     el('f-deptcode').value = '';
     el('f-location').value = '';
+    el('f-worktype').value = '';
     el('f-status').value = 'active';
     el('form-title').textContent = 'เพิ่มพนักงานใหม่';
     el('save-btn').textContent = 'บันทึก';
@@ -827,6 +838,7 @@
     el('f-deptcode').value = row.department_code;
     el('f-position').value = row.position_name;
     el('f-location').value = row.location || '';
+    el('f-worktype').value = row.work_type || '';
     el('f-hiredate').value = isoToThaiDate(row.hire_date);
     el('f-status').value = row.status;
     el('form-title').textContent = 'แก้ไขข้อมูลพนักงาน: ' + code;
@@ -871,6 +883,7 @@
     const departmentCode = el('f-department').value;
     const positionName = el('f-position').value.trim();
     const location = el('f-location').value.trim();
+    const workType = el('f-worktype').value.trim();
     const status = el('f-status').value;
 
     clearFormError();
@@ -881,7 +894,8 @@
       ['f-name', 'ชื่อ-นามสกุล', name],
       ['f-department', 'แผนก', departmentCode],
       ['f-position', 'ตำแหน่ง', positionName],
-      ['f-location', 'สถานที่ปฏิบัติงาน', location]
+      ['f-location', 'สถานที่ปฏิบัติงาน', location],
+      ['f-worktype', 'ประเภทการจ้าง', workType]
     ];
     const missing = required.filter(([, , value]) => !value);
     if (missing.length) {
@@ -908,6 +922,7 @@
         section_name: dept ? dept.section_name : '',
         position_name: positionName,
         location: location,
+        work_type: workType,
         status_label: STATUS_LABEL[status] ?? status
       };
 
@@ -919,6 +934,7 @@
             department_code: departmentCode,
             position_id: positionId,
             location: location,
+            work_type: workType,
             hire_date: hireDate,
             status: status
           })
@@ -941,6 +957,7 @@
             department_code: departmentCode,
             position_id: positionId,
             location: location,
+            work_type: workType,
             hire_date: hireDate,
             status: status
           });
@@ -976,7 +993,8 @@
         department_name: row.department_name,
         section_name: row.section_name,
         position_name: row.position_name,
-        location: row.location || null
+        location: row.location || null,
+        work_type: row.work_type || null
       });
     }
     if (editingCode === code) resetForm();
