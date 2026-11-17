@@ -476,7 +476,11 @@
         <datalist id="position-suggestions"></datalist>
 
         <label for="f-location">สถานที่ปฏิบัติงาน</label>
-        <input id="f-location" required placeholder="เช่น สำนักงานใหญ่ / โรงงานสระบุรี">
+        <select id="f-location" required>
+          <option value="" disabled selected>เลือกสถานที่ปฏิบัติงาน</option>
+          <option value="กรุงเทพ">กรุงเทพ</option>
+          <option value="โรงงาน">โรงงาน</option>
+        </select>
 
         <label for="f-hiredate">วันเริ่มงาน (พ.ศ.)</label>
         <input id="f-hiredate" type="text" placeholder="วว/ดด/ปปปป เช่น 01/01/2533" inputmode="numeric">
@@ -584,7 +588,7 @@
   }
 
   const ITHELPDESK_URL = "https://fnbkcgkuykdabbensvif.supabase.co";
-  const ITHELPDESK_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZuYmtjZ2t1eWtkYWJiZW5zdmlmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkzMDE0MTQsImV4cCI6MjEwNDg3NzQxNH0.L6x3nqAy2rqcxdtzyTs4MHLPubtBqD3Tnk9e97EfEJE";
+  const ITHELPDESK_ANON_KEY = "key-anon";
 
   function syncToItHelpdesk(employeeCode){
     fetch(`${ITHELPDESK_URL}/functions/v1/sync-employees`, {
