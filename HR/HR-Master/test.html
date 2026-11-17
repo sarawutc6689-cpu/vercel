@@ -109,7 +109,7 @@
   .btn-ghost:hover{border-color:var(--accent); color:var(--accent-dark);}
 
   main{
-    max-width:1180px;
+    max-width:1480px;
     margin:0 auto;
     padding:32px;
   }
@@ -245,6 +245,7 @@
     display:inline-block;
   }
   .row-actions{white-space:nowrap;}
+  th.nowrap, td.nowrap{white-space:nowrap;}
   .link-btn{
     background:none;
     border:none;
@@ -284,7 +285,7 @@
 
   #status-banner{
     display:none;
-    max-width:1180px;
+    max-width:1480px;
     margin:0 auto;
     padding:0 32px;
   }
@@ -418,8 +419,8 @@
                 <th>ฝ่าย</th>
                 <th>แผนก</th>
                 <th>ตำแหน่ง</th>
-                <th>สถานที่</th>
-                <th>วันเริ่มงาน</th>
+                <th class="nowrap">สถานที่</th>
+                <th class="nowrap">วันเริ่มงาน</th>
                 <th>สถานะ</th>
                 <th></th>
               </tr>
@@ -588,7 +589,7 @@
   }
 
   const ITHELPDESK_URL = "https://fnbkcgkuykdabbensvif.supabase.co";
-  const ITHELPDESK_ANON_KEY = "key-anon";
+  const ITHELPDESK_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZuYmtjZ2t1eWtkYWJiZW5zdmlmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkzMDE0MTQsImV4cCI6MjEwNDg3NzQxNH0.L6x3nqAy2rqcxdtzyTs4MHLPubtBqD3Tnk9e97EfEJE";
 
   function syncToItHelpdesk(employeeCode){
     fetch(`${ITHELPDESK_URL}/functions/v1/sync-employees`, {
@@ -735,8 +736,8 @@
         <td>${r.section_name}</td>
         <td>${r.department_name} <span style="color:var(--ink-soft); font-size:12px;">(${r.department_code})</span></td>
         <td>${r.position_name}</td>
-        <td>${escapeHtml(r.location) || '-'}</td>
-        <td>${isoToThaiDate(r.hire_date) || '-'}</td>
+        <td class="nowrap">${escapeHtml(r.location) || '-'}</td>
+        <td class="nowrap">${isoToThaiDate(r.hire_date) || '-'}</td>
         <td><span class="status-badge status-${r.status}">${STATUS_LABEL[r.status] ?? r.status}</span></td>
         <td class="row-actions">
           <button class="link-btn" data-edit="${r.employee_code}">
