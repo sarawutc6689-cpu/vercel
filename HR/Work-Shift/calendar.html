@@ -1,0 +1,884 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ปฏิทินวันหยุด — HR Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1B2B3E;
+    --ink-soft:#6E85A0;
+    --bg-a:#EAF3FB;
+    --bg-b:#F7FBFE;
+    --panel:#FFFFFF;
+    --line:#DCE9F5;
+    --accent:#2F7FB8;
+    --accent-dark:#24628F;
+    --accent-ink:#FFFFFF;
+    --accent-soft:#E7F2FB;
+    --accent-soft-2:#F1F8FD;
+    --danger:#C1596A;
+    --danger-soft:#FBEBEE;
+    --warn:#B4791F;
+    --warn-soft:#FDF3E0;
+    --ok:#1F8A4C;
+    --ok-soft:#E5F5EC;
+    /* สีประเภทวัน: อาทิตย์ = แดง, วันหยุดบริษัท = เหลือง, หยุดพิเศษ 75% = เขียว */
+    --sun-bg:#FBEBEE;   --sun-fg:#C1596A;
+    --com-bg:#FDF3E0;   --com-fg:#B4791F;
+    --spe-bg:#E5F5EC;   --spe-fg:#1F8A4C;
+    --radius:16px;
+    --shadow:0 1px 2px rgba(27,60,90,.04), 0 10px 30px rgba(27,60,90,.06);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    min-height:100vh;
+    background:linear-gradient(180deg, var(--bg-a) 0%, var(--bg-b) 320px, var(--bg-b) 100%);
+    color:var(--ink);
+    font-family:'Inter',system-ui,sans-serif;
+    font-size:15px;
+    line-height:1.5;
+  }
+  h1,h2,h3{
+    font-family:'Space Grotesk',system-ui,sans-serif;
+    margin:0;
+    font-weight:600;
+    letter-spacing:-0.01em;
+  }
+
+  /* ---------- login ---------- */
+  #login-screen{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+  }
+  .login-card{
+    width:100%;
+    max-width:380px;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:38px 34px;
+    box-shadow:var(--shadow);
+    text-align:center;
+  }
+  .login-mark{
+    width:52px; height:52px;
+    margin:0 auto 18px;
+    border-radius:14px;
+    background:linear-gradient(135deg, var(--accent), #6FB4E0);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .login-mark svg{width:26px; height:26px;}
+  .login-card h1{font-size:20px; margin-bottom:6px;}
+  .login-card p.sub{color:var(--ink-soft); font-size:13.5px; margin:0 0 24px;}
+  .login-card .field{text-align:left; margin-top:16px;}
+
+  /* ---------- header ---------- */
+  #app{display:none;}
+  header{
+    background:rgba(255,255,255,.85);
+    backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line);
+    padding:16px 32px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    position:sticky;
+    top:0;
+    z-index:10;
+  }
+  .brand{display:flex; align-items:center; gap:12px;}
+  .brand-mark{
+    width:34px; height:34px;
+    border-radius:10px;
+    background:linear-gradient(135deg, var(--accent), #6FB4E0);
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+  }
+  .brand-mark svg{width:18px; height:18px;}
+  header h1{font-size:17px;}
+  header .who{font-size:13px; color:var(--ink-soft);}
+  .btn-ghost{
+    background:#fff;
+    border:1px solid var(--line);
+    color:var(--ink-soft);
+    padding:8px 16px;
+    border-radius:10px;
+    font-size:13.5px;
+    font-family:inherit;
+    cursor:pointer;
+    transition:.15s;
+  }
+  .btn-ghost:hover{border-color:var(--accent); color:var(--accent-dark);}
+
+  main{
+    max-width:1280px;
+    margin:0 auto;
+    padding:32px;
+    display:grid;
+    gap:24px;
+  }
+  @media (max-width:860px){
+    main{padding:20px;}
+    header{padding:14px 20px;}
+  }
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:26px;
+    box-shadow:var(--shadow);
+  }
+  .panel-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    flex-wrap:wrap;
+    margin-bottom:18px;
+  }
+  .panel-head h2{font-size:16px;}
+
+  /* ---------- form controls ---------- */
+  .field{margin-top:16px;}
+  .field:first-child{margin-top:0;}
+  .field label{
+    display:block;
+    font-size:13px;
+    color:var(--ink-soft);
+    margin-bottom:6px;
+    font-weight:500;
+  }
+  input[type=text], input[type=email], input[type=password], input[type=date], select{
+    width:100%;
+    padding:10px 13px;
+    border:1.5px solid var(--line);
+    border-radius:10px;
+    font-size:14px;
+    font-family:inherit;
+    color:var(--ink);
+    background:#fff;
+    transition:.15s;
+  }
+  input:focus, select:focus{
+    outline:none;
+    border-color:var(--accent);
+    box-shadow:0 0 0 4px var(--accent-soft);
+  }
+  input:disabled{background:#F3F6FA; color:var(--ink-soft);}
+  input.invalid, .seg.invalid{border-color:var(--danger); background:var(--danger-soft);}
+  .hint{font-size:12.5px; color:var(--ink-soft); margin-top:6px;}
+
+  .btn{
+    padding:11px 20px;
+    border-radius:10px;
+    border:none;
+    font-size:14px;
+    font-weight:600;
+    font-family:inherit;
+    cursor:pointer;
+    transition:.15s;
+  }
+  .btn-primary{background:var(--accent); color:var(--accent-ink);}
+  .btn-primary:hover{background:var(--accent-dark);}
+  .btn-cancel{background:var(--accent-soft-2); color:var(--ink-soft);}
+  .btn-cancel:hover{color:var(--ink); background:var(--accent-soft);}
+  .btn-danger{background:var(--danger-soft); color:var(--danger);}
+  .btn-danger:hover{background:var(--danger); color:#fff;}
+  .btn:disabled{opacity:.6; cursor:default;}
+  #login-btn{width:100%; margin-top:22px;}
+
+  /* ---------- calendar ---------- */
+  .cal-nav{display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+  .cal-nav .month{
+    font-family:'Space Grotesk',system-ui,sans-serif;
+    font-size:19px;
+    font-weight:600;
+    min-width:190px;
+    text-align:center;
+  }
+  .icon-btn{
+    width:36px; height:36px;
+    border-radius:10px;
+    border:1px solid var(--line);
+    background:#fff;
+    color:var(--ink-soft);
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition:.15s;
+  }
+  .icon-btn:hover{border-color:var(--accent); color:var(--accent-dark);}
+  .legend{display:flex; gap:14px; flex-wrap:wrap; font-size:12.5px; color:var(--ink-soft); align-items:center;}
+  .legend i{
+    display:inline-block;
+    width:13px; height:13px;
+    border-radius:4px;
+    margin-right:5px;
+    vertical-align:-2px;
+  }
+  .legend .s{background:var(--sun-bg); border:1px solid var(--sun-fg);}
+  .legend .c{background:var(--com-bg); border:1px solid var(--com-fg);}
+  .legend .p{background:var(--spe-bg); border:1px solid var(--spe-fg);}
+
+  .cal-grid{
+    display:grid;
+    grid-template-columns:repeat(7, minmax(0, 1fr));
+    gap:6px;
+    margin-top:18px;
+  }
+  .cal-dow{
+    text-align:center;
+    font-size:12.5px;
+    font-weight:600;
+    color:var(--ink-soft);
+    padding:6px 0;
+  }
+  .cal-dow.sun{color:var(--sun-fg);}
+  .day{
+    min-height:92px;
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:8px 9px;
+    background:#fff;
+    text-align:left;
+    font-family:inherit;
+    color:var(--ink);
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+    overflow:hidden;
+  }
+  .day.blank{border:none; background:none;}
+  .day .num{font-size:15px; font-weight:600;}
+  .day .nm{font-size:11.5px; line-height:1.3; font-weight:500; word-break:break-word;}
+  .day.sunday{background:var(--sun-bg); border-color:#F3D3D9;}
+  .day.sunday .num{color:var(--sun-fg);}
+  .day.company{background:var(--com-bg); border-color:#F2DEB8;}
+  .day.company .num, .day.company .nm{color:var(--com-fg);}
+  .day.special75{background:var(--spe-bg); border-color:#BFE3CE;}
+  .day.special75 .num, .day.special75 .nm{color:var(--spe-fg);}
+  .day.today{box-shadow:0 0 0 2px var(--accent);}
+  .day.edit{cursor:pointer;}
+  .day.edit:hover{border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft);}
+  .day.edit.today:hover{box-shadow:0 0 0 2px var(--accent), 0 0 0 5px var(--accent-soft);}
+  @media (max-width:700px){
+    .cal-grid{gap:3px;}
+    .day{min-height:64px; padding:5px 5px;}
+    .day .nm{font-size:10px;}
+    .cal-nav .month{min-width:140px; font-size:16px;}
+  }
+  .ro-note{
+    background:var(--accent-soft-2);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:9px 14px;
+    font-size:13px;
+    color:var(--accent-dark);
+    margin-bottom:16px;
+    display:none;
+  }
+
+  /* ---------- holiday list ---------- */
+  table{width:100%; border-collapse:collapse; font-size:13.5px;}
+  th{
+    text-align:left;
+    font-weight:600;
+    color:var(--ink-soft);
+    font-size:12px;
+    padding:10px 12px;
+    border-bottom:1.5px solid var(--line);
+    white-space:nowrap;
+  }
+  td{padding:11px 12px; border-bottom:1px solid var(--bg-a); vertical-align:middle;}
+  tr:hover td{background:var(--accent-soft-2);}
+  .nowrap{white-space:nowrap;}
+  .badge{
+    display:inline-block;
+    padding:3px 10px;
+    border-radius:100px;
+    font-size:12px;
+    font-weight:600;
+    white-space:nowrap;
+  }
+  .badge.company{background:var(--com-bg); color:var(--com-fg);}
+  .badge.special75{background:var(--spe-bg); color:var(--spe-fg);}
+  .link-btn{
+    background:none;
+    border:none;
+    color:var(--accent);
+    font-size:13px;
+    cursor:pointer;
+    padding:4px 8px;
+    border-radius:7px;
+    font-family:inherit;
+  }
+  .link-btn:hover{background:var(--accent-soft);}
+  .link-btn.danger{color:var(--danger);}
+  .link-btn.danger:hover{background:var(--danger-soft);}
+  .count-tag{
+    font-size:12.5px;
+    color:var(--accent-dark);
+    background:var(--accent-soft);
+    padding:5px 12px;
+    border-radius:100px;
+    white-space:nowrap;
+    font-weight:600;
+  }
+  .empty-state{text-align:center; color:var(--ink-soft); padding:36px 12px; font-size:14px;}
+
+  /* ---------- modal ---------- */
+  .modal-overlay{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(20,40,60,.35);
+    backdrop-filter:blur(2px);
+    align-items:flex-start;
+    justify-content:center;
+    padding:8vh 20px;
+    z-index:100;
+    overflow-y:auto;
+  }
+  .modal-overlay.open{display:flex;}
+  .modal-card{
+    width:100%;
+    max-width:440px;
+    background:var(--panel);
+    border-radius:20px;
+    box-shadow:0 20px 60px rgba(20,40,60,.25);
+    padding:26px 28px 28px;
+    animation:modal-in .18s ease-out;
+  }
+  @keyframes modal-in{
+    from{opacity:0; transform:translateY(8px) scale(.98);}
+    to{opacity:1; transform:translateY(0) scale(1);}
+  }
+  .modal-header{display:flex; align-items:center; justify-content:space-between; margin-bottom:18px;}
+  .modal-header h2{font-size:16px;}
+  .modal-close{
+    background:var(--accent-soft-2);
+    border:none;
+    width:30px; height:30px;
+    border-radius:9px;
+    color:var(--ink-soft);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    transition:.15s;
+    flex-shrink:0;
+  }
+  .modal-close:hover{background:var(--danger-soft); color:var(--danger);}
+  .seg{
+    display:flex;
+    background:var(--accent-soft-2);
+    border:1.5px solid var(--line);
+    border-radius:10px;
+    padding:3px;
+    gap:3px;
+  }
+  .seg button{
+    flex:1;
+    border:none;
+    background:none;
+    padding:8px 10px;
+    border-radius:7px;
+    font:inherit;
+    font-size:13.5px;
+    font-weight:600;
+    color:var(--ink-soft);
+    cursor:pointer;
+    transition:.15s;
+  }
+  .seg button:hover{color:var(--ink);}
+  .seg button.active[data-type=company]{background:var(--com-bg); color:var(--com-fg); box-shadow:inset 0 0 0 1.5px var(--com-fg);}
+  .seg button.active[data-type=special75]{background:var(--spe-bg); color:var(--spe-fg); box-shadow:inset 0 0 0 1.5px var(--spe-fg);}
+  .form-actions{display:flex; gap:10px; margin-top:24px;}
+  .form-actions .btn{flex:1;}
+  .form-error{
+    display:none;
+    margin-top:18px;
+    padding:11px 14px;
+    border-radius:10px;
+    border:1px solid var(--danger);
+    background:var(--danger-soft);
+    color:var(--danger);
+    font-size:13.5px;
+    font-weight:500;
+  }
+  .form-error.show{display:block;}
+
+  /* ---------- banner ---------- */
+  #status-banner{
+    display:none;
+    max-width:1280px;
+    margin:0 auto;
+    padding:16px 32px 0;
+  }
+  .banner{
+    padding:12px 18px;
+    border-radius:12px;
+    font-size:13.5px;
+    box-shadow:var(--shadow);
+    font-weight:500;
+    background:#fff;
+  }
+  .banner.ok{color:var(--accent-dark); border:1px solid var(--accent-soft);}
+  .banner.err{color:var(--danger); border:1px solid var(--danger-soft);}
+  .app-footer{text-align:center; color:var(--ink-soft); font-size:12.5px; padding:8px 20px 32px;}
+</style>
+</head>
+<body>
+
+  <!-- ============ LOGIN ============ -->
+  <div id="login-screen">
+    <div class="login-card">
+      <div class="login-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+      </div>
+      <h1>ปฏิทินวันหยุด</h1>
+      <p class="sub">เข้าสู่ระบบด้วยบัญชีของตนเอง</p>
+      <div class="field">
+        <label for="login-email">อีเมล</label>
+        <input id="login-email" type="email" autocomplete="username">
+      </div>
+      <div class="field">
+        <label for="login-password">รหัสผ่าน</label>
+        <input id="login-password" type="password" autocomplete="current-password">
+      </div>
+      <button id="login-btn" class="btn btn-primary">เข้าสู่ระบบ</button>
+      <p id="login-error" style="color:var(--danger); font-size:13px; margin-top:12px; display:none;"></p>
+    </div>
+  </div>
+
+  <div id="status-banner"><div class="banner" id="banner-inner"></div></div>
+
+  <!-- ============ APP ============ -->
+  <div id="app">
+    <header>
+      <div class="brand">
+        <div class="brand-mark">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+        </div>
+        <h1>ปฏิทินวันหยุด</h1>
+      </div>
+      <div style="display:flex; align-items:center; gap:14px;">
+        <span class="who" id="who-label"></span>
+        <button class="btn-ghost" id="logout-btn">ออกจากระบบ</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="panel">
+        <div class="ro-note" id="ro-note">บัญชีนี้ดูปฏิทินได้อย่างเดียว การเพิ่มหรือแก้ไขวันหยุดทำได้เฉพาะบัญชีฝ่ายบุคคล</div>
+        <div class="panel-head">
+          <div class="cal-nav">
+            <button class="icon-btn" id="prev-btn" aria-label="เดือนก่อนหน้า">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+            <div class="month" id="month-label"></div>
+            <button class="icon-btn" id="next-btn" aria-label="เดือนถัดไป">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+            <button class="btn-ghost" id="today-btn">วันนี้</button>
+          </div>
+          <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+            <div class="legend">
+              <span><i class="s"></i>วันหยุดปกติ (อาทิตย์)</span>
+              <span><i class="c"></i>วันหยุดบริษัท</span>
+              <span><i class="p"></i>วันหยุดพิเศษ 75%</span>
+            </div>
+            <button class="btn btn-primary" id="add-btn">+ เพิ่มวันหยุด</button>
+          </div>
+        </div>
+        <div class="cal-grid" id="cal-grid"></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2 id="list-title">รายการวันหยุดที่กำหนดไว้</h2>
+          <span class="count-tag" id="list-count"></span>
+        </div>
+        <div style="overflow-x:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>วันที่</th>
+                <th>ประเภท</th>
+                <th>ชื่อวันหยุด</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="list-tbody"></tbody>
+          </table>
+        </div>
+        <div class="empty-state" id="list-empty" style="display:none;">ยังไม่มีวันหยุดที่กำหนดเองในปีนี้</div>
+        <div class="hint">วันอาทิตย์เป็นวันหยุดปกติอยู่แล้ว ระบบแสดงให้อัตโนมัติ ไม่ต้องกำหนด</div>
+      </section>
+    </main>
+
+    <footer class="app-footer">ระบบฐานข้อมูลฝ่ายบุคคล | ใช้ภายในบริษัทเท่านั้น</footer>
+  </div>
+
+  <!-- ============ HOLIDAY MODAL ============ -->
+  <div id="form-modal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 id="form-title"></h2>
+        <button type="button" id="modal-close-btn" class="modal-close" aria-label="ปิด">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <form id="hol-form" novalidate>
+        <div class="field">
+          <label for="f-date">วันที่</label>
+          <input id="f-date" type="date">
+        </div>
+        <div class="field" id="row-end">
+          <label for="f-end">ถึงวันที่ (ถ้าหยุดหลายวัน)</label>
+          <input id="f-end" type="date">
+          <div class="hint">ไม่ต้องกรอกถ้าหยุดวันเดียว วันอาทิตย์ในช่วงนี้จะข้ามให้อัตโนมัติ</div>
+        </div>
+        <div class="field">
+          <label>ประเภทวันหยุด</label>
+          <div class="seg" id="type-seg">
+            <button type="button" data-type="company">วันหยุดบริษัท</button>
+            <button type="button" data-type="special75">วันหยุดพิเศษ 75%</button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="f-name">ชื่อวันหยุด</label>
+          <input id="f-name" type="text" placeholder="เช่น วันสงกรานต์" maxlength="120">
+        </div>
+        <div id="form-error" class="form-error" role="alert"></div>
+        <div class="form-actions">
+          <button type="button" id="cancel-btn" class="btn btn-cancel">ยกเลิก</button>
+          <button type="button" id="delete-btn" class="btn btn-danger" style="display:none;">ลบวันหยุด</button>
+          <button type="submit" id="save-btn" class="btn btn-primary">บันทึก</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  // ============================================================
+  // โปรเจค hr-master (โปรเจคเดียวกับหน้าอื่น ๆ)
+  // anon key ฝังในหน้าเว็บได้ เพราะ RLS เป็นตัวคุมสิทธิ์จริง
+  // ห้ามใส่ service_role key ที่นี่เด็ดขาด
+  // ============================================================
+  const SUPABASE_URL = "https://ppzdyvomrfiitahxwrwz.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBwemR5dm9tcmZpaXRhaHh3cnd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwMjQ0MjIsImV4cCI6MjEwNDYwMDQyMn0.iArUz6swMfwhFT_1qEvCwK1B3aiCxdWt46_FBjT6_Y0";
+
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const el = (id) => document.getElementById(id);
+  const WEEKDAYS = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
+  const TYPE_LABEL = { company: 'วันหยุดบริษัท', special75: 'วันหยุดพิเศษ 75%' };
+  const MAX_RANGE = 60;
+
+  let isHr = false;
+  let userEmail = '';
+  let viewYear, viewMonth;        // viewMonth: 0-11
+  let holidays = new Map();       // iso → {holiday_date, holiday_type, name}
+  let loadedYear = null;
+  let modalExisting = null;       // holiday ที่กำลังแก้ หรือ null = เพิ่มใหม่
+  let modalType = 'company';
+  let yearReq = 0;
+
+  // ---------------- HELPERS ----------------
+  function escapeHtml(s){
+    return String(s ?? '').replace(/[&<>"']/g, c => (
+      { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]
+    ));
+  }
+  function showBanner(message, isError=false){
+    const wrap = el('status-banner');
+    const inner = el('banner-inner');
+    inner.textContent = message;
+    inner.className = 'banner ' + (isError ? 'err' : 'ok');
+    wrap.style.display = 'block';
+    clearTimeout(showBanner._t);
+    showBanner._t = setTimeout(() => wrap.style.display = 'none', isError ? 9000 : 3500);
+  }
+  function showFormError(message, ids = []){
+    el('form-error').textContent = message;
+    el('form-error').classList.add('show');
+    ids.forEach(id => el(id).classList.add('invalid'));
+    if (ids.length && el(ids[0]).focus) el(ids[0]).focus();
+  }
+  function clearFormError(){
+    el('form-error').classList.remove('show');
+    el('form-error').textContent = '';
+    document.querySelectorAll('#hol-form .invalid').forEach(n => n.classList.remove('invalid'));
+  }
+  const pad = (n) => String(n).padStart(2, '0');
+  const isoOf = (y, m, d) => `${y}-${pad(m + 1)}-${pad(d)}`;
+  function parseISO(iso){
+    const [y, m, d] = iso.split('-').map(Number);
+    return new Date(Date.UTC(y, m - 1, d));
+  }
+  function toISO(d){ return d.toISOString().slice(0, 10); }
+  function fmtThai(iso){
+    return parseISO(iso).toLocaleDateString('th-TH', { weekday:'short', day:'numeric', month:'short', year:'numeric', timeZone:'UTC' });
+  }
+  function todayISO(){ return new Date().toLocaleDateString('sv-SE'); }
+
+  // ---------------- AUTH ----------------
+  async function doLogin(){
+    const email = el('login-email').value.trim();
+    const password = el('login-password').value;
+    el('login-error').style.display = 'none';
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) {
+      el('login-error').textContent = 'เข้าสู่ระบบไม่สำเร็จ: ' + error.message;
+      el('login-error').style.display = 'block';
+    }
+  }
+  el('login-btn').addEventListener('click', doLogin);
+  el('login-password').addEventListener('keydown', (e) => { if (e.key === 'Enter') doLogin(); });
+  el('logout-btn').addEventListener('click', async () => { await sb.auth.signOut(); });
+
+  // supabase ยิง SIGNED_IN ซ้ำได้เมื่อสลับแท็บกลับมา กัน init() ซ้ำ
+  let initializedFor = null;
+  sb.auth.onAuthStateChange((_event, session) => {
+    if (session) {
+      userEmail = session.user.email || '';
+      el('login-screen').style.display = 'none';
+      el('app').style.display = 'block';
+      el('who-label').textContent = userEmail;
+      if (initializedFor !== session.user.id) {
+        initializedFor = session.user.id;
+        init();
+      }
+    } else {
+      initializedFor = null;
+      holidays = new Map(); loadedYear = null; isHr = false;
+      el('login-screen').style.display = 'flex';
+      el('app').style.display = 'none';
+    }
+  });
+
+  // ---------------- INIT / LOAD ----------------
+  async function init(){
+    const t = todayISO();
+    viewYear = Number(t.slice(0, 4));
+    viewMonth = Number(t.slice(5, 7)) - 1;
+
+    // ตรวจสิทธิ์ HR (ถ้าไม่ใช่ HR ดูได้อย่างเดียว)
+    const { data, error } = await sb.rpc('is_hr_admin');
+    isHr = !error && data === true;
+    el('ro-note').style.display = isHr ? 'none' : 'block';
+    el('add-btn').style.display = isHr ? '' : 'none';
+    if (error) showBanner('ตรวจสิทธิ์ไม่สำเร็จ ตรวจว่ารัน calendar.sql แล้ว: ' + error.message, true);
+
+    await ensureYear(viewYear);
+    render();
+  }
+
+  async function ensureYear(year){
+    if (loadedYear === year) return true;
+    const myReq = ++yearReq;
+    const { data, error } = await sb.from('calendar_holidays')
+      .select('holiday_date, holiday_type, name')
+      .gte('holiday_date', `${year}-01-01`).lte('holiday_date', `${year}-12-31`)
+      .order('holiday_date');
+    if (myReq !== yearReq) return false;           // มีคำขอใหม่กว่าแล้ว
+    if (error) {
+      showBanner('โหลดวันหยุดไม่สำเร็จ: ' + error.message + ' (ตรวจว่ารัน calendar.sql แล้ว)', true);
+      holidays = new Map(); loadedYear = null;
+      return false;
+    }
+    holidays = new Map(data.map(r => [r.holiday_date, r]));
+    loadedYear = year;
+    return true;
+  }
+
+  async function goMonth(delta){
+    let m = viewMonth + delta, y = viewYear;
+    if (m < 0) { m = 11; y--; }
+    if (m > 11) { m = 0; y++; }
+    viewMonth = m; viewYear = y;
+    await ensureYear(viewYear);
+    render();
+  }
+  el('prev-btn').addEventListener('click', () => goMonth(-1));
+  el('next-btn').addEventListener('click', () => goMonth(1));
+  el('today-btn').addEventListener('click', async () => {
+    const t = todayISO();
+    viewYear = Number(t.slice(0, 4)); viewMonth = Number(t.slice(5, 7)) - 1;
+    await ensureYear(viewYear);
+    render();
+  });
+
+  // ---------------- RENDER ----------------
+  function render(){
+    const first = new Date(Date.UTC(viewYear, viewMonth, 1));
+    el('month-label').textContent = first.toLocaleDateString('th-TH', { month:'long', year:'numeric', timeZone:'UTC' });
+
+    const startDow = first.getUTCDay();
+    const nDays = new Date(Date.UTC(viewYear, viewMonth + 1, 0)).getUTCDate();
+    const today = todayISO();
+
+    let html = WEEKDAYS.map((w, i) => `<div class="cal-dow${i === 0 ? ' sun' : ''}">${w}</div>`).join('');
+    for (let i = 0; i < startDow; i++) html += '<div class="day blank"></div>';
+    for (let d = 1; d <= nDays; d++) {
+      const iso = isoOf(viewYear, viewMonth, d);
+      const dow = (startDow + d - 1) % 7;
+      const h = holidays.get(iso);
+      let cls = 'day', name = '';
+      if (dow === 0) { cls += ' sunday'; }
+      else if (h) { cls += ' ' + h.holiday_type; name = h.name; }
+      if (iso === today) cls += ' today';
+      const editable = isHr && dow !== 0;
+      if (editable) cls += ' edit';
+      const title = dow === 0 ? 'วันอาทิตย์ (วันหยุดปกติ)' : (h ? `${TYPE_LABEL[h.holiday_type]}: ${h.name}` : '');
+      html += `<${editable ? 'button type="button"' : 'div'} class="${cls}" ${editable ? `data-date="${iso}"` : ''} title="${escapeHtml(title)}">
+        <span class="num">${d}</span>${name ? `<span class="nm">${escapeHtml(name)}</span>` : ''}
+      </${editable ? 'button' : 'div'}>`;
+    }
+    el('cal-grid').innerHTML = html;
+    renderList();
+  }
+
+  function renderList(){
+    const rows = [...holidays.values()].sort((a, b) => a.holiday_date.localeCompare(b.holiday_date));
+    el('list-title').textContent = `รายการวันหยุดที่กำหนดไว้ ปี พ.ศ. ${viewYear + 543}`;
+    const nCom = rows.filter(r => r.holiday_type === 'company').length;
+    const nSpe = rows.filter(r => r.holiday_type === 'special75').length;
+    el('list-count').textContent = `บริษัท ${nCom} วัน · พิเศษ 75% ${nSpe} วัน`;
+    if (rows.length === 0) {
+      el('list-tbody').innerHTML = '';
+      el('list-empty').style.display = 'block';
+      return;
+    }
+    el('list-empty').style.display = 'none';
+    el('list-tbody').innerHTML = rows.map(r => `
+      <tr>
+        <td class="nowrap">${escapeHtml(fmtThai(r.holiday_date))}</td>
+        <td><span class="badge ${r.holiday_type}">${TYPE_LABEL[r.holiday_type]}</span></td>
+        <td>${escapeHtml(r.name)}</td>
+        <td class="nowrap" style="text-align:right;">
+          ${isHr ? `<button class="link-btn" data-edit="${r.holiday_date}">แก้ไข</button>
+                    <button class="link-btn danger" data-del="${r.holiday_date}">ลบ</button>` : ''}
+        </td>
+      </tr>`).join('');
+  }
+
+  el('cal-grid').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-date]');
+    if (b) openModal(b.dataset.date);
+  });
+  el('list-tbody').addEventListener('click', async (e) => {
+    const ed = e.target.closest('[data-edit]');
+    const del = e.target.closest('[data-del]');
+    if (ed) openModal(ed.dataset.edit);
+    if (del) {
+      const h = holidays.get(del.dataset.del);
+      if (h) await deleteHoliday(h);
+    }
+  });
+
+  // ---------------- MODAL ----------------
+  function setType(t){
+    modalType = t;
+    document.querySelectorAll('#type-seg button').forEach(b => b.classList.toggle('active', b.dataset.type === t));
+    el('type-seg').classList.remove('invalid');
+  }
+  document.querySelectorAll('#type-seg button').forEach(b => b.addEventListener('click', () => setType(b.dataset.type)));
+
+  function openModal(iso){
+    clearFormError();
+    modalExisting = iso ? (holidays.get(iso) || null) : null;
+    const editing = !!modalExisting;
+    el('form-title').textContent = editing ? 'แก้ไขวันหยุด' : 'เพิ่มวันหยุด';
+    el('f-date').value = iso || todayISO();
+    el('f-date').disabled = editing;
+    el('f-end').value = '';
+    el('row-end').style.display = editing ? 'none' : '';
+    el('f-name').value = editing ? modalExisting.name : '';
+    setType(editing ? modalExisting.holiday_type : 'company');
+    el('delete-btn').style.display = editing ? '' : 'none';
+    el('save-btn').textContent = editing ? 'บันทึกการแก้ไข' : 'บันทึก';
+    el('form-modal').classList.add('open');
+    setTimeout(() => el('f-name').focus(), 50);
+  }
+  function closeModal(){ el('form-modal').classList.remove('open'); modalExisting = null; }
+
+  el('add-btn').addEventListener('click', () => openModal(null));
+  el('cancel-btn').addEventListener('click', closeModal);
+  el('modal-close-btn').addEventListener('click', closeModal);
+  el('form-modal').addEventListener('click', (e) => { if (e.target.id === 'form-modal') closeModal(); });
+  el('hol-form').addEventListener('input', (e) => {
+    e.target.classList.remove('invalid');
+    if (!document.querySelector('#hol-form .invalid')) el('form-error').classList.remove('show');
+  });
+
+  el('hol-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    clearFormError();
+    const start = el('f-date').value;
+    const end = el('f-end').value || start;
+    const name = el('f-name').value.trim();
+
+    if (!start) { showFormError('กรุณาเลือกวันที่', ['f-date']); return; }
+    if (!name) { showFormError('กรุณากรอกชื่อวันหยุด', ['f-name']); return; }
+    if (end < start) { showFormError('วันสิ้นสุดต้องไม่ก่อนวันเริ่มต้น', ['f-end']); return; }
+
+    const dates = [];
+    for (let d = parseISO(start); toISO(d) <= end && dates.length <= MAX_RANGE; d = new Date(d.getTime() + 86400000)) {
+      if (d.getUTCDay() !== 0) dates.push(toISO(d));      // ข้ามวันอาทิตย์
+    }
+    if (dates.length > MAX_RANGE) { showFormError(`เลือกช่วงวันที่ได้ไม่เกิน ${MAX_RANGE} วันต่อครั้ง`, ['f-end']); return; }
+    if (dates.length === 0) { showFormError('วันอาทิตย์เป็นวันหยุดปกติอยู่แล้ว ไม่ต้องกำหนดเพิ่ม', ['f-date']); return; }
+
+    if (!modalExisting) {
+      const overlap = dates.filter(iso => holidays.has(iso)).length;
+      if (overlap > 0 && !confirm(`มีวันหยุดเดิมในช่วงนี้ ${overlap} วัน จะถูกแทนที่ด้วยข้อมูลใหม่ ยืนยันหรือไม่?`)) return;
+    }
+
+    const btn = el('save-btn');
+    const label = btn.textContent;
+    btn.disabled = true; btn.textContent = 'กำลังบันทึก...';
+    try {
+      const nowIso = new Date().toISOString();
+      const rows = dates.map(iso => ({
+        holiday_date: iso, holiday_type: modalType, name, created_by: userEmail, updated_at: nowIso
+      }));
+      const { error } = await sb.from('calendar_holidays').upsert(rows, { onConflict: 'holiday_date' });
+      if (error) throw error;
+      closeModal();
+      showBanner(dates.length > 1 ? `บันทึกวันหยุด ${dates.length} วันเรียบร้อย` : 'บันทึกวันหยุดเรียบร้อย');
+      loadedYear = null;                       // ช่วงวันที่อาจข้ามปี โหลดใหม่ปีที่กำลังดูอยู่
+      await ensureYear(viewYear);
+      render();
+    } catch (err) {
+      showFormError('บันทึกไม่สำเร็จ: ' + err.message);
+    } finally {
+      btn.disabled = false; btn.textContent = label;
+    }
+  });
+
+  el('delete-btn').addEventListener('click', async () => {
+    if (modalExisting) await deleteHoliday(modalExisting);
+  });
+
+  async function deleteHoliday(h){
+    if (!confirm(`ลบวันหยุด "${h.name}" (${fmtThai(h.holiday_date)})?`)) return;
+    const { error } = await sb.from('calendar_holidays').delete().eq('holiday_date', h.holiday_date);
+    if (error) { showBanner('ลบไม่สำเร็จ: ' + error.message, true); return; }
+    closeModal();
+    showBanner('ลบวันหยุดเรียบร้อย');
+    holidays.delete(h.holiday_date);
+    render();
+  }
+</script>
+</body>
+</html>
