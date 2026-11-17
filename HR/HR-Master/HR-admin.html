@@ -109,7 +109,7 @@
   .btn-ghost:hover{border-color:var(--accent); color:var(--accent-dark);}
 
   main{
-    max-width:1180px;
+    max-width:1480px;
     margin:0 auto;
     padding:32px;
   }
@@ -155,6 +155,26 @@
   input[readonly]{background:var(--accent-soft-2); color:var(--accent-dark); font-weight:500;}
 
   .readonly-pair{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+
+  input.invalid, select.invalid{
+    border-color:var(--danger);
+    background:var(--danger-soft);
+  }
+  input.invalid:focus, select.invalid:focus{
+    box-shadow:0 0 0 4px var(--danger-soft);
+  }
+  .form-error{
+    display:none;
+    margin-top:20px;
+    padding:11px 14px;
+    border-radius:10px;
+    border:1px solid var(--danger);
+    background:var(--danger-soft);
+    color:var(--danger);
+    font-size:13.5px;
+    font-weight:500;
+  }
+  .form-error.show{display:block;}
 
   .form-actions{
     display:flex;
@@ -225,6 +245,7 @@
     display:inline-block;
   }
   .row-actions{white-space:nowrap;}
+  th.nowrap, td.nowrap{white-space:nowrap;}
   .link-btn{
     background:none;
     border:none;
@@ -264,7 +285,7 @@
 
   #status-banner{
     display:none;
-    max-width:1180px;
+    max-width:1480px;
     margin:0 auto;
     padding:0 32px;
   }
@@ -380,7 +401,7 @@
       <!-- ---------- TABLE ---------- -->
       <section class="panel">
         <div class="table-toolbar">
-          <input id="search-box" placeholder="ค้นหารหัส หรือ ชื่อพนักงาน...">
+          <input id="search-box" placeholder="ค้นหารหัส ชื่อ หรือสถานที่...">
           <div style="display:flex; align-items:center; gap:12px;">
             <span class="count-tag" id="count-tag"></span>
             <button class="btn btn-primary" id="add-new-btn" style="flex:none; display:flex; align-items:center; gap:6px;">
@@ -398,7 +419,9 @@
                 <th>ฝ่าย</th>
                 <th>แผนก</th>
                 <th>ตำแหน่ง</th>
-                <th>วันเริ่มงาน</th>
+                <th class="nowrap">สถานที่</th>
+                <th class="nowrap">ประเภทการจ้าง</th>
+                <th class="nowrap">วันเริ่มงาน</th>
                 <th>สถานะ</th>
                 <th></th>
               </tr>
@@ -427,7 +450,7 @@
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
-      <form id="employee-form">
+      <form id="employee-form" novalidate>
         <label for="f-code">รหัสพนักงาน</label>
         <input id="f-code" required placeholder="เช่น 900123">
 
@@ -454,6 +477,20 @@
         <input id="f-position" required list="position-suggestions" placeholder="เช่น เจ้าหน้าที่ธุรการ">
         <datalist id="position-suggestions"></datalist>
 
+        <label for="f-location">สถานที่ปฏิบัติงาน</label>
+        <select id="f-location" required>
+          <option value="" disabled selected>เลือกสถานที่ปฏิบัติงาน</option>
+          <option value="กรุงเทพ">กรุงเทพ</option>
+          <option value="โรงงาน">โรงงาน</option>
+        </select>
+
+        <label for="f-worktype">ประเภทการจ้าง</label>
+        <select id="f-worktype" required>
+          <option value="" disabled selected>เลือกประเภทการจ้าง</option>
+          <option value="รายเดือน">รายเดือน</option>
+          <option value="รายวัน">รายวัน</option>
+        </select>
+
         <label for="f-hiredate">วันเริ่มงาน (พ.ศ.)</label>
         <input id="f-hiredate" type="text" placeholder="วว/ดด/ปปปป เช่น 01/01/2533" inputmode="numeric">
 
@@ -463,6 +500,8 @@
           <option value="suspended">พักงาน</option>
           <option value="resigned">ลาออก</option>
         </select>
+
+        <div id="form-error" class="form-error" role="alert"></div>
 
         <div class="form-actions">
           <button type="button" id="cancel-btn" class="btn btn-cancel">ยกเลิก</button>
@@ -591,6 +630,13 @@
 
   const el = (id) => document.getElementById(id);
 
+  // escape ข้อความอิสระ (เช่น location) ก่อนใส่ลง innerHTML
+  function escapeHtml(s){
+    return String(s ?? '').replace(/[&<>"']/g, c => (
+      { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]
+    ));
+  }
+
   // ---------------- BUDDHIST-ERA DATE HELPERS ----------------
   // DB stores standard Gregorian dates (yyyy-mm-dd). The UI only
   // ever shows/accepts Thai Buddhist-era dd/MM/yyyy.
@@ -698,7 +744,9 @@
         <td>${r.section_name}</td>
         <td>${r.department_name} <span style="color:var(--ink-soft); font-size:12px;">(${r.department_code})</span></td>
         <td>${r.position_name}</td>
-        <td>${isoToThaiDate(r.hire_date) || '-'}</td>
+        <td class="nowrap">${escapeHtml(r.location) || '-'}</td>
+        <td class="nowrap">${escapeHtml(r.work_type) || '-'}</td>
+        <td class="nowrap">${isoToThaiDate(r.hire_date) || '-'}</td>
         <td><span class="status-badge status-${r.status}">${STATUS_LABEL[r.status] ?? r.status}</span></td>
         <td class="row-actions">
           <button class="link-btn" data-edit="${r.employee_code}">
@@ -725,7 +773,10 @@
     const q = e.target.value.trim().toLowerCase();
     if (!q) { renderTable(allEmployees); return; }
     renderTable(allEmployees.filter(r =>
-      r.employee_code.toLowerCase().includes(q) || r.full_name.toLowerCase().includes(q)
+      r.employee_code.toLowerCase().includes(q) ||
+      r.full_name.toLowerCase().includes(q) ||
+      (r.location || '').toLowerCase().includes(q) ||
+      (r.work_type || '').toLowerCase().includes(q)
     ));
   });
 
@@ -737,12 +788,39 @@
   });
 
   // ---------------- FORM: ADD / EDIT ----------------
+  // กล่องแจ้งเตือนภายใน modal (ค้างอยู่จนกว่าจะแก้ครบ)
+  function showFormError(message, fieldIds = []){
+    const box = el('form-error');
+    box.textContent = message;
+    box.classList.add('show');
+    fieldIds.forEach(id => el(id).classList.add('invalid'));
+    if (fieldIds.length) el(fieldIds[0]).focus();
+  }
+  function clearFormError(){
+    el('form-error').classList.remove('show');
+    el('form-error').textContent = '';
+    document.querySelectorAll('#employee-form .invalid')
+      .forEach(node => node.classList.remove('invalid'));
+  }
+  // พอผู้ใช้แก้ช่องไหน ก็ล้างขอบแดงของช่องนั้น และซ่อนกล่องเมื่อไม่เหลือช่องผิด
+  ['input', 'change'].forEach(evt => {
+    el('employee-form').addEventListener(evt, (e) => {
+      e.target.classList.remove('invalid');
+      if (!document.querySelector('#employee-form .invalid')) {
+        el('form-error').classList.remove('show');
+      }
+    });
+  });
+
   function resetForm(){
     editingCode = null;
     el('employee-form').reset();
+    clearFormError();
     el('f-code').disabled = false;
     el('f-section').value = '';
     el('f-deptcode').value = '';
+    el('f-location').value = '';
+    el('f-worktype').value = '';
     el('f-status').value = 'active';
     el('form-title').textContent = 'เพิ่มพนักงานใหม่';
     el('save-btn').textContent = 'บันทึก';
@@ -759,6 +837,8 @@
     el('f-section').value = row.section_name;
     el('f-deptcode').value = row.department_code;
     el('f-position').value = row.position_name;
+    el('f-location').value = row.location || '';
+    el('f-worktype').value = row.work_type || '';
     el('f-hiredate').value = isoToThaiDate(row.hire_date);
     el('f-status').value = row.status;
     el('form-title').textContent = 'แก้ไขข้อมูลพนักงาน: ' + code;
@@ -802,13 +882,33 @@
     const name = el('f-name').value.trim();
     const departmentCode = el('f-department').value;
     const positionName = el('f-position').value.trim();
+    const location = el('f-location').value.trim();
+    const workType = el('f-worktype').value.trim();
     const status = el('f-status').value;
+
+    clearFormError();
+
+    // ตรวจช่องบังคับ แล้วรวมรายชื่อช่องที่ขาดไว้ในกล่องแจ้งเตือนของ modal
+    const required = [
+      ['f-code', 'รหัสพนักงาน', code],
+      ['f-name', 'ชื่อ-นามสกุล', name],
+      ['f-department', 'แผนก', departmentCode],
+      ['f-position', 'ตำแหน่ง', positionName],
+      ['f-location', 'สถานที่ปฏิบัติงาน', location],
+      ['f-worktype', 'ประเภทการจ้าง', workType]
+    ];
+    const missing = required.filter(([, , value]) => !value);
+    if (missing.length) {
+      showFormError('กรุณากรอก: ' + missing.map(m => m[1]).join(', '), missing.map(m => m[0]));
+      return;
+    }
+
     const parsedDate = thaiToIsoDate(el('f-hiredate').value);
-
-    if (!parsedDate.ok) { showBanner('รูปแบบวันเริ่มงานไม่ถูกต้อง กรุณากรอกเป็น วว/ดด/ปปปป (พ.ศ.) เช่น 01/01/2533', true); return; }
+    if (!parsedDate.ok) {
+      showFormError('รูปแบบวันเริ่มงานไม่ถูกต้อง กรุณากรอกเป็น วว/ดด/ปปปป (พ.ศ.) เช่น 01/01/2533', ['f-hiredate']);
+      return;
+    }
     const hireDate = parsedDate.value;
-
-    if (!departmentCode) { showBanner('กรุณาเลือกแผนก', true); return; }
 
     const STATUS_LABEL = { active: 'กำลังทำงาน', suspended: 'พักงาน', resigned: 'ลาออก' };
 
@@ -821,6 +921,8 @@
         department_name: dept ? dept.name : '',
         section_name: dept ? dept.section_name : '',
         position_name: positionName,
+        location: location,
+        work_type: workType,
         status_label: STATUS_LABEL[status] ?? status
       };
 
@@ -831,6 +933,8 @@
             full_name: name,
             department_code: departmentCode,
             position_id: positionId,
+            location: location,
+            work_type: workType,
             hire_date: hireDate,
             status: status
           })
@@ -852,6 +956,8 @@
             full_name: name,
             department_code: departmentCode,
             position_id: positionId,
+            location: location,
+            work_type: workType,
             hire_date: hireDate,
             status: status
           });
@@ -869,7 +975,7 @@
       closeModal();
       await Promise.all([loadEmployees(), loadPositionSuggestions()]);
     } catch (err) {
-      showBanner('บันทึกไม่สำเร็จ: ' + err.message, true);
+      showFormError('บันทึกไม่สำเร็จ: ' + err.message);
     }
   });
 
@@ -886,7 +992,9 @@
         full_name: row.full_name,
         department_name: row.department_name,
         section_name: row.section_name,
-        position_name: row.position_name
+        position_name: row.position_name,
+        location: row.location || null,
+        work_type: row.work_type || null
       });
     }
     if (editingCode === code) resetForm();
