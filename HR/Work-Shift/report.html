@@ -1,0 +1,644 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>รายงาน — HR Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1B2B3E; --ink-soft:#6E85A0;
+    --bg-a:#EAF3FB; --bg-b:#F7FBFE; --panel:#FFFFFF; --line:#DCE9F5;
+    --accent:#2F7FB8; --accent-dark:#24628F; --accent-ink:#FFFFFF;
+    --accent-soft:#E7F2FB; --accent-soft-2:#F1F8FD;
+    --danger:#C1596A; --danger-soft:#FBEBEE;
+    --ok:#1F8A4C; --ok-soft:#E5F5EC;
+    --warn:#B4791F; --warn-soft:#FDF3E0;
+    --sun-bg:#FBEBEE;   --sun-fg:#C1596A;
+    --com-bg:#FDF3E0;   --com-fg:#B4791F;
+    --spe-bg:#E5F5EC;   --spe-fg:#1F8A4C;
+    --radius:16px;
+    --shadow:0 1px 2px rgba(27,60,90,.04), 0 10px 30px rgba(27,60,90,.06);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; min-height:100vh;
+    background:linear-gradient(180deg, var(--bg-a) 0%, var(--bg-b) 320px, var(--bg-b) 100%);
+    color:var(--ink); font-family:'Inter',system-ui,sans-serif; font-size:15px; line-height:1.5;
+  }
+  h1,h2,h3{font-family:'Space Grotesk',system-ui,sans-serif; margin:0; font-weight:600; letter-spacing:-0.01em;}
+
+  /* login */
+  #login-screen{min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px;}
+  .login-card{
+    width:100%; max-width:380px; background:var(--panel); border:1px solid var(--line);
+    border-radius:20px; padding:38px 34px; box-shadow:var(--shadow); text-align:center;
+  }
+  .login-mark{
+    width:52px; height:52px; margin:0 auto 18px; border-radius:14px;
+    background:linear-gradient(135deg, var(--accent), #6FB4E0);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .login-mark svg{width:26px; height:26px;}
+  .login-card h1{font-size:20px; margin-bottom:6px;}
+  .login-card p.sub{color:var(--ink-soft); font-size:13.5px; margin:0 0 24px;}
+  .login-card .field{text-align:left; margin-top:16px;}
+
+  /* header */
+  #app{display:none;}
+  header{
+    background:rgba(255,255,255,.85); backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line); padding:14px 32px;
+    display:flex; align-items:center; justify-content:space-between;
+    position:sticky; top:0; z-index:20;
+  }
+  .brand{display:flex; align-items:center; gap:12px;}
+  .brand-mark{
+    width:34px; height:34px; border-radius:10px;
+    background:linear-gradient(135deg, var(--accent), #6FB4E0);
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .brand-mark svg{width:18px; height:18px;}
+  header h1{font-size:17px;}
+  header .who{font-size:13px; color:var(--ink-soft);}
+  .btn-ghost{
+    background:#fff; border:1px solid var(--line); color:var(--ink-soft);
+    padding:8px 16px; border-radius:10px; font-size:13.5px; font-family:inherit; cursor:pointer; transition:.15s;
+  }
+  .btn-ghost:hover{border-color:var(--accent); color:var(--accent-dark);}
+  main{max-width:1480px; margin:0 auto; padding:32px; display:grid; gap:24px;}
+  main > *{min-width:0;}
+  @media (max-width:860px){ main{padding:20px;} header{padding:12px 20px;} }
+  .panel{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:26px; box-shadow:var(--shadow);}
+  .panel-head{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:18px;}
+  .panel-head h2{font-size:16px;}
+  .sub-note{font-size:12.5px; color:var(--ink-soft);}
+
+  /* form controls */
+  .field{margin-top:0;}
+  .field label{display:block; font-size:13px; color:var(--ink-soft); margin-bottom:6px; font-weight:500;}
+  input[type=text], input[type=email], input[type=password], input[type=date], input[type=month], input[type=search], select{
+    width:100%; padding:10px 13px; border:1.5px solid var(--line); border-radius:10px;
+    font-size:14px; font-family:inherit; color:var(--ink); background:#fff; transition:.15s;
+  }
+  input:focus, select:focus{outline:none; border-color:var(--accent); box-shadow:0 0 0 4px var(--accent-soft);}
+  .login-card .field{margin-top:16px;}
+  .controls{display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:16px; align-items:end;}
+  .btn{padding:11px 20px; border-radius:10px; border:none; font-size:14px; font-weight:600; font-family:inherit; cursor:pointer; transition:.15s;}
+  .btn-primary{background:var(--accent); color:var(--accent-ink);}
+  .btn-primary:hover{background:var(--accent-dark);}
+  .btn:disabled{opacity:.6; cursor:default;}
+  #login-btn{width:100%; margin-top:22px;}
+  .seg{display:flex; background:var(--accent-soft-2); border:1.5px solid var(--line); border-radius:10px; padding:3px; gap:3px;}
+  .seg button{
+    flex:1; border:none; background:none; padding:8px 12px; border-radius:7px; font:inherit;
+    font-size:13.5px; font-weight:600; color:var(--ink-soft); cursor:pointer; transition:.15s; white-space:nowrap;
+  }
+  .seg button:hover{color:var(--ink);}
+  .seg button.active{background:var(--accent); color:#fff;}
+  .count-tag{
+    font-size:12.5px; color:var(--accent-dark); background:var(--accent-soft);
+    padding:5px 12px; border-radius:100px; white-space:nowrap; font-weight:600;
+  }
+  .count-tag.warn{color:var(--warn); background:var(--warn-soft);}
+  .count-tag.bad{color:var(--danger); background:var(--danger-soft);}
+  .count-tag.good{color:var(--ok); background:var(--ok-soft);}
+  .badge{display:inline-block; padding:3px 10px; border-radius:100px; font-size:12px; font-weight:600; white-space:nowrap;}
+  .badge.none{background:var(--danger-soft); color:var(--danger);}
+  .badge.partial{background:var(--warn-soft); color:var(--warn);}
+  .badge.done{background:var(--ok-soft); color:var(--ok);}
+  .code-cell{color:var(--accent-dark); font-weight:600; background:var(--accent-soft); padding:3px 9px; border-radius:7px; display:inline-block;}
+  .empty-state{text-align:center; color:var(--ink-soft); padding:40px 12px; font-size:14px;}
+
+  /* list table */
+  table.list{width:100%; border-collapse:collapse; font-size:13.5px;}
+  table.list th{
+    text-align:left; font-weight:600; color:var(--ink-soft); font-size:12px;
+    padding:10px 12px; border-bottom:1.5px solid var(--line); white-space:nowrap; background:#fff;
+  }
+  table.list td{padding:10px 12px; border-bottom:1px solid var(--bg-a); vertical-align:top;}
+  table.list tbody tr:hover td{background:var(--accent-soft-2);}
+  .nowrap{white-space:nowrap;}
+
+  /* banner */
+  #status-banner{display:none; max-width:1480px; margin:0 auto; padding:16px 32px 0;}
+  .banner{padding:12px 18px; border-radius:12px; font-size:13.5px; box-shadow:var(--shadow); font-weight:500; background:#fff;}
+  .banner.ok{color:var(--accent-dark); border:1px solid var(--accent-soft);}
+  .banner.err{color:var(--danger); border:1px solid var(--danger-soft);}
+  .app-footer{text-align:center; color:var(--ink-soft); font-size:12.5px; padding:8px 20px 32px;}
+
+  /* ---------- top navigation ---------- */
+  header{flex-wrap:wrap; gap:10px 24px;}
+  .topnav{display:flex; gap:4px; flex-wrap:wrap; align-items:center;}
+  .topnav a{
+    padding:7px 13px; border-radius:9px; font-size:13.5px; font-weight:600;
+    color:var(--ink-soft); text-decoration:none; white-space:nowrap; transition:.15s;
+  }
+  .topnav a:hover{background:var(--accent-soft-2); color:var(--accent-dark);}
+  .topnav a.active{background:var(--accent-soft); color:var(--accent-dark);}
+  @media (max-width:1100px){ .topnav{order:3; width:100%;} }
+
+  .rep-ctl{display:grid; grid-template-columns:repeat(auto-fit, minmax(190px, 1fr)); gap:16px; align-items:end; margin-top:18px;}
+  .only-missing{display:none;}
+  body.tab-missing .only-missing{display:block;}
+  body.tab-missing .only-matrix{display:none;}
+  .rep-head{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:14px;}
+  .rep-head .tags{display:flex; flex-wrap:wrap; gap:8px;}
+  .legend{display:flex; gap:14px; flex-wrap:wrap; font-size:12.5px; color:var(--ink-soft); align-items:center;}
+  .legend i{display:inline-block; width:12px; height:12px; border-radius:4px; margin-right:5px; vertical-align:-1px;}
+  .legend .w{background:var(--accent-soft); border:1px solid var(--accent);}
+  .legend .s{background:var(--sun-bg); border:1px solid var(--sun-fg);}
+  .legend .c{background:var(--com-bg); border:1px solid var(--com-fg);}
+  .legend .p{background:var(--spe-bg); border:1px solid var(--spe-fg);}
+  .export{display:flex; gap:8px;}
+  .grid-wrap{overflow:auto; max-height:72vh; border:1px solid var(--line); border-radius:12px;}
+  table.sched{border-collapse:separate; border-spacing:0; font-size:12px; width:max-content; min-width:100%;}
+  table.sched th, table.sched td{
+    border-bottom:1px solid var(--bg-a); border-right:1px solid var(--bg-a);
+    padding:6px 8px; white-space:nowrap; text-align:center; background:#fff;
+  }
+  table.sched thead th{position:sticky; top:0; z-index:2; border-bottom:1.5px solid var(--line); color:var(--ink-soft); font-weight:600; line-height:1.25;}
+  table.sched thead th.sunday{background:var(--sun-bg); color:var(--sun-fg);}
+  table.sched thead th.company{background:var(--com-bg); color:var(--com-fg);}
+  table.sched thead th.special75{background:var(--spe-bg); color:var(--spe-fg);}
+  table.sched thead th .dn{font-size:13px;}
+  table.sched thead th .mo{font-size:10.5px; font-weight:500; min-height:13px;}
+  table.sched .c1, table.sched .c2{position:sticky; z-index:1; text-align:left;}
+  table.sched .c1{left:0; width:84px; min-width:84px; max-width:84px;}
+  table.sched .c2{left:84px; min-width:190px; border-right:1.5px solid var(--line);}
+  table.sched thead .c1, table.sched thead .c2{z-index:3;}
+  table.sched td.cell{min-width:78px; font-weight:600;}
+  table.sched td.cell.work{background:var(--accent-soft-2); color:var(--accent-dark);}
+  table.sched td.cell.sunday{background:var(--sun-bg); color:var(--sun-fg);}
+  table.sched td.cell.company{background:var(--com-bg); color:var(--com-fg);}
+  table.sched td.cell.special75{background:var(--spe-bg); color:var(--spe-fg);}
+  table.sched td.cell.empty{color:#B8C7D8; font-weight:400;}
+  table.sched td.cell.empty.sunday{background:var(--sun-bg);}
+  table.sched td.cell.empty.company{background:var(--com-bg);}
+  table.sched td.cell.empty.special75{background:var(--spe-bg);}
+  .miss-dates{max-width:420px; white-space:normal; font-size:12.5px; color:var(--ink);}
+</style>
+</head>
+<body>
+  <div id="login-screen">
+    <div class="login-card">
+      <div class="login-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="14 3 14 9 20 9"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg></div>
+      <h1>รายงาน</h1>
+      <p class="sub">เข้าสู่ระบบด้วยบัญชีของตนเอง</p>
+      <div class="field"><label for="login-email">อีเมล</label>
+        <input id="login-email" type="email" autocomplete="username"></div>
+      <div class="field"><label for="login-password">รหัสผ่าน</label>
+        <input id="login-password" type="password" autocomplete="current-password"></div>
+      <button id="login-btn" class="btn btn-primary">เข้าสู่ระบบ</button>
+      <p id="login-error" style="color:var(--danger); font-size:13px; margin-top:12px; display:none;"></p>
+    </div>
+  </div>
+
+  <div id="status-banner"><div class="banner" id="banner-inner"></div></div>
+  <div id="app">
+    <header>
+      <div class="brand">
+        <div class="brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="14 3 14 9 20 9"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg></div>
+        <h1>รายงาน</h1>
+      </div>
+      <nav class="topnav" aria-label="เมนู">
+        <a href="index.html">หน้าหลัก</a>
+        <a href="shift-schedule.html">ตารางกะ</a>
+        <a href="calendar.html">ปฏิทินวันหยุด</a>
+        <a href="report.html">รายงาน</a>
+        <a href="dashboard.html">แดชบอร์ด</a>
+        <a href="clerk-admin.html" data-hr>บัญชีธุรการ</a>
+      </nav>
+      <div style="display:flex; align-items:center; gap:14px;">
+        <span class="who" id="who-label"></span>
+        <button class="btn-ghost" id="logout-btn">ออกจากระบบ</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="panel">
+        <div class="seg" id="tab-seg" style="max-width:460px;">
+          <button type="button" data-tab="matrix" class="active">ตารางกะรายเดือน</button>
+          <button type="button" data-tab="missing">ยังไม่ลงกะ</button>
+        </div>
+        <div class="rep-ctl">
+          <div class="field only-matrix"><label for="r-month">เดือน</label><input id="r-month" type="month"></div>
+          <div class="field only-missing"><label for="r-start">ตั้งแต่วันที่</label><input id="r-start" type="date"></div>
+          <div class="field only-missing"><label for="r-end">ถึงวันที่</label><input id="r-end" type="date"></div>
+          <div class="field"><label for="r-dept">แผนก</label><select id="r-dept"></select></div>
+          <div class="field"><label for="r-group">กลุ่มพนักงาน</label>
+            <select id="r-group">
+              <option value="">ทั้งหมด</option>
+              <option value="employee">พนักงาน</option>
+              <option value="supervisor">หัวหน้างาน</option>
+            </select></div>
+          <div class="field only-missing"><label for="r-status">สถานะ</label>
+            <select id="r-status">
+              <option value="">ทั้งหมด (ยังไม่ครบ)</option>
+              <option value="none">ยังไม่ลงเลย</option>
+              <option value="partial">ลงบางส่วน</option>
+            </select></div>
+          <div class="field"><label for="r-search">ค้นหา</label><input id="r-search" type="search" placeholder="รหัส หรือ ชื่อพนักงาน..."></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="rep-head">
+          <div class="tags" id="r-tags"></div>
+          <div style="display:flex; gap:14px; align-items:center; flex-wrap:wrap;">
+            <div class="legend" id="r-legend">
+              <span><i class="w"></i>วันทำงาน</span><span><i class="s"></i>วันอาทิตย์</span>
+              <span><i class="c"></i>วันหยุดบริษัท</span><span><i class="p"></i>วันหยุดพิเศษ 75%</span>
+            </div>
+            <div class="export">
+              <button type="button" class="btn-ghost" id="export-xlsx">ส่งออก Excel</button>
+              <button type="button" class="btn-ghost" id="export-csv">ส่งออก CSV</button>
+            </div>
+          </div>
+        </div>
+        <div class="empty-state" id="r-msg"></div>
+        <div id="r-matrix" class="grid-wrap" style="display:none;"><table class="sched" id="sched"></table></div>
+        <div id="r-missing" style="display:none; overflow-x:auto;">
+          <table class="list">
+            <thead><tr><th>รหัส</th><th>ชื่อ-นามสกุล</th><th>แผนก</th><th>ตำแหน่ง</th><th>ลงแล้ว</th><th>สถานะ</th><th>วันที่ยังไม่ลงกะ</th></tr></thead>
+            <tbody id="miss-tbody"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+    <footer class="app-footer">ระบบฐานข้อมูลฝ่ายบุคคล | ใช้ภายในบริษัทเท่านั้น</footer>
+  </div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+  // ============================================================
+  // โปรเจค hr-master (โปรเจคเดียวกับหน้าอื่น ๆ)
+  // anon key ฝังในหน้าเว็บได้ เพราะ RLS เป็นตัวคุมสิทธิ์จริง
+  // ห้ามใส่ service_role key ที่นี่เด็ดขาด
+  // ============================================================
+
+  const SUPABASE_URL = "https://ppzdyvomrfiitahxwrwz.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBwemR5dm9tcmZpaXRhaHh3cnd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwMjQ0MjIsImV4cCI6MjEwNDYwMDQyMn0.iArUz6swMfwhFT_1qEvCwK1B3aiCxdWt46_FBjT6_Y0";
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // ---------- เมนูนำทาง: ไฮไลต์หน้าปัจจุบัน และซ่อนเมนูเฉพาะ HR ถ้าไม่ใช่ HR ----------
+  (function(){
+    const here = decodeURIComponent(location.pathname.split('/').pop() || 'index.html');
+    document.querySelectorAll('.topnav a').forEach(a => { if (a.getAttribute('href') === here) a.classList.add('active'); });
+    let doneFor = null;
+    sb.auth.onAuthStateChange((_e, session) => {
+      if (!session || doneFor === session.user.id) return;
+      doneFor = session.user.id;
+      setTimeout(async () => {
+        const { data, error } = await sb.rpc('is_hr_admin');
+        if (error) return;                       // ยังไม่ได้รัน calendar.sql → ไม่ซ่อนเมนู
+        document.querySelectorAll('.topnav [data-hr]').forEach(a => { a.style.display = data === true ? '' : 'none'; });
+      }, 0);
+    });
+  })();
+
+  const el = (id) => document.getElementById(id);
+  const WEEKDAYS = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
+
+  function escapeHtml(s){
+    return String(s ?? '').replace(/[&<>"']/g, c => (
+      { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]
+    ));
+  }
+  function showBanner(message, isError=false){
+    const wrap = el('status-banner');
+    const inner = el('banner-inner');
+    inner.textContent = message;
+    inner.className = 'banner ' + (isError ? 'err' : 'ok');
+    wrap.style.display = 'block';
+    clearTimeout(showBanner._t);
+    showBanner._t = setTimeout(() => wrap.style.display = 'none', isError ? 9000 : 3500);
+  }
+  const pad = (n) => String(n).padStart(2, '0');
+  function parseISO(iso){ const [y, m, d] = iso.split('-').map(Number); return new Date(Date.UTC(y, m - 1, d)); }
+  function toISO(d){ return d.toISOString().slice(0, 10); }
+  function fmtThai(iso){
+    return parseISO(iso).toLocaleDateString('th-TH', { day:'numeric', month:'short', year:'numeric', timeZone:'UTC' });
+  }
+  function daysBetween(start, end){
+    const out = [];
+    let d = parseISO(start);
+    const last = parseISO(end);
+    while (d <= last && out.length < 400) { out.push(toISO(d)); d = new Date(d.getTime() + 86400000); }
+    return out;
+  }
+  function todayISO(){ return new Date().toLocaleDateString('sv-SE'); }
+  function lastDayOfMonth(ym){ const [y, m] = ym.split('-').map(Number); return toISO(new Date(Date.UTC(y, m, 0))); }
+  function fmtTime(t){ return String(t || '').slice(0, 5).replace(':', '.'); }
+
+  // ตำแหน่งมีคำว่า "พนักงาน" → ตารางพนักงาน ที่เหลือ → ตารางหัวหน้างาน (กติกาเดียวกับหน้า shift-schedule)
+  function groupOf(emp){ return String(emp.position_name || '').includes('พนักงาน') ? 'employee' : 'supervisor'; }
+  const GROUP_LABEL = { employee: 'พนักงาน', supervisor: 'หัวหน้างาน' };
+
+  // รหัสวันหยุดตามประเภทการจ้าง (รายเดือน/รายวัน)
+  function offCodeFor(emp, shift){
+    if (!shift) return null;
+    if (emp.work_type === 'รายวัน') return shift.off_code_daily || shift.off_code_monthly;
+    if (emp.work_type === 'รายเดือน') return shift.off_code_monthly;
+    return null;
+  }
+
+  // ดึงข้อมูลทุกหน้า (PostgREST จำกัด 1,000 แถวต่อคำขอ)
+  async function fetchAll(build){
+    const pageSize = 1000;
+    let from = 0, all = [];
+    while (true) {
+      const { data, error } = await build().range(from, from + pageSize - 1);
+      if (error) throw error;
+      all = all.concat(data);
+      if (data.length < pageSize) break;
+      from += pageSize;
+    }
+    return all;
+  }
+
+  // ---------------- AUTH ----------------
+  async function doLogin(){
+    const email = el('login-email').value.trim();
+    const password = el('login-password').value;
+    el('login-error').style.display = 'none';
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) {
+      el('login-error').textContent = 'เข้าสู่ระบบไม่สำเร็จ: ' + error.message;
+      el('login-error').style.display = 'block';
+    }
+  }
+  el('login-btn').addEventListener('click', doLogin);
+  el('login-password').addEventListener('keydown', (e) => { if (e.key === 'Enter') doLogin(); });
+  el('logout-btn').addEventListener('click', async () => { await sb.auth.signOut(); });
+
+  // supabase ยิง SIGNED_IN ซ้ำได้เมื่อสลับแท็บกลับมา กัน init() ซ้ำ
+  let initializedFor = null;
+  sb.auth.onAuthStateChange((_event, session) => {
+    if (session) {
+      el('login-screen').style.display = 'none';
+      el('app').style.display = 'block';
+      el('who-label').textContent = session.user.email || '';
+      if (initializedFor !== session.user.id) {
+        initializedFor = session.user.id;
+        init(session);
+      }
+    } else {
+      initializedFor = null;
+      el('login-screen').style.display = 'flex';
+      el('app').style.display = 'none';
+    }
+  });
+
+
+  const MAX_MATRIX = 31, MAX_MISSING = 62;
+  let tab = 'matrix', employees = [], shiftCodes = [], holidayMap = new Map(), rowMap = new Map();
+  let loadedKey = null, loadReq = 0, lastView = null;   // lastView: ข้อมูลที่แสดงอยู่ ใช้ตอนส่งออก
+
+  async function init(){
+    const t = todayISO();
+    el('r-month').value = t.slice(0, 7);
+    el('r-start').value = t;
+    el('r-end').value = lastDayOfMonth(t.slice(0, 7));
+    const [empRes, shRes] = await Promise.all([
+      sb.rpc('get_report_employees'),
+      sb.from('shift_codes').select('*').order('sort_order')
+    ]);
+    const err = empRes.error || shRes.error;
+    if (err) { setMsg('โหลดข้อมูลไม่สำเร็จ: ' + err.message + ' (ตรวจว่ารัน reports.sql แล้ว)'); return; }
+    employees = empRes.data;
+    shiftCodes = shRes.data;
+    const depts = [];
+    employees.forEach(e => { if (!depts.some(d => d.code === e.department_code)) depts.push({ code: e.department_code, name: e.department_name }); });
+    el('r-dept').innerHTML = `<option value="">ทุกแผนก (${depts.length})</option>` +
+      depts.map(d => `<option value="${escapeHtml(d.code)}">${escapeHtml(d.name)} (${escapeHtml(d.code)})</option>`).join('');
+    refresh();
+  }
+
+  function setMsg(text){
+    el('r-msg').style.display = text ? 'block' : 'none';
+    el('r-msg').textContent = text || '';
+    if (text) { el('r-matrix').style.display = 'none'; el('r-missing').style.display = 'none'; lastView = null; el('r-tags').innerHTML = ''; }
+  }
+
+  // ---------------- tabs / filters ----------------
+  document.querySelectorAll('#tab-seg button').forEach(b => b.addEventListener('click', () => {
+    tab = b.dataset.tab;
+    document.querySelectorAll('#tab-seg button').forEach(x => x.classList.toggle('active', x === b));
+    document.body.classList.toggle('tab-missing', tab === 'missing');
+    el('r-legend').style.display = tab === 'matrix' ? '' : 'none';
+    refresh();
+  }));
+  ['r-month', 'r-start', 'r-end', 'r-dept', 'r-group', 'r-status'].forEach(id => el(id).addEventListener('change', refresh));
+  el('r-search').addEventListener('input', refresh);
+
+  function currentRange(){
+    if (tab === 'matrix') {
+      const m = el('r-month').value;
+      return m ? { start: m + '-01', end: lastDayOfMonth(m) } : null;
+    }
+    const s = el('r-start').value, e = el('r-end').value;
+    return s && e ? { start: s, end: e } : null;
+  }
+
+  function filteredEmps(){
+    const dept = el('r-dept').value, grp = el('r-group').value, q = el('r-search').value.trim().toLowerCase();
+    return employees.filter(e =>
+      (!dept || e.department_code === dept) && (!grp || groupOf(e) === grp) &&
+      (!q || e.employee_code.toLowerCase().includes(q) || String(e.full_name || '').toLowerCase().includes(q)));
+  }
+
+  function dayInfo(iso){
+    if (parseISO(iso).getUTCDay() === 0) return { type: 'sunday', name: 'วันอาทิตย์' };
+    const h = holidayMap.get(iso);
+    return h ? { type: h.holiday_type, name: h.name } : null;
+  }
+
+  // ---------------- data ----------------
+  async function ensureData(rg){
+    const key = rg.start + '|' + rg.end;
+    if (loadedKey === key) return true;
+    const myReq = ++loadReq;
+    setMsg('กำลังโหลดข้อมูล...');
+    try {
+      const [hol, rows] = await Promise.all([
+        sb.from('calendar_holidays').select('holiday_date, holiday_type, name').gte('holiday_date', rg.start).lte('holiday_date', rg.end),
+        fetchAll(() => sb.from('shift_schedules').select('employee_code, work_date, shift_code, base_shift_code, is_off')
+          .gte('work_date', rg.start).lte('work_date', rg.end).order('employee_code').order('work_date'))
+      ]);
+      if (myReq !== loadReq) return false;
+      holidayMap = hol.error ? new Map() : new Map(hol.data.map(h => [h.holiday_date, h]));
+      if (hol.error) showBanner('โหลดปฏิทินวันหยุดไม่สำเร็จ: ' + hol.error.message + ' (ตรวจว่ารัน calendar.sql แล้ว)', true);
+      rowMap = new Map(rows.map(r => [r.employee_code + '|' + r.work_date, r]));
+      loadedKey = key;
+      return true;
+    } catch (err) {
+      if (myReq === loadReq) setMsg('โหลดข้อมูลไม่สำเร็จ: ' + err.message);
+      return false;
+    }
+  }
+
+  async function refresh(){
+    if (!employees.length) return;
+    const rg = currentRange();
+    if (!rg) { setMsg('เลือกช่วงวันที่เพื่อดูรายงาน'); return; }
+    if (rg.end < rg.start) { setMsg('วันสิ้นสุดต้องไม่ก่อนวันเริ่มต้น'); return; }
+    const nd = daysBetween(rg.start, rg.end).length, max = tab === 'matrix' ? MAX_MATRIX : MAX_MISSING;
+    if (nd > max) { setMsg(`เลือกช่วงวันที่ได้ไม่เกิน ${max} วัน`); return; }
+    if (!(await ensureData(rg))) return;
+    if (currentRange() && currentRange().start === rg.start && currentRange().end === rg.end) {
+      setMsg('');
+      tab === 'matrix' ? renderMatrix(rg) : renderMissing(rg);
+    }
+  }
+
+  // ค่าของแต่ละช่อง: วันหยุดตามปฏิทิน → รหัสวันหยุด (OFF-...) ตามประเภทการจ้าง, วันทำงาน → รหัสกะ
+  function cellFor(emp, iso){
+    const r = rowMap.get(emp.employee_code + '|' + iso);
+    const info = dayInfo(iso);
+    if (!r) return { text: '', cls: 'empty ' + (info ? info.type : ''), tip: info ? `${fmtThai(iso)} : ${info.name}` : '' };
+    const base = r.base_shift_code || r.shift_code;
+    if (info) {
+      const shiftObj = shiftCodes.find(x => x.shift_group === groupOf(emp) && x.shift_code === base);
+      const off = offCodeFor(emp, shiftObj);
+      return { text: off || 'OFF?', cls: info.type,
+        tip: off ? `${fmtThai(iso)} : ${info.name} (กะ ${base})` : `${fmtThai(iso)} : ${info.name} — ยังไม่ระบุประเภทการจ้าง จึงไม่ทราบรหัสวันหยุด` };
+    }
+    if (r.is_off) return { text: r.shift_code, cls: 'company', tip: fmtThai(iso) + ' : ' + r.shift_code };
+    return { text: r.shift_code, cls: 'work', tip: fmtThai(iso) + ' : ' + r.shift_code };
+  }
+
+  // ---------------- tab 1: ตารางกะรายเดือน ----------------
+  function renderMatrix(rg){
+    const dates = daysBetween(rg.start, rg.end), emps = filteredEmps();
+    el('r-missing').style.display = 'none';
+    if (!emps.length) { setMsg('ไม่พบพนักงานตามตัวกรอง'); return; }
+
+    const head = dates.map((iso, idx) => {
+      const d = parseISO(iso), day = d.getUTCDate();
+      const mo = (idx === 0 || day === 1) ? d.toLocaleDateString('th-TH', { month: 'short', timeZone: 'UTC' }) : '&nbsp;';
+      const info = dayInfo(iso);
+      return `<th class="${info ? info.type : ''}" title="${escapeHtml(fmtThai(iso) + (info ? ' : ' + info.name : ''))}"><div class="mo">${mo}</div><div>${WEEKDAYS[d.getUTCDay()]}</div><div class="dn">${day}</div></th>`;
+    }).join('');
+    const body = emps.map(emp => {
+      const cells = dates.map(iso => { const c = cellFor(emp, iso); return `<td class="cell ${c.cls}" title="${escapeHtml(c.tip)}">${escapeHtml(c.text || '·')}</td>`; }).join('');
+      return `<tr><td class="c1"><span class="code-cell">${escapeHtml(emp.employee_code)}</span></td><td class="c2">${escapeHtml(emp.full_name)}</td>${cells}</tr>`;
+    }).join('');
+    el('sched').innerHTML = `<thead><tr><th class="c1">รหัส</th><th class="c2">ชื่อ-นามสกุล</th>${head}</tr></thead><tbody>${body}</tbody>`;
+    el('r-matrix').style.display = 'block';
+
+    let filled = 0;
+    emps.forEach(emp => dates.forEach(iso => { if (rowMap.has(emp.employee_code + '|' + iso)) filled++; }));
+    el('r-tags').innerHTML = `<span class="count-tag">${emps.length} คน</span><span class="count-tag ${filled === emps.length * dates.length ? 'good' : 'warn'}">ลงแล้ว ${filled.toLocaleString('th-TH')} / ${(emps.length * dates.length).toLocaleString('th-TH')} คน-วัน</span>`;
+    lastView = { kind: 'matrix', rg, dates, emps };
+  }
+
+  // ---------------- tab 2: ยังไม่ลงกะ ----------------
+  const monShort = (iso) => parseISO(iso).toLocaleDateString('th-TH', { month: 'short', timeZone: 'UTC' });
+  const dayNum = (iso) => parseISO(iso).getUTCDate();
+  function rangesText(dates){
+    const out = [];
+    let s = dates[0], p = dates[0];
+    for (let i = 1; i <= dates.length; i++) {
+      const d = dates[i];
+      if (d && toISO(new Date(parseISO(p).getTime() + 86400000)) === d) { p = d; continue; }
+      if (s === p) out.push(`${dayNum(s)} ${monShort(s)}`);
+      else if (monShort(s) === monShort(p)) out.push(`${dayNum(s)}–${dayNum(p)} ${monShort(p)}`);
+      else out.push(`${dayNum(s)} ${monShort(s)} – ${dayNum(p)} ${monShort(p)}`);
+      s = d; p = d;
+    }
+    return out.join(', ');
+  }
+
+  function renderMissing(rg){
+    const dates = daysBetween(rg.start, rg.end), D = dates.length, emps = filteredEmps();
+    const want = el('r-status').value;
+    el('r-matrix').style.display = 'none';
+
+    const have = new Map();
+    dates.forEach(iso => emps.forEach(e => { if (rowMap.has(e.employee_code + '|' + iso)) have.set(e.employee_code, (have.get(e.employee_code) || 0) + 1); }));
+
+    let nNone = 0, nPartial = 0;
+    const list = [];
+    emps.forEach(e => {
+      const c = have.get(e.employee_code) || 0;
+      if (c >= D) return;
+      const status = c === 0 ? 'none' : 'partial';
+      status === 'none' ? nNone++ : nPartial++;
+      if (want && want !== status) return;
+      list.push({ e, c, status, missing: dates.filter(iso => !rowMap.has(e.employee_code + '|' + iso)) });
+    });
+    list.sort((a, b) => a.e.department_name.localeCompare(b.e.department_name, 'th') || a.e.employee_code.localeCompare(b.e.employee_code));
+
+    el('r-tags').innerHTML =
+      `<span class="count-tag">ตรวจ ${emps.length} คน × ${D} วัน</span>` +
+      `<span class="count-tag ${nNone ? 'bad' : 'good'}">ยังไม่ลงเลย ${nNone} คน</span>` +
+      `<span class="count-tag ${nPartial ? 'warn' : 'good'}">ลงบางส่วน ${nPartial} คน</span>`;
+
+    if (!list.length) {
+      setMsg(emps.length ? (nNone + nPartial === 0 ? 'ทุกคนลงกะครบทุกวันในช่วงนี้แล้ว' : 'ไม่มีรายการตามสถานะที่เลือก') : 'ไม่พบพนักงานตามตัวกรอง');
+      el('r-tags').innerHTML = `<span class="count-tag">ตรวจ ${emps.length} คน × ${D} วัน</span>` + (nNone + nPartial === 0 && emps.length ? '<span class="count-tag good">ลงครบทุกคน</span>' : '');
+      lastView = { kind: 'missing', rg, dates, list: [] };
+      return;
+    }
+    el('miss-tbody').innerHTML = list.map(x => `
+      <tr>
+        <td class="nowrap"><span class="code-cell">${escapeHtml(x.e.employee_code)}</span></td>
+        <td>${escapeHtml(x.e.full_name)}</td>
+        <td>${escapeHtml(x.e.department_name)}</td>
+        <td>${escapeHtml(x.e.position_name)}</td>
+        <td class="nowrap">${x.c} / ${D} วัน</td>
+        <td><span class="badge ${x.status}">${x.status === 'none' ? 'ยังไม่ลงเลย' : 'ลงบางส่วน'}</span></td>
+        <td class="miss-dates">${escapeHtml(rangesText(x.missing))}</td>
+      </tr>`).join('');
+    el('r-missing').style.display = 'block';
+    lastView = { kind: 'missing', rg, dates, list };
+  }
+
+  // ---------------- export ----------------
+  function buildExport(){
+    if (!lastView) return null;
+    const v = lastView;
+    if (v.kind === 'matrix') {
+      const head = ['รหัส', 'ชื่อ-นามสกุล', 'ฝ่าย', 'แผนก', 'ตำแหน่ง', 'ประเภทการจ้าง', 'สถานที่',
+        ...v.dates.map(iso => `${dayNum(iso)} ${monShort(iso)} (${WEEKDAYS[parseISO(iso).getUTCDay()]})`)];
+      const rows = v.emps.map(e => [e.employee_code, e.full_name, e.section_name, e.department_name, e.position_name, e.work_type || '', e.location || '',
+        ...v.dates.map(iso => cellFor(e, iso).text)]);
+      return { name: `ตารางกะ_${v.rg.start.slice(0, 7)}`, aoa: [head, ...rows] };
+    }
+    const head = ['รหัส', 'ชื่อ-นามสกุล', 'ฝ่าย', 'แผนก', 'ตำแหน่ง', 'ประเภทการจ้าง', 'สถานที่', 'ลงแล้ว (วัน)', 'ทั้งหมด (วัน)', 'สถานะ', 'วันที่ยังไม่ลงกะ'];
+    const rows = v.list.map(x => [x.e.employee_code, x.e.full_name, x.e.section_name, x.e.department_name, x.e.position_name, x.e.work_type || '', x.e.location || '',
+      x.c, v.dates.length, x.status === 'none' ? 'ยังไม่ลงเลย' : 'ลงบางส่วน', rangesText(x.missing)]);
+    return { name: `ยังไม่ลงกะ_${v.rg.start}_${v.rg.end}`, aoa: [head, ...rows] };
+  }
+  function saveBlob(blob, filename){
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1500);
+  }
+  el('export-csv').addEventListener('click', () => {
+    const x = buildExport();
+    if (!x) { showBanner('ยังไม่มีข้อมูลให้ส่งออก', true); return; }
+    const csv = '﻿' + x.aoa.map(r => r.map(v => {
+      const s = String(v ?? '');
+      return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+    }).join(',')).join('\r\n');
+    saveBlob(new Blob([csv], { type: 'text/csv;charset=utf-8' }), x.name + '.csv');
+  });
+  el('export-xlsx').addEventListener('click', () => {
+    const x = buildExport();
+    if (!x) { showBanner('ยังไม่มีข้อมูลให้ส่งออก', true); return; }
+    if (!window.XLSX) { showBanner('โหลดไลบรารี Excel ไม่สำเร็จ ลองส่งออก CSV แทน', true); return; }
+    const ws = XLSX.utils.aoa_to_sheet(x.aoa);
+    ws['!cols'] = x.aoa[0].map((_, i) => ({ wch: i === 1 ? 26 : i < 7 ? 16 : (lastView.kind === 'matrix' ? 12 : 22) }));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'รายงาน');
+    XLSX.writeFile(wb, x.name + '.xlsx');
+  });
+
+</script>
+</body>
+</html>
