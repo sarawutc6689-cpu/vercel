@@ -332,8 +332,8 @@
   function lastDayOfMonth(ym){ const [y, m] = ym.split('-').map(Number); return toISO(new Date(Date.UTC(y, m, 0))); }
   function fmtTime(t){ return String(t || '').slice(0, 5).replace(':', '.'); }
 
-  // ตำแหน่งมีคำว่า "พนักงาน" → ตารางพนักงาน ที่เหลือ → ตารางหัวหน้างาน (กติกาเดียวกับหน้า shift-schedule)
-  function groupOf(emp){ return String(emp.position_name || '').includes('พนักงาน') ? 'employee' : 'supervisor'; }
+  // ตำแหน่งมีคำว่า "หัวหน้างาน" → ตารางหัวหน้างาน ที่เหลือทั้งหมด → ตารางพนักงาน (กติกาเดียวกับหน้า shift-schedule)
+  function groupOf(emp){ return String(emp.position_name || '').includes('หัวหน้างาน') ? 'supervisor' : 'employee'; }
   const GROUP_LABEL = { employee: 'พนักงาน', supervisor: 'หัวหน้างาน' };
 
   // รหัสวันหยุดตามประเภทการจ้าง (รายเดือน/รายวัน)
