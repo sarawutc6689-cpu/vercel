@@ -439,6 +439,10 @@
   table.sched td.cell.empty.sunday{background:var(--sun-bg);}
   table.sched td.cell.empty.company{background:var(--com-bg);}
   table.sched td.cell.empty.special75{background:var(--spe-bg);}
+  table.sched td.cell.empty.sunday, table.sched td.cell.empty.company, table.sched td.cell.empty.special75{font-size:11px; font-weight:500;}
+  table.sched td.cell.empty.sunday{color:var(--sun-fg);}
+  table.sched td.cell.empty.company{color:var(--com-fg);}
+  table.sched td.cell.empty.special75{color:var(--spe-fg);}
 
   /* ---------- banner ---------- */
   #status-banner{
@@ -540,16 +544,16 @@
         <div class="dept-note" id="dept-note"></div>
 
         <div class="controls">
-           <div class="field">
-            <label for="f-dept">แผนก</label>
-            <select id="f-dept"></select>
-          </div>
           <div class="field">
-            <label>พนักงาน</label>
+            <label>กลุ่มพนักงาน</label>
             <div class="seg" id="group-switch">
               <button type="button" data-group="employee" class="active">พนักงาน <span class="n" id="cnt-employee"></span></button>
               <button type="button" data-group="supervisor">หัวหน้างาน <span class="n" id="cnt-supervisor"></span></button>
             </div>
+          </div>
+          <div class="field">
+            <label for="f-dept">แผนก</label>
+            <select id="f-dept"></select>
           </div>
           <div class="field">
             <label for="f-shift">รหัสกะ</label>
@@ -654,7 +658,9 @@
   const WEEKDAYS = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];   // 0 = อาทิตย์
   const MAX_DAYS = 93;                                         // ช่วงวันที่สูงสุดต่อการบันทึก 1 ครั้ง
 
-  let myEmployees = [];      // จาก get_my_employees() เฉพาะแผนกที่ธุรการรับผิดชอบ
+  // หน้านี้แสดงและลงกะเฉพาะพนักงานที่สถานที่ปฏิบัติงานตรงกับค่านี้
+  const ONLY_LOCATION = 'โรงงาน';
+  let myEmployees = [];      // จาก get_my_employees() เฉพาะแผนกที่ธุรการรับผิดชอบ และสถานที่ = ONLY_LOCATION
   let shiftCodes = [];       // จากตาราง shift_codes
   let currentGroup = 'employee';
   let selected = new Set();  // employee_code ที่ติ๊กไว้
@@ -662,6 +668,8 @@
   let gridReqId = 0;
   let holidayMap = new Map();   // iso → {holiday_type, name} จากตาราง calendar_holidays (ไม่รวมวันอาทิตย์)
 
+  // ข้อความสั้นในช่องวันหยุดที่ยังไม่ได้ลงกะ (ให้เห็นว่าเป็นวันหยุดตามปฏิทิน)
+  const HOL_SHORT = { sunday: 'หยุด', company: 'หยุดบริษัท', special75: 'หยุด 75%' };
   const DAY_LABEL = { sunday: 'วันอาทิตย์', company: 'วันหยุดบริษัท', special75: 'วันหยุดพิเศษ 75%' };
   // ประเภทของวัน: อาทิตย์ → 'sunday', นอกนั้นดูจากปฏิทิน, วันทำงานปกติ → null
   function dayInfo(iso){
@@ -735,18 +743,12 @@
   }
 
   // รหัสวันหยุดตามประเภทการจ้าง (รายเดือน/รายวัน)
-  function offCodeFor(emp, shift, dayType){
-  if (!shift) return null;
-  const sp = dayType === 'special75';
-  if (emp.work_type === 'รายวัน') {
-    return (sp && (shift.off_code_special75_daily || shift.off_code_special75_monthly))
-        || shift.off_code_daily || shift.off_code_monthly;
+  function offCodeFor(emp, shift){
+    if (!shift) return null;
+    if (emp.work_type === 'รายวัน') return shift.off_code_daily || shift.off_code_monthly;
+    if (emp.work_type === 'รายเดือน') return shift.off_code_monthly;
+    return null;
   }
-  if (emp.work_type === 'รายเดือน') {
-    return (sp && shift.off_code_special75_monthly) || shift.off_code_monthly;
-  }
-  return null;
-}
 
   // ดึงข้อมูลทุกหน้า (PostgREST จำกัด 1,000 แถวต่อคำขอ)
   async function fetchAll(build){
@@ -809,7 +811,12 @@
       return;
     }
     shiftCodes = shRes.data;
-    myEmployees = empRes.data;
+    const allMine = empRes.data;
+    if (allMine.length && !('location' in allMine[0])) {
+      showBanner('ฟังก์ชัน get_my_employees ยังไม่ส่งคอลัมน์ location กรุณารัน shift-schedule.sql ฉบับใหม่ใน SQL Editor', true);
+    }
+    myEmployees = allMine.filter(e => e.location === ONLY_LOCATION);
+    const hiddenCount = allMine.length - myEmployees.length;
     selected = new Set();
 
     // แผนกที่รับผิดชอบ
@@ -818,9 +825,12 @@
       if (!depts.some(d => d.code === e.department_code)) depts.push({ code: e.department_code, name: e.department_name });
     });
     el('dept-note').textContent = depts.length
-      ? 'แผนกที่รับผิดชอบ: ' + depts.map(d => `${d.name} (${d.code})`).join(', ')
-      : 'บัญชีนี้ยังไม่ได้ถูกกำหนดแผนกที่รับผิดชอบ หรือยังไม่มีพนักงานที่กำลังทำงานในแผนก กรุณาติดต่อฝ่ายบุคคล';
-    el('f-dept').innerHTML = `<option value="">แผนกที่รับผิดชอบ (${depts.length})</option>` +
+      ? `แผนกที่รับผิดชอบ: ${depts.map(d => `${d.name} (${d.code})`).join(', ')} · แสดงเฉพาะพนักงานที่สถานที่ปฏิบัติงาน = ${ONLY_LOCATION}` +
+        (hiddenCount ? ` (ซ่อน ${hiddenCount} คนที่สถานที่อื่นหรือยังไม่ระบุ)` : '')
+      : (allMine.length
+          ? `ไม่พบพนักงานที่สถานที่ปฏิบัติงาน = ${ONLY_LOCATION} ในแผนกที่รับผิดชอบ (มีพนักงานสถานที่อื่นหรือยังไม่ระบุ ${allMine.length} คน)`
+          : 'บัญชีนี้ยังไม่ได้ถูกกำหนดแผนกที่รับผิดชอบ หรือยังไม่มีพนักงานที่กำลังทำงานในแผนก กรุณาติดต่อฝ่ายบุคคล');
+    el('f-dept').innerHTML = `<option value="">ทุกแผนกที่รับผิดชอบ (${depts.length})</option>` +
       depts.map(d => `<option value="${escapeHtml(d.code)}">${escapeHtml(d.name)} (${escapeHtml(d.code)})</option>`).join('');
 
     // ค่าเริ่มต้นช่วงวันที่ = วันนี้ ถึง อีก 6 วัน
@@ -912,7 +922,7 @@
       tbody.innerHTML = '';
       el('emp-empty').style.display = 'block';
       el('emp-empty').textContent = myEmployees.length === 0
-        ? 'ไม่พบพนักงานในแผนกที่รับผิดชอบ'
+        ? `ไม่พบพนักงานที่สถานที่ปฏิบัติงาน = ${ONLY_LOCATION} ในแผนกที่รับผิดชอบ`
         : 'ไม่พบพนักงานในกลุ่ม/แผนกที่เลือก';
     } else {
       el('emp-empty').style.display = 'none';
@@ -1115,13 +1125,12 @@
       const cells = dates.map(iso => {
         const r = map.get(emp.employee_code + '|' + iso);
         const info = dayInfo(iso);
-        if (!r) return `<td class="cell empty ${info ? info.type : ''}" title="${escapeHtml(info ? fmtThai(iso) + ' : ' + info.name : '')}">·</td>`;
+        if (!r) return `<td class="cell empty ${info ? info.type : ''}" title="${escapeHtml(info ? fmtThai(iso) + ' : ' + info.name : '')}">${info ? HOL_SHORT[info.type] : '·'}</td>`;
         const base = r.base_shift_code || r.shift_code;
         if (info) {
           // วันหยุดตามปฏิทิน → แสดงรหัสวันหยุดของกะนั้นตามประเภทการจ้าง (รายเดือน/รายวัน)
           const shiftObj = shiftCodes.find(x => x.shift_group === groupOf(emp) && x.shift_code === base);
-          const off = offCodeFor(emp, shiftObj, info.type);
-
+          const off = offCodeFor(emp, shiftObj);
           const shown = off || 'OFF?';
           const tip = off ? `${fmtThai(iso)} : ${info.name} (กะ ${base})`
                           : `${fmtThai(iso)} : ${info.name} — พนักงานยังไม่ระบุประเภทการจ้าง (รายเดือน/รายวัน) จึงไม่ทราบรหัสวันหยุด`;
