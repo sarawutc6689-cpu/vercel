@@ -595,10 +595,9 @@
     if (!lastView) return null;
     const v = lastView;
     if (v.kind === 'matrix') {
-      const head = ['รหัส', 'ชื่อ-นามสกุล', 'ฝ่าย', 'แผนก', 'ตำแหน่ง', 'ประเภทการจ้าง', 'สถานที่',
-        ...v.dates.map(iso => `${dayNum(iso)} ${monShort(iso)} (${WEEKDAYS[parseISO(iso).getUTCDay()]})`)];
-      const rows = v.emps.map(e => [e.employee_code, e.full_name, e.section_name, e.department_name, e.position_name, e.work_type || '', e.location || '',
-        ...v.dates.map(iso => cellFor(e, iso).text)]);
+      // รูปแบบตามไฟล์ตัวอย่าง: คอลัมน์ A = รหัสพนักงาน, คอลัมน์ B เป็นต้นไป = วันที่ (เลขวันที่ในเดือน)
+      const head = ['รหัสพนักงาน', ...v.dates.map(iso => String(dayNum(iso)))];
+      const rows = v.emps.map(e => [e.employee_code, ...v.dates.map(iso => cellFor(e, iso).text)]);
       return { name: `ตารางกะ_${v.rg.start}_${v.rg.end}`, aoa: [head, ...rows] };
     }
     const head = ['รหัส', 'ชื่อ-นามสกุล', 'ฝ่าย', 'แผนก', 'ตำแหน่ง', 'ประเภทการจ้าง', 'สถานที่', 'ลงแล้ว (วัน)', 'ทั้งหมด (วัน)', 'สถานะ', 'วันที่ยังไม่ลงกะ'];
@@ -626,7 +625,7 @@
     if (!x) { showBanner('ยังไม่มีข้อมูลให้ส่งออก', true); return; }
     if (!window.XLSX) { showBanner('โหลดไลบรารี Excel ไม่สำเร็จ ลองส่งออก CSV แทน', true); return; }
     const ws = XLSX.utils.aoa_to_sheet(x.aoa);
-    ws['!cols'] = x.aoa[0].map((_, i) => ({ wch: i === 1 ? 26 : i < 7 ? 16 : (lastView.kind === 'matrix' ? 12 : 22) }));
+    ws['!cols'] = x.aoa[0].map((_, i) => ({ wch: lastView.kind === 'matrix' ? (i === 0 ? 16 : 12) : (i === 1 ? 26 : i < 7 ? 16 : 22) }));
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'รายงาน');
     XLSX.writeFile(wb, x.name + '.xlsx');
