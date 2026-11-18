@@ -501,7 +501,8 @@
     const base = r.base_shift_code || r.shift_code;
     if (info) {
       const shiftObj = shiftCodes.find(x => x.shift_group === groupOf(emp) && x.shift_code === base);
-      const off = offCodeFor(emp, shiftObj);
+      const off = offCodeFor(emp, shiftObj, info.type);
+
       return { text: off || 'OFF?', cls: info.type,
         tip: off ? `${fmtThai(iso)} : ${info.name} (กะ ${base})` : `${fmtThai(iso)} : ${info.name} — ยังไม่ระบุประเภทการจ้าง จึงไม่ทราบรหัสวันหยุด` };
     }
