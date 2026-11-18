@@ -464,6 +464,17 @@
     font-size:12.5px;
     padding:8px 20px 32px;
   }
+
+  /* ---------- top navigation ---------- */
+  header{flex-wrap:wrap; gap:10px 24px;}
+  .topnav{display:flex; gap:4px; flex-wrap:wrap; align-items:center;}
+  .topnav a{
+    padding:7px 13px; border-radius:9px; font-size:13.5px; font-weight:600;
+    color:var(--ink-soft); text-decoration:none; white-space:nowrap; transition:.15s;
+  }
+  .topnav a:hover{background:var(--accent-soft-2); color:var(--accent-dark);}
+  .topnav a.active{background:var(--accent-soft); color:var(--accent-dark);}
+  @media (max-width:1100px){ .topnav{order:3; width:100%;} }
 </style>
 </head>
 <body>
@@ -505,6 +516,14 @@
         </div>
         <h1>ตารางกะการทำงาน</h1>
       </div>
+      <nav class="topnav" aria-label="เมนู">
+        <a href="index.html">หน้าหลัก</a>
+        <a href="shift-schedule.html">ตารางกะ</a>
+        <a href="calendar.html">ปฏิทินวันหยุด</a>
+        <a href="report.html">รายงาน</a>
+        <a href="dashboard.html">แดชบอร์ด</a>
+        <a href="clerk-admin.html" data-hr>บัญชีธุรการ</a>
+      </nav>
       <div style="display:flex; align-items:center; gap:14px;">
         <span class="who" id="who-label"></span>
         <button class="btn-ghost" id="logout-btn">ออกจากระบบ</button>
@@ -522,16 +541,16 @@
 
         <div class="controls">
           <div class="field">
-            <label for="f-dept">แผนก</label>
-            <select id="f-dept"></select>
-          </div>
-          <div class="field">
-            <label>พนักงาน</label>
+            <label>กลุ่มพนักงาน</label>
             <div class="seg" id="group-switch">
               <button type="button" data-group="employee" class="active">พนักงาน <span class="n" id="cnt-employee"></span></button>
               <button type="button" data-group="supervisor">หัวหน้างาน <span class="n" id="cnt-supervisor"></span></button>
             </div>
-          </div> 
+          </div>
+          <div class="field">
+            <label for="f-dept">แผนก</label>
+            <select id="f-dept"></select>
+          </div>
           <div class="field">
             <label for="f-shift">รหัสกะ</label>
             <select id="f-shift"></select>
@@ -599,7 +618,7 @@
     </main>
 
     <footer class="app-footer">
-      แบบฟอร์มตารางกะทำงานฝ่ายบุคคล | ใช้ภายในบริษัทเท่านั้น | พัฒนาโดย Sarawut.C
+      ระบบฐานข้อมูลฝ่ายบุคคล | ใช้ภายในบริษัทเท่านั้น
     </footer>
   </div>
 
@@ -614,6 +633,22 @@
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBwemR5dm9tcmZpaXRhaHh3cnd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwMjQ0MjIsImV4cCI6MjEwNDYwMDQyMn0.iArUz6swMfwhFT_1qEvCwK1B3aiCxdWt46_FBjT6_Y0";
 
   const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // ---------- เมนูนำทาง: ไฮไลต์หน้าปัจจุบัน และซ่อนเมนูเฉพาะ HR ถ้าไม่ใช่ HR ----------
+  (function(){
+    const here = decodeURIComponent(location.pathname.split('/').pop() || 'index.html');
+    document.querySelectorAll('.topnav a').forEach(a => { if (a.getAttribute('href') === here) a.classList.add('active'); });
+    let doneFor = null;
+    sb.auth.onAuthStateChange((_e, session) => {
+      if (!session || doneFor === session.user.id) return;
+      doneFor = session.user.id;
+      setTimeout(async () => {
+        const { data, error } = await sb.rpc('is_hr_admin');
+        if (error) return;                       // ยังไม่ได้รัน calendar.sql → ไม่ซ่อนเมนู
+        document.querySelectorAll('.topnav [data-hr]').forEach(a => { a.style.display = data === true ? '' : 'none'; });
+      }, 0);
+    });
+  })();
 
   const el = (id) => document.getElementById(id);
   const WEEKDAYS = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];   // 0 = อาทิตย์
@@ -689,9 +724,9 @@
   function fmtTime(t){ return String(t || '').slice(0, 5).replace(':', '.'); }
   function shiftLabel(s){ return `${s.shift_code} : ${fmtTime(s.time_start)} น. - ${fmtTime(s.time_end)} น.`; }
 
-  // ตำแหน่งมีคำว่า "พนักงาน" → ตารางพนักงาน ที่เหลือ → ตารางหัวหน้างาน
+  // ตำแหน่งมีคำว่า "หัวหน้างาน" → ตารางหัวหน้างาน ที่เหลือทั้งหมด → ตารางพนักงาน
   function groupOf(emp){
-    return String(emp.position_name || '').includes('พนักงาน') ? 'employee' : 'supervisor';
+    return String(emp.position_name || '').includes('หัวหน้างาน') ? 'supervisor' : 'employee';
   }
 
   function selectedShift(){
@@ -779,7 +814,7 @@
     el('dept-note').textContent = depts.length
       ? 'แผนกที่รับผิดชอบ: ' + depts.map(d => `${d.name} (${d.code})`).join(', ')
       : 'บัญชีนี้ยังไม่ได้ถูกกำหนดแผนกที่รับผิดชอบ หรือยังไม่มีพนักงานที่กำลังทำงานในแผนก กรุณาติดต่อฝ่ายบุคคล';
-    el('f-dept').innerHTML = `<option value="">แผนกที่รับผิดชอบ (${depts.length})</option>` +
+    el('f-dept').innerHTML = `<option value="">ทุกแผนกที่รับผิดชอบ (${depts.length})</option>` +
       depts.map(d => `<option value="${escapeHtml(d.code)}">${escapeHtml(d.name)} (${escapeHtml(d.code)})</option>`).join('');
 
     // ค่าเริ่มต้นช่วงวันที่ = วันนี้ ถึง อีก 6 วัน
