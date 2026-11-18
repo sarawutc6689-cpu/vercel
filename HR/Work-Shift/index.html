@@ -205,7 +205,7 @@
       </section>
       <section class="tiles" id="tiles"></section>
     </main>
-    <footer class="app-footer">แบบฟอร์มตารางกะทำงานฝ่ายบุคคล | ใช้ภายในบริษัทเท่านั้น | พัฒนาโดย Sarawut.C</footer>
+    <footer class="app-footer">ระบบฐานข้อมูลฝ่ายบุคคล | ใช้ภายในบริษัทเท่านั้น</footer>
   </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -270,8 +270,8 @@
   function lastDayOfMonth(ym){ const [y, m] = ym.split('-').map(Number); return toISO(new Date(Date.UTC(y, m, 0))); }
   function fmtTime(t){ return String(t || '').slice(0, 5).replace(':', '.'); }
 
-  // ตำแหน่งมีคำว่า "พนักงาน" → ตารางพนักงาน ที่เหลือ → ตารางหัวหน้างาน (กติกาเดียวกับหน้า shift-schedule)
-  function groupOf(emp){ return String(emp.position_name || '').includes('พนักงาน') ? 'employee' : 'supervisor'; }
+  // ตำแหน่งมีคำว่า "หัวหน้างาน" → ตารางหัวหน้างาน ที่เหลือทั้งหมด → ตารางพนักงาน (กติกาเดียวกับหน้า shift-schedule)
+  function groupOf(emp){ return String(emp.position_name || '').includes('หัวหน้างาน') ? 'supervisor' : 'employee'; }
   const GROUP_LABEL = { employee: 'พนักงาน', supervisor: 'หัวหน้างาน' };
 
   // รหัสวันหยุดตามประเภทการจ้าง (รายเดือน/รายวัน)
