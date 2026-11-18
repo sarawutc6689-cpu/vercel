@@ -1120,7 +1120,8 @@
         if (info) {
           // วันหยุดตามปฏิทิน → แสดงรหัสวันหยุดของกะนั้นตามประเภทการจ้าง (รายเดือน/รายวัน)
           const shiftObj = shiftCodes.find(x => x.shift_group === groupOf(emp) && x.shift_code === base);
-          const off = offCodeFor(emp, shiftObj);
+          const off = offCodeFor(emp, shiftObj, info.type);
+
           const shown = off || 'OFF?';
           const tip = off ? `${fmtThai(iso)} : ${info.name} (กะ ${base})`
                           : `${fmtThai(iso)} : ${info.name} — พนักงานยังไม่ระบุประเภทการจ้าง (รายเดือน/รายวัน) จึงไม่ทราบรหัสวันหยุด`;
