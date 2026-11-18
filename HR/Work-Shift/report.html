@@ -337,12 +337,18 @@
   const GROUP_LABEL = { employee: 'พนักงาน', supervisor: 'หัวหน้างาน' };
 
   // รหัสวันหยุดตามประเภทการจ้าง (รายเดือน/รายวัน)
-  function offCodeFor(emp, shift){
-    if (!shift) return null;
-    if (emp.work_type === 'รายวัน') return shift.off_code_daily || shift.off_code_monthly;
-    if (emp.work_type === 'รายเดือน') return shift.off_code_monthly;
-    return null;
+  function offCodeFor(emp, shift, dayType){
+  if (!shift) return null;
+  const sp = dayType === 'special75';
+  if (emp.work_type === 'รายวัน') {
+    return (sp && (shift.off_code_special75_daily || shift.off_code_special75_monthly))
+        || shift.off_code_daily || shift.off_code_monthly;
   }
+  if (emp.work_type === 'รายเดือน') {
+    return (sp && shift.off_code_special75_monthly) || shift.off_code_monthly;
+  }
+  return null;
+}
 
   // ดึงข้อมูลทุกหน้า (PostgREST จำกัด 1,000 แถวต่อคำขอ)
   async function fetchAll(build){
