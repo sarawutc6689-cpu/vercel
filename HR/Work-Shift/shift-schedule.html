@@ -751,7 +751,7 @@
     return null;
   }
 
-  // ดึงข้อมูลทุกหน้า (PostgREST จำกัด 1,000 แถวต่อคำขอ)
+  // ดึงข้อมูลหน้า (PostgREST จำกัด 1,000 แถวต่อคำขอ)
   async function fetchAll(build){
     const pageSize = 1000;
     let from = 0, all = [];
@@ -831,7 +831,7 @@
       : (allMine.length
           ? `ไม่พบพนักงานที่สถานที่ปฏิบัติงาน = ${ONLY_LOCATION} ในแผนกที่รับผิดชอบ (มีพนักงานสถานที่อื่นหรือยังไม่ระบุ ${allMine.length} คน)`
           : 'บัญชีนี้ยังไม่ได้ถูกกำหนดแผนกที่รับผิดชอบ หรือยังไม่มีพนักงานที่กำลังทำงานในแผนก กรุณาติดต่อฝ่ายบุคคล');
-    el('f-dept').innerHTML = `<option value="">ทุกแผนกที่รับผิดชอบ (${depts.length})</option>` +
+    el('f-dept').innerHTML = `<option value="">แผนกที่รับผิดชอบ (${depts.length})</option>` +
       depts.map(d => `<option value="${escapeHtml(d.code)}">${escapeHtml(d.name)} (${escapeHtml(d.code)})</option>`).join('');
 
     // ค่าเริ่มต้นช่วงวันที่ = วันนี้ ถึง อีก 6 วัน
