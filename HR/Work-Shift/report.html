@@ -223,9 +223,8 @@
           <button type="button" data-tab="missing">ยังไม่ลงกะ</button>
         </div>
         <div class="rep-ctl">
-          <div class="field only-matrix"><label for="r-month">เดือน</label><input id="r-month" type="month"></div>
-          <div class="field only-missing"><label for="r-start">ตั้งแต่วันที่</label><input id="r-start" type="date"></div>
-          <div class="field only-missing"><label for="r-end">ถึงวันที่</label><input id="r-end" type="date"></div>
+          <div class="field"><label for="r-start">ตั้งแต่วันที่</label><input id="r-start" type="date"></div>
+          <div class="field"><label for="r-end">ถึงวันที่</label><input id="r-end" type="date"></div>
           <div class="field"><label for="r-dept">แผนก</label><select id="r-dept"></select></div>
           <div class="field"><label for="r-group">กลุ่มพนักงาน</label>
             <select id="r-group">
@@ -267,7 +266,7 @@
         </div>
       </section>
     </main>
-    <footer class="app-footer">แบบฟอร์มตารางกะทำงานฝ่ายบุคคล | ใช้ภายในบริษัทเท่านั้น | พัฒนาโดย Sarawut.C</footer>
+    <footer class="app-footer">ระบบฐานข้อมูลฝ่ายบุคคล | ใช้ภายในบริษัทเท่านั้น</footer>
   </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -393,14 +392,13 @@
   });
 
 
-  const MAX_MATRIX = 31, MAX_MISSING = 62;
+  const MAX_DAYS = 62;   // ช่วงวันที่สูงสุดต่อรายงาน (ทั้งสองแท็บ)
   let tab = 'matrix', employees = [], shiftCodes = [], holidayMap = new Map(), rowMap = new Map();
   let loadedKey = null, loadReq = 0, lastView = null;   // lastView: ข้อมูลที่แสดงอยู่ ใช้ตอนส่งออก
 
   async function init(){
     const t = todayISO();
-    el('r-month').value = t.slice(0, 7);
-    el('r-start').value = t;
+    el('r-start').value = t.slice(0, 7) + '-01';           // ค่าเริ่มต้น = ทั้งเดือนปัจจุบัน
     el('r-end').value = lastDayOfMonth(t.slice(0, 7));
     const [empRes, shRes] = await Promise.all([
       sb.rpc('get_report_employees'),
@@ -431,14 +429,10 @@
     el('r-legend').style.display = tab === 'matrix' ? '' : 'none';
     refresh();
   }));
-  ['r-month', 'r-start', 'r-end', 'r-dept', 'r-group', 'r-status'].forEach(id => el(id).addEventListener('change', refresh));
+  ['r-start', 'r-end', 'r-dept', 'r-group', 'r-status'].forEach(id => el(id).addEventListener('change', refresh));
   el('r-search').addEventListener('input', refresh);
 
   function currentRange(){
-    if (tab === 'matrix') {
-      const m = el('r-month').value;
-      return m ? { start: m + '-01', end: lastDayOfMonth(m) } : null;
-    }
     const s = el('r-start').value, e = el('r-end').value;
     return s && e ? { start: s, end: e } : null;
   }
@@ -485,8 +479,7 @@
     const rg = currentRange();
     if (!rg) { setMsg('เลือกช่วงวันที่เพื่อดูรายงาน'); return; }
     if (rg.end < rg.start) { setMsg('วันสิ้นสุดต้องไม่ก่อนวันเริ่มต้น'); return; }
-    const nd = daysBetween(rg.start, rg.end).length, max = tab === 'matrix' ? MAX_MATRIX : MAX_MISSING;
-    if (nd > max) { setMsg(`เลือกช่วงวันที่ได้ไม่เกิน ${max} วัน`); return; }
+    if (daysBetween(rg.start, rg.end).length > MAX_DAYS) { setMsg(`เลือกช่วงวันที่ได้ไม่เกิน ${MAX_DAYS} วัน`); return; }
     if (!(await ensureData(rg))) return;
     if (currentRange() && currentRange().start === rg.start && currentRange().end === rg.end) {
       setMsg('');
@@ -606,7 +599,7 @@
         ...v.dates.map(iso => `${dayNum(iso)} ${monShort(iso)} (${WEEKDAYS[parseISO(iso).getUTCDay()]})`)];
       const rows = v.emps.map(e => [e.employee_code, e.full_name, e.section_name, e.department_name, e.position_name, e.work_type || '', e.location || '',
         ...v.dates.map(iso => cellFor(e, iso).text)]);
-      return { name: `ตารางกะ_${v.rg.start.slice(0, 7)}`, aoa: [head, ...rows] };
+      return { name: `ตารางกะ_${v.rg.start}_${v.rg.end}`, aoa: [head, ...rows] };
     }
     const head = ['รหัส', 'ชื่อ-นามสกุล', 'ฝ่าย', 'แผนก', 'ตำแหน่ง', 'ประเภทการจ้าง', 'สถานที่', 'ลงแล้ว (วัน)', 'ทั้งหมด (วัน)', 'สถานะ', 'วันที่ยังไม่ลงกะ'];
     const rows = v.list.map(x => [x.e.employee_code, x.e.full_name, x.e.section_name, x.e.department_name, x.e.position_name, x.e.work_type || '', x.e.location || '',
