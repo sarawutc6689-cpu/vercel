@@ -430,6 +430,17 @@
   .banner.ok{color:var(--accent-dark); border:1px solid var(--accent-soft);}
   .banner.err{color:var(--danger); border:1px solid var(--danger-soft);}
   .app-footer{text-align:center; color:var(--ink-soft); font-size:12.5px; padding:8px 20px 32px;}
+
+  /* ---------- top navigation ---------- */
+  header{flex-wrap:wrap; gap:10px 24px;}
+  .topnav{display:flex; gap:4px; flex-wrap:wrap; align-items:center;}
+  .topnav a{
+    padding:7px 13px; border-radius:9px; font-size:13.5px; font-weight:600;
+    color:var(--ink-soft); text-decoration:none; white-space:nowrap; transition:.15s;
+  }
+  .topnav a:hover{background:var(--accent-soft-2); color:var(--accent-dark);}
+  .topnav a.active{background:var(--accent-soft); color:var(--accent-dark);}
+  @media (max-width:1100px){ .topnav{order:3; width:100%;} }
 </style>
 </head>
 <body>
@@ -470,6 +481,16 @@
         </div>
         <h1>ปฏิทินวันหยุด</h1>
       </div>
+      <nav class="topnav" aria-label="เมนู">
+        <a href="index.html">หน้าหลัก</a>
+        <a href="shift-schedule.html">ตารางกะ</a>
+        <a href="approval.html">อนุมัติตารางกะ</a>
+        <a href="calendar.html">ปฏิทินวันหยุด</a>
+        <a href="report.html">รายงาน</a>
+        <a href="dashboard.html">แดชบอร์ด</a>
+        <a href="clerk-admin.html" data-hr>บัญชีธุรการ</a>
+        <a href="approver-admin.html" data-hr>บัญชีผู้จัดการแผนก</a>
+      </nav>
       <div style="display:flex; align-items:center; gap:14px;">
         <span class="who" id="who-label"></span>
         <button class="btn-ghost" id="logout-btn">ออกจากระบบ</button>
@@ -525,7 +546,7 @@
       </section>
     </main>
 
-    <footer class="app-footer">แบบฟอร์มตารางกะทำงานฝ่ายบุคคล | ใช้ภายในบริษัทเท่านั้น | พัฒนาโดย Sarawut.C</footer>
+    <footer class="app-footer">ระบบฐานข้อมูลฝ่ายบุคคล | ใช้ภายในบริษัทเท่านั้น</footer>
   </div>
 
   <!-- ============ HOLIDAY MODAL ============ -->
@@ -579,6 +600,22 @@
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBwemR5dm9tcmZpaXRhaHh3cnd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwMjQ0MjIsImV4cCI6MjEwNDYwMDQyMn0.iArUz6swMfwhFT_1qEvCwK1B3aiCxdWt46_FBjT6_Y0";
 
   const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // ---------- เมนูนำทาง: ไฮไลต์หน้าปัจจุบัน และซ่อนเมนูเฉพาะ HR ถ้าไม่ใช่ HR ----------
+  (function(){
+    const here = decodeURIComponent(location.pathname.split('/').pop() || 'index.html');
+    document.querySelectorAll('.topnav a').forEach(a => { if (a.getAttribute('href') === here) a.classList.add('active'); });
+    let doneFor = null;
+    sb.auth.onAuthStateChange((_e, session) => {
+      if (!session || doneFor === session.user.id) return;
+      doneFor = session.user.id;
+      setTimeout(async () => {
+        const { data, error } = await sb.rpc('is_hr_admin');
+        if (error) return;                       // ยังไม่ได้รัน calendar.sql → ไม่ซ่อนเมนู
+        document.querySelectorAll('.topnav [data-hr]').forEach(a => { a.style.display = data === true ? '' : 'none'; });
+      }, 0);
+    });
+  })();
   const el = (id) => document.getElementById(id);
   const WEEKDAYS = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
   const TYPE_LABEL = { company: 'วันหยุดบริษัท', special75: 'วันหยุดพิเศษ 75%' };
