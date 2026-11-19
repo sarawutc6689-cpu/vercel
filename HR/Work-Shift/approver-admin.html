@@ -773,16 +773,17 @@
         ? `<span class="dchip more" title="${escapeHtml(names.join('\n'))}">+${names.length - 3}</span>` : '';
       return `
         <tr>
-          <td class="name">${escapeHtml(c.full_name || '-')}</td>
+          <td class="name">${escapeHtml(c.full_name || '-')}${c.managed ? '' : ' <span class="badge suspended" title="บัญชีนี้เป็นของระบบอื่น จัดการรหัสผ่าน/สถานะ/ลบได้ในระบบเดิม" style="background:var(--accent-soft);color:var(--accent-dark);">บัญชีร่วม</span>'}</td>
           <td>${escapeHtml(c.email)}</td>
           <td><div class="dept-chips">${shown}${more}${names.length ? '' : '<span class="sub">ยังไม่ได้กำหนด</span>'}</div></td>
           <td><span class="badge ${c.suspended ? 'suspended' : 'active'}">${c.suspended ? 'ระงับ' : 'ใช้งาน'}</span></td>
           <td class="sub nowrap">${escapeHtml(fmtDateTime(c.last_sign_in_at))}</td>
           <td class="row-actions" data-id="${escapeHtml(c.id)}">
             <button class="link-btn" data-act="edit">แก้ไข</button>
-            <button class="link-btn" data-act="reset">รีเซ็ตรหัสผ่าน</button>
+            ${c.managed ? `<button class="link-btn" data-act="reset">รีเซ็ตรหัสผ่าน</button>
             <button class="link-btn" data-act="toggle">${c.suspended ? 'เปิดใช้งาน' : 'ระงับ'}</button>
-            <button class="link-btn danger" data-act="delete">ลบ</button>
+            <button class="link-btn danger" data-act="delete">ลบ</button>`
+            : `<button class="link-btn danger" data-act="remove">เอาออกจากผู้อนุมัติ</button>`}
           </td>
         </tr>`;
     }).join('');
@@ -808,6 +809,14 @@
       try {
         await api('set_active', { id, active: activate });
         showBanner(activate ? 'เปิดใช้งานบัญชีเรียบร้อย' : 'ระงับบัญชีเรียบร้อย');
+        await loadAll();
+      } catch (e) { showBanner('ทำรายการไม่สำเร็จ: ' + e.message, true); }
+    }
+    if (act === 'remove') {
+      if (!confirm(`เอา ${clerkLabel(c)} (${c.email}) ออกจากผู้อนุมัติ? บัญชีเข้าระบบอื่นยังใช้ได้ตามเดิม`)) return;
+      try {
+        await api('remove', { id });
+        showBanner('เอาออกจากผู้อนุมัติเรียบร้อย');
         await loadAll();
       } catch (e) { showBanner('ทำรายการไม่สำเร็จ: ' + e.message, true); }
     }
@@ -894,6 +903,8 @@
     el('f-name').value = clerk ? (clerk.full_name || '') : '';
     el('f-email').value = clerk ? clerk.email : '';
     el('f-email').disabled = mode !== 'create';
+    el('f-name').disabled = !!clerk && mode === 'edit' && clerk.managed === false;   // บัญชีร่วม ไม่แก้ชื่อในบัญชี
+    if (el('f-name').disabled && !el('f-name').value) el('f-name').value = clerk.email;
     el('f-password').value = mode === 'edit' ? '' : generatePassword();
     el('save-btn').textContent = mode === 'create' ? 'สร้างบัญชี' : mode === 'edit' ? 'บันทึกการแก้ไข' : 'ตั้งรหัสผ่านใหม่';
 
@@ -961,6 +972,16 @@
       await loadAll();
     } catch (err) {
       if (err.status === 401) { await sb.auth.signOut(); return; }
+      if (err.status === 409 && modalMode === 'create' &&
+          confirm(`อีเมล ${email} มีบัญชีอยู่แล้ว (อาจเป็นของระบบอื่น)\n\nต้องการใช้บัญชีเดิมเป็นผู้อนุมัติหรือไม่? ระบบจะไม่เปลี่ยนรหัสผ่านและไม่แก้ข้อมูลบัญชีเดิม ผู้ใช้ล็อกอินด้วยรหัสผ่านเดิม`)) {
+        try {
+          await api('link', { email, full_name: name, department_codes: codes });
+          closeForm();
+          showBanner('ผูกบัญชีเดิมเป็นผู้อนุมัติเรียบร้อย');
+          await loadAll();
+          return;
+        } catch (e2) { showFormError(e2.message); return; }
+      }
       showFormError(err.message, err.status === 409 ? ['f-email'] : []);
     } finally {
       btn.disabled = false;
