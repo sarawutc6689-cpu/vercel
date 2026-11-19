@@ -547,6 +547,11 @@
           </div>
           <div class="hint">อย่างน้อย 8 ตัวอักษร ระบบจะแสดงรหัสนี้ให้คัดลอกอีกครั้งหลังบันทึก</div>
         </div>
+        <div class="field" id="row-tg">
+          <label for="f-tg">Telegram chat ID (ไม่บังคับ)</label>
+          <input id="f-tg" type="text" inputmode="numeric" autocomplete="off" placeholder="เช่น 123456789">
+          <div class="hint">ใช้รับแจ้งเตือนเมื่อมีคำขออนุมัติ ผู้จัดการต้องกด Start กับบอทก่อน และดู chat ID ได้จากบอท @userinfobot</div>
+        </div>
         <div class="field" id="row-depts">
           <label>แผนกที่อนุมัติ</label>
           <div class="picker">
@@ -773,13 +778,14 @@
         ? `<span class="dchip more" title="${escapeHtml(names.join('\n'))}">+${names.length - 3}</span>` : '';
       return `
         <tr>
-          <td class="name">${escapeHtml(c.full_name || '-')}${c.managed ? '' : ' <span class="badge suspended" title="บัญชีนี้เป็นของระบบอื่น จัดการรหัสผ่าน/สถานะ/ลบได้ในระบบเดิม" style="background:var(--accent-soft);color:var(--accent-dark);">บัญชีร่วม</span>'}</td>
+          <td class="name">${escapeHtml(c.full_name || '-')}${c.telegram_chat_id ? ' <span class="badge active" title="ตั้งค่าแจ้งเตือน Telegram แล้ว">Telegram</span>' : ''}${c.managed ? '' : ' <span class="badge suspended" title="บัญชีนี้เป็นของระบบอื่น จัดการรหัสผ่าน/สถานะ/ลบได้ในระบบเดิม" style="background:var(--accent-soft);color:var(--accent-dark);">บัญชีร่วม</span>'}</td>
           <td>${escapeHtml(c.email)}</td>
           <td><div class="dept-chips">${shown}${more}${names.length ? '' : '<span class="sub">ยังไม่ได้กำหนด</span>'}</div></td>
           <td><span class="badge ${c.suspended ? 'suspended' : 'active'}">${c.suspended ? 'ระงับ' : 'ใช้งาน'}</span></td>
           <td class="sub nowrap">${escapeHtml(fmtDateTime(c.last_sign_in_at))}</td>
           <td class="row-actions" data-id="${escapeHtml(c.id)}">
             <button class="link-btn" data-act="edit">แก้ไข</button>
+            ${c.telegram_chat_id ? '<button class="link-btn" data-act="tgtest">ทดสอบ Telegram</button>' : ''}
             ${c.managed ? `<button class="link-btn" data-act="reset">รีเซ็ตรหัสผ่าน</button>
             <button class="link-btn" data-act="toggle">${c.suspended ? 'เปิดใช้งาน' : 'ระงับ'}</button>
             <button class="link-btn danger" data-act="delete">ลบ</button>`
@@ -811,6 +817,11 @@
         showBanner(activate ? 'เปิดใช้งานบัญชีเรียบร้อย' : 'ระงับบัญชีเรียบร้อย');
         await loadAll();
       } catch (e) { showBanner('ทำรายการไม่สำเร็จ: ' + e.message, true); }
+    }
+    if (act === 'tgtest') {
+      try { await api('test_telegram', { id }); showBanner('ส่งข้อความทดสอบแล้ว ตรวจใน Telegram'); }
+      catch (e) { showBanner('ส่งทดสอบไม่สำเร็จ: ' + e.message, true); }
+      return;
     }
     if (act === 'remove') {
       if (!confirm(`เอา ${clerkLabel(c)} (${c.email}) ออกจากผู้อนุมัติ? บัญชีเข้าระบบอื่นยังใช้ได้ตามเดิม`)) return;
@@ -899,9 +910,11 @@
     // ช่องอีเมลแสดงทุกโหมด แต่แก้ได้เฉพาะตอนสร้างบัญชี (ดู disabled ด้านล่าง)
     show('row-password', mode !== 'edit');
     show('row-depts', mode !== 'reset');
+    show('row-tg', mode !== 'reset');
 
     el('f-name').value = clerk ? (clerk.full_name || '') : '';
     el('f-email').value = clerk ? clerk.email : '';
+    el('f-tg').value = clerk ? (clerk.telegram_chat_id || '') : '';
     el('f-email').disabled = mode !== 'create';
     el('f-name').disabled = !!clerk && mode === 'edit' && clerk.managed === false;   // บัญชีร่วม ไม่แก้ชื่อในบัญชี
     if (el('f-name').disabled && !el('f-name').value) el('f-name').value = clerk.email;
@@ -933,6 +946,7 @@
     const email = el('f-email').value.trim().toLowerCase();
     const password = el('f-password').value;
     const codes = [...pickerSelected];
+    const tg = el('f-tg').value.trim();
 
     const missing = [];
     if (modalMode !== 'reset' && !name) missing.push(['f-name', 'ชื่อ-นามสกุล']);
@@ -946,6 +960,9 @@
     if (modalMode !== 'edit' && password.length < 8) {
       showFormError('รหัสผ่านต้องยาวอย่างน้อย 8 ตัวอักษร', ['f-password']); return;
     }
+    if (modalMode !== 'reset' && tg && !/^-?\d{5,15}$/.test(tg)) {
+      showFormError('Telegram chat ID ต้องเป็นตัวเลข (กลุ่มจะขึ้นต้นด้วย -)', ['f-tg']); return;
+    }
     if (modalMode !== 'reset' && codes.length === 0) {
       showFormError('กรุณาเลือกแผนกที่อนุมัติอย่างน้อย 1 แผนก'); return;
     }
@@ -956,11 +973,11 @@
     btn.textContent = 'กำลังบันทึก...';
     try {
       if (modalMode === 'create') {
-        await api('create', { email, password, full_name: name, department_codes: codes });
+        await api('create', { email, password, full_name: name, department_codes: codes, telegram_chat_id: tg });
         closeForm();
         showCreds('สร้างบัญชีเรียบร้อย', email, password);
       } else if (modalMode === 'edit') {
-        await api('update', { id: editingId, full_name: name, department_codes: codes });
+        await api('update', { id: editingId, full_name: name, department_codes: codes, telegram_chat_id: tg });
         closeForm();
         showBanner('บันทึกการแก้ไขเรียบร้อย');
       } else {
@@ -975,7 +992,7 @@
       if (err.status === 409 && modalMode === 'create' &&
           confirm(`อีเมล ${email} มีบัญชีอยู่แล้ว (อาจเป็นของระบบอื่น)\n\nต้องการใช้บัญชีเดิมเป็นผู้อนุมัติหรือไม่? ระบบจะไม่เปลี่ยนรหัสผ่านและไม่แก้ข้อมูลบัญชีเดิม ผู้ใช้ล็อกอินด้วยรหัสผ่านเดิม`)) {
         try {
-          await api('link', { email, full_name: name, department_codes: codes });
+          await api('link', { email, full_name: name, department_codes: codes, telegram_chat_id: tg });
           closeForm();
           showBanner('ผูกบัญชีเดิมเป็นผู้อนุมัติเรียบร้อย');
           await loadAll();
