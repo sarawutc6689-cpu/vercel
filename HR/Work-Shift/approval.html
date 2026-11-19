@@ -907,9 +907,9 @@
       teamCount.set(team, (teamCount.get(team) || 0) + 1);
       const cells = wd.dates.map(iso => { const c = cellOf(e, iso, wd); return `<td class="${c.cls}" title="${escapeHtml(c.tip)}">${escapeHtml(c.text)}</td>`; }).join('');
       body += `<tr><td>${idx + 1}</td><td>${escapeHtml(e.employee_code)}</td><td class="nm" title="${escapeHtml(e.full_name)}">${escapeHtml(e.full_name)}</td>` +
-              `<td title="${escapeHtml(e.position_name)}">${escapeHtml(e.position_name)}</td><td class="team">${escapeHtml(team)}</td>${cells}<td class="note"></td></tr>`;
+              `<td title="${escapeHtml(e.position_name)}">${escapeHtml(e.position_name)}</td>${cells}<td class="note"></td></tr>`;
     });
-    if (!wd.emps.length) body = `<tr><td colspan="13" class="empty-state">ไม่พบพนักงานที่สถานที่ปฏิบัติงาน = ${escapeHtml(ONLY_LOCATION)} ในแผนกนี้</td></tr>`;
+    if (!wd.emps.length) body = `<tr><td colspan="12" class="empty-state">ไม่พบพนักงานที่สถานที่ปฏิบัติงาน = ${escapeHtml(ONLY_LOCATION)} ในแผนกนี้</td></tr>`;
 
     // ตารางสรุปจำนวนคนต่อกะ (นับจากคอลัมน์ "ทีม" เหมือน COUNTIF ในไฟล์ตัวอย่าง)
     const known = new Set(FORM_SHIFTS.map(s => s.k));
@@ -929,12 +929,12 @@
     return `<div class="paper-one">
       <div class="paper-stat"><span class="${st}">${st === 'approved' ? 'อนุมัติแล้ว' : 'ฉบับร่าง · ' + STATUS[st].label}</span></div>
       <table class="form">
-        <colgroup><col style="width:4%"><col style="width:7%"><col style="width:15%"><col style="width:11%"><col style="width:6%">
+        <colgroup><col style="width:4%"><col style="width:7%"><col style="width:18%"><col style="width:14%">
           ${'<col style="width:7%">'.repeat(7)}<col style="width:8%"></colgroup>
         <thead>
-          <tr><th class="ttl" colspan="13">${escapeHtml(title)}</th></tr>
-          <tr><th class="per" colspan="13">สัปดาห์ที่ ${escapeHtml(weekText(wd.week))}</th></tr>
-          <tr><th rowspan="2">ลำดับ</th><th>รหัส</th><th rowspan="2" class="l">รายชื่อพนักงาน</th><th rowspan="2">ตำแหน่ง</th><th rowspan="2">ทีม</th>
+          <tr><th class="ttl" colspan="12">${escapeHtml(title)}</th></tr>
+          <tr><th class="per" colspan="12">สัปดาห์ที่ ${escapeHtml(weekText(wd.week))}</th></tr>
+          <tr><th rowspan="2">ลำดับ</th><th>รหัส</th><th rowspan="2" class="l">รายชื่อพนักงาน</th><th rowspan="2">ตำแหน่ง</th>
             ${dayHead.map(d => `<th class="${d.cls}" title="${escapeHtml(d.tip)}">${d.n}</th>`).join('')}<th>หมายเหตุ</th></tr>
           <tr><th>พนักงาน</th>${dayHead.map(d => `<th class="${d.cls}" title="${escapeHtml(d.tip)}">${d.dow}</th>`).join('')}<th>งานที่ได้รับ</th></tr>
         </thead>
