@@ -592,6 +592,7 @@
     if (a.getUTCMonth() !== b.getUTCMonth()) return `${f(a, { day: 'numeric', month: 'long' })} – ${f(b, { day: 'numeric', month: 'long', year: 'numeric' })}`;
     return `${a.getUTCDate()} – ${f(b, { day: 'numeric', month: 'long', year: 'numeric' })}`;
   }
+  const personOf = (name, email) => name || email || '';   // แสดงชื่อ-นามสกุล ถ้ายังไม่มีชื่อจึงใช้อีเมล
   const deptNameOf = (code) => { const d = deptList.find(x => x.code === code); return d ? d.name : code; };
   const shortOf = (group, code) => {
     const s = shiftCodes.find(x => x.shift_group === group && x.shift_code === code);
@@ -812,7 +813,7 @@
       `<tr class="total"><td>รวม</td><td>${wd.emps.length}</td><td>คน</td></tr>`;
 
     const a = wd.approval;
-    const submitter = a && a.submitted_by ? `<div class="signed">${escapeHtml(a.submitted_by)}</div><div class="when">ส่งเมื่อ ${escapeHtml(fmtDT(a.submitted_at))}</div>` : '<div class="signed"></div><div class="when"></div>';
+    const submitter = a && a.submitted_by ? `<div class="signed">${escapeHtml(personOf(a.submitted_by_name, a.submitted_by))}</div><div class="when">ส่งเมื่อ ${escapeHtml(fmtDT(a.submitted_at))}</div>` : '<div class="signed"></div><div class="when"></div>';
     const decider = a && st === 'approved'
       ? `<div class="signed">${escapeHtml(a.decided_by_name || a.decided_by || '')}</div><div class="when">อนุมัติเมื่อ ${escapeHtml(fmtDT(a.decided_at))}</div>`
       : `<div class="signed"></div><div class="when">${st === 'rejected' ? 'ส่งกลับแก้ไข' : ''}</div>`;
@@ -856,7 +857,7 @@
     const who = (v) => escapeHtml(v || '-');
     let text = '';
     if (st === 'none') text = 'ยังไม่ได้ส่งขออนุมัติ ธุรการลงตารางกะให้ครบแล้วกด "ส่งขออนุมัติ" ระหว่างนี้ยังแก้ไขตารางกะได้';
-    if (st === 'submitted') text = `ส่งขออนุมัติโดย ${who(a.submitted_by)} เมื่อ ${escapeHtml(fmtDT(a.submitted_at))}<br><span class="muted">ตารางกะสัปดาห์นี้ถูกล็อก ธุรการแก้ไขไม่ได้ จนกว่าจะอนุมัติหรือส่งกลับ</span>`;
+    if (st === 'submitted') text = `ส่งขออนุมัติโดย ${who(personOf(a.submitted_by_name, a.submitted_by))} เมื่อ ${escapeHtml(fmtDT(a.submitted_at))}<br><span class="muted">ตารางกะสัปดาห์นี้ถูกล็อก ธุรการแก้ไขไม่ได้ จนกว่าจะอนุมัติหรือส่งกลับ</span>`;
     if (st === 'approved') text = `อนุมัติโดย ${who(a.decided_by_name || a.decided_by)} เมื่อ ${escapeHtml(fmtDT(a.decided_at))}<br><span class="muted">ตารางกะถูกล็อก เฉพาะฝ่ายบุคคลที่ยกเลิกการอนุมัติได้</span>`;
     if (st === 'rejected') text = `ส่งกลับโดย ${who(a.decided_by_name || a.decided_by)} เมื่อ ${escapeHtml(fmtDT(a.decided_at))}<br>เหตุผล: ${who(a.reject_reason)}<br><span class="muted">ธุรการแก้ไขตารางกะแล้วส่งขออนุมัติใหม่ได้</span>`;
     el('st-text').innerHTML = text;
@@ -880,7 +881,7 @@
     const rows = weekData.log;
     el('log-empty').style.display = rows.length ? 'none' : 'block';
     el('log-tbody').innerHTML = rows.map(r => `<tr><td class="nowrap">${escapeHtml(fmtDT(r.created_at))}</td>` +
-      `<td><b>${escapeHtml(ACTION_LABEL[r.action] || r.action)}</b></td><td>${escapeHtml(r.actor || '-')}</td><td>${escapeHtml(r.note || '')}</td></tr>`).join('');
+      `<td><b>${escapeHtml(ACTION_LABEL[r.action] || r.action)}</b></td><td>${escapeHtml(personOf(r.actor_name, r.actor) || '-')}</td><td>${escapeHtml(r.note || '')}</td></tr>`).join('');
   }
 
   // ---------------- งานที่ต้องดำเนินการ ----------------
