@@ -251,6 +251,35 @@
   .sig .role{font-size:12.5px; font-weight:700;}
   .sig .when{font-size:11.5px; color:#44566D; min-height:16px;}
 
+  /* ---------- เลือกหลายแผนก ---------- */
+  .dpick{position:relative;}
+  .dpick-btn{
+    width:100%; display:flex; align-items:center; justify-content:space-between; gap:10px; text-align:left;
+    padding:10px 13px; border:1.5px solid var(--line); border-radius:10px; background:#fff; color:var(--ink);
+    font:inherit; font-size:14px; cursor:pointer;
+  }
+  .dpick-btn:hover, .dpick-btn[aria-expanded="true"]{border-color:var(--accent);}
+  .dpick-btn span{overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .dpick-panel{
+    display:none; position:absolute; z-index:30; left:0; right:0; top:calc(100% + 6px); min-width:300px;
+    background:#fff; border:1px solid var(--line); border-radius:12px; box-shadow:0 12px 36px rgba(20,40,60,.18); padding:10px;
+  }
+  .dpick-panel.open{display:block;}
+  .dpick-panel input[type=search]{width:100%; padding:8px 11px; border:1.5px solid var(--line); border-radius:9px; font:inherit; font-size:13.5px;}
+  .dpick-tools{display:flex; align-items:center; gap:14px; padding:8px 2px 4px;}
+  .dpick-tools .sub-note{margin-left:auto;}
+  .dpick-list{max-height:300px; overflow-y:auto; border-top:1px solid var(--line); margin-top:4px;}
+  .dpick-item{display:flex; align-items:center; gap:10px; padding:8px 6px; font-size:13.5px; cursor:pointer; border-radius:8px;}
+  .dpick-item:hover{background:var(--accent-soft-2);}
+  .dpick-item input{width:16px; height:16px; accent-color:var(--accent); flex-shrink:0;}
+  .dpick-item small{color:var(--ink-soft);}
+  .st-list{display:flex; flex-direction:column; gap:8px; min-width:0; flex:1 1 320px;}
+  .st-row{display:flex; align-items:baseline; gap:6px 10px; flex-wrap:wrap; font-size:13.5px;}
+  .st-dept{font-weight:600; min-width:0; word-break:break-word;}
+  .st-detail{color:var(--ink-soft); font-size:12.5px; min-width:0; word-break:break-word;}
+  .paper-one + .paper-one{margin-top:36px; padding-top:28px; border-top:2px dashed var(--line);}
+  .paper-empty{padding:30px 10px;}
+
   /* ---------- modal ---------- */
   .modal-overlay{
     display:none; position:fixed; inset:0; background:rgba(20,40,60,.35); backdrop-filter:blur(2px);
@@ -292,6 +321,9 @@
     table.form thead{display:table-header-group;}
     table.form tr{break-inside:avoid;}
     table.form td.gap{box-shadow:none !important;}
+    .paper-one{break-after:page;}
+    .paper-one:last-child{break-after:auto;}
+    .paper-one + .paper-one{margin-top:0 !important; padding-top:0 !important; border-top:none !important;}
     table.sum{font-size:8pt;}
     .sum-title{font-size:11pt;}
     .sig{min-height:80px;}
@@ -348,8 +380,22 @@
       <section class="panel no-print" id="ctl-panel">
         <div class="ctl">
           <div class="field">
-            <label for="f-dept">แผนก</label>
-            <select id="f-dept"></select>
+            <label for="dpick-btn">แผนก (เลือกได้หลายแผนก)</label>
+            <div class="dpick" id="dpick">
+              <button type="button" class="dpick-btn" id="dpick-btn" aria-haspopup="true" aria-expanded="false">
+                <span id="dpick-btn-text">เลือกแผนก</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div class="dpick-panel" id="dpick-panel">
+                <input id="dpick-search" type="search" placeholder="ค้นหาแผนก / รหัส...">
+                <div class="dpick-tools">
+                  <button type="button" class="link-btn" id="dpick-all">เลือกทั้งหมด</button>
+                  <button type="button" class="link-btn" id="dpick-none">ล้าง</button>
+                  <span class="sub-note" id="dpick-count"></span>
+                </div>
+                <div class="dpick-list" id="dpick-list"></div>
+              </div>
+            </div>
           </div>
           <div class="field">
             <label for="wk-date">สัปดาห์ (จันทร์ – อาทิตย์)</label>
@@ -369,8 +415,7 @@
 
         <div class="statusbar" id="statusbar">
           <div class="st-left">
-            <span class="badge s-none" id="st-badge">-</span>
-            <div class="st-text" id="st-text"></div>
+            <div class="st-list" id="st-list"></div>
           </div>
           <div class="st-actions">
             <button type="button" class="btn btn-primary" id="btn-submit" style="display:none;">ส่งขออนุมัติ</button>
@@ -393,7 +438,7 @@
         <div class="panel-head"><h2>ประวัติการดำเนินการของสัปดาห์นี้</h2></div>
         <div style="overflow-x:auto;">
           <table class="list">
-            <thead><tr><th>เวลา</th><th>การดำเนินการ</th><th>โดย</th><th>หมายเหตุ / เหตุผล</th></tr></thead>
+            <thead><tr><th>เวลา</th><th>แผนก</th><th>การดำเนินการ</th><th>โดย</th><th>หมายเหตุ / เหตุผล</th></tr></thead>
             <tbody id="log-tbody"></tbody>
           </table>
         </div>
@@ -557,12 +602,13 @@
   const DOW_FORM = ['จ.', 'อ.', 'พ.', 'พฤ', 'ศ.', 'ส.', 'อา.'];   // จันทร์ → อาทิตย์ ตามหัวตารางในฟอร์ม
 
   // ตารางสรุป "Shift / เวลาการทำงาน" ตามฟอร์ม (ข้อความเวลาคัดจากไฟล์ตัวอย่าง)
+  const SHORT_ALIAS = { A2: 'E0007' };   // ชื่อที่แสดงในฟอร์มแทนชื่อย่อเดิม
   const FORM_SHIFTS = [
     { k: 'A',  t: '08.00 - 17.00 พัก 12.00 - 13.00 น.' },
     { k: 'B',  t: '16.00 - 01.00 พัก 20.00 - 21.00 น.' },
     { k: 'C',  t: '24.00 - 09.00 พัก 04.00 - 05.00 น.' },
     { k: 'E',  t: '20.00 - 05.00 พัก 24.00 - 01.00 น.' },
-    { k: 'A2', t: '07.00 - 16.00 น.' },
+    { k: 'E0007', t: '07.00 - 16.00 น.' },
     { k: 'A1', t: '13.00 - 22.00 พัก 17.00 - 18.00 น.' },
     { k: 'C1', t: '22.00 - 07.00 น. พัก 02.00 - 03.00 น.' }
   ];
@@ -575,9 +621,9 @@
   const ACTION_LABEL = { submit: 'ส่งขออนุมัติ', approve: 'อนุมัติ', reject: 'ส่งกลับแก้ไข', reopen: 'ยกเลิกการอนุมัติ' };
 
   let role = {}, employees = [], hiddenCount = 0, shiftCodes = [], deptList = [];
-  let cur = { dept: '', week: '' };
-  let weekData = null;          // ข้อมูลของแผนก+สัปดาห์ที่เปิดอยู่
-  let weekReq = 0, busy = false, reasonMode = null;
+  let cur = { depts: [], week: '' };
+  let weekDatas = [];           // ข้อมูลของแต่ละแผนกที่เลือก (สัปดาห์เดียวกัน)
+  let weekReq = 0, busy = false, reasonMode = null, reasonList = [];
 
   // ---------------- helpers ----------------
   const addDays = (iso, n) => toISO(new Date(parseISO(iso).getTime() + n * 86400000));
@@ -596,7 +642,7 @@
   const deptNameOf = (code) => { const d = deptList.find(x => x.code === code); return d ? d.name : code; };
   const shortOf = (group, code) => {
     const s = shiftCodes.find(x => x.shift_group === group && x.shift_code === code);
-    return (s && s.short_name) || code;
+    return SHORT_ALIAS[(s && s.short_name) || code] || (s && s.short_name) || code;
   };
   function roleText(){
     const t = [];
@@ -649,13 +695,14 @@
     return { text: shortOf(group, base), cls: 'work', tip: r.shift_code };
   }
 
-  function gapStats(){
-    const wd = weekData; let cells = 0, people = 0;
-    if (!wd) return { cells, people };
-    wd.emps.forEach(e => {
-      let n = 0;
-      wd.dates.forEach(iso => { if (!wd.rows.has(e.employee_code + '|' + iso)) n++; });
-      cells += n; if (n) people++;
+  function gapStats(list){
+    let cells = 0, people = 0;
+    (list || weekDatas).forEach(wd => {
+      wd.emps.forEach(e => {
+        let n = 0;
+        wd.dates.forEach(iso => { if (!wd.rows.has(e.employee_code + '|' + iso)) n++; });
+        cells += n; if (n) people++;
+      });
     });
     return { cells, people };
   }
@@ -681,13 +728,12 @@
 
     el('scope-note').textContent = `บทบาทของคุณ: ${roleText()} · แสดงเฉพาะพนักงานที่สถานที่ปฏิบัติงาน = ${ONLY_LOCATION}` +
       (hiddenCount ? ` (ซ่อน ${hiddenCount} คนที่สถานที่อื่นหรือยังไม่ระบุ)` : '');
-    el('f-dept').innerHTML = deptList.length
-      ? deptList.map(d => `<option value="${escapeHtml(d.code)}">${escapeHtml(d.name)} (${escapeHtml(d.code)})</option>`).join('')
-      : '<option value="">ไม่พบแผนก</option>';
 
     const h = new URLSearchParams(location.hash.slice(1));
-    cur.dept = deptList.some(d => d.code === h.get('dept')) ? h.get('dept') : (deptList[0] ? deptList[0].code : '');
+    const wanted = (h.get('depts') || h.get('dept') || '').split('|').filter(c => deptList.some(d => d.code === c));
+    cur.depts = wanted.length ? wanted : (deptList[0] ? [deptList[0].code] : []);
     cur.week = h.get('week') && /^\d{4}-\d{2}-\d{2}$/.test(h.get('week')) ? mondayOf(h.get('week')) : mondayOf(todayISO());
+    renderDeptPicker();
     syncControls();
 
     if (!deptList.length) {
@@ -699,37 +745,88 @@
     await Promise.all([loadWeek(), loadInbox()]);
   }
 
+  // ---------------- เลือกแผนก (check box หลายแผนก) ----------------
+  let pickLoadTimer = null;
+  function updatePickBtn(){
+    const n = cur.depts.length;
+    el('dpick-btn-text').textContent = n === 0 ? 'เลือกแผนก' : n === 1 ? `${deptNameOf(cur.depts[0])} (${cur.depts[0]})` : `เลือกแล้ว ${n} แผนก`;
+    el('dpick-count').textContent = `เลือกแล้ว ${n} / ${deptList.length}`;
+  }
+  function pickMatches(d, q){ return !q || d.name.toLowerCase().includes(q) || d.code.toLowerCase().includes(q); }
+  function renderDeptPicker(){
+    const q = el('dpick-search').value.trim().toLowerCase();
+    const list = deptList.filter(d => pickMatches(d, q));
+    el('dpick-list').innerHTML = list.length
+      ? list.map(d => `<label class="dpick-item"><input type="checkbox" data-code="${escapeHtml(d.code)}" ${cur.depts.includes(d.code) ? 'checked' : ''}>
+          <span>${escapeHtml(d.name)} <small>(${escapeHtml(d.code)})</small></span></label>`).join('')
+      : '<div class="empty-state" style="padding:18px;">ไม่พบแผนก</div>';
+    updatePickBtn();
+  }
+  function pickChanged(){
+    cur.depts = deptList.map(d => d.code).filter(c => cur.depts.includes(c));   // เรียงตามรายชื่อแผนก
+    updatePickBtn(); syncControls();
+    clearTimeout(pickLoadTimer);
+    pickLoadTimer = setTimeout(loadWeek, 500);                                  // รอให้ติ๊กต่อได้ก่อนโหลด
+  }
+  function setPanel(open){
+    el('dpick-panel').classList.toggle('open', open);
+    el('dpick-btn').setAttribute('aria-expanded', open ? 'true' : 'false');
+    if (open) setTimeout(() => el('dpick-search').focus(), 30);
+  }
+  el('dpick-btn').addEventListener('click', () => setPanel(!el('dpick-panel').classList.contains('open')));
+  document.addEventListener('click', (e) => { if (!e.target.closest('#dpick')) setPanel(false); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setPanel(false); });
+  el('dpick-search').addEventListener('input', renderDeptPicker);
+  el('dpick-list').addEventListener('change', (e) => {
+    const c = e.target.dataset.code; if (!c) return;
+    const set = new Set(cur.depts); e.target.checked ? set.add(c) : set.delete(c);
+    cur.depts = [...set]; pickChanged();
+  });
+  el('dpick-all').addEventListener('click', () => {
+    const q = el('dpick-search').value.trim().toLowerCase();
+    const set = new Set(cur.depts); deptList.filter(d => pickMatches(d, q)).forEach(d => set.add(d.code));
+    cur.depts = [...set]; renderDeptPicker(); pickChanged();
+  });
+  el('dpick-none').addEventListener('click', () => {
+    const q = el('dpick-search').value.trim().toLowerCase();
+    const drop = new Set(deptList.filter(d => pickMatches(d, q)).map(d => d.code));
+    cur.depts = cur.depts.filter(c => !drop.has(c)); renderDeptPicker(); pickChanged();
+  });
+
   function syncControls(){
-    if (cur.dept && !deptList.some(d => d.code === cur.dept)) {
-      el('f-dept').insertAdjacentHTML('beforeend', `<option value="${escapeHtml(cur.dept)}">${escapeHtml(cur.dept)}</option>`);
-    }
-    el('f-dept').value = cur.dept;
+    updatePickBtn();
     el('wk-date').value = cur.week;
-    try { history.replaceState(null, '', '#dept=' + encodeURIComponent(cur.dept) + '&week=' + cur.week); } catch (e) { /* เปิดจากไฟล์ในเครื่อง */ }
+    try { history.replaceState(null, '', '#depts=' + encodeURIComponent(cur.depts.join('|')) + '&week=' + cur.week); } catch (e) { /* เปิดจากไฟล์ในเครื่อง */ }
   }
 
-  el('f-dept').addEventListener('change', () => { cur.dept = el('f-dept').value; syncControls(); loadWeek(); });
   el('wk-date').addEventListener('change', () => { if (!el('wk-date').value) return; cur.week = mondayOf(el('wk-date').value); syncControls(); loadWeek(); });
   el('wk-prev').addEventListener('click', () => { cur.week = addDays(cur.week, -7); syncControls(); loadWeek(); });
   el('wk-next').addEventListener('click', () => { cur.week = addDays(cur.week, 7); syncControls(); loadWeek(); });
   el('wk-today').addEventListener('click', () => { cur.week = mondayOf(todayISO()); syncControls(); loadWeek(); });
 
-  // ---------------- โหลดข้อมูลของแผนก + สัปดาห์ ----------------
+  // ---------------- โหลดข้อมูลของแผนกที่เลือก + สัปดาห์ ----------------
   async function loadWeek(){
-    if (!cur.dept || !cur.week) return;
+    if (!cur.week) return;
     const myReq = ++weekReq;
-    const dept = cur.dept, week = cur.week, end = addDays(week, 6);
-    const emps = employees.filter(e => e.department_code === dept);
+    const week = cur.week, end = addDays(week, 6), depts = cur.depts.slice();
+    if (!depts.length) {
+      weekDatas = [];
+      el('paper').innerHTML = '<div class="empty-state paper-empty">เลือกแผนกอย่างน้อย 1 แผนก</div>';
+      renderStatus(); renderLog();
+      return;
+    }
+    const empsBy = new Map(depts.map(d => [d, employees.filter(e => e.department_code === d)]));
+    const codes = [].concat(...[...empsBy.values()].map(l => l.map(e => e.employee_code)));
     el('paper').style.opacity = '.55';
     try {
       const chunks = [];
-      for (let i = 0; i < emps.length; i += 100) chunks.push(emps.slice(i, i + 100).map(e => e.employee_code));
+      for (let i = 0; i < codes.length; i += 100) chunks.push(codes.slice(i, i + 100));   // 100 คน x 7 วัน < 1,000 แถวต่อคำขอ
       const [rowsArr, hol, appr, log] = await Promise.all([
         Promise.all(chunks.map(c => sb.from('shift_schedules').select('employee_code, work_date, shift_code, base_shift_code, is_off')
           .in('employee_code', c).gte('work_date', week).lte('work_date', end))),
         sb.from('calendar_holidays').select('holiday_date, holiday_type, name').gte('holiday_date', week).lte('holiday_date', end),
-        sb.from('shift_approvals').select('*').eq('department_code', dept).eq('week_start', week).maybeSingle(),
-        sb.from('shift_approval_log').select('*').eq('department_code', dept).eq('week_start', week).order('created_at', { ascending: false })
+        sb.from('shift_approvals').select('*').in('department_code', depts).eq('week_start', week),
+        sb.from('shift_approval_log').select('*').in('department_code', depts).eq('week_start', week).order('created_at', { ascending: false })
       ]);
       if (myReq !== weekReq) return;                       // มีคำขอใหม่กว่าแล้ว
       const rowErr = rowsArr.find(r => r.error);
@@ -739,15 +836,17 @@
 
       const rows = new Map();
       rowsArr.forEach(r => r.data.forEach(x => rows.set(x.employee_code + '|' + x.work_date, x)));
-      weekData = {
-        dept, week, emps, rows,
-        hol: hol.error ? new Map() : new Map(hol.data.map(h => [h.holiday_date, h])),
-        approval: appr.error ? null : appr.data,
-        log: log.error ? [] : log.data,
-        dates: Array.from({ length: 7 }, (_, i) => addDays(week, i))
-      };
+      const holMap = hol.error ? new Map() : new Map(hol.data.map(h => [h.holiday_date, h]));
+      const apprMap = new Map((appr.error ? [] : appr.data).map(a => [a.department_code, a]));
+      const logs = log.error ? [] : log.data;
+      const dates = Array.from({ length: 7 }, (_, i) => addDays(week, i));
+      weekDatas = depts.map(d => ({
+        dept: d, week, emps: empsBy.get(d), rows, hol: holMap, dates,
+        approval: apprMap.get(d) || null,
+        log: logs.filter(l => l.department_code === d)
+      }));
       el('paper').style.opacity = '';
-      renderPaper(); renderStatus(); renderLog();
+      renderPapers(); renderStatus(); renderLog();
     } catch (err) {
       if (myReq !== weekReq) return;
       el('paper').style.opacity = '';
@@ -782,8 +881,9 @@
     return s + '</svg>';
   }
 
-  function renderPaper(){
-    const wd = weekData;
+  function renderPapers(){ el('paper').innerHTML = weekDatas.map(paperHtml).join(''); }
+
+  function paperHtml(wd){
     const st = wd.approval ? wd.approval.status : 'none';
     const title = 'ตารางกะแผนก' + deptNameOf(wd.dept).replace(/^ผ\.?\s*/, '');
 
@@ -818,7 +918,7 @@
       ? `<div class="signed">${escapeHtml(a.decided_by_name || a.decided_by || '')}</div><div class="when">อนุมัติเมื่อ ${escapeHtml(fmtDT(a.decided_at))}</div>`
       : `<div class="signed"></div><div class="when">${st === 'rejected' ? 'ส่งกลับแก้ไข' : ''}</div>`;
 
-    el('paper').innerHTML = `
+    return `<div class="paper-one">
       <div class="paper-stat"><span class="${st}">${st === 'approved' ? 'อนุมัติแล้ว' : 'ฉบับร่าง · ' + STATUS[st].label}</span></div>
       <table class="form">
         <colgroup><col style="width:4%"><col style="width:8%"><col style="width:19%"><col style="width:15%"><col style="width:5%">
@@ -847,41 +947,54 @@
       <div class="sign">
         <div class="sig">${submitter}<div class="line"></div><div class="role">ผู้จัดทำ (ธุรการ)</div></div>
         <div class="sig">${decider}<div class="line"></div><div class="role">ผู้อนุมัติ (ผู้จัดการแผนก)</div></div>
-      </div>`;
+      </div></div>`;
   }
 
   // ---------------- สถานะ + ปุ่มดำเนินการ ----------------
+  // รายการแผนกที่แต่ละปุ่มทำได้ (ในแผนกที่เลือก)
+  const eligible = {
+    submit: () => role.is_clerk ? weekDatas.filter(w => (!w.approval || w.approval.status === 'rejected') && w.emps.length > 0) : [],
+    decide: () => (role.is_hr || role.is_approver) ? weekDatas.filter(w => w.approval && w.approval.status === 'submitted') : [],
+    reopen: () => role.is_hr ? weekDatas.filter(w => w.approval && w.approval.status === 'approved') : []
+  };
+
+  function stDetail(w){
+    const a = w.approval; if (!a) return w.emps.length ? '' : 'ไม่มีพนักงานในแผนกนี้';
+    const sub = personOf(a.submitted_by_name, a.submitted_by), dec = personOf(a.decided_by_name, a.decided_by);
+    if (a.status === 'submitted') return `ส่งโดย ${escapeHtml(sub)} · ${escapeHtml(fmtDT(a.submitted_at))}`;
+    if (a.status === 'approved') return `อนุมัติโดย ${escapeHtml(dec)} · ${escapeHtml(fmtDT(a.decided_at))}`;
+    return `ส่งกลับโดย ${escapeHtml(dec)} · ${escapeHtml(fmtDT(a.decided_at))} · เหตุผล: ${escapeHtml(a.reject_reason || '-')}`;
+  }
+
   function renderStatus(){
-    const wd = weekData, a = wd.approval, st = a ? a.status : 'none', S = STATUS[st];
-    const b = el('st-badge'); b.textContent = S.label; b.className = 'badge ' + S.cls;
-    const who = (v) => escapeHtml(v || '-');
-    let text = '';
-    if (st === 'none') text = 'ยังไม่ได้ส่งขออนุมัติ ธุรการลงตารางกะให้ครบแล้วกด "ส่งขออนุมัติ" ระหว่างนี้ยังแก้ไขตารางกะได้';
-    if (st === 'submitted') text = `ส่งขออนุมัติโดย ${who(personOf(a.submitted_by_name, a.submitted_by))} เมื่อ ${escapeHtml(fmtDT(a.submitted_at))}<br><span class="muted">ตารางกะสัปดาห์นี้ถูกล็อก ธุรการแก้ไขไม่ได้ จนกว่าจะอนุมัติหรือส่งกลับ</span>`;
-    if (st === 'approved') text = `อนุมัติโดย ${who(a.decided_by_name || a.decided_by)} เมื่อ ${escapeHtml(fmtDT(a.decided_at))}<br><span class="muted">ตารางกะถูกล็อก เฉพาะฝ่ายบุคคลที่ยกเลิกการอนุมัติได้</span>`;
-    if (st === 'rejected') text = `ส่งกลับโดย ${who(a.decided_by_name || a.decided_by)} เมื่อ ${escapeHtml(fmtDT(a.decided_at))}<br>เหตุผล: ${who(a.reject_reason)}<br><span class="muted">ธุรการแก้ไขตารางกะแล้วส่งขออนุมัติใหม่ได้</span>`;
-    el('st-text').innerHTML = text;
+    el('statusbar').style.display = weekDatas.length ? '' : 'none';
+    el('st-list').innerHTML = weekDatas.map(w => {
+      const st = w.approval ? w.approval.status : 'none', S = STATUS[st];
+      return `<div class="st-row"><span class="st-dept">${escapeHtml(deptNameOf(w.dept))}</span>
+        <span class="badge ${S.cls}">${S.label}</span><span class="st-detail">${stDetail(w)}</span></div>`;
+    }).join('');
 
-    const canSubmit = !!role.is_clerk && (st === 'none' || st === 'rejected') && wd.emps.length > 0;
-    const canDecide = (!!role.is_hr || !!role.is_approver) && st === 'submitted';
-    const canReopen = !!role.is_hr && st === 'approved';
-    el('btn-submit').style.display = canSubmit ? '' : 'none';
-    el('btn-approve').style.display = canDecide ? '' : 'none';
-    el('btn-reject').style.display = canDecide ? '' : 'none';
-    el('btn-reopen').style.display = canReopen ? '' : 'none';
+    const setBtn = (id, base, n) => { const b = el(id); b.style.display = n ? '' : 'none'; b.textContent = n > 1 ? `${base} (${n} แผนก)` : base; };
+    setBtn('btn-submit', 'ส่งขออนุมัติ', eligible.submit().length);
+    setBtn('btn-approve', 'อนุมัติ', eligible.decide().length);
+    setBtn('btn-reject', 'ส่งกลับแก้ไข', eligible.decide().length);
+    setBtn('btn-reopen', 'ยกเลิกการอนุมัติ', eligible.reopen().length);
 
-    const g = gapStats(), gn = el('gapnote');
-    if (g.cells > 0 && st !== 'approved' && wd.emps.length) {
+    const open = weekDatas.filter(w => !w.approval || w.approval.status !== 'approved');
+    const g = gapStats(open), gn = el('gapnote');
+    if (g.cells > 0) {
       gn.style.display = 'block';
       gn.textContent = `ยังมีช่องที่ไม่ได้ลงกะ ${g.cells} ช่อง (${g.people} คน) ดูช่องที่มีกรอบสีแดงในตารางด้านล่าง`;
     } else gn.style.display = 'none';
   }
 
   function renderLog(){
-    const rows = weekData.log;
+    const rows = [].concat(...weekDatas.map(w => w.log.map(l => ({ l, dept: w.dept }))))
+      .sort((a, b) => String(b.l.created_at).localeCompare(String(a.l.created_at)));
     el('log-empty').style.display = rows.length ? 'none' : 'block';
-    el('log-tbody').innerHTML = rows.map(r => `<tr><td class="nowrap">${escapeHtml(fmtDT(r.created_at))}</td>` +
-      `<td><b>${escapeHtml(ACTION_LABEL[r.action] || r.action)}</b></td><td>${escapeHtml(personOf(r.actor_name, r.actor) || '-')}</td><td>${escapeHtml(r.note || '')}</td></tr>`).join('');
+    el('log-tbody').innerHTML = rows.map(({ l: r, dept }) => `<tr><td class="nowrap">${escapeHtml(fmtDT(r.created_at))}</td>` +
+      `<td>${escapeHtml(deptNameOf(dept))}</td><td><b>${escapeHtml(ACTION_LABEL[r.action] || r.action)}</b></td>` +
+      `<td>${escapeHtml(personOf(r.actor_name, r.actor) || '-')}</td><td>${escapeHtml(r.note || '')}</td></tr>`).join('');
   }
 
   // ---------------- งานที่ต้องดำเนินการ ----------------
@@ -900,12 +1013,12 @@
   }
   el('inbox').addEventListener('click', (e) => {
     const b = e.target.closest('.inbox-item'); if (!b) return;
-    cur.dept = b.dataset.dept; cur.week = mondayOf(b.dataset.week);
-    syncControls(); loadWeek();
+    cur.depts = [b.dataset.dept]; cur.week = mondayOf(b.dataset.week);
+    renderDeptPicker(); syncControls(); loadWeek();
     el('ctl-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
 
-  // ---------------- การดำเนินการ ----------------
+  // ---------------- การดำเนินการ (ทำพร้อมกันทุกแผนกที่เลือกและทำได้) ----------------
   function setBusy(on){
     busy = on;
     ['btn-submit', 'btn-approve', 'btn-reject', 'btn-reopen', 'reason-ok'].forEach(id => { el(id).disabled = on; });
@@ -916,27 +1029,43 @@
     try { await fn(); } catch (err) { showBanner('ทำรายการไม่สำเร็จ: ' + (err.message || err), true); }
     finally { setBusy(false); }
   }
-  const target = () => `แผนก${deptNameOf(cur.dept)} สัปดาห์ ${weekText(cur.week)}`;
+  const targetText = (list) => (list.length === 1 ? `แผนก${deptNameOf(list[0].dept)}` : `${list.length} แผนก`) + ` สัปดาห์ ${weekText(cur.week)}`;
+  const namesText = (list) => list.length < 2 ? '' : '\n\n' + list.slice(0, 10).map(w => '• ' + deptNameOf(w.dept)).join('\n') + (list.length > 10 ? `\n… และอีก ${list.length - 10} แผนก` : '');
+
+  async function bulk(list, fn){
+    const fails = []; let ok = 0;
+    for (const w of list) {
+      try { const { error } = await fn(w); if (error) throw error; ok++; }
+      catch (e) { fails.push(`${deptNameOf(w.dept)}: ${e.message || e}`); }
+    }
+    return { ok, fails };
+  }
+  function report(verb, r){
+    if (r.fails.length) showBanner(`${verb}สำเร็จ ${r.ok} แผนก ไม่สำเร็จ ${r.fails.length} แผนก — ${r.fails.join(' | ')}`, true);
+    else showBanner(`${verb}เรียบร้อย ${r.ok} แผนก`);
+  }
 
   el('btn-submit').addEventListener('click', () => run(async () => {
-    const g = gapStats();
+    const list = eligible.submit(); if (!list.length) return;
+    const g = gapStats(list);
     const warn = g.cells > 0 ? `\n\n⚠ ยังมีช่องที่ไม่ได้ลงกะ ${g.cells} ช่อง (${g.people} คน)` : '';
-    if (!confirm(`ส่งขออนุมัติ ${target()}?${warn}\n\nเมื่อส่งแล้ว ตารางกะสัปดาห์นี้จะถูกล็อก แก้ไขไม่ได้จนกว่าผู้อนุมัติจะส่งกลับ`)) return;
-    const { error } = await sb.rpc('submit_shift_approval', { p_dept: cur.dept, p_week: cur.week });
-    if (error) throw error;
-    showBanner('ส่งขออนุมัติเรียบร้อย'); await refreshAll();
+    if (!confirm(`ส่งขออนุมัติ ${targetText(list)}?${namesText(list)}${warn}\n\nเมื่อส่งแล้ว ตารางกะสัปดาห์นี้จะถูกล็อก แก้ไขไม่ได้จนกว่าผู้อนุมัติจะส่งกลับ`)) return;
+    report('ส่งขออนุมัติ', await bulk(list, w => sb.rpc('submit_shift_approval', { p_dept: w.dept, p_week: cur.week })));
+    await refreshAll();
   }));
   el('btn-approve').addEventListener('click', () => run(async () => {
-    if (!confirm(`อนุมัติ ${target()}?`)) return;
-    const { error } = await sb.rpc('decide_shift_approval', { p_dept: cur.dept, p_week: cur.week, p_approve: true, p_note: null });
-    if (error) throw error;
-    showBanner('อนุมัติเรียบร้อย'); await refreshAll();
+    const list = eligible.decide(); if (!list.length) return;
+    if (!confirm(`อนุมัติ ${targetText(list)}?${namesText(list)}`)) return;
+    report('อนุมัติ', await bulk(list, w => sb.rpc('decide_shift_approval', { p_dept: w.dept, p_week: cur.week, p_approve: true, p_note: null })));
+    await refreshAll();
   }));
 
   function openReason(mode){
     reasonMode = mode;
+    reasonList = mode === 'reject' ? eligible.decide() : eligible.reopen();
+    if (!reasonList.length) return;
     el('reason-title').textContent = mode === 'reject' ? 'ส่งกลับแก้ไข' : 'ยกเลิกการอนุมัติ';
-    el('reason-sub').textContent = target() + (mode === 'reject'
+    el('reason-sub').textContent = targetText(reasonList) + (mode === 'reject'
       ? ' · ธุรการจะแก้ไขตารางกะได้อีกครั้ง แล้วส่งขออนุมัติใหม่'
       : ' · ตารางกะจะถูกปลดล็อกให้ธุรการแก้ไข');
     el('reason-text').value = '';
@@ -944,7 +1073,7 @@
     el('reason-modal').classList.add('open');
     setTimeout(() => el('reason-text').focus(), 50);
   }
-  const closeReason = () => { el('reason-modal').classList.remove('open'); reasonMode = null; };
+  const closeReason = () => { el('reason-modal').classList.remove('open'); reasonMode = null; reasonList = []; };
   el('btn-reject').addEventListener('click', () => openReason('reject'));
   el('btn-reopen').addEventListener('click', () => openReason('reopen'));
   el('reason-close').addEventListener('click', closeReason);
@@ -953,14 +1082,13 @@
   el('reason-ok').addEventListener('click', () => {
     const note = el('reason-text').value.trim();
     if (!note) { el('reason-error').textContent = 'กรุณาระบุเหตุผล'; el('reason-error').classList.add('show'); el('reason-text').focus(); return; }
-    const mode = reasonMode;
+    const mode = reasonMode, list = reasonList.slice();
     run(async () => {
-      const { error } = mode === 'reject'
-        ? await sb.rpc('decide_shift_approval', { p_dept: cur.dept, p_week: cur.week, p_approve: false, p_note: note })
-        : await sb.rpc('reopen_shift_approval', { p_dept: cur.dept, p_week: cur.week, p_note: note });
-      if (error) { el('reason-error').textContent = error.message; el('reason-error').classList.add('show'); return; }
+      const r = await bulk(list, w => mode === 'reject'
+        ? sb.rpc('decide_shift_approval', { p_dept: w.dept, p_week: cur.week, p_approve: false, p_note: note })
+        : sb.rpc('reopen_shift_approval', { p_dept: w.dept, p_week: cur.week, p_note: note }));
       closeReason();
-      showBanner(mode === 'reject' ? 'ส่งกลับแก้ไขเรียบร้อย' : 'ยกเลิกการอนุมัติเรียบร้อย');
+      report(mode === 'reject' ? 'ส่งกลับแก้ไข' : 'ยกเลิกการอนุมัติ', r);
       await refreshAll();
     });
   });
@@ -971,7 +1099,9 @@
   let savedTitle = document.title;
   window.addEventListener('beforeprint', () => {
     savedTitle = document.title;
-    if (weekData) document.title = `ตารางกะ_${deptNameOf(weekData.dept).replace(/^ผ\.?\s*/, '')}_${weekData.week}`;
+    if (!weekDatas.length) return;
+    const nm = weekDatas.length === 1 ? deptNameOf(weekDatas[0].dept).replace(/^ผ\.?\s*/, '') : `${weekDatas.length}แผนก`;
+    document.title = `ตารางกะ_${nm}_${cur.week}`;
   });
   window.addEventListener('afterprint', () => { document.title = savedTitle; });
 </script>
