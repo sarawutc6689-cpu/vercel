@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ตารางกะการทำงาน</title>
+<title>ตารางกะการทำงาน — ธุรการ</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600&display=swap" rel="stylesheet">
 <style>
@@ -523,10 +523,12 @@
       <nav class="topnav" aria-label="เมนู">
         <a href="index.html">หน้าหลัก</a>
         <a href="shift-schedule.html">ตารางกะ</a>
+        <a href="approval.html">อนุมัติตารางกะ</a>
         <a href="calendar.html">ปฏิทินวันหยุด</a>
         <a href="report.html">รายงาน</a>
         <a href="dashboard.html">แดชบอร์ด</a>
         <a href="clerk-admin.html" data-hr>บัญชีธุรการ</a>
+        <a href="approver-admin.html" data-hr>บัญชีผู้จัดการแผนก</a>
       </nav>
       <div style="display:flex; align-items:center; gap:14px;">
         <span class="who" id="who-label"></span>
@@ -544,18 +546,17 @@
         <div class="dept-note" id="dept-note"></div>
 
         <div class="controls">
-           <div class="field">
-            <label for="f-dept">แผนก</label>
-            <select id="f-dept"></select>
-          </div>
           <div class="field">
-            <label>พนักงาน</label>
+            <label>กลุ่มพนักงาน</label>
             <div class="seg" id="group-switch">
               <button type="button" data-group="employee" class="active">พนักงาน <span class="n" id="cnt-employee"></span></button>
               <button type="button" data-group="supervisor">หัวหน้างาน <span class="n" id="cnt-supervisor"></span></button>
             </div>
           </div>
-         
+          <div class="field">
+            <label for="f-dept">แผนก</label>
+            <select id="f-dept"></select>
+          </div>
           <div class="field">
             <label for="f-shift">รหัสกะ</label>
             <select id="f-shift"></select>
@@ -571,7 +572,7 @@
         </div>
         <div class="range-label" id="range-label"></div>
 
-        <div class="hint" style="margin-top:12px;"></div>
+        <div class="hint" style="margin-top:12px;">เลือกรหัสกะหลักเพียงครั้งเดียว ระบบจะแสดงรหัสวันหยุด (เช่น OFF-A000_M รายเดือน, OFF-A000_D รายวัน) ในตารางด้านล่างให้เองตามปฏิทินวันหยุด (วันอาทิตย์ วันหยุดบริษัท วันหยุดพิเศษ 75%) ไม่ต้องเลือกวันหยุดเอง</div>
 
         <div class="emp-toolbar">
           <input id="emp-search" type="search" placeholder="ค้นหารหัส หรือ ชื่อพนักงาน...">
@@ -623,7 +624,7 @@
     </main>
 
     <footer class="app-footer">
-      แบบฟอร์มตารางกะทำงานฝ่ายบุคคล | ใช้ภายในบริษัทเท่านั้น | พัฒนาโดย Sarawut.C
+      ระบบฐานข้อมูลฝ่ายบุคคล | ใช้ภายในบริษัทเท่านั้น
     </footer>
   </div>
 
@@ -751,7 +752,7 @@
     return null;
   }
 
-  // ดึงข้อมูลหน้า (PostgREST จำกัด 1,000 แถวต่อคำขอ)
+  // ดึงข้อมูลทุกหน้า (PostgREST จำกัด 1,000 แถวต่อคำขอ)
   async function fetchAll(build){
     const pageSize = 1000;
     let from = 0, all = [];
@@ -831,7 +832,7 @@
       : (allMine.length
           ? `ไม่พบพนักงานที่สถานที่ปฏิบัติงาน = ${ONLY_LOCATION} ในแผนกที่รับผิดชอบ (มีพนักงานสถานที่อื่นหรือยังไม่ระบุ ${allMine.length} คน)`
           : 'บัญชีนี้ยังไม่ได้ถูกกำหนดแผนกที่รับผิดชอบ หรือยังไม่มีพนักงานที่กำลังทำงานในแผนก กรุณาติดต่อฝ่ายบุคคล');
-    el('f-dept').innerHTML = `<option value="">แผนกที่รับผิดชอบ (${depts.length})</option>` +
+    el('f-dept').innerHTML = `<option value="">ทุกแผนกที่รับผิดชอบ (${depts.length})</option>` +
       depts.map(d => `<option value="${escapeHtml(d.code)}">${escapeHtml(d.name)} (${escapeHtml(d.code)})</option>`).join('');
 
     // ค่าเริ่มต้นช่วงวันที่ = วันนี้ ถึง อีก 6 วัน
