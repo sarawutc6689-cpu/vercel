@@ -192,10 +192,12 @@
       <nav class="topnav" aria-label="เมนู">
         <a href="index.html">หน้าหลัก</a>
         <a href="shift-schedule.html">ตารางกะ</a>
+        <a href="approval.html">อนุมัติตารางกะ</a>
         <a href="calendar.html">ปฏิทินวันหยุด</a>
         <a href="report.html">รายงาน</a>
         <a href="dashboard.html">แดชบอร์ด</a>
         <a href="clerk-admin.html" data-hr>บัญชีธุรการ</a>
+        <a href="approver-admin.html" data-hr>บัญชีผู้จัดการแผนก</a>
       </nav>
       <div style="display:flex; align-items:center; gap:14px;">
         <span class="who" id="who-label"></span>
@@ -375,6 +377,8 @@
 
 
   const UNSPEC = 'ไม่ระบุ';
+  const ONLY_LOCATION = 'โรงงาน';   // แสดงเฉพาะพนักงานที่สถานที่ปฏิบัติงานตรงกับค่านี้
+  let hiddenCount = 0;
   let employees = [], shiftCodes = [], monthRows = [], holidayMap = new Map(), loadedMonth = null, monthReq = 0;
 
   async function init(){
@@ -385,7 +389,9 @@
     ]);
     const err = empRes.error || shRes.error;
     if (err) { showBanner('โหลดข้อมูลไม่สำเร็จ: ' + err.message + ' (ตรวจว่ารัน reports.sql แล้ว)', true); return; }
-    employees = empRes.data;
+    if (empRes.data.length && !('location' in empRes.data[0])) { showBanner('ฟังก์ชัน get_report_employees ยังไม่ส่งคอลัมน์ location กรุณารัน reports.sql ฉบับล่าสุด', true); }
+    employees = empRes.data.filter(e => e.location === ONLY_LOCATION);
+    hiddenCount = empRes.data.length - employees.length;
     shiftCodes = shRes.data;
 
     const depts = [];
@@ -425,7 +431,8 @@
     const list = scope(), n = list.length;
     const nEmp = list.filter(e => groupOf(e) === 'employee').length;
     el('scope-note').textContent = `ขอบเขตข้อมูล: ${n.toLocaleString('th-TH')} คน` +
-      (el('d-dept').value || el('d-group').value ? ' (ตามตัวกรอง)' : ' (ทุกแผนกที่คุณมีสิทธิ์ดู)');
+      (el('d-dept').value || el('d-group').value ? ' (ตามตัวกรอง)' : ' (ทุกแผนกที่คุณมีสิทธิ์ดู)') +
+      ` · เฉพาะพนักงานที่สถานที่ปฏิบัติงาน = ${ONLY_LOCATION}` + (hiddenCount ? ` (ซ่อน ${hiddenCount} คนที่สถานที่อื่นหรือยังไม่ระบุ)` : '');
 
     const loc = countBy(list, e => e.location || UNSPEC);
     const wt = countBy(list, e => e.work_type || UNSPEC);
