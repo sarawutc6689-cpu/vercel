@@ -177,6 +177,10 @@
   table.sched td.cell.empty.sunday{background:var(--sun-bg);}
   table.sched td.cell.empty.company{background:var(--com-bg);}
   table.sched td.cell.empty.special75{background:var(--spe-bg);}
+  table.sched td.cell.empty.sunday, table.sched td.cell.empty.company, table.sched td.cell.empty.special75{font-size:11px; font-weight:500;}
+  table.sched td.cell.empty.sunday{color:var(--sun-fg);}
+  table.sched td.cell.empty.company{color:var(--com-fg);}
+  table.sched td.cell.empty.special75{color:var(--spe-fg);}
   .miss-dates{max-width:420px; white-space:normal; font-size:12.5px; color:var(--ink);}
 </style>
 </head>
@@ -205,10 +209,12 @@
       <nav class="topnav" aria-label="เมนู">
         <a href="index.html">หน้าหลัก</a>
         <a href="shift-schedule.html">ตารางกะ</a>
+        <a href="approval.html">อนุมัติตารางกะ</a>
         <a href="calendar.html">ปฏิทินวันหยุด</a>
         <a href="report.html">รายงาน</a>
         <a href="dashboard.html">แดชบอร์ด</a>
         <a href="clerk-admin.html" data-hr>บัญชีธุรการ</a>
+        <a href="approver-admin.html" data-hr>บัญชีผู้จัดการแผนก</a>
       </nav>
       <div style="display:flex; align-items:center; gap:14px;">
         <span class="who" id="who-label"></span>
@@ -240,6 +246,7 @@
             </select></div>
           <div class="field"><label for="r-search">ค้นหา</label><input id="r-search" type="search" placeholder="รหัส หรือ ชื่อพนักงาน..."></div>
         </div>
+        <div class="sub-note" id="r-scope-note" style="margin-top:12px;"></div>
       </section>
 
       <section class="panel">
@@ -337,18 +344,12 @@
   const GROUP_LABEL = { employee: 'พนักงาน', supervisor: 'หัวหน้างาน' };
 
   // รหัสวันหยุดตามประเภทการจ้าง (รายเดือน/รายวัน)
-  function offCodeFor(emp, shift, dayType){
-  if (!shift) return null;
-  const sp = dayType === 'special75';
-  if (emp.work_type === 'รายวัน') {
-    return (sp && (shift.off_code_special75_daily || shift.off_code_special75_monthly))
-        || shift.off_code_daily || shift.off_code_monthly;
+  function offCodeFor(emp, shift){
+    if (!shift) return null;
+    if (emp.work_type === 'รายวัน') return shift.off_code_daily || shift.off_code_monthly;
+    if (emp.work_type === 'รายเดือน') return shift.off_code_monthly;
+    return null;
   }
-  if (emp.work_type === 'รายเดือน') {
-    return (sp && shift.off_code_special75_monthly) || shift.off_code_monthly;
-  }
-  return null;
-}
 
   // ดึงข้อมูลทุกหน้า (PostgREST จำกัด 1,000 แถวต่อคำขอ)
   async function fetchAll(build){
@@ -400,6 +401,7 @@
 
   const MAX_DAYS = 62;   // ช่วงวันที่สูงสุดต่อรายงาน (ทั้งสองแท็บ)
   let tab = 'matrix', employees = [], shiftCodes = [], holidayMap = new Map(), rowMap = new Map();
+  const ONLY_LOCATION = 'โรงงาน';   // แสดงเฉพาะพนักงานที่สถานที่ปฏิบัติงานตรงกับค่านี้
   let loadedKey = null, loadReq = 0, lastView = null;   // lastView: ข้อมูลที่แสดงอยู่ ใช้ตอนส่งออก
 
   async function init(){
@@ -412,7 +414,10 @@
     ]);
     const err = empRes.error || shRes.error;
     if (err) { setMsg('โหลดข้อมูลไม่สำเร็จ: ' + err.message + ' (ตรวจว่ารัน reports.sql แล้ว)'); return; }
-    employees = empRes.data;
+    if (empRes.data.length && !('location' in empRes.data[0])) { showBanner('ฟังก์ชัน get_report_employees ยังไม่ส่งคอลัมน์ location กรุณารัน reports.sql ฉบับล่าสุด', true); }
+    employees = empRes.data.filter(e => e.location === ONLY_LOCATION);
+    const hidden = empRes.data.length - employees.length;
+    el('r-scope-note').textContent = `แสดงเฉพาะพนักงานที่สถานที่ปฏิบัติงาน = ${ONLY_LOCATION}` + (hidden ? ` (ซ่อน ${hidden} คนที่สถานที่อื่นหรือยังไม่ระบุ)` : '');
     shiftCodes = shRes.data;
     const depts = [];
     employees.forEach(e => { if (!depts.some(d => d.code === e.department_code)) depts.push({ code: e.department_code, name: e.department_name }); });
@@ -450,6 +455,7 @@
       (!q || e.employee_code.toLowerCase().includes(q) || String(e.full_name || '').toLowerCase().includes(q)));
   }
 
+  const HOL_SHORT = { sunday: 'หยุด', company: 'หยุดบริษัท', special75: 'หยุด 75%' };   // แสดงในช่องวันหยุดที่ยังไม่ได้ลงกะ (ไม่ใส่ในไฟล์ส่งออก)
   function dayInfo(iso){
     if (parseISO(iso).getUTCDay() === 0) return { type: 'sunday', name: 'วันอาทิตย์' };
     const h = holidayMap.get(iso);
@@ -481,7 +487,7 @@
   }
 
   async function refresh(){
-    if (!employees.length) return;
+    if (!employees.length) { setMsg(`ไม่พบพนักงานที่สถานที่ปฏิบัติงาน = ${ONLY_LOCATION} ในขอบเขตที่คุณมีสิทธิ์ดู`); return; }
     const rg = currentRange();
     if (!rg) { setMsg('เลือกช่วงวันที่เพื่อดูรายงาน'); return; }
     if (rg.end < rg.start) { setMsg('วันสิ้นสุดต้องไม่ก่อนวันเริ่มต้น'); return; }
@@ -497,12 +503,11 @@
   function cellFor(emp, iso){
     const r = rowMap.get(emp.employee_code + '|' + iso);
     const info = dayInfo(iso);
-    if (!r) return { text: '', cls: 'empty ' + (info ? info.type : ''), tip: info ? `${fmtThai(iso)} : ${info.name}` : '' };
+    if (!r) return { text: '', show: info ? HOL_SHORT[info.type] : '', cls: 'empty ' + (info ? info.type : ''), tip: info ? `${fmtThai(iso)} : ${info.name}` : '' };
     const base = r.base_shift_code || r.shift_code;
     if (info) {
       const shiftObj = shiftCodes.find(x => x.shift_group === groupOf(emp) && x.shift_code === base);
-      const off = offCodeFor(emp, shiftObj, info.type);
-
+      const off = offCodeFor(emp, shiftObj);
       return { text: off || 'OFF?', cls: info.type,
         tip: off ? `${fmtThai(iso)} : ${info.name} (กะ ${base})` : `${fmtThai(iso)} : ${info.name} — ยังไม่ระบุประเภทการจ้าง จึงไม่ทราบรหัสวันหยุด` };
     }
@@ -523,7 +528,7 @@
       return `<th class="${info ? info.type : ''}" title="${escapeHtml(fmtThai(iso) + (info ? ' : ' + info.name : ''))}"><div class="mo">${mo}</div><div>${WEEKDAYS[d.getUTCDay()]}</div><div class="dn">${day}</div></th>`;
     }).join('');
     const body = emps.map(emp => {
-      const cells = dates.map(iso => { const c = cellFor(emp, iso); return `<td class="cell ${c.cls}" title="${escapeHtml(c.tip)}">${escapeHtml(c.text || '·')}</td>`; }).join('');
+      const cells = dates.map(iso => { const c = cellFor(emp, iso); return `<td class="cell ${c.cls}" title="${escapeHtml(c.tip)}">${escapeHtml(c.show || c.text || '·')}</td>`; }).join('');
       return `<tr><td class="c1"><span class="code-cell">${escapeHtml(emp.employee_code)}</span></td><td class="c2">${escapeHtml(emp.full_name)}</td>${cells}</tr>`;
     }).join('');
     el('sched').innerHTML = `<thead><tr><th class="c1">รหัส</th><th class="c2">ชื่อ-นามสกุล</th>${head}</tr></thead><tbody>${body}</tbody>`;
