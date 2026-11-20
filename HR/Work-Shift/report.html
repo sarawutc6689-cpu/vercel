@@ -156,7 +156,6 @@
   .btn-ghost.btn-csv:hover{background:#D7EFE1; border-color:#8FCDA8; color:#17603A;}
   .btn-ghost.btn-pdf{background:#E4F1FB; border-color:#BBD9F0; color:#1F6FA8;}
   .btn-ghost.btn-pdf:hover{background:#D3E8F8; border-color:#8DBEE3; color:#175788;}
-  .no-export-msg{display:none;}
 
   /* พิมพ์ / PDF: เฉพาะตารางที่แสดงอยู่ (A4 แนวนอน) */
   @page{size:A4 landscape; margin:8mm;}
@@ -170,8 +169,6 @@
     table.sched th, table.sched td{padding:2px 3px !important; position:static !important;}
     table.list{font-size:8.5pt;}
     *{-webkit-print-color-adjust:exact; print-color-adjust:exact;}
-    body.no-export #app{display:none !important;}
-    body.no-export .no-export-msg{display:block !important; padding:40px; text-align:center; font-size:16pt;}
   }
   .grid-wrap{overflow:auto; max-height:72vh; border:1px solid var(--line); border-radius:12px;}
   table.sched{border-collapse:separate; border-spacing:0; font-size:12px; width:max-content; min-width:100%;}
@@ -221,7 +218,6 @@
   </div>
 
   <div id="status-banner"><div class="banner" id="banner-inner"></div></div>
-  <div class="no-export-msg">ไม่มีสิทธิ์พิมพ์หรือส่งออกรายงาน</div>
   <div id="app">
     <header>
       <div class="brand">
@@ -279,7 +275,7 @@
               <span><i class="w"></i>วันทำงาน</span><span><i class="s"></i>วันอาทิตย์</span>
               <span><i class="c"></i>วันหยุดบริษัท</span><span><i class="p"></i>วันหยุดพิเศษ 75%</span>
             </div>
-            <div class="export no-print" id="export-box" style="display:none;">
+            <div class="export no-print" id="export-box">
               <button type="button" class="btn-ghost" id="export-xlsx">ส่งออก Excel</button>
               <button type="button" class="btn-ghost btn-csv" id="export-csv">ส่งออก CSV</button>
               <button type="button" class="btn-ghost btn-pdf" id="export-pdf">ส่งออก PDF</button>
@@ -444,7 +440,7 @@
   const ONLY_LOCATION = 'โรงงาน';   // แสดงเฉพาะพนักงานที่สถานที่ปฏิบัติงานตรงกับค่านี้
   let loadedKey = null, loadReq = 0, lastView = null;   // lastView: ข้อมูลที่แสดงอยู่ ใช้ตอนส่งออก
 
-  // สิทธิ์ส่งออก/พิมพ์: เฉพาะฝ่ายบุคคลและผู้อนุมัติ (ธุรการดูรายงานได้อย่างเดียว)
+  // สิทธิ์ส่งออก Excel/CSV: เฉพาะฝ่ายบุคคลและผู้อนุมัติ (ธุรการส่งออก PDF ได้อย่างเดียว)
   let canExport = false;
   async function loadExportRight(){
     let ok = false;
@@ -454,8 +450,8 @@
       else { const h = await sb.rpc('is_hr_admin'); ok = h.data === true; }   // ยังไม่ได้รัน approval.sql: ให้เฉพาะฝ่ายบุคคล
     } catch (e) { ok = false; }
     canExport = ok;
-    document.body.classList.toggle('no-export', !ok);
-    el('export-box').style.display = ok ? '' : 'none';
+    el('export-xlsx').style.display = ok ? '' : 'none';
+    el('export-csv').style.display = ok ? '' : 'none';
   }
 
   async function init(){
@@ -679,14 +675,13 @@
     setTimeout(() => URL.revokeObjectURL(a.href), 1500);
   }
   el('export-pdf').addEventListener('click', () => {
-    if (!canExport) return;
     if (!lastView) { showBanner('ยังไม่มีข้อมูลให้ส่งออก', true); return; }
     window.print();   // เลือก "บันทึกเป็น PDF" ในหน้าต่างพิมพ์
   });
   let savedTitle = document.title;
   window.addEventListener('beforeprint', () => {
     savedTitle = document.title;
-    const x = lastView && canExport ? buildExport() : null;
+    const x = lastView ? buildExport() : null;
     if (x) document.title = x.name;
   });
   window.addEventListener('afterprint', () => { document.title = savedTitle; });
