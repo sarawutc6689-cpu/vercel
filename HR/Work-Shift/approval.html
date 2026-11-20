@@ -195,7 +195,7 @@
 
   /* ---------- ฟอร์มตารางกะ (ตามไฟล์ตัวอย่าง) ---------- */
   .paper-scroll{overflow-x:auto;}
-  .paper{min-width:1100px; font-family:Tahoma, 'Noto Sans Thai', 'Sarabun', system-ui, sans-serif; color:#000;}
+  .paper{min-width:960px; font-family:Tahoma, 'Noto Sans Thai', 'Sarabun', system-ui, sans-serif; color:#000;}
   .paper-stat{
     display:flex; justify-content:flex-end; margin-bottom:8px;
   }
@@ -219,7 +219,7 @@
   table.form th.company{background:var(--com-bg); color:var(--com-fg);}
   table.form th.special75{background:var(--spe-bg); color:var(--spe-fg);}
   table.form td.work{font-weight:600;}
-  table.form td.off{font-weight:700; font-size:10px; padding:3px 2px;}
+  table.form td.off{font-weight:700; font-size:11px;}
   table.form td.off.sunday{background:var(--sun-bg); color:var(--sun-fg);}
   table.form td.off.company{background:var(--com-bg); color:var(--com-fg);}
   table.form td.off.special75{background:var(--spe-bg); color:var(--spe-fg);}
@@ -318,7 +318,6 @@
     table.form th.ttl{font-size:15pt; padding:4px;}
     table.form th.per{font-size:9pt;}
     table.form tbody td{height:6mm; padding:1px 3px;}
-    table.form td.off{font-size:6.5pt; padding:1px 1px;}
     table.form thead{display:table-header-group;}
     table.form tr{break-inside:avoid;}
     table.form td.gap{box-shadow:none !important;}
@@ -575,12 +574,29 @@
   el('logout-btn').addEventListener('click', async () => { await sb.auth.signOut(); });
 
   // supabase ยิง SIGNED_IN ซ้ำได้เมื่อสลับแท็บกลับมา กัน init() ซ้ำ
+  // แสดงชื่อ-นามสกุลแทนอีเมล (ชื่อในบัญชี -> my_display_name() -> อีเมล) เอาเมาส์ชี้เพื่อดูอีเมล
+  const whoCache = {};
+  function showWho(session){
+    const uid = session.user.id, email = session.user.email || '';
+    const meta = session.user.user_metadata && session.user.user_metadata.full_name;
+    el('who-label').title = email;
+    el('who-label').textContent = whoCache[uid] || meta || email;
+    if (meta || uid in whoCache) return;
+    whoCache[uid] = '';
+    setTimeout(async () => {
+      try {
+        const { data } = await sb.rpc('my_display_name');
+        if (data) { whoCache[uid] = data; el('who-label').textContent = data; }
+      } catch (e) { /* ยังไม่ได้รัน approval-names.sql: แสดงอีเมลต่อไป */ }
+    }, 0);
+  }
+
   let initializedFor = null;
   sb.auth.onAuthStateChange((_event, session) => {
     if (session) {
       el('login-screen').style.display = 'none';
       el('app').style.display = 'block';
-      el('who-label').textContent = session.user.email || '';
+      showWho(session);
       if (initializedFor !== session.user.id) {
         initializedFor = session.user.id;
         init(session);
@@ -603,22 +619,15 @@
   const DOW_FORM = ['จ.', 'อ.', 'พ.', 'พฤ', 'ศ.', 'ส.', 'อา.'];   // จันทร์ → อาทิตย์ ตามหัวตารางในฟอร์ม
 
   // ตารางสรุป "Shift / เวลาการทำงาน" ตามฟอร์ม (ข้อความเวลาคัดจากไฟล์ตัวอย่าง)
-  const SHORT_ALIAS = {   // ชื่อที่แสดงในฟอร์มแทนชื่อย่อเดิม
-    A:  'A000',
-    B:  'B000',
-    C:  'C000',
-    E:  'E000',
-    A1: 'E0013',
-    A2: 'E0007'
-  };
+  const SHORT_ALIAS = { A2: 'E0007' };   // ชื่อที่แสดงในฟอร์มแทนชื่อย่อเดิม
   const FORM_SHIFTS = [
-    { k: 'A000',  t: '08.00 - 17.00 พัก 12.00 - 13.00 น.' },
-    { k: 'B000',  t: '16.00 - 01.00 พัก 20.00 - 21.00 น.' },
-    { k: 'C000',  t: '24.00 - 09.00 พัก 04.00 - 05.00 น.' },
-    { k: 'E000',  t: '20.00 - 05.00 พัก 24.00 - 01.00 น.' },
+    { k: 'A',  t: '08.00 - 17.00 พัก 12.00 - 13.00 น.' },
+    { k: 'B',  t: '16.00 - 01.00 พัก 20.00 - 21.00 น.' },
+    { k: 'C',  t: '24.00 - 09.00 พัก 04.00 - 05.00 น.' },
+    { k: 'E',  t: '20.00 - 05.00 พัก 24.00 - 01.00 น.' },
     { k: 'E0007', t: '07.00 - 16.00 น.' },
-    { k: 'E0013', t: '13.00 - 22.00 พัก 17.00 - 18.00 น.' },
-    { k: 'C1',    t: '22.00 - 07.00 น. พัก 02.00 - 03.00 น.' }
+    { k: 'A1', t: '13.00 - 22.00 พัก 17.00 - 18.00 น.' },
+    { k: 'C1', t: '22.00 - 07.00 น. พัก 02.00 - 03.00 น.' }
   ];
   const STATUS = {
     none:      { label: 'ยังไม่ส่งขออนุมัติ', cls: 's-none' },
@@ -684,7 +693,7 @@
     return '';
   }
 
-  // เนื้อหาของช่องวัน: วันทำงาน = ชื่อย่อกะ, วันหยุด = รหัส OFF เต็ม เช่น OFF-A000_M (ถ้าไม่ทราบรหัสแสดง OFF)
+  // เนื้อหาของช่องวัน: วันทำงาน = ชื่อย่อกะ, วันหยุด = OFF (ชี้เมาส์เพื่อดูรหัส OFF-... เต็ม)
   function cellOf(emp, iso, wd){
     const group = groupOf(emp);
     const r = wd.rows.get(emp.employee_code + '|' + iso);
@@ -696,7 +705,7 @@
       const off = (r && r.is_off && !info) ? r.shift_code : offCodeFor(emp, sObj);
       const why = info ? info.name : 'วันหยุด';
       const tip = off ? `${why} · ${off}` : `${why} · ${gap ? 'ยังไม่ลงกะ' : 'ยังไม่ระบุประเภทการจ้าง จึงไม่ทราบรหัสวันหยุด'}`;
-      return { text: off || 'OFF', cls: 'off ' + (info ? info.type : 'company') + (gap ? ' gap' : ''), tip };
+      return { text: 'OFF', cls: 'off ' + (info ? info.type : 'company') + (gap ? ' gap' : ''), tip };
     }
     if (gap) return { text: '', cls: 'gap', tip: 'ยังไม่ลงกะ' };
     const base = r.base_shift_code || r.shift_code;
@@ -907,9 +916,9 @@
       teamCount.set(team, (teamCount.get(team) || 0) + 1);
       const cells = wd.dates.map(iso => { const c = cellOf(e, iso, wd); return `<td class="${c.cls}" title="${escapeHtml(c.tip)}">${escapeHtml(c.text)}</td>`; }).join('');
       body += `<tr><td>${idx + 1}</td><td>${escapeHtml(e.employee_code)}</td><td class="nm" title="${escapeHtml(e.full_name)}">${escapeHtml(e.full_name)}</td>` +
-              `<td title="${escapeHtml(e.position_name)}">${escapeHtml(e.position_name)}</td>${cells}<td class="note"></td></tr>`;
+              `<td title="${escapeHtml(e.position_name)}">${escapeHtml(e.position_name)}</td><td class="team">${escapeHtml(team)}</td>${cells}<td class="note"></td></tr>`;
     });
-    if (!wd.emps.length) body = `<tr><td colspan="12" class="empty-state">ไม่พบพนักงานที่สถานที่ปฏิบัติงาน = ${escapeHtml(ONLY_LOCATION)} ในแผนกนี้</td></tr>`;
+    if (!wd.emps.length) body = `<tr><td colspan="13" class="empty-state">ไม่พบพนักงานที่สถานที่ปฏิบัติงาน = ${escapeHtml(ONLY_LOCATION)} ในแผนกนี้</td></tr>`;
 
     // ตารางสรุปจำนวนคนต่อกะ (นับจากคอลัมน์ "ทีม" เหมือน COUNTIF ในไฟล์ตัวอย่าง)
     const known = new Set(FORM_SHIFTS.map(s => s.k));
@@ -929,12 +938,12 @@
     return `<div class="paper-one">
       <div class="paper-stat"><span class="${st}">${st === 'approved' ? 'อนุมัติแล้ว' : 'ฉบับร่าง · ' + STATUS[st].label}</span></div>
       <table class="form">
-        <colgroup><col style="width:4%"><col style="width:7%"><col style="width:18%"><col style="width:14%">
-          ${'<col style="width:7%">'.repeat(7)}<col style="width:8%"></colgroup>
+        <colgroup><col style="width:4%"><col style="width:8%"><col style="width:19%"><col style="width:15%"><col style="width:5%">
+          ${'<col style="width:5.3%">'.repeat(7)}<col style="width:13.9%"></colgroup>
         <thead>
-          <tr><th class="ttl" colspan="12">${escapeHtml(title)}</th></tr>
-          <tr><th class="per" colspan="12">สัปดาห์ที่ ${escapeHtml(weekText(wd.week))}</th></tr>
-          <tr><th rowspan="2">ลำดับ</th><th>รหัส</th><th rowspan="2" class="l">รายชื่อพนักงาน</th><th rowspan="2">ตำแหน่ง</th>
+          <tr><th class="ttl" colspan="13">${escapeHtml(title)}</th></tr>
+          <tr><th class="per" colspan="13">สัปดาห์ที่ ${escapeHtml(weekText(wd.week))}</th></tr>
+          <tr><th rowspan="2">ลำดับ</th><th>รหัส</th><th rowspan="2" class="l">รายชื่อพนักงาน</th><th rowspan="2">ตำแหน่ง</th><th rowspan="2">ทีม</th>
             ${dayHead.map(d => `<th class="${d.cls}" title="${escapeHtml(d.tip)}">${d.n}</th>`).join('')}<th>หมายเหตุ</th></tr>
           <tr><th>พนักงาน</th>${dayHead.map(d => `<th class="${d.cls}" title="${escapeHtml(d.tip)}">${d.dow}</th>`).join('')}<th>งานที่ได้รับ</th></tr>
         </thead>
