@@ -314,12 +314,29 @@
   el('logout-btn').addEventListener('click', async () => { await sb.auth.signOut(); });
 
   // supabase ยิง SIGNED_IN ซ้ำได้เมื่อสลับแท็บกลับมา กัน init() ซ้ำ
+  // แสดงชื่อ-นามสกุลแทนอีเมล (ชื่อในบัญชี -> my_display_name() -> อีเมล) เอาเมาส์ชี้เพื่อดูอีเมล
+  const whoCache = {};
+  function showWho(session){
+    const uid = session.user.id, email = session.user.email || '';
+    const meta = session.user.user_metadata && session.user.user_metadata.full_name;
+    el('who-label').title = email;
+    el('who-label').textContent = whoCache[uid] || meta || email;
+    if (meta || uid in whoCache) return;
+    whoCache[uid] = '';
+    setTimeout(async () => {
+      try {
+        const { data } = await sb.rpc('my_display_name');
+        if (data) { whoCache[uid] = data; el('who-label').textContent = data; }
+      } catch (e) { /* ยังไม่ได้รัน approval-names.sql: แสดงอีเมลต่อไป */ }
+    }, 0);
+  }
+
   let initializedFor = null;
   sb.auth.onAuthStateChange((_event, session) => {
     if (session) {
       el('login-screen').style.display = 'none';
       el('app').style.display = 'block';
-      el('who-label').textContent = session.user.email || '';
+      showWho(session);
       if (initializedFor !== session.user.id) {
         initializedFor = session.user.id;
         init(session);
@@ -344,6 +361,7 @@
     { href: 'shift-schedule.html', icon: IC.shift,  title: 'ตารางกะ',            desc: 'บันทึกตารางกะของพนักงานในแผนกที่รับผิดชอบ เลือกรหัสกะ ช่วงวันที่ และดูตารางที่บันทึกไว้' },
     { href: 'approval.html',       icon: IC.appr,   title: 'อนุมัติตารางกะ',      desc: 'ธุรการส่งตารางกะรายสัปดาห์ต่อแผนก ผู้จัดการแผนกอนุมัติหรือส่งกลับ พิมพ์ตามแบบฟอร์มตารางกะแผนก' },
     { href: 'clerk-admin.html',    icon: IC.clerk,  title: 'จัดการบัญชีธุรการ',   desc: 'สร้างบัญชีธุรการ กำหนดแผนกที่รับผิดชอบ รีเซ็ตรหัสผ่าน ระงับหรือลบบัญชี', hr: true },
+    { href: 'approver-admin.html',  icon: IC.appr,   title: 'จัดการบัญชีผู้จัดการแผนก', desc: 'สร้างบัญชีผู้อนุมัติตารางกะ กำหนดแผนกที่อนุมัติ รีเซ็ตรหัสผ่าน ระงับหรือลบบัญชี', hr: true },
     { href: 'calendar.html',       icon: IC.cal,    title: 'ปฏิทินวันหยุด',      desc: 'ดูวันอาทิตย์ วันหยุดบริษัท และวันหยุดพิเศษ 75% ฝ่ายบุคคลเป็นผู้กำหนดวันหยุด', note: 'ธุรการดูได้อย่างเดียว' },
     { href: 'report.html',         icon: IC.report, title: 'รายงาน',             desc: 'ตารางกะรายเดือน และรายชื่อพนักงานที่ยังไม่ลงกะ ส่งออกเป็น Excel หรือ CSV ได้' },
     { href: 'dashboard.html',      icon: IC.dash,   title: 'แดชบอร์ด',           desc: 'ภาพรวมพนักงานตามฝ่าย สถานที่ ประเภทการจ้าง และความคืบหน้าการลงกะรายแผนก' }
