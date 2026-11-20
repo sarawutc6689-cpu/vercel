@@ -546,19 +546,17 @@
         <div class="dept-note" id="dept-note"></div>
 
         <div class="controls">
-           <div class="field">
-            <label for="f-dept">แผนก</label>
-            <select id="f-dept"></select>
-          </div>
-          
           <div class="field">
-            <label>พนักงาน</label>
+            <label>กลุ่มพนักงาน</label>
             <div class="seg" id="group-switch">
               <button type="button" data-group="employee" class="active">พนักงาน <span class="n" id="cnt-employee"></span></button>
               <button type="button" data-group="supervisor">หัวหน้างาน <span class="n" id="cnt-supervisor"></span></button>
             </div>
           </div>
-         
+          <div class="field">
+            <label for="f-dept">แผนก</label>
+            <select id="f-dept"></select>
+          </div>
           <div class="field">
             <label for="f-shift">รหัสกะ</label>
             <select id="f-shift"></select>
@@ -784,13 +782,30 @@
   el('logout-btn').addEventListener('click', async () => { await sb.auth.signOut(); });
 
   // supabase ยิง SIGNED_IN ซ้ำได้เมื่อสลับแท็บกลับมา กัน init() ซ้ำเพื่อไม่ให้ฟอร์มที่กรอกค้างไว้ถูกรีเซ็ต
+  // แสดงชื่อ-นามสกุลแทนอีเมล (ชื่อในบัญชี -> my_display_name() -> อีเมล) เอาเมาส์ชี้เพื่อดูอีเมล
+  const whoCache = {};
+  function showWho(session){
+    const uid = session.user.id, email = session.user.email || '';
+    const meta = session.user.user_metadata && session.user.user_metadata.full_name;
+    el('who-label').title = email;
+    el('who-label').textContent = whoCache[uid] || meta || email;
+    if (meta || uid in whoCache) return;
+    whoCache[uid] = '';
+    setTimeout(async () => {
+      try {
+        const { data } = await sb.rpc('my_display_name');
+        if (data) { whoCache[uid] = data; el('who-label').textContent = data; }
+      } catch (e) { /* ยังไม่ได้รัน approval-names.sql: แสดงอีเมลต่อไป */ }
+    }, 0);
+  }
+
   let initializedFor = null;
   sb.auth.onAuthStateChange((_event, session) => {
     if (session) {
       currentUserEmail = session.user.email || '';
       el('login-screen').style.display = 'none';
       el('app').style.display = 'block';
-      el('who-label').textContent = currentUserEmail;
+      showWho(session);
       if (initializedFor !== session.user.id) {
         initializedFor = session.user.id;
         init();
