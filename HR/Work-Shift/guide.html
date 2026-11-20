@@ -1,0 +1,487 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>คู่มือการใช้งาน — HR Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1B2B3E; --ink-soft:#6E85A0;
+    --bg-a:#EAF3FB; --bg-b:#F7FBFE; --panel:#FFFFFF; --line:#DCE9F5;
+    --accent:#2F7FB8; --accent-dark:#24628F; --accent-ink:#FFFFFF;
+    --accent-soft:#E7F2FB; --accent-soft-2:#F1F8FD;
+    --danger:#C1596A; --danger-soft:#FBEBEE;
+    --ok:#1F8A4C; --ok-soft:#E5F5EC;
+    --warn:#B4791F; --warn-soft:#FDF3E0;
+    --sun-bg:#FBEBEE;   --sun-fg:#C1596A;
+    --com-bg:#FDF3E0;   --com-fg:#B4791F;
+    --spe-bg:#E5F5EC;   --spe-fg:#1F8A4C;
+    --radius:16px;
+    --shadow:0 1px 2px rgba(27,60,90,.04), 0 10px 30px rgba(27,60,90,.06);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; min-height:100vh;
+    background:linear-gradient(180deg, var(--bg-a) 0%, var(--bg-b) 320px, var(--bg-b) 100%);
+    color:var(--ink); font-family:'Inter',system-ui,sans-serif; font-size:15px; line-height:1.5;
+  }
+  h1,h2,h3{font-family:'Space Grotesk',system-ui,sans-serif; margin:0; font-weight:600; letter-spacing:-0.01em;}
+
+  /* login */
+  #login-screen{min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px;}
+  .login-card{
+    width:100%; max-width:380px; background:var(--panel); border:1px solid var(--line);
+    border-radius:20px; padding:38px 34px; box-shadow:var(--shadow); text-align:center;
+  }
+  .login-mark{
+    width:52px; height:52px; margin:0 auto 18px; border-radius:14px;
+    background:linear-gradient(135deg, var(--accent), #6FB4E0);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .login-mark svg{width:26px; height:26px;}
+  .login-card h1{font-size:20px; margin-bottom:6px;}
+  .login-card p.sub{color:var(--ink-soft); font-size:13.5px; margin:0 0 24px;}
+  .login-card .field{text-align:left; margin-top:16px;}
+
+  /* header */
+  #app{display:none;}
+  header{
+    background:rgba(255,255,255,.85); backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line); padding:14px 32px;
+    display:flex; align-items:center; justify-content:space-between;
+    position:sticky; top:0; z-index:20;
+  }
+  .brand{display:flex; align-items:center; gap:12px;}
+  .brand-mark{
+    width:34px; height:34px; border-radius:10px;
+    background:linear-gradient(135deg, var(--accent), #6FB4E0);
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .brand-mark svg{width:18px; height:18px;}
+  header h1{font-size:17px;}
+  header .who{font-size:13px; color:var(--ink-soft);}
+  .btn-ghost{
+    background:#fff; border:1px solid var(--line); color:var(--ink-soft);
+    padding:8px 16px; border-radius:10px; font-size:13.5px; font-family:inherit; cursor:pointer; transition:.15s;
+  }
+  .btn-ghost:hover{border-color:var(--accent); color:var(--accent-dark);}
+  main{max-width:1480px; margin:0 auto; padding:32px; display:grid; gap:24px;}
+  main > *{min-width:0;}
+  @media (max-width:860px){ main{padding:20px;} header{padding:12px 20px;} }
+  .panel{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:26px; box-shadow:var(--shadow);}
+  .panel-head{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:18px;}
+  .panel-head h2{font-size:16px;}
+  .sub-note{font-size:12.5px; color:var(--ink-soft);}
+
+  /* form controls */
+  .field{margin-top:0;}
+  .field label{display:block; font-size:13px; color:var(--ink-soft); margin-bottom:6px; font-weight:500;}
+  input[type=text], input[type=email], input[type=password], input[type=date], input[type=month], input[type=search], select{
+    width:100%; padding:10px 13px; border:1.5px solid var(--line); border-radius:10px;
+    font-size:14px; font-family:inherit; color:var(--ink); background:#fff; transition:.15s;
+  }
+  input:focus, select:focus{outline:none; border-color:var(--accent); box-shadow:0 0 0 4px var(--accent-soft);}
+  .login-card .field{margin-top:16px;}
+  .controls{display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:16px; align-items:end;}
+  .btn{padding:11px 20px; border-radius:10px; border:none; font-size:14px; font-weight:600; font-family:inherit; cursor:pointer; transition:.15s;}
+  .btn-primary{background:var(--accent); color:var(--accent-ink);}
+  .btn-primary:hover{background:var(--accent-dark);}
+  .btn:disabled{opacity:.6; cursor:default;}
+  #login-btn{width:100%; margin-top:22px;}
+  .seg{display:flex; background:var(--accent-soft-2); border:1.5px solid var(--line); border-radius:10px; padding:3px; gap:3px;}
+  .seg button{
+    flex:1; border:none; background:none; padding:8px 12px; border-radius:7px; font:inherit;
+    font-size:13.5px; font-weight:600; color:var(--ink-soft); cursor:pointer; transition:.15s; white-space:nowrap;
+  }
+  .seg button:hover{color:var(--ink);}
+  .seg button.active{background:var(--accent); color:#fff;}
+  .count-tag{
+    font-size:12.5px; color:var(--accent-dark); background:var(--accent-soft);
+    padding:5px 12px; border-radius:100px; white-space:nowrap; font-weight:600;
+  }
+  .count-tag.warn{color:var(--warn); background:var(--warn-soft);}
+  .count-tag.bad{color:var(--danger); background:var(--danger-soft);}
+  .count-tag.good{color:var(--ok); background:var(--ok-soft);}
+  .badge{display:inline-block; padding:3px 10px; border-radius:100px; font-size:12px; font-weight:600; white-space:nowrap;}
+  .badge.none{background:var(--danger-soft); color:var(--danger);}
+  .badge.partial{background:var(--warn-soft); color:var(--warn);}
+  .badge.done{background:var(--ok-soft); color:var(--ok);}
+  .code-cell{color:var(--accent-dark); font-weight:600; background:var(--accent-soft); padding:3px 9px; border-radius:7px; display:inline-block;}
+  .empty-state{text-align:center; color:var(--ink-soft); padding:40px 12px; font-size:14px;}
+
+  /* list table */
+  table.list{width:100%; border-collapse:collapse; font-size:13.5px;}
+  table.list th{
+    text-align:left; font-weight:600; color:var(--ink-soft); font-size:12px;
+    padding:10px 12px; border-bottom:1.5px solid var(--line); white-space:nowrap; background:#fff;
+  }
+  table.list td{padding:10px 12px; border-bottom:1px solid var(--bg-a); vertical-align:top;}
+  table.list tbody tr:hover td{background:var(--accent-soft-2);}
+  .nowrap{white-space:nowrap;}
+
+  /* banner */
+  #status-banner{display:none; max-width:1480px; margin:0 auto; padding:16px 32px 0;}
+  .banner{padding:12px 18px; border-radius:12px; font-size:13.5px; box-shadow:var(--shadow); font-weight:500; background:#fff;}
+  .banner.ok{color:var(--accent-dark); border:1px solid var(--accent-soft);}
+  .banner.err{color:var(--danger); border:1px solid var(--danger-soft);}
+  .app-footer{text-align:center; color:var(--ink-soft); font-size:12.5px; padding:8px 20px 32px;}
+
+  /* ---------- top navigation ---------- */
+  header{flex-wrap:wrap; gap:10px 24px;}
+  .topnav{display:flex; gap:4px; flex-wrap:wrap; align-items:center;}
+  .topnav a{
+    padding:7px 13px; border-radius:9px; font-size:13.5px; font-weight:600;
+    color:var(--ink-soft); text-decoration:none; white-space:nowrap; transition:.15s;
+  }
+  .topnav a:hover{background:var(--accent-soft-2); color:var(--accent-dark);}
+  .topnav a.active{background:var(--accent-soft); color:var(--accent-dark);}
+  @media (max-width:1100px){ .topnav{order:3; width:100%;} }
+
+
+  #app{display:block;}
+  main{max-width:none;}
+  .guide{display:grid; grid-template-columns:240px minmax(0, 1fr); gap:24px; align-items:start;}
+  @media (max-width:900px){ .guide{grid-template-columns:1fr;} }
+  .toc{position:sticky; top:16px; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:16px 12px; box-shadow:var(--shadow); max-height:calc(100vh - 32px); overflow-y:auto;}
+  @media (max-width:900px){ .toc{position:static; max-height:none;} }
+  .toc h3{font-size:12px; letter-spacing:.06em; color:var(--ink-soft); text-transform:uppercase; padding:0 8px 8px;}
+  .toc a{display:block; padding:7px 10px; border-radius:8px; font-size:13.5px; color:var(--ink); text-decoration:none;}
+  .toc a:hover{background:var(--accent-soft-2); color:var(--accent-dark);}
+  .toc a.on{background:var(--accent-soft); color:var(--accent-dark); font-weight:600;}
+  .toc .grp{font-size:11.5px; color:var(--ink-soft); padding:10px 10px 4px;}
+  .roles{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:6px;}
+  .role-chip{border:1px solid var(--line); background:#fff; color:var(--ink-soft); border-radius:100px; padding:7px 16px; font:inherit; font-size:13.5px; cursor:pointer; transition:.15s;}
+  .role-chip:hover{border-color:var(--accent); color:var(--accent-dark);}
+  .role-chip.on{background:var(--accent); border-color:var(--accent); color:#fff; font-weight:600;}
+  .content{display:flex; flex-direction:column; gap:20px; min-width:0;}
+  .sec{scroll-margin-top:16px;}
+  .sec h2{font-size:19px; margin-bottom:6px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+  .sec h3{font-size:15px; margin:20px 0 8px;}
+  .sec p, .sec li{font-size:14.5px; line-height:1.75; color:var(--ink);}
+  .sec p{margin:8px 0;}
+  .sec ul, .sec ol{margin:8px 0 8px 22px;}
+  .sec li{margin:3px 0;}
+  .lead{color:var(--ink-soft); font-size:14px;}
+  .tag{display:inline-block; font-size:11.5px; font-weight:600; padding:3px 10px; border-radius:100px; background:var(--accent-soft); color:var(--accent-dark);}
+  .tag.hr{background:#F1E8FB; color:#6B3FA0;}
+  .tag.clerk{background:#E6F5EC; color:#1E7A46;}
+  .tag.mgr{background:#FFF1DA; color:#9A5B00;}
+  .tbl{width:100%; border-collapse:collapse; margin:10px 0; font-size:13.5px;}
+  .tbl th, .tbl td{border:1px solid var(--line); padding:9px 12px; text-align:left; vertical-align:top;}
+  .tbl th{background:var(--accent-soft-2); font-weight:600; color:var(--ink);}
+  .tbl td.c, .tbl th.c{text-align:center;}
+  .yes{color:#1E7A46; font-weight:700;}
+  .no{color:#B04A5E;}
+  .tblwrap{overflow-x:auto;}
+  .flow{display:grid; grid-template-columns:repeat(auto-fit, minmax(190px, 1fr)); gap:12px; margin:14px 0 6px; counter-reset:st;}
+  .flow .st{position:relative; border:1px solid var(--line); border-radius:14px; padding:14px 14px 14px 14px; background:var(--accent-soft-2);}
+  .flow .st::before{counter-increment:st; content:counter(st); display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px; border-radius:50%; background:var(--accent); color:#fff; font-weight:700; font-size:13px; margin-bottom:8px;}
+  .flow .st b{display:block; font-size:14px; margin-bottom:3px;}
+  .flow .st span{font-size:13px; color:var(--ink-soft); line-height:1.6;}
+  .note{border-left:4px solid var(--accent); background:var(--accent-soft-2); border-radius:10px; padding:11px 14px; margin:12px 0; font-size:13.8px; line-height:1.7;}
+  .note.warn{border-left-color:#D99A2B; background:#FFF8EA;}
+  .note.danger{border-left-color:#C25B6E; background:#FDF0F2;}
+  .sw{display:inline-block; width:14px; height:14px; border-radius:4px; vertical-align:-2px; margin-right:6px; border:1px solid rgba(0,0,0,.08);}
+  kbd, .btnref{display:inline-block; padding:1px 9px; border:1px solid var(--line); border-radius:7px; background:#fff; font-size:13px; font-family:inherit; font-weight:600; color:var(--ink);}
+  .btnref.p{background:var(--accent); border-color:var(--accent); color:#fff;}
+  .btnref.ok{background:#1E8E4E; border-color:#1E8E4E; color:#fff;}
+  .btnref.dg{background:var(--danger-soft); border-color:#F1C9D0; color:var(--danger);}
+  details{border:1px solid var(--line); border-radius:12px; padding:0 16px; margin:8px 0; background:#fff;}
+  details[open]{background:var(--accent-soft-2);}
+  summary{cursor:pointer; padding:12px 0; font-weight:600; font-size:14.5px;}
+  details > div{padding:0 0 12px;}
+  details p{margin:4px 0;}
+  .codes{display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:8px; margin:10px 0;}
+  .codes div{border:1px solid var(--line); border-radius:10px; padding:8px 12px; font-size:13px; background:#fff;}
+  .codes b{display:block; font-size:14px;}
+  .hide{display:none !important;}
+  @media print{ header, .toc, .roles, .app-footer{display:none !important;} .guide{display:block;} .panel{box-shadow:none; break-inside:avoid;} details{break-inside:avoid;} details > div{display:block;} }
+</style>
+</head>
+<body>
+  <div id="app">
+    <header>
+      <div class="brand">
+        <div class="brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
+        <h1>คู่มือการใช้งาน</h1>
+      </div>
+      <nav class="topnav" aria-label="เมนู">
+        <a href="index.html">หน้าหลัก</a>
+        <a href="shift-schedule.html">ตารางกะ</a>
+        <a href="approval.html">อนุมัติตารางกะ</a>
+        <a href="calendar.html">ปฏิทินวันหยุด</a>
+        <a href="report.html">รายงาน</a>
+        <a href="dashboard.html">แดชบอร์ด</a>
+        <a href="clerk-admin.html">บัญชีธุรการ</a>
+        <a href="approver-admin.html">บัญชีผู้จัดการแผนก</a>
+        <a href="guide.html">คู่มือ</a>
+      </nav>
+      <div></div>
+    </header>
+
+    <main>
+      <section class="panel">
+        <h2 style="font-size:20px; margin-bottom:4px;">คู่มือการใช้งานระบบตารางกะการทำงาน</h2>
+        <p class="lead" style="margin:0 0 14px;">เลือกบทบาทของคุณเพื่อดูเฉพาะหัวข้อที่เกี่ยวข้อง หรือเลือก "ทั้งหมด" เพื่ออ่านทุกหัวข้อ</p>
+        <div class="roles" id="roles">
+          <button type="button" class="role-chip on" data-role="all">ทั้งหมด</button>
+          <button type="button" class="role-chip" data-role="clerk">ธุรการ</button>
+          <button type="button" class="role-chip" data-role="mgr">ผู้จัดการแผนก (ผู้อนุมัติ)</button>
+          <button type="button" class="role-chip" data-role="hr">ฝ่ายบุคคล</button>
+        </div>
+      </section>
+
+      <div class="guide">
+        <aside class="toc" id="toc" aria-label="สารบัญ"></aside>
+        <div class="content" id="content">
+
+          <section class="panel sec" id="overview" data-title="ภาพรวมและสิทธิ์การใช้งาน" data-roles="clerk mgr hr">
+            <h2>ภาพรวมและสิทธิ์การใช้งาน</h2>
+            <p>ระบบนี้ใช้บันทึก ตรวจสอบ และอนุมัติตารางกะการทำงานของพนักงานที่ปฏิบัติงานที่ <b>โรงงาน</b> เป็นรายแผนก รายสัปดาห์ (จันทร์–อาทิตย์) โดยแบ่งผู้ใช้เป็น 3 บทบาท</p>
+            <div class="tblwrap"><table class="tbl">
+              <thead><tr><th>บทบาท</th><th>ทำอะไรได้</th></tr></thead>
+              <tbody>
+                <tr><td><span class="tag clerk">ธุรการ</span></td><td>ลงตารางกะของแผนกที่ตนรับผิดชอบ ส่งตารางกะขออนุมัติ ดูรายงาน แดชบอร์ด และปฏิทินวันหยุด (ดูอย่างเดียว) ส่งออกรายงานเป็น PDF ได้</td></tr>
+                <tr><td><span class="tag mgr">ผู้จัดการแผนก</span></td><td>ตรวจและ <b>อนุมัติ</b> หรือ <b>ส่งกลับแก้ไข</b> ตารางกะของแผนกที่ตนอนุมัติ ดูรายงานและแดชบอร์ด ส่งออก Excel / CSV / PDF ได้</td></tr>
+                <tr><td><span class="tag hr">ฝ่ายบุคคล</span></td><td>เห็นทุกแผนก กำหนดวันหยุดในปฏิทิน สร้างและจัดการบัญชีธุรการและผู้จัดการแผนก อนุมัติแทนได้ และเป็นผู้เดียวที่ <b>ยกเลิกการอนุมัติ</b> ได้</td></tr>
+              </tbody>
+            </table></div>
+            <div class="tblwrap"><table class="tbl">
+              <thead><tr><th>หน้า</th><th class="c">ธุรการ</th><th class="c">ผู้จัดการแผนก</th><th class="c">ฝ่ายบุคคล</th></tr></thead>
+              <tbody>
+                <tr><td>ตารางกะ (ลงกะ)</td><td class="c yes">✓</td><td class="c no">–</td><td class="c yes">✓</td></tr>
+                <tr><td>อนุมัติตารางกะ</td><td class="c">ส่งขออนุมัติ</td><td class="c">อนุมัติ / ส่งกลับ</td><td class="c">ทุกอย่าง</td></tr>
+                <tr><td>ปฏิทินวันหยุด</td><td class="c">ดูอย่างเดียว</td><td class="c">ดูอย่างเดียว</td><td class="c yes">แก้ไขได้</td></tr>
+                <tr><td>รายงาน / แดชบอร์ด</td><td class="c">ดู + ส่งออก PDF</td><td class="c">ดู + ส่งออกทุกแบบ</td><td class="c">ดู + ส่งออกทุกแบบ</td></tr>
+                <tr><td>จัดการบัญชีธุรการ / ผู้จัดการแผนก</td><td class="c no">–</td><td class="c no">–</td><td class="c yes">✓</td></tr>
+              </tbody>
+            </table></div>
+            <div class="note">แต่ละคนเห็นข้อมูลเฉพาะแผนกที่ตนมีสิทธิ์ ถ้าไม่เห็นแผนกที่ควรเห็น ให้แจ้งฝ่ายบุคคลเพื่อตรวจสอบการกำหนดแผนกของบัญชี</div>
+          </section>
+
+          <section class="panel sec" id="flow" data-title="ขั้นตอนการทำงานแต่ละสัปดาห์" data-roles="clerk mgr hr">
+            <h2>ขั้นตอนการทำงานแต่ละสัปดาห์</h2>
+            <div class="flow">
+              <div class="st"><b>ฝ่ายบุคคลตั้งวันหยุด</b><span>กำหนดวันหยุดบริษัทและวันหยุดพิเศษ 75% ในปฏิทิน (วันอาทิตย์ระบบถือเป็นวันหยุดอยู่แล้ว)</span></div>
+              <div class="st"><b>ธุรการลงตารางกะ</b><span>เลือกกะ ช่วงวันที่ แล้วบันทึก ทำจนครบทุกคนทุกวันของสัปดาห์</span></div>
+              <div class="st"><b>ธุรการส่งขออนุมัติ</b><span>ตรวจฟอร์มในหน้า "อนุมัติตารางกะ" แล้วกดส่ง ตารางกะสัปดาห์นั้นจะถูกล็อก</span></div>
+              <div class="st"><b>แจ้งเตือนทาง Telegram</b><span>ระบบส่งข้อความเข้ากลุ่มพร้อมปุ่มเปิดหน้าอนุมัติ</span></div>
+              <div class="st"><b>ผู้จัดการตรวจและตัดสิน</b><span>อนุมัติ หรือส่งกลับพร้อมเหตุผล</span></div>
+              <div class="st"><b>จบงาน หรือแก้ไขแล้วส่งใหม่</b><span>อนุมัติแล้วตารางถูกล็อกและพิมพ์ PDF ได้ ถ้าถูกส่งกลับ ธุรการแก้ไขแล้วส่งใหม่</span></div>
+            </div>
+          </section>
+
+          <section class="panel sec" id="login" data-title="เข้าสู่ระบบและเมนู" data-roles="clerk mgr hr">
+            <h2>เข้าสู่ระบบและเมนู</h2>
+            <ol>
+              <li>เปิดหน้าที่ต้องการ (เช่น หน้าหลัก) กรอก <b>อีเมล</b> และ <b>รหัสผ่าน</b> ที่ฝ่ายบุคคลให้ แล้วกด <span class="btnref p">เข้าสู่ระบบ</span></li>
+              <li>มุมขวาบนแสดงชื่อ-นามสกุลของคุณ (เอาเมาส์ชี้เพื่อดูอีเมล) กด <span class="btnref">ออกจากระบบ</span> เมื่อใช้เสร็จ โดยเฉพาะเครื่องที่ใช้ร่วมกัน</li>
+              <li>แถบเมนูด้านบนใช้สลับระหว่างหน้า เมนูบัญชีธุรการและบัญชีผู้จัดการแผนกแสดงเฉพาะฝ่ายบุคคล</li>
+              <li>ลืมรหัสผ่าน ให้แจ้งฝ่ายบุคคลเพื่อรีเซ็ตให้</li>
+            </ol>
+          </section>
+
+          <section class="panel sec" id="schedule" data-title="ลงตารางกะ" data-roles="clerk hr">
+            <h2>ลงตารางกะ <span class="tag clerk">ธุรการ</span></h2>
+            <p>หน้า <b>ตารางกะ</b> ใช้บันทึกกะของพนักงานทั้งแผนกเป็นช่วงวันที่ในครั้งเดียว</p>
+            <ol>
+              <li><b>กลุ่มพนักงาน</b> เลือก "พนักงาน" หรือ "หัวหน้างาน" ตำแหน่งที่มีคำว่า "หัวหน้างาน" จะอยู่กลุ่มหัวหน้างาน ที่เหลืออยู่กลุ่มพนักงาน แต่ละกลุ่มมีรหัสกะของตัวเอง</li>
+              <li><b>แผนก</b> เลือกแผนกที่คุณรับผิดชอบ (เห็นเฉพาะแผนกของตน)</li>
+              <li><b>รหัสกะ</b> เลือกรหัสกะที่ต้องการจากรายการ</li>
+              <li><b>วันที่เริ่ม</b> และ <b>ถึงวันที่</b> เลือกช่วงวันที่ที่จะใช้กะนี้</li>
+              <li>เลือกพนักงานที่ต้องการในรายชื่อ แล้วกด <span class="btnref p">บันทึกตารางกะ</span></li>
+              <li>ดูผลได้ในส่วน <b>ตารางกะที่บันทึกไว้</b> ด้านล่าง กด <span class="btnref">รีเฟรช</span> เพื่อโหลดข้อมูลล่าสุด</li>
+            </ol>
+            <div class="note"><b>วันหยุดไม่ต้องเลือกเอง</b> ระบบแสดงวันอาทิตย์ วันหยุดบริษัท และวันหยุดพิเศษ 75% ตามปฏิทินให้อัตโนมัติ รวมรหัส OFF ของกะนั้นตามประเภทการจ้าง (รายเดือน / รายวัน) ช่องวันหยุดที่ยังไม่ได้ลงกะจะแสดงคำว่า "หยุด"</div>
+            <div class="note warn"><b>แสดงเฉพาะพนักงานที่สถานที่ปฏิบัติงานเป็น "โรงงาน"</b> หากไม่พบชื่อพนักงานที่ควรมี ให้ตรวจข้อมูลสถานที่ปฏิบัติงานและสถานะการทำงานของพนักงานคนนั้น</div>
+            <div class="note danger"><b>เมื่อส่งขออนุมัติหรืออนุมัติแล้ว สัปดาห์นั้นจะถูกล็อก</b> บันทึกหรือแก้ไขไม่ได้ จะแก้ได้อีกเมื่อผู้อนุมัติส่งกลับ หรือฝ่ายบุคคลยกเลิกการอนุมัติ</div>
+          </section>
+
+          <section class="panel sec" id="submit" data-title="ส่งขออนุมัติ" data-roles="clerk">
+            <h2>ส่งขออนุมัติ <span class="tag clerk">ธุรการ</span></h2>
+            <ol>
+              <li>เปิดหน้า <b>อนุมัติตารางกะ</b> กดช่อง <b>แผนก</b> แล้วติ๊กเลือกแผนก (เลือกได้หลายแผนก มีช่องค้นหา) จากนั้นเลือก <b>สัปดาห์</b> ด้วยปุ่มลูกศรหรือช่องวันที่ (ระบบปัดเป็นวันจันทร์ถึงอาทิตย์ให้)</li>
+              <li>ตรวจฟอร์มที่แสดง <b>ช่องที่มีกรอบสีแดง</b> คือช่องที่ยังไม่ได้ลงกะ กลับไปลงในหน้า "ตารางกะ" ให้ครบก่อน แล้วรีเฟรชหน้านี้</li>
+              <li>กด <span class="btnref p">ส่งขออนุมัติ</span> ยืนยันในหน้าต่างที่ขึ้นมา (ถ้าเลือกหลายแผนก ปุ่มจะบอกจำนวน เช่น "ส่งขออนุมัติ (3 แผนก)" และส่งทีเดียวทุกแผนก)</li>
+              <li>สถานะเปลี่ยนเป็น <b>รออนุมัติ</b> และผู้จัดการจะได้รับแจ้งเตือนทาง Telegram</li>
+            </ol>
+            <h3>ถ้าถูกส่งกลับแก้ไข</h3>
+            <p>สถานะจะเป็น <b>ส่งกลับแก้ไข</b> พร้อมเหตุผลในแถบสถานะ และขึ้นในกล่อง "งานที่ต้องดำเนินการ" ด้านบนของหน้า แก้ตารางกะในหน้า "ตารางกะ" ตามเหตุผล แล้วกดส่งขออนุมัติใหม่</p>
+            <h3>สถานะที่พบ</h3>
+            <div class="tblwrap"><table class="tbl">
+              <thead><tr><th>สถานะ</th><th>ความหมาย</th><th>แก้ตารางกะได้หรือไม่</th></tr></thead>
+              <tbody>
+                <tr><td>ยังไม่ส่งขออนุมัติ</td><td>ยังอยู่ระหว่างลงกะ</td><td>ได้</td></tr>
+                <tr><td>รออนุมัติ</td><td>ส่งแล้ว รอผู้จัดการตัดสิน</td><td>ไม่ได้ (ล็อก)</td></tr>
+                <tr><td>อนุมัติแล้ว</td><td>ผู้จัดการอนุมัติเรียบร้อย</td><td>ไม่ได้ (ล็อก)</td></tr>
+                <tr><td>ส่งกลับแก้ไข</td><td>ผู้จัดการให้แก้ไข ดูเหตุผลในแถบสถานะ</td><td>ได้</td></tr>
+              </tbody>
+            </table></div>
+          </section>
+
+          <section class="panel sec" id="approve" data-title="อนุมัติ / ส่งกลับ" data-roles="mgr hr">
+            <h2>อนุมัติหรือส่งกลับ <span class="tag mgr">ผู้จัดการแผนก</span> <span class="tag hr">ฝ่ายบุคคล</span></h2>
+            <ol>
+              <li>เปิดหน้า <b>อนุมัติตารางกะ</b> จากปุ่ม "เปิดหน้าอนุมัติ" ในข้อความ Telegram หรือจากกล่อง <b>งานที่ต้องดำเนินการ</b> ด้านบนของหน้า (กดที่รายการเพื่อเปิดแผนกและสัปดาห์นั้น)</li>
+              <li>ตรวจฟอร์มตารางกะของแผนก ดูผู้ส่งและเวลาส่งได้ในแถบสถานะ และดูประวัติการดำเนินการที่ด้านล่างของหน้า</li>
+              <li>กด <span class="btnref ok">อนุมัติ</span> เพื่ออนุมัติ หรือกด <span class="btnref dg">ส่งกลับแก้ไข</span> แล้ว <b>ระบุเหตุผล</b> (บังคับ) เพื่อให้ธุรการรู้ว่าต้องแก้ไขอะไร</li>
+            </ol>
+            <div class="note"><b>ตรวจหลายแผนกพร้อมกัน</b> ติ๊กเลือกหลายแผนกได้ ฟอร์มของแต่ละแผนกแสดงต่อกัน ปุ่มอนุมัติและส่งกลับจะทำกับทุกแผนกที่อยู่ในสถานะรออนุมัติ และแจ้งผลรายแผนก หากบางแผนกไม่สำเร็จ แผนกที่เหลือยังสำเร็จตามปกติ</div>
+            <h3>ยกเลิกการอนุมัติ <span class="tag hr">เฉพาะฝ่ายบุคคล</span></h3>
+            <p>ถ้าอนุมัติไปแล้วแต่ต้องแก้ไข ฝ่ายบุคคลกด <span class="btnref dg">ยกเลิกการอนุมัติ</span> พร้อมเหตุผล ตารางกะจะปลดล็อกให้ธุรการแก้ไขและส่งขออนุมัติใหม่</p>
+            <h3>ส่งออก PDF</h3>
+            <p>กด <span class="btnref" style="background:#E4F1FB; border-color:#BBD9F0; color:#1F6FA8;">ส่งออก PDF</span> ในหน้าต่างพิมพ์เลือก "บันทึกเป็น PDF" ได้ฟอร์มขนาด A4 แนวตั้ง แผนกละ 1 หน้า เลือกหลายแผนกจะได้หลายหน้าในไฟล์เดียว</p>
+          </section>
+
+          <section class="panel sec" id="form" data-title="วิธีอ่านฟอร์มตารางกะ" data-roles="clerk mgr hr">
+            <h2>วิธีอ่านฟอร์มตารางกะ</h2>
+            <p>ฟอร์มในหน้าอนุมัติตามแบบ "ตารางกะแผนก…" ของบริษัท ประกอบด้วย</p>
+            <ul>
+              <li><b>ตารางรายวัน</b> ลำดับ รหัสพนักงาน ชื่อ ตำแหน่ง และ 7 วัน (จันทร์–อาทิตย์) ของสัปดาห์ที่เลือก ช่องวันทำงานแสดงรหัสกะ ช่องวันหยุดแสดงรหัส OFF</li>
+              <li><b>รหัส OFF</b> พนักงานรายเดือนแสดงเช่น <code>OFF-A000_M</code> พนักงานรายวันแสดงเช่น <code>OFF-A000_D</code> ถ้าขึ้นแค่ "OFF" แปลว่าระบบยังไม่ทราบประเภทการจ้างหรือรหัสของกะนั้น ให้แจ้งฝ่ายบุคคล</li>
+              <li><b>Dashboard Summary</b> ตารางสรุปจำนวนคนต่อกะพร้อมเวลาทำงาน และกราฟแท่ง นับจากกะที่แต่ละคนใช้บ่อยที่สุดในสัปดาห์นั้น</li>
+              <li><b>ช่องลงชื่อ</b> ผู้จัดทำ (ธุรการ) แสดงชื่อผู้ส่งและเวลาส่ง ผู้อนุมัติ (ผู้จัดการแผนก) แสดงชื่อและเวลาเมื่ออนุมัติแล้ว</li>
+              <li>คอลัมน์ <b>หมายเหตุ / งานที่ได้รับ</b> เว้นว่างไว้สำหรับเขียนด้วยมือหลังพิมพ์</li>
+            </ul>
+            <h3>สีของวัน</h3>
+            <p><span class="sw" style="background:#FBE3E3;"></span>วันอาทิตย์ (แดงจาง) &nbsp; <span class="sw" style="background:#FFF1C9;"></span>วันหยุดบริษัท (เหลืองจาง) &nbsp; <span class="sw" style="background:#DDF3E3;"></span>วันหยุดพิเศษ 75% (เขียวจาง)</p>
+            <h3>รหัสกะที่ใช้ในฟอร์ม</h3>
+            <div class="codes">
+              <div><b>A000</b>08.00 - 17.00</div>
+              <div><b>B000</b>16.00 - 01.00</div>
+              <div><b>C000</b>24.00 - 09.00</div>
+              <div><b>E000</b>20.00 - 05.00</div>
+              <div><b>E0007</b>07.00 - 16.00</div>
+              <div><b>E0013</b>13.00 - 22.00</div>
+            </div>
+          </section>
+
+          <section class="panel sec" id="calendar" data-title="ปฏิทินวันหยุด" data-roles="clerk mgr hr">
+            <h2>ปฏิทินวันหยุด</h2>
+            <p>แสดงวันหยุดของทั้งปีเป็นปฏิทิน ใช้เป็นฐานให้หน้าตารางกะและหน้าอนุมัติแสดงวันหยุดและรหัส OFF ให้ตรงกัน</p>
+            <div class="tblwrap"><table class="tbl">
+              <thead><tr><th>ประเภท</th><th>สี</th><th>ที่มา</th></tr></thead>
+              <tbody>
+                <tr><td>วันหยุดปกติ (วันอาทิตย์)</td><td><span class="sw" style="background:#FBE3E3;"></span>แดงจาง</td><td>ระบบกำหนดให้อัตโนมัติ</td></tr>
+                <tr><td>วันหยุดบริษัท</td><td><span class="sw" style="background:#FFF1C9;"></span>เหลืองจาง</td><td>ฝ่ายบุคคลกำหนด</td></tr>
+                <tr><td>วันหยุดพิเศษ 75%</td><td><span class="sw" style="background:#DDF3E3;"></span>เขียวจาง</td><td>ฝ่ายบุคคลกำหนด</td></tr>
+              </tbody>
+            </table></div>
+            <p>ใช้ปุ่ม <span class="btnref">วันนี้</span> เพื่อกลับมาเดือนปัจจุบัน ธุรการและผู้จัดการแผนกดูได้อย่างเดียว</p>
+            <h3>เพิ่มวันหยุด <span class="tag hr">ฝ่ายบุคคล</span></h3>
+            <ol>
+              <li>กด <span class="btnref p">+ เพิ่มวันหยุด</span></li>
+              <li>เลือกวันที่ ประเภท (วันหยุดบริษัท หรือ วันหยุดพิเศษ 75%) และตั้งชื่อวันหยุด แล้วบันทึก</li>
+              <li>แก้ไขหรือลบได้จากรายการวันหยุดที่กำหนดไว้ใต้ปฏิทิน</li>
+            </ol>
+            <div class="note warn">วันหยุดที่เพิ่มหรือเปลี่ยน มีผลกับการแสดงผลของทุกสัปดาห์ที่เกี่ยวข้องทันที ควรทำก่อนที่ธุรการจะเริ่มลงกะของสัปดาห์นั้น</div>
+          </section>
+
+          <section class="panel sec" id="report" data-title="รายงาน" data-roles="clerk mgr hr">
+            <h2>รายงาน</h2>
+            <p>มี 2 แท็บ</p>
+            <ul>
+              <li><b>ตารางกะรายเดือน</b> เมทริกซ์พนักงาน × วันที่ ตามช่วงวันที่ที่เลือก</li>
+              <li><b>ยังไม่ลงกะ</b> รายชื่อพนักงานที่ยังไม่ได้ลงกะ แยกเป็น "ยังไม่ลงเลย" และ "ลงบางส่วน"</li>
+            </ul>
+            <p>กรองด้วย <b>ตั้งแต่วันที่ – ถึงวันที่</b> แผนก กลุ่มพนักงาน (พนักงาน / หัวหน้างาน) สถานะ และช่องค้นหา รายงานแสดงเฉพาะพนักงานที่สถานที่ปฏิบัติงานเป็น "โรงงาน"</p>
+            <h3>ส่งออกไฟล์</h3>
+            <div class="tblwrap"><table class="tbl">
+              <thead><tr><th>ปุ่ม</th><th>ได้อะไร</th><th>ใครใช้ได้</th></tr></thead>
+              <tbody>
+                <tr><td>ส่งออก Excel</td><td>ไฟล์ .xlsx คอลัมน์ A = รหัสพนักงาน คอลัมน์ B เป็นต้นไป = วันที่</td><td>ผู้จัดการแผนก, ฝ่ายบุคคล</td></tr>
+                <tr><td><span style="color:#1E7A46; font-weight:600;">ส่งออก CSV</span></td><td>ไฟล์ .csv รูปแบบเดียวกับ Excel</td><td>ผู้จัดการแผนก, ฝ่ายบุคคล</td></tr>
+                <tr><td><span style="color:#1F6FA8; font-weight:600;">ส่งออก PDF</span></td><td>พิมพ์ตารางที่แสดงอยู่เป็น PDF (A4 แนวนอน) เลือก "บันทึกเป็น PDF" ในหน้าต่างพิมพ์</td><td>ทุกบทบาท</td></tr>
+              </tbody>
+            </table></div>
+            <div class="note">ธุรการจะไม่เห็นปุ่ม Excel และ CSV เห็นเฉพาะ PDF</div>
+          </section>
+
+          <section class="panel sec" id="dashboard" data-title="แดชบอร์ด" data-roles="clerk mgr hr">
+            <h2>แดชบอร์ด</h2>
+            <ul>
+              <li><b>ภาพรวมพนักงาน</b> จำนวนพนักงานที่กำลังทำงาน แยกตามฝ่าย สถานที่ และประเภทการจ้าง</li>
+              <li><b>ภาพรวมการลงกะ</b> ความคืบหน้าการลงกะรายแผนกในเดือนที่เลือก เรียงจากน้อยไปมาก เพื่อเห็นแผนกที่ยังลงไม่ครบ</li>
+            </ul>
+            <p>เลือกเดือน แผนก และกลุ่มพนักงานได้จากตัวกรองด้านบน</p>
+            <div class="note">การนับเป็นรายวัน ต้องมีข้อมูลครบทุกวันของเดือน (รวมวันอาทิตย์และวันหยุด) จึงนับว่า "ลงครบ"</div>
+          </section>
+
+          <section class="panel sec" id="accounts" data-title="จัดการบัญชีผู้ใช้" data-roles="hr">
+            <h2>จัดการบัญชีผู้ใช้ <span class="tag hr">ฝ่ายบุคคล</span></h2>
+            <p>มี 2 หน้า คือ <b>บัญชีธุรการ</b> และ <b>บัญชีผู้จัดการแผนก</b> ใช้งานเหมือนกัน</p>
+            <h3>สร้างบัญชี</h3>
+            <ol>
+              <li>กด <span class="btnref p">+ เพิ่มบัญชี</span></li>
+              <li>กรอก <b>ชื่อ-นามสกุล</b> <b>อีเมล</b> (ใช้เข้าระบบ) และ <b>รหัสผ่าน</b> อย่างน้อย 8 ตัวอักษร (กด "สุ่มรหัสผ่าน" ได้)</li>
+              <li>เลือก <b>แผนก</b> ที่รับผิดชอบหรืออนุมัติ ติ๊กทีละแผนก หรือกด "เลือก/ยกเลิกทั้งฝ่าย" เลือกได้หลายแผนก</li>
+              <li>กดสร้างบัญชี ระบบจะแสดงรหัสผ่านให้ <b>คัดลอกเก็บ</b> เพียงครั้งเดียว ส่งให้เจ้าของบัญชีโดยตรง</li>
+            </ol>
+            <h3>จัดการบัญชีที่มีอยู่</h3>
+            <ul>
+              <li><b>แก้ไข</b> เปลี่ยนชื่อหรือแผนก</li>
+              <li><b>รีเซ็ตรหัสผ่าน</b> ตั้งรหัสใหม่ให้ผู้ที่ลืมรหัสผ่าน</li>
+              <li><b>ระงับ / เปิดใช้งาน</b> ปิดหรือเปิดการเข้าระบบชั่วคราว</li>
+              <li><b>ลบ</b> ลบบัญชีถาวร</li>
+              <li>ตัวนับ "ยังไม่มีธุรการ/ผู้อนุมัติ N แผนก" ช่วยเช็กว่ายังมีแผนกที่ไม่มีคนดูแล</li>
+            </ul>
+            <div class="note warn"><b>อีเมลนี้มีบัญชีอยู่แล้ว</b> หากอีเมลถูกใช้ในระบบอื่นของบริษัทอยู่แล้ว ระบบจะถามว่าจะใช้บัญชีเดิมเป็นผู้อนุมัติหรือไม่ ถ้าตกลง จะผูกสิทธิ์ให้โดยไม่เปลี่ยนรหัสผ่านเดิม บัญชีแบบนี้มีป้าย "บัญชีร่วม" และรีเซ็ตรหัสผ่าน ระงับ หรือลบไม่ได้จากหน้านี้ (ทำได้เฉพาะ "เอาออกจากผู้อนุมัติ")</div>
+            <div class="note"><b>Telegram chat ID (ไม่บังคับ)</b> ข้อความแจ้งเตือนส่งเข้ากลุ่มอยู่แล้ว ปล่อยช่องนี้ว่างได้ กรอกเฉพาะเมื่อต้องการให้ผู้จัดการคนนั้นได้ข้อความส่วนตัวเพิ่ม (ต้องกด Start กับบอทก่อน) กด "ทดสอบ Telegram" เพื่อเช็กว่าข้อความไปถึง</div>
+          </section>
+
+          <section class="panel sec" id="faq" data-title="คำถามที่พบบ่อย" data-roles="clerk mgr hr">
+            <h2>คำถามที่พบบ่อย</h2>
+            <details><summary>บันทึกตารางกะไม่ได้ ขึ้นว่า "ตารางกะสัปดาห์นี้ถูกล็อก"</summary><div><p>สัปดาห์นั้นอยู่ในสถานะ "รออนุมัติ" หรือ "อนุมัติแล้ว" ต้องให้ผู้อนุมัติกด "ส่งกลับแก้ไข" (หรือฝ่ายบุคคลกด "ยกเลิกการอนุมัติ") จึงจะแก้ได้</p></div></details>
+            <details><summary>ไม่เห็นชื่อพนักงานหรือแผนกที่ควรเห็น</summary><div><p>ระบบแสดงเฉพาะพนักงานที่สถานที่ปฏิบัติงานเป็น "โรงงาน" และเฉพาะแผนกที่บัญชีของคุณมีสิทธิ์ ให้แจ้งฝ่ายบุคคลตรวจข้อมูลพนักงานและการกำหนดแผนกของบัญชี</p></div></details>
+            <details><summary>ช่องวันหยุดในฟอร์มขึ้นแค่ "OFF"</summary><div><p>ระบบหารหัส OFF ไม่ได้ เพราะพนักงานยังไม่ระบุประเภทการจ้าง (รายเดือน / รายวัน) หรือกะนั้นยังไม่มีรหัส OFF ในระบบ แจ้งฝ่ายบุคคลให้ตรวจข้อมูล</p></div></details>
+            <details><summary>ขึ้นข้อความ "ตรวจสิทธิ์ไม่สำเร็จ" หรือ "Invalid API key"</summary><div><p>เป็นปัญหาการตั้งค่าระบบ ไม่ใช่รหัสผ่านของคุณ ให้แจ้งฝ่ายบุคคลหรือผู้ดูแลระบบ</p></div></details>
+            <details><summary>ธุรการไม่เห็นปุ่มส่งออก Excel / CSV</summary><div><p>เป็นการจำกัดสิทธิ์โดยตั้งใจ ธุรการส่งออกได้เฉพาะ PDF หากต้องการไฟล์ Excel หรือ CSV ให้ขอจากผู้จัดการแผนกหรือฝ่ายบุคคล</p></div></details>
+            <details><summary>ส่งขออนุมัติแล้ว แต่ผู้จัดการไม่ได้รับข้อความ Telegram</summary><div><p>ข้อความส่งเข้ากลุ่มที่ตั้งไว้ ให้เช็กว่าผู้จัดการอยู่ในกลุ่ม หรือเปิดหน้า "อนุมัติตารางกะ" โดยตรง ที่กล่อง "งานที่ต้องดำเนินการ" จะเห็นรายการที่รออนุมัติเสมอ ถ้าไม่มีข้อความเข้ากลุ่มเลย แจ้งฝ่ายบุคคลให้ตรวจการตั้งค่าแจ้งเตือน</p></div></details>
+            <details><summary>อนุมัติผิดแผนก หรืออนุมัติแล้วพบว่าต้องแก้</summary><div><p>แจ้งฝ่ายบุคคลให้กด "ยกเลิกการอนุมัติ" พร้อมเหตุผล ตารางกะจะปลดล็อกให้ธุรการแก้ไขและส่งขออนุมัติใหม่ ทุกการดำเนินการมีบันทึกในประวัติของสัปดาห์นั้น</p></div></details>
+          </section>
+
+        </div>
+      </div>
+    </main>
+    <footer class="app-footer">ระบบฐานข้อมูลฝ่ายบุคคล | ใช้ภายในบริษัทเท่านั้น</footer>
+  </div>
+<script>
+  (function(){
+    var secs = Array.prototype.slice.call(document.querySelectorAll('.sec'));
+    var toc = document.getElementById('toc');
+    var role = 'all';
+    try { role = localStorage.getItem('guideRole') || 'all'; } catch (e) {}
+    if (['all','clerk','mgr','hr'].indexOf(role) < 0) role = 'all';
+
+    function render(){
+      var html = '<h3>สารบัญ</h3>';
+      secs.forEach(function(s){
+        var show = role === 'all' || s.dataset.roles.split(' ').indexOf(role) >= 0;
+        s.classList.toggle('hide', !show);
+        if (show) html += '<a href="#' + s.id + '" data-id="' + s.id + '">' + s.dataset.title + '</a>';
+      });
+      toc.innerHTML = html;
+      document.querySelectorAll('.role-chip').forEach(function(b){ b.classList.toggle('on', b.dataset.role === role); });
+      mark();
+    }
+    function mark(){
+      var cur = null;
+      secs.forEach(function(s){ if (!s.classList.contains('hide') && s.getBoundingClientRect().top < 120) cur = s.id; });
+      toc.querySelectorAll('a').forEach(function(a){ a.classList.toggle('on', a.dataset.id === cur); });
+    }
+    document.getElementById('roles').addEventListener('click', function(e){
+      var b = e.target.closest('.role-chip'); if (!b) return;
+      role = b.dataset.role;
+      try { localStorage.setItem('guideRole', role); } catch (x) {}
+      render();
+    });
+    window.addEventListener('scroll', mark, { passive: true });
+    var here = location.pathname.split('/').pop() || 'index.html';
+    document.querySelectorAll('.topnav a').forEach(function(a){ if (a.getAttribute('href') === here) a.classList.add('active'); });
+    render();
+  })();
+</script>
+</body>
+</html>
