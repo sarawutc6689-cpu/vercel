@@ -277,6 +277,9 @@
   .st-row{display:flex; align-items:baseline; gap:6px 10px; flex-wrap:wrap; font-size:13.5px;}
   .st-dept{font-weight:600; min-width:0; word-break:break-word;}
   .st-detail{color:var(--ink-soft); font-size:12.5px; min-width:0; word-break:break-word;}
+  .btn-ghost.btn-pdf{background:#E4F1FB; border-color:#BBD9F0; color:#1F6FA8;}
+  .btn-ghost.btn-pdf:hover{background:#D3E8F8; border-color:#8DBEE3; color:#175788;}
+  .no-export-msg{display:none;}
   .paper-one + .paper-one{margin-top:36px; padding-top:28px; border-top:2px dashed var(--line);}
   .paper-empty{padding:30px 10px;}
 
@@ -321,6 +324,8 @@
     table.form thead{display:table-header-group;}
     table.form tr{break-inside:avoid;}
     table.form td.gap{box-shadow:none !important;}
+    body.no-export #app{display:none !important;}
+    body.no-export .no-export-msg{display:block !important; padding:40px; text-align:center; font-size:16pt;}
     .paper-one{break-after:page;}
     .paper-one:last-child{break-after:auto;}
     .paper-one + .paper-one{margin-top:0 !important; padding-top:0 !important; border-top:none !important;}
@@ -347,6 +352,7 @@
   </div>
 
   <div id="status-banner"><div class="banner" id="banner-inner"></div></div>
+  <div class="no-export-msg">ไม่มีสิทธิ์พิมพ์หรือส่งออก</div>
   <div id="app">
     <header>
       <div class="brand">
@@ -422,7 +428,7 @@
             <button type="button" class="btn btn-ok" id="btn-approve" style="display:none;">อนุมัติ</button>
             <button type="button" class="btn btn-danger" id="btn-reject" style="display:none;">ส่งกลับแก้ไข</button>
             <button type="button" class="btn btn-danger" id="btn-reopen" style="display:none;">ยกเลิกการอนุมัติ</button>
-            <button type="button" class="btn-ghost" id="btn-print">พิมพ์ / บันทึก PDF</button>
+            <button type="button" class="btn-ghost btn-pdf" id="btn-print" style="display:none;">ส่งออก PDF</button>
           </div>
         </div>
         <div class="gapnote" id="gapnote" style="display:none;"></div>
@@ -445,7 +451,7 @@
         <div class="empty-state" id="log-empty" style="display:none;">ยังไม่มีประวัติการดำเนินการ</div>
       </section>
     </main>
-    <footer class="app-footer no-print">แบบฟอร์มลงกะเวลาทำงาน | ใช้ภายในบริษัทเท่านั้น | พัฒนาโดย Sarawut.C</footer>
+    <footer class="app-footer no-print">ระบบฐานข้อมูลฝ่ายบุคคล | ใช้ภายในบริษัทเท่านั้น</footer>
   </div>
 
   <!-- ใส่เหตุผล (ส่งกลับ / ยกเลิกอนุมัติ) -->
@@ -641,6 +647,7 @@
   let cur = { depts: [], week: '' };
   let weekDatas = [];           // ข้อมูลของแต่ละแผนกที่เลือก (สัปดาห์เดียวกัน)
   let weekReq = 0, busy = false, reasonMode = null, reasonList = [];
+  let canExport = false;
 
   // ---------------- helpers ----------------
   const addDays = (iso, n) => toISO(new Date(parseISO(iso).getTime() + n * 86400000));
@@ -735,6 +742,10 @@
     if (err) { showBanner('โหลดข้อมูลไม่สำเร็จ: ' + err.message + ' (ตรวจว่ารัน approval.sql แล้ว)', true); return; }
     role = (Array.isArray(roleRes.data) ? roleRes.data[0] : roleRes.data) || {};
     shiftCodes = shRes.data;
+    // ส่งออก PDF/พิมพ์: เฉพาะฝ่ายบุคคลและผู้อนุมัติ (ธุรการดูได้อย่างเดียว)
+    canExport = !!(role.is_hr || role.is_approver);
+    document.body.classList.toggle('no-export', !canExport);
+    el('btn-print').style.display = canExport ? '' : 'none';
     if (empRes.data.length && !('location' in empRes.data[0])) showBanner('ฟังก์ชัน get_approval_employees ยังไม่ส่งคอลัมน์ location กรุณารัน approval.sql ฉบับล่าสุด', true);
     employees = empRes.data.filter(e => e.location === ONLY_LOCATION);
     hiddenCount = empRes.data.length - employees.length;
@@ -1112,7 +1123,7 @@
   el('reason-text').addEventListener('input', () => el('reason-error').classList.remove('show'));
 
   // ---------------- พิมพ์ ----------------
-  el('btn-print').addEventListener('click', () => window.print());
+  el('btn-print').addEventListener('click', () => { if (canExport) window.print(); });
   let savedTitle = document.title;
   window.addEventListener('beforeprint', () => {
     savedTitle = document.title;
