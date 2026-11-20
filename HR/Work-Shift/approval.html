@@ -195,7 +195,7 @@
 
   /* ---------- ฟอร์มตารางกะ (ตามไฟล์ตัวอย่าง) ---------- */
   .paper-scroll{overflow-x:auto;}
-  .paper{min-width:960px; font-family:Tahoma, 'Noto Sans Thai', 'Sarabun', system-ui, sans-serif; color:#000;}
+  .paper{min-width:1100px; font-family:Tahoma, 'Noto Sans Thai', 'Sarabun', system-ui, sans-serif; color:#000;}
   .paper-stat{
     display:flex; justify-content:flex-end; margin-bottom:8px;
   }
@@ -219,7 +219,7 @@
   table.form th.company{background:var(--com-bg); color:var(--com-fg);}
   table.form th.special75{background:var(--spe-bg); color:var(--spe-fg);}
   table.form td.work{font-weight:600;}
-  table.form td.off{font-weight:700; font-size:11px;}
+  table.form td.off{font-weight:700; font-size:10px; letter-spacing:-.01em; padding:3px 2px;}
   table.form td.off.sunday{background:var(--sun-bg); color:var(--sun-fg);}
   table.form td.off.company{background:var(--com-bg); color:var(--com-fg);}
   table.form td.off.special75{background:var(--spe-bg); color:var(--spe-fg);}
@@ -317,6 +317,8 @@
     .paper-scroll{overflow:visible !important;}
     .paper{min-width:0 !important;}
     table.form{font-size:8.5pt;}
+    table.form td.off{font-size:6pt; white-space:normal; word-break:break-all; text-overflow:clip; line-height:1.1;}
+    table.form th{white-space:normal; text-overflow:clip; padding:1px 1px;}
     table.form th.ttl{font-size:15pt; padding:4px;}
     table.form th.per{font-size:9pt;}
     table.form tbody td{height:6mm; padding:1px 3px;}
@@ -447,7 +449,7 @@
         <div class="empty-state" id="log-empty" style="display:none;">ยังไม่มีประวัติการดำเนินการ</div>
       </section>
     </main>
-    <footer class="app-footer no-print">แบบฟอร์มลงกะเวลาทำงาน | ใช้ภายในบริษัทเท่านั้น | พัฒนาโดย Sarawut.C</footer>
+    <footer class="app-footer no-print">ระบบฐานข้อมูลฝ่ายบุคคล | ใช้ภายในบริษัทเท่านั้น</footer>
   </div>
 
   <!-- ใส่เหตุผล (ส่งกลับ / ยกเลิกอนุมัติ) -->
@@ -621,15 +623,22 @@
   const DOW_FORM = ['จ.', 'อ.', 'พ.', 'พฤ', 'ศ.', 'ส.', 'อา.'];   // จันทร์ → อาทิตย์ ตามหัวตารางในฟอร์ม
 
   // ตารางสรุป "Shift / เวลาการทำงาน" ตามฟอร์ม (ข้อความเวลาคัดจากไฟล์ตัวอย่าง)
-  const SHORT_ALIAS = { A2: 'E0007' };   // ชื่อที่แสดงในฟอร์มแทนชื่อย่อเดิม
+  const SHORT_ALIAS = {   // ชื่อที่แสดงในฟอร์มแทนชื่อย่อเดิม (ชื่อย่อในตาราง shift_codes -> รหัสกะที่แสดง)
+    A:  'A000',
+    B:  'B000',
+    C:  'C000',
+    E:  'E000',
+    A1: 'E0013',
+    A2: 'E0007'
+  };
   const FORM_SHIFTS = [
-    { k: 'A',  t: '08.00 - 17.00 พัก 12.00 - 13.00 น.' },
-    { k: 'B',  t: '16.00 - 01.00 พัก 20.00 - 21.00 น.' },
-    { k: 'C',  t: '24.00 - 09.00 พัก 04.00 - 05.00 น.' },
-    { k: 'E',  t: '20.00 - 05.00 พัก 24.00 - 01.00 น.' },
+    { k: 'A000',  t: '08.00 - 17.00 พัก 12.00 - 13.00 น.' },
+    { k: 'B000',  t: '16.00 - 01.00 พัก 20.00 - 21.00 น.' },
+    { k: 'C000',  t: '24.00 - 09.00 พัก 04.00 - 05.00 น.' },
+    { k: 'E000',  t: '20.00 - 05.00 พัก 24.00 - 01.00 น.' },
     { k: 'E0007', t: '07.00 - 16.00 น.' },
-    { k: 'A1', t: '13.00 - 22.00 พัก 17.00 - 18.00 น.' },
-    { k: 'C1', t: '22.00 - 07.00 น. พัก 02.00 - 03.00 น.' }
+    { k: 'E0013', t: '13.00 - 22.00 พัก 17.00 - 18.00 น.' },
+    { k: 'C1',    t: '22.00 - 07.00 น. พัก 02.00 - 03.00 น.' }
   ];
   const STATUS = {
     none:      { label: 'ยังไม่ส่งขออนุมัติ', cls: 's-none' },
@@ -678,24 +687,28 @@
     return h ? { type: h.holiday_type, name: h.name } : null;
   }
 
-  // ทีมของพนักงาน = ชื่อย่อกะที่ใช้บ่อยที่สุดในวันทำงานของสัปดาห์นั้น
-  function teamOf(emp, wd){
+  // กะหลักของพนักงานในสัปดาห์นั้น = รหัสกะที่ใช้บ่อยที่สุดในวันทำงาน (ใช้นับจำนวนคนต่อกะ และหารหัส OFF ของวันที่ยังไม่ได้ลงกะ)
+  function mainShiftOf(emp, wd){
     const group = groupOf(emp), counts = new Map();
+    let first = null;
     wd.dates.forEach(iso => {
       const r = wd.rows.get(emp.employee_code + '|' + iso);
-      if (!r || r.is_off || dayInfo(iso, wd)) return;
-      const k = shortOf(group, r.base_shift_code || r.shift_code);
-      counts.set(k, (counts.get(k) || 0) + 1);
+      if (!r) return;
+      const code = r.base_shift_code || r.shift_code;
+      if (!first) first = code;
+      if (r.is_off || dayInfo(iso, wd)) return;
+      counts.set(code, (counts.get(code) || 0) + 1);
     });
-    if (counts.size) return [...counts].sort((a, b) => b[1] - a[1])[0][0];
-    for (const iso of wd.dates) {
-      const r = wd.rows.get(emp.employee_code + '|' + iso);
-      if (r) return shortOf(group, r.base_shift_code || r.shift_code);
-    }
-    return '';
+    const code = counts.size ? [...counts].sort((a, b) => b[1] - a[1])[0][0] : first;
+    return code ? (shiftCodes.find(x => x.shift_group === group && x.shift_code === code) || { shift_code: code }) : null;
+  }
+  // ชื่อที่แสดงของกะหลัก (ใช้นับในตารางสรุป)
+  function teamOf(emp, wd){
+    const m = mainShiftOf(emp, wd);
+    return m ? shortOf(groupOf(emp), m.shift_code) : '';
   }
 
-  // เนื้อหาของช่องวัน: วันทำงาน = ชื่อย่อกะ, วันหยุด = OFF (ชี้เมาส์เพื่อดูรหัส OFF-... เต็ม)
+  // เนื้อหาของช่องวัน: วันทำงาน = รหัสกะ, วันหยุด = รหัส OFF ของกะนั้นตามประเภทการจ้าง (รายเดือน OFF-A000_M / รายวัน OFF-A000_D)
   function cellOf(emp, iso, wd){
     const group = groupOf(emp);
     const r = wd.rows.get(emp.employee_code + '|' + iso);
@@ -703,11 +716,12 @@
     const gap = !r;
     if (info || (r && r.is_off)) {
       const base = r ? (r.base_shift_code || r.shift_code) : '';
-      const sObj = shiftCodes.find(x => x.shift_group === group && x.shift_code === base);
-      const off = (r && r.is_off && !info) ? r.shift_code : offCodeFor(emp, sObj);
+      const sObj = shiftCodes.find(x => x.shift_group === group && x.shift_code === base) || mainShiftOf(emp, wd);
+      // รหัส OFF ตามประเภทการจ้าง: รายเดือน = _M, รายวัน = _D (ไม่ทราบประเภทการจ้างและมีรหัสที่บันทึกไว้ ใช้รหัสนั้น)
+      const off = offCodeFor(emp, sObj) || ((r && r.is_off && !info) ? r.shift_code : null);
       const why = info ? info.name : 'วันหยุด';
-      const tip = off ? `${why} · ${off}` : `${why} · ${gap ? 'ยังไม่ลงกะ' : 'ยังไม่ระบุประเภทการจ้าง จึงไม่ทราบรหัสวันหยุด'}`;
-      return { text: 'OFF', cls: 'off ' + (info ? info.type : 'company') + (gap ? ' gap' : ''), tip };
+      const tip = why + (gap ? ' · ยังไม่ลงกะ' : '') + (off ? '' : ' · ไม่ทราบรหัส OFF (ตรวจประเภทการจ้างและรหัสในตาราง shift_codes)');
+      return { text: off || 'OFF', cls: 'off ' + (info ? info.type : 'company') + (gap ? ' gap' : ''), tip };
     }
     if (gap) return { text: '', cls: 'gap', tip: 'ยังไม่ลงกะ' };
     const base = r.base_shift_code || r.shift_code;
@@ -918,11 +932,11 @@
       teamCount.set(team, (teamCount.get(team) || 0) + 1);
       const cells = wd.dates.map(iso => { const c = cellOf(e, iso, wd); return `<td class="${c.cls}" title="${escapeHtml(c.tip)}">${escapeHtml(c.text)}</td>`; }).join('');
       body += `<tr><td>${idx + 1}</td><td>${escapeHtml(e.employee_code)}</td><td class="nm" title="${escapeHtml(e.full_name)}">${escapeHtml(e.full_name)}</td>` +
-              `<td title="${escapeHtml(e.position_name)}">${escapeHtml(e.position_name)}</td><td class="team">${escapeHtml(team)}</td>${cells}<td class="note"></td></tr>`;
+              `<td title="${escapeHtml(e.position_name)}">${escapeHtml(e.position_name)}</td>${cells}<td class="note"></td></tr>`;
     });
-    if (!wd.emps.length) body = `<tr><td colspan="13" class="empty-state">ไม่พบพนักงานที่สถานที่ปฏิบัติงาน = ${escapeHtml(ONLY_LOCATION)} ในแผนกนี้</td></tr>`;
+    if (!wd.emps.length) body = `<tr><td colspan="12" class="empty-state">ไม่พบพนักงานที่สถานที่ปฏิบัติงาน = ${escapeHtml(ONLY_LOCATION)} ในแผนกนี้</td></tr>`;
 
-    // ตารางสรุปจำนวนคนต่อกะ (นับจากคอลัมน์ "ทีม" เหมือน COUNTIF ในไฟล์ตัวอย่าง)
+    // ตารางสรุปจำนวนคนต่อกะ (นับจากกะหลักของแต่ละคนในสัปดาห์นั้น)
     const known = new Set(FORM_SHIFTS.map(s => s.k));
     const others = [...teamCount].filter(([k]) => k && !known.has(k));
     const nOther = others.reduce((a, [, v]) => a + v, 0), nNone = teamCount.get('') || 0;
@@ -940,12 +954,12 @@
     return `<div class="paper-one">
       <div class="paper-stat"><span class="${st}">${st === 'approved' ? 'อนุมัติแล้ว' : 'ฉบับร่าง · ' + STATUS[st].label}</span></div>
       <table class="form">
-        <colgroup><col style="width:4%"><col style="width:8%"><col style="width:19%"><col style="width:15%"><col style="width:5%">
-          ${'<col style="width:5.3%">'.repeat(7)}<col style="width:13.9%"></colgroup>
+        <colgroup><col style="width:4%"><col style="width:7%"><col style="width:18%"><col style="width:14%">
+          ${'<col style="width:7%">'.repeat(7)}<col style="width:8%"></colgroup>
         <thead>
-          <tr><th class="ttl" colspan="13">${escapeHtml(title)}</th></tr>
-          <tr><th class="per" colspan="13">สัปดาห์ที่ ${escapeHtml(weekText(wd.week))}</th></tr>
-          <tr><th rowspan="2">ลำดับ</th><th>รหัส</th><th rowspan="2" class="l">รายชื่อพนักงาน</th><th rowspan="2">ตำแหน่ง</th><th rowspan="2">ทีม</th>
+          <tr><th class="ttl" colspan="12">${escapeHtml(title)}</th></tr>
+          <tr><th class="per" colspan="12">สัปดาห์ที่ ${escapeHtml(weekText(wd.week))}</th></tr>
+          <tr><th rowspan="2">ลำดับ</th><th>รหัส</th><th rowspan="2" class="l">รายชื่อพนักงาน</th><th rowspan="2">ตำแหน่ง</th>
             ${dayHead.map(d => `<th class="${d.cls}" title="${escapeHtml(d.tip)}">${d.n}</th>`).join('')}<th>หมายเหตุ</th></tr>
           <tr><th>พนักงาน</th>${dayHead.map(d => `<th class="${d.cls}" title="${escapeHtml(d.tip)}">${d.dow}</th>`).join('')}<th>งานที่ได้รับ</th></tr>
         </thead>
