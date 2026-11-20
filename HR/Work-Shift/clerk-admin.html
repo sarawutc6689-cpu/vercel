@@ -705,12 +705,29 @@
   el('logout-btn').addEventListener('click', async () => { await sb.auth.signOut(); });
 
   // supabase ยิง SIGNED_IN ซ้ำได้เมื่อสลับแท็บกลับมา กัน loadAll() ซ้ำ
+  // แสดงชื่อ-นามสกุลแทนอีเมล (ชื่อในบัญชี -> my_display_name() -> อีเมล) เอาเมาส์ชี้เพื่อดูอีเมล
+  const whoCache = {};
+  function showWho(session){
+    const uid = session.user.id, email = session.user.email || '';
+    const meta = session.user.user_metadata && session.user.user_metadata.full_name;
+    el('who-label').title = email;
+    el('who-label').textContent = whoCache[uid] || meta || email;
+    if (meta || uid in whoCache) return;
+    whoCache[uid] = '';
+    setTimeout(async () => {
+      try {
+        const { data } = await sb.rpc('my_display_name');
+        if (data) { whoCache[uid] = data; el('who-label').textContent = data; }
+      } catch (e) { /* ยังไม่ได้รัน approval-names.sql: แสดงอีเมลต่อไป */ }
+    }, 0);
+  }
+
   let initializedFor = null;
   sb.auth.onAuthStateChange((_event, session) => {
     if (session) {
       el('login-screen').style.display = 'none';
       el('app').style.display = 'block';
-      el('who-label').textContent = session.user.email || '';
+      showWho(session);
       if (initializedFor !== session.user.id) {
         initializedFor = session.user.id;
         loadAll();
