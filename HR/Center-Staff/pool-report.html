@@ -176,6 +176,13 @@
   .btn-warn:hover{filter:brightness(.95);}
   .row-actions{display:flex; justify-content:flex-end; gap:10px; margin-top:14px; align-items:center;}
   td.cancelled{color:#98a3b0; text-decoration:line-through;}
+
+  .inb{border:1px solid var(--line); border-radius:12px; padding:12px 14px; margin-bottom:10px; display:flex; gap:14px; align-items:center; justify-content:space-between; flex-wrap:wrap; background:var(--accent-soft-2);}
+  .inb .t{font-weight:600; font-size:14px;} .inb .s{font-size:13px; color:var(--ink-soft); margin-top:2px;}
+  .inb .acts{display:flex; gap:8px;}
+  .btn-sm{padding:6px 14px; font-size:13px; border-radius:9px; border:1px solid var(--line); background:#fff; cursor:pointer; font-family:inherit; font-weight:600;}
+  .btn-sm.ok{background:var(--ok-soft); color:var(--ok); border-color:#BFE6CB;} .btn-sm.no{background:var(--danger-soft); color:var(--danger); border-color:#EBC0C8;}
+  textarea.note{width:100%; padding:10px 13px; border:1.5px solid var(--line); border-radius:10px; font-family:inherit; font-size:14px; min-height:70px;}
   /* ---------- modal ---------- */
   .modal-overlay{
     display:none;
@@ -272,7 +279,7 @@
         <div class="field"><label for="f-from">ตั้งแต่วันที่</label><input id="f-from" type="date"></div>
         <div class="field"><label for="f-to">ถึงวันที่</label><input id="f-to" type="date"></div>
         <div class="field"><label for="f-dept">แผนกปลายทาง</label><select id="f-dept"><option value="">ทุกแผนก</option></select></div>
-        <div class="field"><label for="f-status">สถานะ</label><select id="f-status"><option value="">ทั้งหมด</option><option value="active">ใช้งาน</option><option value="cancelled">ยกเลิกแล้ว</option></select></div>
+        <div class="field"><label for="f-status">สถานะ</label><select id="f-status"><option value="">ทั้งหมด</option><option value="pending">รออนุมัติ</option><option value="active">ใช้งาน</option><option value="rejected">ไม่อนุมัติ</option><option value="cancelled">ยกเลิกแล้ว</option></select></div>
         <div class="field"><label for="f-q">ค้นหา</label><input id="f-q" type="search" placeholder="รหัส / ชื่อ"></div>
       </div>
       <div class="row-actions" style="justify-content:space-between"><span class="hint" id="sum"></span>
@@ -281,7 +288,7 @@
         <button class="btn-ghost btn-pdf" id="x-pdf" type="button">ส่งออก PDF</button></span></div></section>
       <section class="panel"><h2 class="print-title">รายงานการกำหนดพนักงานจากส่วนกลาง <span id="p-sub"></span></h2>
         <div style="overflow-x:auto"><table class="list"><thead><tr><th>ลำดับ</th><th>เลขที่รายการ</th><th>แผนกปลายทาง</th><th>รหัส</th><th>ชื่อ-นามสกุล</th><th>แผนกต้นสังกัด</th>
-          <th>เริ่ม</th><th>สิ้นสุด</th><th>วัน</th><th>สถานะ</th><th>ผู้บันทึก</th><th>หมายเหตุ</th></tr></thead><tbody id="body"></tbody></table></div></section>
+          <th>เริ่ม</th><th>สิ้นสุด (กำหนด)</th><th>คืนจริง</th><th>วันที่ใช้งาน</th><th>สถานะ</th><th>การคืน</th><th>ผู้บันทึก</th><th>ผู้อนุมัติ</th><th>หมายเหตุ</th></tr></thead><tbody id="body"></tbody></table></div></section>
     </main>
     <footer class="app-footer">แบบฟอร์มการโอนย้ายพนักงานเข้าส่วนกลาง | ใช้ภายในบริษัทเท่านั้น | พัฒนาโดย Sarawut.C</footer>
   </div>
@@ -429,6 +436,9 @@
 
   const DN = {}; let ROWS = [], CAN_EXPORT = false, VIEW = [];
   const dl = c => c ? (c + ' ' + (DN[c] || '')).trim() : '-';
+  const ST_TH = { pending: 'รออนุมัติ', active: 'ใช้งาน', rejected: 'ไม่อนุมัติ', cancelled: 'ยกเลิกแล้ว' };
+  const RET_TH = { pending_mgr: 'รอ ผจก. อนุมัติคืน', pending_hr: 'รอฝ่ายบุคคลอนุมัติคืน', approved: 'คืนแล้ว', rejected: 'คำขอคืนไม่ผ่าน', cancelled: 'ยกเลิกคำขอคืน' };
+  const effEnd = r => r.returned_on || r.end_date;
   const diffDays = (a, b) => Math.round((parseISO(b) - parseISO(a)) / 86400000) + 1;
   async function init(){
     const t = todayISO();
@@ -452,18 +462,19 @@
     VIEW = ROWS.filter(r => (!d || r.dept_code === d) && (!s || r.status === s) && (!q || (r.employee_code + ' ' + (r.full_name || '')).toLowerCase().includes(q)));
     el('body').innerHTML = VIEW.map((r, n) => `<tr><td>${n + 1}</td><td>${r.request_id}</td><td>${escapeHtml(dl(r.dept_code))}</td><td><span class="code-cell">${escapeHtml(r.employee_code)}</span></td>
       <td>${escapeHtml(r.full_name || '')}${r.has_loan ? ' ⚠' : ''}</td><td>${escapeHtml(r.home_dept_name || '')}</td>
-      <td class="nowrap">${escapeHtml(fmtThai(r.start_date))}</td><td class="nowrap">${escapeHtml(fmtThai(r.end_date))}</td><td>${diffDays(r.start_date, r.end_date)}</td>
-      <td>${r.status === 'active' ? 'ใช้งาน' : 'ยกเลิกแล้ว'}</td><td>${escapeHtml(r.created_by_name || '')}</td><td>${escapeHtml(r.note || '')}</td></tr>`).join('')
-      || '<tr><td colspan="12" class="empty-state">ไม่พบรายการ</td></tr>';
+      <td class="nowrap">${escapeHtml(fmtThai(r.start_date))}</td><td class="nowrap">${escapeHtml(fmtThai(r.end_date))}</td>
+      <td class="nowrap">${r.returned_on ? escapeHtml(fmtThai(r.returned_on)) : '-'}</td><td>${diffDays(r.start_date, effEnd(r))}</td>
+      <td>${ST_TH[r.status] || r.status}</td><td>${RET_TH[r.ret_status] || '-'}</td><td>${escapeHtml(r.created_by_name || '')}</td><td>${escapeHtml(r.decided_by_name || '')}</td><td>${escapeHtml(r.note || r.reject_reason || '')}</td></tr>`).join('')
+      || '<tr><td colspan="15" class="empty-state">ไม่พบรายการ</td></tr>';
     const people = new Set(VIEW.filter(r => r.status === 'active').map(r => r.employee_code)).size;
     el('sum').textContent = `${VIEW.length} แถว · พนักงานที่ใช้งาน ${people} คน · ⚠ = เคยมีการเตือนจากระบบยืมพนักงาน`;
     el('p-sub').textContent = `(${fmtThai(el('f-from').value || todayISO())} – ${fmtThai(el('f-to').value || todayISO())})`;
   }
   ['f-from', 'f-to'].forEach(i => el(i).addEventListener('change', load));
   ['f-dept', 'f-status'].forEach(i => el(i).addEventListener('change', draw)); el('f-q').addEventListener('input', draw);
-  const HEAD = ['ลำดับ', 'เลขที่รายการ', 'แผนกปลายทาง', 'รหัสพนักงาน', 'ชื่อ-นามสกุล', 'แผนกต้นสังกัด', 'วันเริ่ม', 'วันสิ้นสุด', 'จำนวนวัน', 'สถานะ', 'ผู้บันทึก', 'หมายเหตุ', 'เคยเตือนจากระบบยืม'];
+  const HEAD = ['ลำดับ', 'เลขที่รายการ', 'แผนกปลายทาง', 'รหัสพนักงาน', 'ชื่อ-นามสกุล', 'แผนกต้นสังกัด', 'วันเริ่ม', 'วันสิ้นสุด (กำหนด)', 'วันที่คืนจริง', 'จำนวนวันที่ใช้งาน', 'สถานะ', 'การคืน', 'ผู้บันทึก', 'ผู้อนุมัติ', 'หมายเหตุ', 'เคยเตือนจากระบบยืม'];
   const aoa = () => [HEAD].concat(VIEW.map((r, n) => [n + 1, r.request_id, dl(r.dept_code), r.employee_code, r.full_name || '', r.home_dept_name || '', r.start_date, r.end_date,
-    diffDays(r.start_date, r.end_date), r.status === 'active' ? 'ใช้งาน' : 'ยกเลิกแล้ว', r.created_by_name || '', r.note || '', r.has_loan ? 'ใช่' : '']));
+    r.returned_on || '', diffDays(r.start_date, effEnd(r)), ST_TH[r.status] || r.status, RET_TH[r.ret_status] || '', r.created_by_name || '', r.decided_by_name || '', r.note || r.reject_reason || '', r.has_loan ? 'ใช่' : '']));
   el('x-pdf').addEventListener('click', () => window.print());
   el('x-csv').addEventListener('click', () => {
     if (!CAN_EXPORT) return;
