@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>โอนย้ายพนักงานเข้าส่วนกลาง — HR Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1B2B3E; --ink-soft:#6E85A0;
+    --bg-a:#EAF3FB; --bg-b:#F7FBFE; --panel:#FFFFFF; --line:#DCE9F5;
+    --accent:#2F7FB8; --accent-dark:#24628F; --accent-ink:#FFFFFF;
+    --accent-soft:#E7F2FB; --accent-soft-2:#F1F8FD;
+    --danger:#C1596A; --danger-soft:#FBEBEE;
+    --ok:#1F8A4C; --ok-soft:#E5F5EC;
+    --warn:#B4791F; --warn-soft:#FDF3E0;
+    --sun-bg:#FBEBEE;   --sun-fg:#C1596A;
+    --com-bg:#FDF3E0;   --com-fg:#B4791F;
+    --spe-bg:#E5F5EC;   --spe-fg:#1F8A4C;
+    --radius:16px;
+    --shadow:0 1px 2px rgba(27,60,90,.04), 0 10px 30px rgba(27,60,90,.06);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; min-height:100vh;
+    background:linear-gradient(180deg, var(--bg-a) 0%, var(--bg-b) 320px, var(--bg-b) 100%);
+    color:var(--ink); font-family:'Inter',system-ui,sans-serif; font-size:15px; line-height:1.5;
+  }
+  h1,h2,h3{font-family:'Space Grotesk',system-ui,sans-serif; margin:0; font-weight:600; letter-spacing:-0.01em;}
+
+  /* login */
+  #login-screen{min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px;}
+  .login-card{
+    width:100%; max-width:380px; background:var(--panel); border:1px solid var(--line);
+    border-radius:20px; padding:38px 34px; box-shadow:var(--shadow); text-align:center;
+  }
+  .login-mark{
+    width:52px; height:52px; margin:0 auto 18px; border-radius:14px;
+    background:linear-gradient(135deg, var(--accent), #6FB4E0);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .login-mark svg{width:26px; height:26px;}
+  .login-card h1{font-size:20px; margin-bottom:6px;}
+  .login-card p.sub{color:var(--ink-soft); font-size:13.5px; margin:0 0 24px;}
+  .login-card .field{text-align:left; margin-top:16px;}
+
+  /* header */
+  #app{display:none;}
+  header{
+    background:rgba(255,255,255,.85); backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line); padding:14px 32px;
+    display:flex; align-items:center; justify-content:space-between;
+    position:sticky; top:0; z-index:20;
+  }
+  .brand{display:flex; align-items:center; gap:12px;}
+  .brand-mark{
+    width:34px; height:34px; border-radius:10px;
+    background:linear-gradient(135deg, var(--accent), #6FB4E0);
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .brand-mark svg{width:18px; height:18px;}
+  header h1{font-size:17px;}
+  header .who{font-size:13px; color:var(--ink-soft);}
+  .btn-ghost{
+    background:#fff; border:1px solid var(--line); color:var(--ink-soft);
+    padding:8px 16px; border-radius:10px; font-size:13.5px; font-family:inherit; cursor:pointer; transition:.15s;
+  }
+  .btn-ghost:hover{border-color:var(--accent); color:var(--accent-dark);}
+  main{max-width:1480px; margin:0 auto; padding:32px; display:grid; gap:24px;}
+  main > *{min-width:0;}
+  @media (max-width:860px){ main{padding:20px;} header{padding:12px 20px;} }
+  .panel{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:26px; box-shadow:var(--shadow);}
+  .panel-head{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:18px;}
+  .panel-head h2{font-size:16px;}
+  .sub-note{font-size:12.5px; color:var(--ink-soft);}
+
+  /* form controls */
+  .field{margin-top:0;}
+  .field label{display:block; font-size:13px; color:var(--ink-soft); margin-bottom:6px; font-weight:500;}
+  input[type=text], input[type=email], input[type=password], input[type=date], input[type=month], input[type=search], select{
+    width:100%; padding:10px 13px; border:1.5px solid var(--line); border-radius:10px;
+    font-size:14px; font-family:inherit; color:var(--ink); background:#fff; transition:.15s;
+  }
+  input:focus, select:focus{outline:none; border-color:var(--accent); box-shadow:0 0 0 4px var(--accent-soft);}
+  .login-card .field{margin-top:16px;}
+  .controls{display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:16px; align-items:end;}
+  .btn{padding:11px 20px; border-radius:10px; border:none; font-size:14px; font-weight:600; font-family:inherit; cursor:pointer; transition:.15s;}
+  .btn-primary{background:var(--accent); color:var(--accent-ink);}
+  .btn-primary:hover{background:var(--accent-dark);}
+  .btn:disabled{opacity:.6; cursor:default;}
+  #login-btn{width:100%; margin-top:22px;}
+  .seg{display:flex; background:var(--accent-soft-2); border:1.5px solid var(--line); border-radius:10px; padding:3px; gap:3px;}
+  .seg button{
+    flex:1; border:none; background:none; padding:8px 12px; border-radius:7px; font:inherit;
+    font-size:13.5px; font-weight:600; color:var(--ink-soft); cursor:pointer; transition:.15s; white-space:nowrap;
+  }
+  .seg button:hover{color:var(--ink);}
+  .seg button.active{background:var(--accent); color:#fff;}
+  .count-tag{
+    font-size:12.5px; color:var(--accent-dark); background:var(--accent-soft);
+    padding:5px 12px; border-radius:100px; white-space:nowrap; font-weight:600;
+  }
+  .count-tag.warn{color:var(--warn); background:var(--warn-soft);}
+  .count-tag.bad{color:var(--danger); background:var(--danger-soft);}
+  .count-tag.good{color:var(--ok); background:var(--ok-soft);}
+  .badge{display:inline-block; padding:3px 10px; border-radius:100px; font-size:12px; font-weight:600; white-space:nowrap;}
+  .badge.none{background:var(--danger-soft); color:var(--danger);}
+  .badge.partial{background:var(--warn-soft); color:var(--warn);}
+  .badge.done{background:var(--ok-soft); color:var(--ok);}
+  .code-cell{color:var(--accent-dark); font-weight:600; background:var(--accent-soft); padding:3px 9px; border-radius:7px; display:inline-block;}
+  .empty-state{text-align:center; color:var(--ink-soft); padding:40px 12px; font-size:14px;}
+
+  /* list table */
+  table.list{width:100%; border-collapse:collapse; font-size:13.5px;}
+  table.list th{
+    text-align:left; font-weight:600; color:var(--ink-soft); font-size:12px;
+    padding:10px 12px; border-bottom:1.5px solid var(--line); white-space:nowrap; background:#fff;
+  }
+  table.list td{padding:10px 12px; border-bottom:1px solid var(--bg-a); vertical-align:top;}
+  table.list tbody tr:hover td{background:var(--accent-soft-2);}
+  .nowrap{white-space:nowrap;}
+
+  /* banner */
+  #status-banner{display:none; max-width:1480px; margin:0 auto; padding:16px 32px 0;}
+  .banner{padding:12px 18px; border-radius:12px; font-size:13.5px; box-shadow:var(--shadow); font-weight:500; background:#fff;}
+  .banner.ok{color:var(--accent-dark); border:1px solid var(--accent-soft);}
+  .banner.err{color:var(--danger); border:1px solid var(--danger-soft);}
+  .app-footer{text-align:center; color:var(--ink-soft); font-size:12.5px; padding:8px 20px 32px;}
+
+  /* ---------- top navigation ---------- */
+  header{flex-wrap:wrap; gap:10px 24px;}
+  .topnav{display:flex; gap:4px; flex-wrap:wrap; align-items:center;}
+  .topnav a{
+    padding:7px 13px; border-radius:9px; font-size:13.5px; font-weight:600;
+    color:var(--ink-soft); text-decoration:none; white-space:nowrap; transition:.15s;
+  }
+  .topnav a:hover{background:var(--accent-soft-2); color:var(--accent-dark);}
+  .topnav a.active{background:var(--accent-soft); color:var(--accent-dark);}
+  @media (max-width:1100px){ .topnav{order:3; width:100%;} }
+
+
+  main{max-width:1280px;}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:18px; align-items:start;}
+  @media (max-width:900px){ .grid2{grid-template-columns:1fr;} }
+  .ctl{display:grid; grid-template-columns:2fr 1fr 1fr 2fr; gap:14px; align-items:end;}
+  @media (max-width:900px){ .ctl{grid-template-columns:1fr 1fr;} }
+  .hint{font-size:13px; color:var(--ink-soft);}
+  .pick-tools{display:flex; gap:10px; margin-bottom:10px; flex-wrap:wrap;}
+  .pick-tools input{flex:1; min-width:160px;}
+  .pick-list{max-height:460px; overflow:auto; border:1px solid var(--line); border-radius:12px;}
+  .pick-row{display:flex; gap:10px; align-items:center; padding:8px 12px; border-bottom:1px solid var(--line); cursor:pointer; font-size:14px;}
+  .pick-row:last-child{border-bottom:none;}
+  .pick-row:hover{background:var(--accent-soft-2);}
+  .pick-row.sel{background:var(--accent-soft);}
+  .pick-row input{width:16px; height:16px; accent-color:var(--accent);}
+  .pick-row .nm{flex:1; min-width:0;}
+  .pick-row .nm b{font-weight:600;}
+  .pick-row .sm{font-size:12px; color:var(--ink-soft);}
+  .sel-row{display:flex; gap:10px; align-items:center; padding:8px 12px; border-bottom:1px solid var(--line); font-size:14px;}
+  .sel-row:last-child{border-bottom:none;}
+  .sel-row .nm{flex:1; min-width:0;}
+  .sel-row .x{border:none; background:none; color:var(--ink-soft); cursor:pointer; font-size:18px; line-height:1; padding:2px 6px; border-radius:6px;}
+  .sel-row .x:hover{background:var(--danger-soft); color:var(--danger);}
+  .tag{display:inline-block; font-size:11.5px; padding:1px 8px; border-radius:99px; background:var(--warn-soft); color:var(--warn); margin-left:6px; white-space:nowrap;}
+  .tag.bad{background:var(--danger-soft); color:var(--danger);}
+  .tag.off{background:#EEF1F4; color:#6b7785;}
+  .chips{display:flex; flex-wrap:wrap; gap:4px;}
+  .chip{font-size:12px; background:var(--accent-soft-2); border:1px solid var(--line); border-radius:99px; padding:1px 9px;}
+  .warn-card{border:1px solid #F1D9A8; background:var(--warn-soft); border-radius:12px; padding:12px 14px; margin-bottom:10px; font-size:14px;}
+  .warn-card.bad{border-color:#EBC0C8; background:var(--danger-soft);}
+  .warn-card h3{font-size:14px; margin-bottom:4px;}
+  .warn-card ul{margin:4px 0 0; padding-left:18px;}
+  .warn-card .hl{font-weight:600; color:var(--danger);}
+  .btn-warn{background:var(--warn); color:#fff; border:none;}
+  .btn-warn:hover{filter:brightness(.95);}
+  .row-actions{display:flex; justify-content:flex-end; gap:10px; margin-top:14px; align-items:center;}
+  td.cancelled{color:#98a3b0; text-decoration:line-through;}
+  /* ---------- modal ---------- */
+  .modal-overlay{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(20,40,60,.35);
+    backdrop-filter:blur(2px);
+    align-items:flex-start;
+    justify-content:center;
+    padding:6vh 20px;
+    z-index:100;
+    overflow-y:auto;
+  }
+  .modal-overlay.open{display:flex;}
+  .modal-card{
+    width:100%;
+    max-width:560px;
+    background:var(--panel);
+    border-radius:20px;
+    box-shadow:0 20px 60px rgba(20,40,60,.25);
+    padding:26px 28px 28px;
+    animation:modal-in .18s ease-out;
+  }
+  .modal-card.narrow{max-width:440px;}
+  @keyframes modal-in{
+    from{opacity:0; transform:translateY(8px) scale(.98);}
+    to{opacity:1; transform:translateY(0) scale(1);}
+  }
+  .modal-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:18px;
+  }
+  .modal-header h2{font-size:16px;}
+  .modal-close{
+    background:var(--accent-soft-2);
+    border:none;
+    width:30px; height:30px;
+    border-radius:9px;
+    color:var(--ink-soft);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    transition:.15s;
+    flex-shrink:0;
+  }
+  .modal-close:hover{background:var(--danger-soft); color:var(--danger);}
+  .form-actions{display:flex; gap:10px; margin-top:24px;}
+  .form-actions .btn{flex:1;}
+  .tiles{display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px;}
+  .tile{background:var(--accent-soft-2); border:1px solid var(--line); border-radius:14px; padding:14px 16px;}
+  .tile .k{font-size:12.5px; color:var(--ink-soft);} .tile .v{font-family:'Space Grotesk',sans-serif; font-size:30px; font-weight:600; line-height:1.15;}
+  .tile.good .v{color:var(--ok);} .tile.warn .v{color:var(--warn);}
+  .bars{display:grid; gap:8px;}
+  .bar-row{display:grid; grid-template-columns:minmax(110px,220px) 1fr 40px; gap:10px; align-items:center; font-size:13.5px;}
+  .bar-track{background:var(--accent-soft-2); border-radius:6px; height:14px; overflow:hidden;}
+  .bar-fill{background:var(--accent); height:100%; border-radius:0 4px 4px 0;}
+  .bar-row .n{text-align:right; font-weight:600;}
+  .days{display:flex; gap:6px; align-items:flex-end; height:150px; padding-top:8px;}
+  .day{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; font-size:11px; color:var(--ink-soft);}
+  .day .col{width:100%; max-width:34px; background:var(--accent); border-radius:4px 4px 0 0; min-height:2px;}
+  .day.we .col{background:#9DB7CE;} .day b{color:var(--ink); font-size:12px; font-weight:600; margin-bottom:2px;}
+  .ctl3{display:grid; grid-template-columns:repeat(5,1fr); gap:14px; align-items:end;}
+  @media (max-width:900px){ .ctl3{grid-template-columns:1fr 1fr;} }
+  .btn-csv{background:#DDF3E4; color:#1F6B3A; border:1px solid #BFE6CB;} .btn-pdf{background:#DCEBFA; color:#1F5C8F; border:1px solid #BFD8F0;}
+  .print-title{display:none;}
+  @media print{
+    @page{size:A4 landscape; margin:10mm;}
+    .no-print{display:none !important;} .print-title{display:block; font-size:14pt; font-weight:600; margin:0 0 6px;}
+    table.list{font-size:8.5pt;} .panel{border:none !important; box-shadow:none !important; padding:0 !important;}
+  }
+  .hero{display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;}
+  .hero h2{font-size:22px;} .hero p{margin:4px 0 0; color:var(--ink-soft); font-size:14px;}
+  .role{font-size:12.5px; font-weight:600; padding:5px 12px; border-radius:100px; background:var(--accent-soft); color:var(--accent-dark);}
+  .hub{display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:18px;}
+  a.hubtile{display:flex; flex-direction:column; gap:10px; text-decoration:none; color:inherit; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:22px; box-shadow:var(--shadow); transition:.15s;}
+  a.hubtile:hover{border-color:var(--accent); transform:translateY(-2px);}
+  a.hubtile:focus-visible{outline:none; box-shadow:0 0 0 4px var(--accent-soft); border-color:var(--accent);}
+  .hubtile .ic{width:44px; height:44px; border-radius:12px; background:var(--accent-soft); color:var(--accent-dark); display:flex; align-items:center; justify-content:center;}
+  .hubtile .ic svg{width:22px; height:22px;} .hubtile h3{font-size:16px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;}
+  .hubtile p{margin:0; color:var(--ink-soft); font-size:13.5px; flex:1;} .hubtile .go{font-size:13px; font-weight:600; color:var(--accent);}
+  .tag-hr{font-size:11.5px; font-weight:600; padding:2px 9px; border-radius:100px; background:var(--warn-soft); color:var(--warn);}
+  .hdr-links{display:flex; gap:14px; font-size:13px;} .hdr-links a{color:var(--ink-soft); text-decoration:none;} .hdr-links a:hover{color:var(--accent-dark);} .hdr-links a.cur{color:var(--ink); font-weight:600;}
+  .login-foot{position:fixed; left:0; right:0; bottom:14px; text-align:center; color:var(--ink-soft); font-size:12.5px; padding:0 16px;}
+  @media print{ .app-footer{display:block !important; font-size:8pt;} }
+</style>
+</head>
+<body>
+  <div id="login-screen"><div class="login-card">
+      <div class="login-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg></div><h1>โอนย้ายพนักงานเข้าส่วนกลาง</h1><p class="sub">เข้าสู่ระบบด้วยบัญชีของตนเอง</p>
+      <div class="field"><label for="login-email">อีเมล</label><input id="login-email" type="email" autocomplete="username"></div>
+      <div class="field"><label for="login-password">รหัสผ่าน</label><input id="login-password" type="password" autocomplete="current-password"></div>
+      <button id="login-btn" class="btn btn-primary">เข้าสู่ระบบ</button>
+      <p id="login-error" style="color:var(--danger); font-size:13px; margin-top:12px; display:none;"></p></div>
+    <div class="login-foot">แบบฟอร์มการโอนย้ายพนักงานเข้าส่วนกลาง | ใช้ภายในบริษัทเท่านั้น | พัฒนาโดย Sarawut.C</div></div>
+  <div id="status-banner"><div class="banner" id="banner-inner"></div></div>
+  <div id="app">
+    <header class="no-print">
+      <div class="brand"><div class="brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg></div><h1>หน้ารวม</h1></div>
+      <div style="display:flex; align-items:center; gap:14px;"><span class="hdr-links no-print"><a href="pool-index.html" class="cur">หน้ารวม</a> <a href="assign.html">เลือกพนักงาน</a> <a href="central-pool.html" data-hr>โอนเข้าส่วนกลาง</a> <a href="pool-dashboard.html">แดชบอร์ด</a> <a href="pool-report.html">รายงาน</a></span><span class="who" id="who-label"></span>
+        <button class="btn-ghost" id="logout-btn">ออกจากระบบ</button></div>
+    </header>
+    <main>
+      <section class="panel hero"><div><h2>โอนย้ายพนักงานเข้าส่วนกลาง</h2><p id="today-line"></p></div><span class="role" id="role-chip"></span></section>
+      <section class="hub" id="hub"></section>
+    </main>
+    <footer class="app-footer">แบบฟอร์มการโอนย้ายพนักงานเข้าส่วนกลาง | ใช้ภายในบริษัทเท่านั้น | พัฒนาโดย Sarawut.C</footer>
+  </div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  // ============================================================
+  // โปรเจค hr-master (โปรเจคเดียวกับหน้าอื่น ๆ)
+  // anon key ฝังในหน้าเว็บได้ เพราะ RLS เป็นตัวคุมสิทธิ์จริง
+  // ห้ามใส่ service_role key ที่นี่เด็ดขาด
+  // ============================================================
+
+  const SUPABASE_URL = "https://ppzdyvomrfiitahxwrwz.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBwemR5dm9tcmZpaXRhaHh3cnd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwMjQ0MjIsImV4cCI6MjEwNDYwMDQyMn0.iArUz6swMfwhFT_1qEvCwK1B3aiCxdWt46_FBjT6_Y0";
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // ---------- เมนูนำทาง: ไฮไลต์หน้าปัจจุบัน และซ่อนเมนูเฉพาะ HR ถ้าไม่ใช่ HR ----------
+  (function(){
+    const here = decodeURIComponent(location.pathname.split('/').pop() || 'index.html');
+    document.querySelectorAll('.topnav a').forEach(a => { if (a.getAttribute('href') === here) a.classList.add('active'); });
+    let doneFor = null;
+    sb.auth.onAuthStateChange((_e, session) => {
+      if (!session || doneFor === session.user.id) return;
+      doneFor = session.user.id;
+      setTimeout(async () => {
+        const { data, error } = await sb.rpc('is_hr_admin');
+        if (error) return;                       // ยังไม่ได้รัน calendar.sql → ไม่ซ่อนเมนู
+        document.querySelectorAll('.topnav [data-hr], .hdr-links [data-hr]').forEach(a => { a.style.display = data === true ? '' : 'none'; });
+      }, 0);
+    });
+  })();
+
+  const el = (id) => document.getElementById(id);
+  const WEEKDAYS = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
+
+  function escapeHtml(s){
+    return String(s ?? '').replace(/[&<>"']/g, c => (
+      { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]
+    ));
+  }
+  function showBanner(message, isError=false){
+    const wrap = el('status-banner');
+    const inner = el('banner-inner');
+    inner.textContent = message;
+    inner.className = 'banner ' + (isError ? 'err' : 'ok');
+    wrap.style.display = 'block';
+    clearTimeout(showBanner._t);
+    showBanner._t = setTimeout(() => wrap.style.display = 'none', isError ? 9000 : 3500);
+  }
+  const pad = (n) => String(n).padStart(2, '0');
+  function parseISO(iso){ const [y, m, d] = iso.split('-').map(Number); return new Date(Date.UTC(y, m - 1, d)); }
+  function toISO(d){ return d.toISOString().slice(0, 10); }
+  function fmtThai(iso){
+    return parseISO(iso).toLocaleDateString('th-TH', { day:'numeric', month:'short', year:'numeric', timeZone:'UTC' });
+  }
+  function daysBetween(start, end){
+    const out = [];
+    let d = parseISO(start);
+    const last = parseISO(end);
+    while (d <= last && out.length < 400) { out.push(toISO(d)); d = new Date(d.getTime() + 86400000); }
+    return out;
+  }
+  function todayISO(){ return new Date().toLocaleDateString('sv-SE'); }
+  function lastDayOfMonth(ym){ const [y, m] = ym.split('-').map(Number); return toISO(new Date(Date.UTC(y, m, 0))); }
+  function fmtTime(t){ return String(t || '').slice(0, 5).replace(':', '.'); }
+
+  // ตำแหน่งมีคำว่า "หัวหน้างาน" → ตารางหัวหน้างาน ที่เหลือทั้งหมด → ตารางพนักงาน (กติกาเดียวกับหน้า shift-schedule)
+  function groupOf(emp){ return String(emp.position_name || '').includes('หัวหน้างาน') ? 'supervisor' : 'employee'; }
+  const GROUP_LABEL = { employee: 'พนักงาน', supervisor: 'หัวหน้างาน' };
+
+  // รหัสวันหยุดตามประเภทการจ้าง (รายเดือน/รายวัน)
+  function offCodeFor(emp, shift){
+    if (!shift) return null;
+    if (emp.work_type === 'รายวัน') return shift.off_code_daily || shift.off_code_monthly;
+    if (emp.work_type === 'รายเดือน') return shift.off_code_monthly;
+    return null;
+  }
+
+  // ดึงข้อมูลทุกหน้า (PostgREST จำกัด 1,000 แถวต่อคำขอ)
+  async function fetchAll(build){
+    const pageSize = 1000;
+    let from = 0, all = [];
+    while (true) {
+      const { data, error } = await build().range(from, from + pageSize - 1);
+      if (error) throw error;
+      all = all.concat(data);
+      if (data.length < pageSize) break;
+      from += pageSize;
+    }
+    return all;
+  }
+
+  // ---------------- AUTH ----------------
+  async function doLogin(){
+    const email = el('login-email').value.trim();
+    const password = el('login-password').value;
+    el('login-error').style.display = 'none';
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) {
+      el('login-error').textContent = 'เข้าสู่ระบบไม่สำเร็จ: ' + error.message;
+      el('login-error').style.display = 'block';
+    }
+  }
+  el('login-btn').addEventListener('click', doLogin);
+  el('login-password').addEventListener('keydown', (e) => { if (e.key === 'Enter') doLogin(); });
+  el('logout-btn').addEventListener('click', async () => { await sb.auth.signOut(); });
+
+  // supabase ยิง SIGNED_IN ซ้ำได้เมื่อสลับแท็บกลับมา กัน init() ซ้ำ
+  // แสดงชื่อ-นามสกุลแทนอีเมล (ชื่อในบัญชี -> my_display_name() -> อีเมล) เอาเมาส์ชี้เพื่อดูอีเมล
+  const whoCache = {};
+  function showWho(session){
+    const uid = session.user.id, email = session.user.email || '';
+    const meta = session.user.user_metadata && session.user.user_metadata.full_name;
+    el('who-label').title = email;
+    el('who-label').textContent = whoCache[uid] || meta || email;
+    if (meta || uid in whoCache) return;
+    whoCache[uid] = '';
+    setTimeout(async () => {
+      try {
+        const { data } = await sb.rpc('my_display_name');
+        if (data) { whoCache[uid] = data; el('who-label').textContent = data; }
+      } catch (e) { /* ยังไม่ได้รัน approval-names.sql: แสดงอีเมลต่อไป */ }
+    }, 0);
+  }
+
+  let initializedFor = null;
+  sb.auth.onAuthStateChange((_event, session) => {
+    if (session) {
+      el('login-screen').style.display = 'none';
+      el('app').style.display = 'block';
+      showWho(session);
+      if (initializedFor !== session.user.id) {
+        initializedFor = session.user.id;
+        init(session);
+      }
+    } else {
+      initializedFor = null;
+      el('login-screen').style.display = 'flex';
+      el('app').style.display = 'none';
+    }
+  });
+
+
+
+
+  const IC = {
+    pool: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>',
+    pick: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+    dash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>',
+    rep: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>'
+  };
+  const TILES = [
+    { href: 'central-pool.html',  icon: IC.pool, title: 'โอนเข้าส่วนกลาง', hr: true, desc: 'ฝ่ายบุคคลเลือกพนักงานที่จะโอนย้ายเข้าส่วนกลาง ดูสถานะว่าง/ถูกใช้งาน และนำออกจากส่วนกลาง' },
+    { href: 'assign.html',        icon: IC.pick, title: 'เลือกพนักงานจากส่วนกลาง', desc: 'ธุรการเลือกพนักงานจากส่วนกลางไปแผนกของตนเองตามช่วงเวลา พร้อมแจ้งเตือนเมื่อมีรายการในระบบยืมพนักงาน' },
+    { href: 'pool-dashboard.html', icon: IC.dash, title: 'แดชบอร์ด', desc: 'ภาพรวมจำนวนพนักงานในส่วนกลาง คนว่าง คนที่ถูกใช้งาน และรายการที่ใกล้สิ้นสุด' },
+    { href: 'pool-report.html',   icon: IC.rep,  title: 'รายงาน', desc: 'รายงานการกำหนดพนักงานตามช่วงวันที่ แผนก และสถานะ ส่งออก PDF (HR ส่งออก Excel / CSV ได้)' }
+  ];
+  async function init(){
+    el('today-line').textContent = 'วันนี้ ' + new Date().toLocaleDateString('th-TH', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+    let isHr = false;
+    try { const { data } = await sb.rpc('is_hr_admin'); isHr = data === true; } catch (e) {}
+    el('role-chip').textContent = isHr ? 'ฝ่ายบุคคล' : 'ธุรการ / ผู้จัดการแผนก';
+    el('hub').innerHTML = TILES.filter(t => !t.hr || isHr).map(t => `
+      <a class="hubtile" href="${t.href}"><div class="ic">${t.icon}</div>
+        <h3>${escapeHtml(t.title)}${t.hr ? ' <span class="tag-hr">เฉพาะฝ่ายบุคคล</span>' : ''}</h3><p>${escapeHtml(t.desc)}</p><span class="go">เปิดหน้านี้ →</span></a>`).join('');
+  }
+</script>
+</body>
+</html>
