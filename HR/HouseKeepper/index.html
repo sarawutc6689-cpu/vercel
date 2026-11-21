@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>เบิกของใช้แม่บ้าน</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f4f6f3;--ink:#1c2a25;--mute:#64736c;--line:#d8dfda;--card:#fff;--brand:#1f6f5c;--warn:#b4421a;--ok:#2e7d4f}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.5 Sarabun,system-ui,sans-serif}
+.wrap{max-width:640px;margin:0 auto;padding:16px 16px 96px}
+.bar,.row{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.bar{margin-bottom:16px}
+h1{font-size:22px;margin:0}h2{font-size:18px;margin:24px 0 8px}
+.mute{color:var(--mute);font-size:15px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:10px}
+input{width:100%;font:inherit;padding:12px;border:1px solid var(--line);border-radius:8px;background:#fff}
+label{display:block;font-weight:600;margin:12px 0 4px}
+button{font:inherit;font-weight:600;padding:12px 16px;border-radius:8px;border:1px solid var(--line);background:#fff;color:var(--ink);cursor:pointer;min-height:48px}
+button.primary{background:var(--brand);color:#fff;border-color:var(--brand)}
+button.danger{color:var(--warn)}
+button.small{min-height:40px;padding:8px 12px}
+button.full{width:100%;margin-top:20px}
+button:disabled{opacity:.5}
+:focus-visible{outline:3px solid #7fc4b1;outline-offset:2px}
+.stepper{display:flex;align-items:center;gap:8px}
+.stepper button{width:44px;padding:0;font-size:22px}
+.stepper b{min-width:28px;text-align:center;font-size:18px}
+.sticky{position:fixed;left:0;right:0;bottom:0;padding:12px 16px;background:var(--bg);border-top:1px solid var(--line)}
+.sticky>div{max-width:640px;margin:0 auto}.sticky button{width:100%}
+.tag{font-size:14px;font-weight:600;padding:2px 8px;border-radius:99px;border:1px solid currentColor;white-space:nowrap}
+.tag.pending{color:#8a6100}.tag.issued{color:var(--ok)}.tag.rejected{color:var(--warn)}
+.low{color:var(--warn);font-weight:600}
+.tabs{display:flex;gap:6px;margin-bottom:12px}.tabs button{flex:1}
+.tabs button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.err{color:var(--warn);margin:8px 0 0}.msg{color:var(--ok);margin:8px 0 0}
+</style>
+</head>
+<body>
+<div id="app" class="wrap"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+// ====== ตั้งค่า: ใส่ค่าจาก Supabase > Project Settings > API (anon key เปิดเผยได้ ปลอดภัยด้วย RLS) ======
+const SUPABASE_URL = 'https://lubxxhjnqulmyjgtadpw.supabase.co'
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1Ynh4aGpucXVsbXlqZ3RhZHB3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTUyNDY5NTYsImV4cCI6MjExMDgyMjk1Nn0.BwGztJImVlO9ezjrqaCY9dCuvTdUdGf-L3B5qa4sT5U'
+// =====================================================================================================
+
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+const $app = document.getElementById('app')
+const STATUS = { pending: 'รออนุมัติ', issued: 'จ่ายแล้ว', rejected: 'ไม่อนุมัติ' }
+const S = { profile: null, view: 'home', tab: 'req', items: [], cart: {}, history: [], reqs: [], msg: '', ok: false }
+
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
+const fmt = (d) => new Date(d).toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' })
+const lines = (r) => r.requisition_items.map((x) => `${esc(x.items.name)} ${x.qty} ${esc(x.items.unit)}`).join(', ')
+const say = (m, ok = false) => { S.msg = m; S.ok = ok }
+const note = () => (S.msg ? `<p class="${S.ok ? 'msg' : 'err'}">${esc(S.msg)}</p>` : '')
+
+// ---------- เริ่มต้น ----------
+async function boot() {
+  const { data: { session } } = await sb.auth.getSession()
+  if (!session) return renderLogin()
+  const { data } = await sb.from('profiles').select('*').eq('id', session.user.id).single()
+  if (!data || !data.active) { await sb.auth.signOut(); return renderLogin() }
+  S.profile = data
+  await goHome()
+}
+async function logout() { await sb.auth.signOut(); S.profile = null; S.cart = {}; say(''); renderLogin() }
+
+// ---------- Login ----------
+function renderLogin(err = '') {
+  $app.innerHTML = `
+    <h1 style="margin:48px 0 4px">เบิกของใช้แม่บ้าน</h1>
+    <p class="mute">กรอกรหัสพนักงานและ PIN เพื่อเข้าใช้งาน</p>
+    <form onsubmit="doLogin(event)">
+      <label for="code">รหัสพนักงาน</label>
+      <input id="code" autocapitalize="characters" autocomplete="username" required>
+      <label for="pin">PIN 6 หลัก</label>
+      <input id="pin" type="password" inputmode="numeric" autocomplete="current-password" required>
+      ${err ? `<p class="err">${esc(err)}</p>` : ''}
+      <button class="primary full" id="loginBtn">เข้าสู่ระบบ</button>
+    </form>`
+}
+async function doLogin(e) {
+  e.preventDefault()
+  const code = document.getElementById('code').value.trim().toLowerCase()
+  const pin = document.getElementById('pin').value
+  document.getElementById('loginBtn').disabled = true
+  const { error } = await sb.auth.signInWithPassword({ email: `${code}@hk.local`, password: pin })
+  if (error) return renderLogin('รหัสพนักงานหรือ PIN ไม่ถูกต้อง')
+  boot()
+}
+
+// ---------- หน้าแม่บ้าน ----------
+async function goHome() {
+  S.view = 'home'
+  const [i, h] = await Promise.all([
+    sb.from('items').select('*').eq('active', true).order('category').order('name'),
+    sb.from('requisitions').select('id,status,created_at,reject_reason,requisition_items(qty,items(name,unit))')
+      .eq('requester_id', S.profile.id).order('created_at', { ascending: false }).limit(15),
+  ])
+  S.items = i.data || []; S.history = h.data || []
+  renderHome()
+}
+function renderHome() {
+  const p = S.profile, n = Object.keys(S.cart).length
+  $app.innerHTML = `
+    <div class="bar">
+      <div><h1>สวัสดี ${esc(p.full_name)}</h1><span class="mute">${esc(p.employee_code)}</span></div>
+      <div class="row">
+        ${p.role === 'admin' ? '<button class="small" onclick="goAdmin()">จัดการ</button>' : ''}
+        <button class="small" onclick="logout()">ออก</button>
+      </div>
+    </div>
+    <h2>เลือกของที่ต้องการเบิก</h2>
+    ${S.items.map((it) => `
+      <div class="card row">
+        <div><div>${esc(it.name)}</div>
+          <div class="${it.stock <= it.min_stock ? 'low' : 'mute'}">เหลือ ${it.stock} ${esc(it.unit)}</div></div>
+        <div class="stepper">
+          <button onclick="chg('${it.id}',-1,${it.stock})" aria-label="ลด ${esc(it.name)}">−</button>
+          <b>${S.cart[it.id] || 0}</b>
+          <button onclick="chg('${it.id}',1,${it.stock})" aria-label="เพิ่ม ${esc(it.name)}">+</button>
+        </div>
+      </div>`).join('')}
+    ${note()}
+    <h2>ประวัติการเบิก</h2>
+    ${S.history.length ? '' : '<p class="mute">ยังไม่เคยเบิก เลือกของด้านบนแล้วกดส่งใบเบิก</p>'}
+    ${S.history.map((r) => `
+      <div class="card">
+        <div class="row"><span class="mute">${fmt(r.created_at)}</span><span class="tag ${r.status}">${STATUS[r.status]}</span></div>
+        <div>${lines(r)}</div>
+        ${r.reject_reason ? `<div class="err">เหตุผล: ${esc(r.reject_reason)}</div>` : ''}
+      </div>`).join('')}
+    ${n ? `<div class="sticky"><div><button class="primary" onclick="submitReq()">ส่งใบเบิก (${n} รายการ)</button></div></div>` : ''}`
+}
+function chg(id, d, max) {
+  const v = Math.max(0, Math.min(max, (S.cart[id] || 0) + d))
+  v ? (S.cart[id] = v) : delete S.cart[id]
+  renderHome()
+}
+async function submitReq() {
+  const p_items = Object.entries(S.cart).map(([item_id, qty]) => ({ item_id, qty }))
+  const { error } = await sb.rpc('create_requisition', { p_items })
+  if (error) { say(error.message); return renderHome() }
+  S.cart = {}; say('ส่งใบเบิกแล้ว รอหัวหน้าอนุมัติ', true)
+  goHome()
+}
+
+// ---------- หน้าแอดมิน ----------
+async function goAdmin() { S.view = 'admin'; say(''); await loadAdmin() }
+async function loadAdmin() {
+  const [r, i] = await Promise.all([
+    sb.from('requisitions')
+      .select('id,status,created_at,profiles!requisitions_requester_id_fkey(full_name,employee_code),requisition_items(qty,items(name,unit))')
+      .order('created_at', { ascending: false }).limit(50),
+    sb.from('items').select('*').order('name'),
+  ])
+  S.reqs = r.data || []; S.items = i.data || []
+  renderAdmin()
+}
+function reqCard(r, actions = '') {
+  return `<div class="card">
+    <div class="row"><b>${esc(r.profiles?.full_name)} <span class="mute">(${esc(r.profiles?.employee_code)})</span></b>
+      <span class="tag ${r.status}">${STATUS[r.status]}</span></div>
+    <div class="mute">${fmt(r.created_at)}</div>
+    <div style="margin:6px 0">${lines(r)}</div>${actions}</div>`
+}
+function renderAdmin() {
+  const pending = S.reqs.filter((r) => r.status === 'pending')
+  const done = S.reqs.filter((r) => r.status !== 'pending')
+  let body = ''
+  if (S.tab === 'req') {
+    body = `<h2>รออนุมัติ</h2>
+      ${pending.length ? '' : '<p class="mute">ไม่มีใบเบิกที่รออนุมัติ</p>'}
+      ${pending.map((r) => reqCard(r, `<div class="row">
+        <button class="primary" onclick="issue('${r.id}')">อนุมัติและจ่าย</button>
+        <button class="danger" onclick="reject('${r.id}')">ไม่อนุมัติ</button></div>`)).join('')}
+      <h2>ดำเนินการแล้ว</h2>${done.map((r) => reqCard(r)).join('')}`
+  } else if (S.tab === 'stock') {
+    body = S.items.map((it) => `<div class="card row">
+      <div><div>${esc(it.name)}</div>
+        <div class="${it.stock <= it.min_stock ? 'low' : 'mute'}">เหลือ ${it.stock} ${esc(it.unit)}${it.stock <= it.min_stock ? ' (ใกล้หมด)' : ''}</div></div>
+      <button class="small" onclick="receive('${it.id}')">รับเข้า</button></div>`).join('')
+  } else {
+    body = `<form onsubmit="addEmp(event)">
+      <label for="ec">รหัสพนักงาน (ภาษาอังกฤษหรือตัวเลข)</label><input id="ec" pattern="[A-Za-z0-9]+" required>
+      <label for="en">ชื่อ-นามสกุล</label><input id="en" required>
+      <label for="ea">พื้นที่ที่รับผิดชอบ (ไม่บังคับ)</label><input id="ea">
+      <label for="ep">PIN เริ่มต้น 6 หลัก</label><input id="ep" inputmode="numeric" pattern="[0-9]{6}" required>
+      <button class="primary full">สร้างบัญชี</button></form>`
+  }
+  $app.innerHTML = `
+    <div class="bar"><h1>จัดการระบบ</h1><button class="small" onclick="goHome()">กลับ</button></div>
+    <div class="tabs">${[['req', `ใบเบิก (${pending.length})`], ['stock', 'สต็อก'], ['emp', 'พนักงาน']]
+      .map(([k, l]) => `<button class="${S.tab === k ? 'on' : ''}" onclick="setTab('${k}')">${l}</button>`).join('')}</div>
+    ${note()}${body}`
+}
+function setTab(t) { S.tab = t; say(''); renderAdmin() }
+async function rpc(fn, args, ok) {
+  const { error } = await sb.rpc(fn, args)
+  error ? say(error.message) : say(ok, true)
+  loadAdmin()
+}
+const issue = (id) => rpc('issue_requisition', { p_id: id }, 'อนุมัติและตัดสต็อกแล้ว')
+function reject(id) {
+  const why = prompt('เหตุผลที่ไม่อนุมัติ')
+  if (why !== null) rpc('reject_requisition', { p_id: id, p_reason: why }, 'ปฏิเสธใบเบิกแล้ว')
+}
+function receive(id) {
+  const it = S.items.find((x) => x.id === id)
+  const q = parseInt(prompt(`รับ ${it.name} เข้า กี่${it.unit}?`), 10)
+  if (q > 0) rpc('receive_stock', { p_item: id, p_qty: q }, `รับเข้า ${it.name} แล้ว`)
+}
+async function addEmp(e) {
+  e.preventDefault()
+  const body = {
+    employee_code: document.getElementById('ec').value, full_name: document.getElementById('en').value,
+    area: document.getElementById('ea').value, pin: document.getElementById('ep').value,
+  }
+  const { data: { session } } = await sb.auth.getSession()
+  const res = await fetch('/api/create-user', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+    body: JSON.stringify(body),
+  })
+  const j = await res.json().catch(() => ({}))
+  say(res.ok ? `สร้างบัญชี ${body.employee_code.toUpperCase()} แล้ว` : (j.error || 'เกิดข้อผิดพลาด'), res.ok)
+  renderAdmin()
+}
+
+boot()
+</script>
+</body>
+</html>
