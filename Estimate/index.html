@@ -36,8 +36,9 @@
     min-height:100vh;
   }
   .page{
-    max-width:760px;
-    margin:0 auto;
+    width:100%;
+    max-width:none;
+    margin:0;
     padding:0 0 60px;
   }
 
@@ -91,7 +92,7 @@
 
   /* ===== Search / index ===== */
   .container-inner{
-    padding:0 16px;
+    padding:0 clamp(16px, 3vw, 48px);
   }
   .index-bar{
     margin-top:-20px;
@@ -174,6 +175,14 @@
     margin-bottom:16px;
     border:1px solid var(--border);
   }
+  .card{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));
+    gap:12px;
+    align-items:start;
+  }
+  .card .cat-head{ grid-column:1 / -1; margin-bottom:0; }
+  .card .row{ margin-bottom:0; }
   .cat-head{
     display:flex;
     align-items:baseline;
