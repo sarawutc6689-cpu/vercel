@@ -176,6 +176,13 @@
   .btn-warn:hover{filter:brightness(.95);}
   .row-actions{display:flex; justify-content:flex-end; gap:10px; margin-top:14px; align-items:center;}
   td.cancelled{color:#98a3b0; text-decoration:line-through;}
+
+  .inb{border:1px solid var(--line); border-radius:12px; padding:12px 14px; margin-bottom:10px; display:flex; gap:14px; align-items:center; justify-content:space-between; flex-wrap:wrap; background:var(--accent-soft-2);}
+  .inb .t{font-weight:600; font-size:14px;} .inb .s{font-size:13px; color:var(--ink-soft); margin-top:2px;}
+  .inb .acts{display:flex; gap:8px;}
+  .btn-sm{padding:6px 14px; font-size:13px; border-radius:9px; border:1px solid var(--line); background:#fff; cursor:pointer; font-family:inherit; font-weight:600;}
+  .btn-sm.ok{background:var(--ok-soft); color:var(--ok); border-color:#BFE6CB;} .btn-sm.no{background:var(--danger-soft); color:var(--danger); border-color:#EBC0C8;}
+  textarea.note{width:100%; padding:10px 13px; border:1.5px solid var(--line); border-radius:10px; font-family:inherit; font-size:14px; min-height:70px;}
   /* ---------- modal ---------- */
   .modal-overlay{
     display:none;
@@ -437,17 +444,20 @@
   }
   const dl = c => c ? (c + ' ' + (DN[c] || '')).trim() : '-';
   function render(pool, rows){
-    const t = todayISO(), act = rows.filter(r => r.status === 'active');
-    const cur = act.filter(r => r.start_date <= t && r.end_date >= t);
+    const t = todayISO(), act = rows.filter(r => r.status === 'active'), ee = r => r.returned_on || r.end_date;
+    const cur = act.filter(r => r.start_date <= t && ee(r) >= t);
     const curP = new Set(cur.map(r => r.employee_code));
-    const end7 = act.filter(r => r.end_date >= t && r.end_date <= addD(t, 7) && r.start_date <= t);
+    const end7 = act.filter(r => ee(r) >= t && ee(r) <= addD(t, 7) && r.start_date <= t);
     const up = act.filter(r => r.start_date > t);
     el('asof').textContent = 'ณ วันที่ ' + fmtThai(t);
     const busy = pool.filter(p => p.busy).length;
+    const pendT = rows.filter(r => r.status === 'pending').length;
+    const pendR = rows.filter(r => r.status === 'active' && (r.ret_status === 'pending_mgr' || r.ret_status === 'pending_hr')).length;
     el('tiles').innerHTML = [
       ['พนักงานในส่วนกลาง', pool.length, ''], ['ว่าง (พร้อมถูกเลือก)', pool.length - busy, 'good'],
       ['ถูกใช้งานวันนี้ (ทั้งบริษัท)', busy, ''], ['รายการที่ใช้งานอยู่ (ตามสิทธิ์ของท่าน)', new Set(cur.map(r => r.request_id)).size, ''],
-      ['สิ้นสุดภายใน 7 วัน', end7.length, end7.length ? 'warn' : ''], ['กำลังจะเริ่ม', up.length, '']
+      ['สิ้นสุดภายใน 7 วัน', end7.length, end7.length ? 'warn' : ''], ['กำลังจะเริ่ม', up.length, ''],
+      ['รออนุมัติโอนย้าย (คน)', pendT, pendT ? 'warn' : ''], ['รออนุมัติคืน (คน)', pendR, pendR ? 'warn' : '']
     ].map(([k, v, c]) => `<div class="tile ${c}"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('');
     const by = {}; cur.forEach(r => by[r.dept_code] = (by[r.dept_code] || 0) + 1);
     const ent = Object.entries(by).sort((a, b) => b[1] - a[1]); const mx = Math.max(1, ...ent.map(x => x[1]));
@@ -455,11 +465,11 @@
       <div class="bar-track"><div class="bar-fill" style="width:${n / mx * 100}%"></div></div><span class="n">${n}</span></div>`).join('')
       || '<div class="empty-state">วันนี้ยังไม่มีการกำหนด</div>';
     const days = []; for (let i = 0; i < 14; i++) days.push(addD(t, i));
-    const cnt = days.map(d => new Set(act.filter(r => r.start_date <= d && r.end_date >= d).map(r => r.employee_code)).size);
+    const cnt = days.map(d => new Set(act.filter(r => r.start_date <= d && ee(r) >= d).map(r => r.employee_code)).size);
     const m2 = Math.max(1, ...cnt);
     el('days').innerHTML = days.map((d, i) => { const w = [0, 6].includes(parseISO(d).getUTCDay());
       return `<div class="day ${w ? 'we' : ''}" title="${escapeHtml(fmtThai(d))}: ${cnt[i]} คน"><b>${cnt[i]}</b><div class="col" style="height:${cnt[i] / m2 * 100 * .8}%"></div>${d.slice(8)}</div>`; }).join('');
-    const row = (r, k) => `<tr><td>${escapeHtml(r.full_name || r.employee_code)}</td><td>${escapeHtml(dl(r.dept_code))}</td><td class="nowrap">${escapeHtml(fmtThai(r[k]))}</td></tr>`;
+    const row = (r, k) => `<tr><td>${escapeHtml(r.full_name || r.employee_code)}</td><td>${escapeHtml(dl(r.dept_code))}</td><td class="nowrap">${escapeHtml(fmtThai(k === 'end_date' ? ee(r) : r[k]))}</td></tr>`;
     el('ending').innerHTML = end7.sort((a, b) => a.end_date < b.end_date ? -1 : 1).map(r => row(r, 'end_date')).join('') || '<tr><td colspan="3" class="empty-state">ไม่มี</td></tr>';
     el('upcoming').innerHTML = up.sort((a, b) => a.start_date < b.start_date ? -1 : 1).slice(0, 50).map(r => row(r, 'start_date')).join('') || '<tr><td colspan="3" class="empty-state">ไม่มี</td></tr>';
   }
