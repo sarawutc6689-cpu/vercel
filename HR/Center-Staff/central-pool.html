@@ -176,6 +176,13 @@
   .btn-warn:hover{filter:brightness(.95);}
   .row-actions{display:flex; justify-content:flex-end; gap:10px; margin-top:14px; align-items:center;}
   td.cancelled{color:#98a3b0; text-decoration:line-through;}
+
+  .inb{border:1px solid var(--line); border-radius:12px; padding:12px 14px; margin-bottom:10px; display:flex; gap:14px; align-items:center; justify-content:space-between; flex-wrap:wrap; background:var(--accent-soft-2);}
+  .inb .t{font-weight:600; font-size:14px;} .inb .s{font-size:13px; color:var(--ink-soft); margin-top:2px;}
+  .inb .acts{display:flex; gap:8px;}
+  .btn-sm{padding:6px 14px; font-size:13px; border-radius:9px; border:1px solid var(--line); background:#fff; cursor:pointer; font-family:inherit; font-weight:600;}
+  .btn-sm.ok{background:var(--ok-soft); color:var(--ok); border-color:#BFE6CB;} .btn-sm.no{background:var(--danger-soft); color:var(--danger); border-color:#EBC0C8;}
+  textarea.note{width:100%; padding:10px 13px; border:1.5px solid var(--line); border-radius:10px; font-family:inherit; font-size:14px; min-height:70px;}
   /* ---------- modal ---------- */
   .modal-overlay{
     display:none;
@@ -247,6 +254,10 @@
     <main>
       <section class="panel" id="deny" style="display:none"><div class="empty-state">หน้านี้สำหรับฝ่ายบุคคลเท่านั้น</div></section>
       <div id="hr-area">
+      <section class="panel" id="inbox-panel" style="display:none">
+        <div class="panel-head"><h2>งานที่รออนุมัติ <span class="count-tag" id="inbox-count"></span></h2></div>
+        <div id="inbox"></div>
+      </section>
       <section class="panel">
         <div class="panel-head"><h2>เลือกพนักงานเข้าส่วนกลาง</h2><span class="sub-note">ธุรการแต่ละแผนกจะเห็นและเลือกพนักงานจากส่วนกลางนี้ไปแผนกตัวเอง</span></div>
         <div class="grid2">
@@ -275,6 +286,11 @@
     </main>
     <footer class="app-footer">แบบฟอร์มการโอนย้ายพนักงานเข้าส่วนกลาง | ใช้ภายในบริษัทเท่านั้น | พัฒนาโดย Sarawut.C</footer>
   </div>
+  <div id="dec-modal" class="modal-overlay"><div class="modal-card narrow">
+      <div class="modal-header"><h2 id="dec-title">ยืนยัน</h2></div>
+      <div id="dec-body"></div>
+      <div class="form-actions"><button class="btn btn-ghost" id="dec-no" type="button" style="border:1px solid var(--line)">ยกเลิก</button>
+        <button class="btn btn-primary" id="dec-yes" type="button">ยืนยัน</button></div></div></div>
   <div id="warn-modal" class="modal-overlay"><div class="modal-card narrow">
       <div class="modal-header"><h2 id="warn-title">ยืนยัน</h2></div>
       <div id="warn-body"></div>
@@ -429,7 +445,7 @@
     const { data: isHr } = await sb.rpc('is_hr_admin');
     if (isHr !== true) { el('hr-area').style.display = 'none'; el('deny').style.display = ''; return; }
     el('hr-area').style.display = ''; el('deny').style.display = 'none';
-    await reload();
+    await reload(); loadInbox();
   }
   async function reload(){
     try {
@@ -475,7 +491,7 @@
     el('pool-count').textContent = '(' + POOL.length + ' คน)';
     el('pool-body').innerHTML = rows.map(e => {
       const u = USE[e.employee_code] || [];
-      const st = u.length ? u.map(r => `<div style="margin-bottom:4px"><span class="tag">${escapeHtml(r.dept_code)} ${escapeHtml(fmtRange(r.start_date, r.end_date))}</span> <button class="btn-ghost" style="padding:2px 10px;font-size:12px" data-cancel="${r.request_id}" data-n="${r.item_count}">ยกเลิกรายการ #${r.request_id}</button></div>`).join('') : '<span class="badge done">ว่าง</span>';
+      const st = u.length ? u.map(r => `<div style="margin-bottom:4px"><span class="tag ${r.status === 'pending' ? '' : 'off'}">${r.status === 'pending' ? 'รออนุมัติ · ' : ''}${escapeHtml(r.dept_code)} ${escapeHtml(fmtRange(r.start_date, r.end_date))}</span> <button class="btn-ghost" style="padding:2px 10px;font-size:12px" data-cancel="${r.request_id}" data-n="${r.item_count}">ยกเลิกรายการ #${r.request_id}</button></div>`).join('') : '<span class="badge done">ว่าง</span>';
       return `<tr><td class="code-cell">${escapeHtml(e.employee_code)}</td><td>${escapeHtml(e.full_name)}</td>
         <td>${escapeHtml(e.department_name || '')}</td><td>${escapeHtml(e.position_name || '')}</td><td>${st}</td>
         <td>${escapeHtml(e.meta.added_by_name || e.meta.added_by || '')}<div class="hint">${e.meta.added_at ? escapeHtml(fmtThai(e.meta.added_at.slice(0, 10))) : ''}${e.meta.note ? ' · ' + escapeHtml(e.meta.note) : ''}</div></td>
@@ -490,6 +506,7 @@
       el('warn-yes').onclick = () => done(true); el('warn-no').onclick = () => done(false);
     });
   }
+  function onDecided(){ reload(); loadInbox(); }
   function fmtRange(s, e){ return s === e ? fmtThai(s) : fmtThai(s) + ' – ' + fmtThai(e); }
 
   el('pick-list').addEventListener('change', (ev) => {
@@ -524,6 +541,70 @@
     if (!(await askConfirm('นำออกจากส่วนกลาง', 'นำ <b>' + escapeHtml(p ? p.full_name : b.dataset.del) + '</b> ออกจากส่วนกลาง?'))) return;
     const { error } = await sb.rpc('pool_remove', { p_code: b.dataset.del });
     if (error) showBanner(error.message, true); else { showBanner('นำออกแล้ว'); reload(); }
+  });
+
+  // ================= งานที่รออนุมัติ (โอนย้าย / คืนก่อนกำหนด) =================
+  const INB_DN = {};
+  const inbRange = (s, e) => s === e ? fmtThai(s) : fmtThai(s) + ' – ' + fmtThai(e);
+  const inbDept = c => (c + ' ' + (INB_DN[c] || '')).trim();
+  function decAsk(title, html, yes, needNote){
+    return new Promise(resolve => {
+      el('dec-title').textContent = title;
+      el('dec-body').innerHTML = html + (needNote !== null ? `<div class="field" style="margin-top:12px"><label for="dec-note">${needNote ? 'เหตุผล (จำเป็น)' : 'หมายเหตุ (ไม่บังคับ)'}</label><textarea id="dec-note" class="note" maxlength="300"></textarea></div>` : '');
+      el('dec-yes').textContent = yes; el('dec-modal').classList.add('open');
+      const done = v => { el('dec-modal').classList.remove('open'); el('dec-yes').onclick = el('dec-no').onclick = null; resolve(v); };
+      el('dec-yes').onclick = () => {
+        if (needNote && !el('dec-note').value.trim()) { showBanner('กรุณาระบุเหตุผล', true); return; }
+        done(true);
+      };
+      el('dec-no').onclick = () => done(false);
+    });
+  }
+  // kind: 't' = โอนย้าย, 'r' = คืน
+  async function inbDecide(kind, id, approve, label){
+    const ok = await decAsk((approve ? 'อนุมัติ' : 'ไม่อนุมัติ') + (kind === 't' ? 'การโอนย้าย' : 'การคืน'),
+      '<p style="margin:0">' + escapeHtml(label) + '</p>', approve ? 'ยืนยันอนุมัติ' : 'ยืนยันไม่อนุมัติ', approve ? null : true);
+    if (!ok) return;
+    const note = (el('dec-note') && el('dec-note').value) || '';
+    const { error } = kind === 't' ? await sb.rpc('assign_decide', { p_id: id, p_approve: approve, p_note: note })
+                                   : await sb.rpc('assign_return_decide', { p_id: id, p_approve: approve, p_note: note });
+    if (error) { showBanner(error.message, true); return; }
+    showBanner(approve ? 'อนุมัติแล้ว' : 'บันทึกการไม่อนุมัติแล้ว');
+    if (typeof onDecided === 'function') onDecided(); else loadInbox();
+  }
+  async function loadInbox(){
+    try {
+      if (!Object.keys(INB_DN).length) { const { data } = await sb.rpc('assign_depts'); (data || []).forEach(d => INB_DN[d.department_code] = d.name); }
+      const [a, b] = await Promise.all([sb.rpc('assign_rows', { p_from: null, p_to: null }), sb.rpc('assign_returns_list')]);
+      if (a.error || b.error) throw (a.error || b.error);
+      const reqs = new Map();
+      (a.data || []).filter(r => r.can_decide).forEach(r => {
+        if (!reqs.has(r.request_id)) reqs.set(r.request_id, { ...r, people: [] });
+        reqs.get(r.request_id).people.push(r.full_name || r.employee_code);
+      });
+      const rets = (b.data || []).filter(r => r.can_decide);
+      const html = [...reqs.values()].map(r => {
+        const label = `โอนย้ายเข้า ${inbDept(r.dept_code)} ${inbRange(r.start_date, r.end_date)}: ${r.people.join(', ')}`;
+        return `<div class="inb"><div><div class="t">โอนย้ายพนักงานเข้าแผนก ${escapeHtml(inbDept(r.dept_code))} · ${r.people.length} คน</div>
+          <div class="s">${escapeHtml(inbRange(r.start_date, r.end_date))} · ${escapeHtml(r.people.join(', '))}<br>ผู้ขอ: ${escapeHtml(r.created_by_name || '')}${r.note ? ' · ' + escapeHtml(r.note) : ''}</div></div>
+          <div class="acts"><button class="btn-sm ok" data-inb="t" data-id="${r.request_id}" data-act="1" data-label="${escapeHtml(label)}">อนุมัติ</button>
+            <button class="btn-sm no" data-inb="t" data-id="${r.request_id}" data-act="0" data-label="${escapeHtml(label)}">ไม่อนุมัติ</button></div></div>`;
+      }).concat(rets.map(r => {
+        const label = `คืน ${r.full_name || r.employee_code} จากแผนก ${inbDept(r.dept_code)} วันที่ ${fmtThai(r.return_date)}`;
+        const step = r.status === 'pending_mgr' ? 'ขั้นตอน: รอ ผจก.แผนกอนุมัติ' : 'ขั้นตอน: ผจก. ' + (r.mgr_by_name || '') + ' อนุมัติแล้ว → รอฝ่ายบุคคล';
+        return `<div class="inb"><div><div class="t">ขอคืนพนักงานก่อนกำหนด: ${escapeHtml(r.full_name || r.employee_code)} · ${escapeHtml(inbDept(r.dept_code))}</div>
+          <div class="s">คืนวันที่ ${escapeHtml(fmtThai(r.return_date))} (เดิมสิ้นสุด ${escapeHtml(fmtThai(r.end_date))})${r.reason ? ' · เหตุผล: ' + escapeHtml(r.reason) : ''}<br>${escapeHtml(step)} · ผู้ขอ: ${escapeHtml(r.requested_by_name || '')}</div></div>
+          <div class="acts"><button class="btn-sm ok" data-inb="r" data-id="${r.id}" data-act="1" data-label="${escapeHtml(label)}">อนุมัติ</button>
+            <button class="btn-sm no" data-inb="r" data-id="${r.id}" data-act="0" data-label="${escapeHtml(label)}">ไม่อนุมัติ</button></div></div>`;
+      })).join('');
+      el('inbox').innerHTML = html;
+      el('inbox-count').textContent = reqs.size + rets.length;
+      el('inbox-panel').style.display = html ? '' : 'none';
+    } catch (e) { el('inbox-panel').style.display = 'none'; }
+  }
+  document.addEventListener('click', (ev) => {
+    const b = ev.target.closest('[data-inb]'); if (!b) return;
+    inbDecide(b.dataset.inb, Number(b.dataset.id), b.dataset.act === '1', b.dataset.label || '');
   });
 </script>
 </body>
