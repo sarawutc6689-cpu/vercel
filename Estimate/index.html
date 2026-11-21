@@ -1,1 +1,630 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ทะเบียนแบบประเมิน</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<style>
+  :root{
+    --primary:#b91c1c;
+    --primary-dark:#3f0d0d;
+    --accent:#f59e0b;
+    --bg:#141010;
+    --card:#1f1717;
+    --card-alt:#1a1212;
+    --text:#f2e9e9;
+    --muted:#b98f8f;
+    --danger:#ef4444;
+    --ok:#22c55e;
+    --border:#3a2626;
+    --radius:16px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Segoe UI', 'Sarabun', 'Noto Sans Thai', sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    min-height:100vh;
+  }
+  .page{
+    max-width:760px;
+    margin:0 auto;
+    padding:0 0 60px;
+  }
 
+  /* ===== Topbar ===== */
+  .topbar{
+    background:linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color:#fff;
+    padding:26px 20px 32px;
+    text-align:center;
+    position:relative;
+  }
+  .topbar h1{
+    margin:0;
+    font-size:22px;
+    font-weight:800;
+  }
+  .topbar p{
+    margin:6px 0 0;
+    font-size:13.5px;
+    opacity:.9;
+    max-width:440px;
+    margin-left:auto;
+    margin-right:auto;
+  }
+
+  .admin-toggle{
+    position:fixed;
+    top:16px;
+    right:16px;
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    background:rgba(255,255,255,.18);
+    border:1px solid rgba(255,255,255,.4);
+    color:#fff;
+    font-family:inherit;
+    font-size:13px;
+    font-weight:600;
+    padding:10px 14px;
+    border-radius:12px;
+    cursor:pointer;
+    z-index:60;
+    transition:background .15s;
+  }
+  .admin-toggle:hover{ background:rgba(255,255,255,.28); }
+  .admin-toggle.on{
+    background:var(--danger);
+    border-color:var(--danger);
+  }
+
+  /* ===== Search / index ===== */
+  .container-inner{
+    padding:0 16px;
+  }
+  .index-bar{
+    margin-top:-20px;
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    box-shadow:0 1px 3px rgba(0,0,0,.3), 0 1px 2px rgba(0,0,0,.2);
+    padding:14px 16px;
+    display:flex;
+    gap:10px;
+    align-items:center;
+    position:relative;
+    z-index:2;
+  }
+  .index-bar svg{flex:none;color:var(--muted);}
+  .index-bar input{
+    flex:1;
+    border:none;
+    outline:none;
+    background:transparent;
+    font-family:inherit;
+    font-size:15px;
+    color:var(--text);
+  }
+  .index-bar input::placeholder{color:var(--muted);}
+  .count-tag{
+    font-size:12px;
+    font-weight:700;
+    color:#fff;
+    background:var(--accent);
+    padding:4px 10px;
+    border-radius:999px;
+    white-space:nowrap;
+  }
+
+  .admin-banner{
+    margin-top:14px;
+    background:#2a1414;
+    border:1px solid var(--danger);
+    color:#fca5a5;
+    font-size:13px;
+    padding:12px 14px;
+    border-radius:12px;
+    line-height:1.6;
+  }
+  .admin-banner b{ color:#fff; }
+
+  /* ===== Category tabs ===== */
+  .tabs{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    margin:20px 0 4px;
+  }
+  .tab{
+    font-family:inherit;
+    font-size:13.5px;
+    font-weight:600;
+    padding:9px 15px;
+    border:2px solid var(--border);
+    border-radius:10px;
+    background:var(--card-alt);
+    color:var(--muted);
+    cursor:pointer;
+    transition:background .15s, color .15s, border-color .15s;
+  }
+  .tab.active{
+    background:var(--primary);
+    color:#fff;
+    border-color:var(--primary);
+  }
+
+  /* ===== Category card & rows ===== */
+  .card{
+    background:var(--card);
+    border-radius:var(--radius);
+    padding:18px 16px;
+    box-shadow:0 1px 3px rgba(0,0,0,.3), 0 1px 2px rgba(0,0,0,.2);
+    margin-bottom:16px;
+    border:1px solid var(--border);
+  }
+  .cat-head{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    margin-bottom:12px;
+  }
+  .cat-head h2{
+    font-size:16px;
+    font-weight:800;
+    color:var(--text);
+    margin:0;
+  }
+  .cat-head span{
+    font-size:11.5px;
+    font-weight:600;
+    color:var(--accent);
+  }
+  .row{
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:14px 16px;
+    margin-bottom:12px;
+    background:var(--card-alt);
+    transition:opacity .15s;
+  }
+  .row:last-child{ margin-bottom:0; }
+  .row.inactive{ opacity:.55; }
+  .row-top{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    margin-bottom:12px;
+  }
+  .row-no{
+    font-size:11.5px;
+    font-weight:700;
+    color:var(--accent);
+    flex:none;
+    padding-top:2px;
+  }
+  .row-body{flex:1; min-width:0;}
+  .row-body h3{
+    font-size:15px;
+    font-weight:700;
+    margin:0 0 3px;
+    color:var(--text);
+  }
+  .row-body p{
+    font-size:13px;
+    color:var(--muted);
+    margin:0;
+    line-height:1.5;
+  }
+  .status-pill{
+    display:inline-block;
+    margin-top:6px;
+    font-size:11px;
+    font-weight:700;
+    padding:3px 9px;
+    border-radius:999px;
+    background:#2a1414;
+    color:var(--danger);
+    border:1px solid var(--danger);
+  }
+
+  .open-btn{
+    display:block;
+    width:100%;
+    text-align:center;
+    font-family:inherit;
+    font-size:14px;
+    font-weight:700;
+    color:#fff;
+    background:var(--primary);
+    border:none;
+    padding:11px;
+    border-radius:10px;
+    cursor:pointer;
+    text-decoration:none;
+    transition:background .15s;
+  }
+  .open-btn:hover{ background:var(--primary-dark); }
+  .open-btn.disabled{
+    background:#4a3a3a;
+    color:var(--muted);
+    cursor:not-allowed;
+    pointer-events:none;
+  }
+  .open-btn:focus-visible, .tab:focus-visible, input:focus-visible, .admin-toggle:focus-visible, .toggle-btn:focus-visible{
+    outline:2.5px solid var(--accent);
+    outline-offset:2px;
+  }
+
+  /* ===== Admin toggle-row (เปิด/ปิด แบบ take-nottake) ===== */
+  .toggle-row{
+    display:flex;
+    gap:8px;
+  }
+  .toggle-btn{
+    flex:1;
+    padding:9px 8px;
+    text-align:center;
+    border:2px solid var(--border);
+    border-radius:10px;
+    cursor:pointer;
+    font-weight:700;
+    font-size:13px;
+    background:var(--card-alt);
+    color:var(--muted);
+    user-select:none;
+    transition:background .15s,border-color .15s,color .15s;
+  }
+  .toggle-btn.on-btn.active{
+    border-color:var(--ok);
+    background:#122417;
+    color:var(--ok);
+  }
+  .toggle-btn.off-btn.active{
+    border-color:var(--danger);
+    background:#2a1414;
+    color:var(--danger);
+  }
+
+  .empty{
+    text-align:center;
+    padding:50px 20px;
+    color:var(--muted);
+    font-size:14px;
+  }
+
+  .app-footer{
+    text-align:center;
+    font-size:12px;
+    color:var(--muted);
+    opacity:.75;
+    margin-top:20px;
+    padding-top:16px;
+    border-top:1px solid var(--border);
+    line-height:1.6;
+  }
+
+  /* ===== Modal ===== */
+  .modal-overlay{
+    position:fixed; inset:0;
+    background:rgba(0,0,0,.6);
+    display:flex; align-items:center; justify-content:center;
+    z-index:100;
+    padding:20px;
+  }
+  .modal-overlay[hidden]{ display:none; }
+  .modal{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:18px;
+    padding:26px 24px;
+    max-width:340px;
+    width:100%;
+    box-shadow:0 8px 30px rgba(0,0,0,.5);
+    text-align:center;
+  }
+  .modal h3{
+    font-size:18px;
+    font-weight:800;
+    color:var(--text);
+    margin:0 0 8px;
+  }
+  .modal p{
+    color:var(--muted);
+    font-size:13.5px;
+    margin:0 0 16px;
+    line-height:1.6;
+  }
+  .modal input{
+    width:100%;
+    background:#211717;
+    border:1px solid var(--border);
+    color:var(--text);
+    padding:12px 14px;
+    border-radius:10px;
+    font-size:15px;
+    outline:none;
+    margin-bottom:8px;
+    font-family:inherit;
+    text-align:left;
+  }
+  .modal input:focus{ border-color:var(--primary); background:#2a1c1c; }
+  .modal-error{
+    color:var(--danger);
+    font-size:12.5px;
+    margin:0 0 10px;
+  }
+  .modal-actions{
+    display:flex; gap:10px; margin-top:6px;
+  }
+  .modal-actions button{
+    flex:1;
+    padding:11px;
+    border-radius:10px;
+    font-family:inherit;
+    font-weight:700;
+    font-size:14px;
+    cursor:pointer;
+    border:none;
+  }
+  #adminCancelBtn{ background:transparent; border:2px solid var(--border); color:var(--muted); }
+  #adminSubmitBtn{ background:var(--primary); color:#fff; }
+  #adminSubmitBtn:hover{ background:var(--primary-dark); }
+
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none !important;}
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <button class="admin-toggle" id="adminToggleBtn">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    <span id="adminToggleLabel">แอดมิน</span>
+  </button>
+
+  <div class="topbar">
+    <h1>แบบสำรวจและประเมินความพึงพอใจ</h1>
+    <p>แบบประเมินทั้งหมดไว้ในที่เดียว ค้นหาหรือเลือกหมวดหมู่แล้วกดเปิดแบบประเมินที่ต้องการได้ทันที</p>
+  </div>
+
+  <div class="container-inner">
+    <div class="index-bar">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="searchInput" type="text" placeholder="ค้นหาชื่อแบบประเมิน…">
+      <span class="count-tag" id="countTag">0 รายการ</span>
+    </div>
+
+    <div id="adminBanner" class="admin-banner" hidden>
+      อยู่ใน <b>โหมดแอดมิน</b> — กดปุ่ม "เปิดใช้งาน / ปิดใช้งาน" ท้ายแต่ละแบบประเมินได้เลย
+      สถานะที่ตั้งจะถูกบันทึกไว้และ <b>ทุกคนที่เปิดหน้านี้จะเห็นผลเหมือนกัน</b>
+    </div>
+
+    <div class="tabs" id="tabs"></div>
+    <div id="results"></div>
+
+    <div class="app-footer">
+     แบบสำรวจและประเมินความพึงพอใจ &nbsp;© 2026&nbsp; | &nbsp;พัฒนาโดย Sarawut.C&nbsp; | &nbsp;ใช้สำหรับภายในองค์กรเท่านั้น
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="adminModal" hidden>
+  <div class="modal">
+    <h3>🔒 เข้าสู่โหมดแอดมิน</h3>
+    <p>กรอกรหัสผ่านเพื่อจัดการสถานะเปิด/ปิดของแต่ละแบบประเมิน</p>
+    <input id="adminPassInput" type="password" placeholder="รหัสผ่าน" autocomplete="off">
+    <p class="modal-error" id="adminError" hidden>รหัสผ่านไม่ถูกต้อง ลองใหม่อีกครั้ง</p>
+    <div class="modal-actions">
+      <button id="adminCancelBtn">ยกเลิก</button>
+      <button id="adminSubmitBtn">ยืนยัน</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ==========================================================================
+   วาง Firebase config ของคุณตรงนี้ (ได้จาก Firebase Console > Project settings)
+   ========================================================================== */
+const firebaseConfig = {
+  apiKey: "AIzaSyBpS_GjOVa1_MN8bZhAkhrrlp7FoGx6h2s",
+  authDomain: "mm-estimate.firebaseapp.com",
+  databaseURL: "https://mm-estimate-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "mm-estimate",
+  storageBucket: "mm-estimate.firebasestorage.app",
+  messagingSenderId: "448000386724",
+  appId: "1:448000386724:web:d49914b19d105733702831"
+};
+firebase.initializeApp(firebaseConfig);
+const statusRef = firebase.database().ref('linkStatus');
+/* ========================================================================== */
+
+const DATA = {
+  "งานฝ่ายทรัพยากรบุคคล": [
+    { id: "gen-01", title: "แบบประเมินความพึงพอใจ การใช้บริการโรงอาหาร", desc: "สำหรับพนักงานบริษัทที่เข้ามาใช้บริการโรงอาหาร", url: "https://script.google.com/macros/s/AKfycby6bINyoPNnXCCMOmfbIg3HZct4pM18a0AiIaWzbGgddf6xGFEL5MKk4EBLMnrLcBr5Rw/exec" },
+    { id: "gen-02", title: "แบบสำรวจชุดพนักงานสวัสดิการ", desc: "สำรวจเสื้อ รองเท้า และ เสื้อShop", url: "https://script.google.com/macros/s/AKfycbzhmTxV-N1RdJS85N55fj_KWMf7m4kqQUn79pZ6RgbVBTOtSI3xkKWKhuovXiyGRBkwuQ/exec" },
+    { id: "gen-03", title: "แบบประเมินความพึงพอใจคัดสรรการประกวดร้านค้า", desc: "รายละเอียดบ่งบอก", url: "https://script.google.com/macros/s/AKfycbx4biUW62LVJ6iIh2odhBZ84XHdcfc45yrSfhkMWD2RQII1lJj7ByYv4023nxCvZ-3BAQ/exec" },
+    { id: "gen-04", title: "แบบสำรวจการใช้ยานพาหนะพนักงาน", desc: "สำรวจการใช้ยานพาหนะพนักงานในกาารเดินทางมาทำงาน", url: "https://mouldmate.vercel.app/HR/Inspect-Vehicle/vehicle-survey.html" }
+  ],
+  "งานฝ่าย.......": [
+    { id: "edu-01", title: "แบบประเมินความพึงพอใจ .......", desc: "รายละเอียดบ่งบอก", url: "https://forms.gle/ตัวอย่าง4" },
+    { id: "edu-02", title: "แบบประเมินความพึงพอใจ .......", desc: "รายละเอียดบ่งบอกน", url: "https://forms.gle/ตัวอย่าง5" },
+    { id: "edu-03", title: "แบบประเมินความพึงพอใจ .......", desc: "รายละเอียดบ่งบอก", url: "https://forms.gle/ตัวอย่าง6" }
+  ],
+  "งานฝ่าย.......": [
+    { id: "med-01", title: "แบบประเมินความพึงพอใจ .......", desc: "รายละเอียดบ่งบอก", url: "https://forms.gle/ตัวอย่าง7" },
+    { id: "med-02", title: "แบบประเมินความพึงพอใจ .......", desc: "รายละเอียดบ่งบอก", url: "https://forms.gle/ตัวอย่าง8" }
+  ],
+  "งานฝ่าย.......": [
+    { id: "act-01", title: "แบบประเมินความพึงพอใจ .......", desc: "รายละเอียดบ่งบอก", url: "https://forms.gle/ตัวอย่าง9" },
+    { id: "act-02", title: "แบบประเมินความพึงพอใจ .......", desc: "รายละเอียดบ่งบอก", url: "https://forms.gle/ตัวอย่าง10" }
+  ]
+};
+
+const ADMIN_PASSWORD = "mm169Moo4";
+const STORAGE_KEY = "link-status";
+
+let STATUS = {};
+let isAdmin = false;
+
+const tabsEl = document.getElementById('tabs');
+const resultsEl = document.getElementById('results');
+const searchInput = document.getElementById('searchInput');
+const countTag = document.getElementById('countTag');
+const adminToggleBtn = document.getElementById('adminToggleBtn');
+const adminToggleLabel = document.getElementById('adminToggleLabel');
+const adminBanner = document.getElementById('adminBanner');
+const adminModal = document.getElementById('adminModal');
+const adminPassInput = document.getElementById('adminPassInput');
+const adminError = document.getElementById('adminError');
+
+const categories = Object.keys(DATA);
+let activeCategory = 'ทั้งหมด';
+
+function isActive(id){
+  return STATUS[id] !== false;
+}
+
+function loadStatus(){
+  return new Promise(function(resolve){
+    let first = true;
+    statusRef.on('value', function(snapshot){
+      STATUS = snapshot.exists() ? snapshot.val() : {};
+      if(first){ first = false; resolve(); }
+      else{ render(); } // อัปเดตแบบเรียลไทม์เมื่อมีคนอื่นแก้ไขสถานะ
+    }, function(err){
+      console.error('โหลดสถานะไม่สำเร็จ', err);
+      STATUS = {};
+      if(first){ first = false; resolve(); }
+    });
+  });
+}
+
+function saveStatus(){
+  statusRef.set(STATUS).catch(function(err){
+    console.error('เกิดข้อผิดพลาดในการบันทึกสถานะ', err);
+  });
+}
+
+function buildTabs(){
+  const all = ['ทั้งหมด', ...categories];
+  tabsEl.innerHTML = all.map(cat =>
+    '<button class="tab ' + (cat===activeCategory?'active':'') + '" data-cat="' + cat + '">' + cat + '</button>'
+  ).join('');
+  tabsEl.querySelectorAll('.tab').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      activeCategory = btn.dataset.cat;
+      buildTabs();
+      render();
+    });
+  });
+}
+
+function toggleStatus(id, value){
+  STATUS[id] = value;
+  saveStatus();
+  render();
+}
+
+function render(){
+  const query = searchInput.value.trim().toLowerCase();
+  let total = 0;
+  let html = '';
+
+  categories.forEach(cat=>{
+    if(activeCategory !== 'ทั้งหมด' && activeCategory !== cat) return;
+
+    const items = DATA[cat].filter(item =>
+      item.title.toLowerCase().includes(query) || item.desc.toLowerCase().includes(query)
+    );
+    if(items.length === 0) return;
+
+    total += items.length;
+
+    html += '<div class="card">' +
+      '<div class="cat-head"><h2>' + cat + '</h2><span>' + items.length + ' รายการ</span></div>' +
+      items.map((item, i) => {
+        const active = isActive(item.id);
+        const rowClass = active ? 'row' : 'row inactive';
+        const btnHtml = active
+          ? '<a class="open-btn" href="' + item.url + '" target="_blank" rel="noopener">เปิดแบบประเมิน</a>'
+          : '<span class="open-btn disabled">ปิดรับการประเมิน</span>';
+        const statusPill = active ? '' : '<span class="status-pill">ปิดใช้งานอยู่</span>';
+        const adminRow = isAdmin
+          ? '<div class="toggle-row" style="margin-top:10px;">' +
+              '<div class="toggle-btn on-btn ' + (active ? 'active' : '') + '" data-id="' + item.id + '" data-val="true">✅ เปิดใช้งาน</div>' +
+              '<div class="toggle-btn off-btn ' + (!active ? 'active' : '') + '" data-id="' + item.id + '" data-val="false">🚫 ปิดใช้งาน</div>' +
+            '</div>'
+          : '';
+        return '<div class="' + rowClass + '">' +
+            '<div class="row-top">' +
+              '<span class="row-no">' + String(i+1).padStart(3,'0') + '</span>' +
+              '<div class="row-body"><h3>' + item.title + '</h3><p>' + item.desc + '</p>' + statusPill + '</div>' +
+            '</div>' +
+            btnHtml +
+            adminRow +
+          '</div>';
+      }).join('') +
+    '</div>';
+  });
+
+  resultsEl.innerHTML = total > 0 ? html : '<div class="empty">ไม่พบแบบประเมินที่ตรงกับคำค้นหา</div>';
+  countTag.textContent = total + ' รายการ';
+
+  resultsEl.querySelectorAll('.toggle-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=> toggleStatus(btn.dataset.id, btn.dataset.val === 'true'));
+  });
+}
+
+function openAdminModal(){
+  adminError.hidden = true;
+  adminPassInput.value = '';
+  adminModal.hidden = false;
+  adminPassInput.focus();
+}
+function closeAdminModal(){ adminModal.hidden = true; }
+
+function setAdminState(on){
+  isAdmin = on;
+  adminToggleBtn.classList.toggle('on', on);
+  adminToggleLabel.textContent = on ? 'ออกจากแอดมิน' : 'แอดมิน';
+  adminBanner.hidden = !on;
+  render();
+}
+
+adminToggleBtn.addEventListener('click', ()=>{
+  if(isAdmin){
+    setAdminState(false);
+  }else{
+    openAdminModal();
+  }
+});
+document.getElementById('adminCancelBtn').addEventListener('click', closeAdminModal);
+document.getElementById('adminSubmitBtn').addEventListener('click', ()=>{
+  if(adminPassInput.value === ADMIN_PASSWORD){
+    closeAdminModal();
+    setAdminState(true);
+  }else{
+    adminError.hidden = false;
+  }
+});
+adminPassInput.addEventListener('keydown', (e)=>{
+  if(e.key === 'Enter') document.getElementById('adminSubmitBtn').click();
+});
+
+searchInput.addEventListener('input', render);
+
+(async function init(){
+  buildTabs();
+  await loadStatus();
+  render();
+})();
+</script>
+</body>
+</html>
