@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>แดชบอร์ดส่วนกลาง — HR Admin</title>
+<title>รายงานการกำหนดพนักงาน — HR Admin</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600&display=swap" rel="stylesheet">
 <style>
@@ -254,7 +254,7 @@
 </head>
 <body>
   <div id="login-screen"><div class="login-card">
-      <div class="login-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg></div><h1>แดชบอร์ดส่วนกลาง</h1><p class="sub">เข้าสู่ระบบด้วยบัญชีของตนเอง</p>
+      <div class="login-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg></div><h1>รายงานการกำหนดพนักงาน</h1><p class="sub">เข้าสู่ระบบด้วยบัญชีของตนเอง</p>
       <div class="field"><label for="login-email">อีเมล</label><input id="login-email" type="email" autocomplete="username"></div>
       <div class="field"><label for="login-password">รหัสผ่าน</label><input id="login-password" type="password" autocomplete="current-password"></div>
       <button id="login-btn" class="btn btn-primary">เข้าสู่ระบบ</button>
@@ -263,28 +263,31 @@
   <div id="status-banner"><div class="banner" id="banner-inner"></div></div>
   <div id="app">
     <header class="no-print">
-      <div class="brand"><div class="brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg></div><h1>แดชบอร์ดส่วนกลาง</h1></div>
-      <div style="display:flex; align-items:center; gap:14px;"><span class="hdr-links no-print"><a href="assign.html">เลือกพนักงาน</a> <a href="central-pool.html" data-hr>โอนเข้าส่วนกลาง</a> <a href="pool-dashboard.html" class="cur">แดชบอร์ด</a> <a href="pool-report.html">รายงาน</a></span><span class="who" id="who-label"></span>
+      <div class="brand"><div class="brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg></div><h1>รายงานการกำหนดพนักงาน</h1></div>
+      <div style="display:flex; align-items:center; gap:14px;"><span class="hdr-links no-print"><a href="pool-index.html">หน้ารวม</a> <a href="assign.html">เลือกพนักงาน</a> <a href="central-pool.html" data-hr>โอนเข้าส่วนกลาง</a> <a href="pool-dashboard.html">แดชบอร์ด</a> <a href="pool-report.html" class="cur">รายงาน</a></span><span class="who" id="who-label"></span>
         <button class="btn-ghost" id="logout-btn">ออกจากระบบ</button></div>
     </header>
     <main>
-      <section class="panel"><div class="panel-head"><h2>ภาพรวมวันนี้</h2><span class="sub-note" id="asof"></span></div>
-        <div class="tiles" id="tiles"></div></section>
-      <div class="grid2">
-        <section class="panel"><div class="panel-head"><h2>พนักงานที่ถูกใช้งานวันนี้ แยกตามแผนกปลายทาง</h2></div><div class="bars" id="bars"></div></section>
-        <section class="panel"><div class="panel-head"><h2>จำนวนคนที่ถูกกำหนดใน 14 วันข้างหน้า</h2></div><div class="days" id="days"></div></section>
+      <section class="panel no-print"><div class="ctl3">
+        <div class="field"><label for="f-from">ตั้งแต่วันที่</label><input id="f-from" type="date"></div>
+        <div class="field"><label for="f-to">ถึงวันที่</label><input id="f-to" type="date"></div>
+        <div class="field"><label for="f-dept">แผนกปลายทาง</label><select id="f-dept"><option value="">ทุกแผนก</option></select></div>
+        <div class="field"><label for="f-status">สถานะ</label><select id="f-status"><option value="">ทั้งหมด</option><option value="active">ใช้งาน</option><option value="cancelled">ยกเลิกแล้ว</option></select></div>
+        <div class="field"><label for="f-q">ค้นหา</label><input id="f-q" type="search" placeholder="รหัส / ชื่อ"></div>
       </div>
-      <div class="grid2">
-        <section class="panel"><div class="panel-head"><h2>สิ้นสุดภายใน 7 วัน</h2></div>
-          <table class="list"><thead><tr><th>พนักงาน</th><th>แผนกปลายทาง</th><th>สิ้นสุด</th></tr></thead><tbody id="ending"></tbody></table></section>
-        <section class="panel"><div class="panel-head"><h2>กำลังจะเริ่ม</h2></div>
-          <table class="list"><thead><tr><th>พนักงาน</th><th>แผนกปลายทาง</th><th>เริ่ม</th></tr></thead><tbody id="upcoming"></tbody></table></section>
-      </div>
+      <div class="row-actions" style="justify-content:space-between"><span class="hint" id="sum"></span>
+        <span style="display:flex; gap:8px"><button class="btn-ghost btn-csv" id="x-csv" type="button" style="display:none">ส่งออก CSV</button>
+        <button class="btn-ghost" id="x-xlsx" type="button" style="display:none">ส่งออก Excel</button>
+        <button class="btn-ghost btn-pdf" id="x-pdf" type="button">ส่งออก PDF</button></span></div></section>
+      <section class="panel"><h2 class="print-title">รายงานการกำหนดพนักงานจากส่วนกลาง <span id="p-sub"></span></h2>
+        <div style="overflow-x:auto"><table class="list"><thead><tr><th>#</th><th>แผนกปลายทาง</th><th>รหัส</th><th>ชื่อ-นามสกุล</th><th>แผนกต้นสังกัด</th>
+          <th>เริ่ม</th><th>สิ้นสุด</th><th>วัน</th><th>สถานะ</th><th>ผู้บันทึก</th><th>หมายเหตุ</th></tr></thead><tbody id="body"></tbody></table></div></section>
     </main>
     <footer class="app-footer">แบบฟอร์มการโอนย้ายพนักงานเข้าส่วนกลาง | ใช้ภายในบริษัทเท่านั้น | พัฒนาโดย Sarawut.C</footer>
   </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
   // ============================================================
   // โปรเจค hr-master (โปรเจคเดียวกับหน้าอื่น ๆ)
@@ -424,45 +427,54 @@
 
 
 
-  const DN = {};
-  const addD = (iso, n) => toISO(new Date(parseISO(iso).getTime() + n * 86400000));
-  async function init(){
-    try {
-      const [{ data: ds }, { data: ps, error: e1 }, { data: rows, error: e2 }] = await Promise.all([
-        sb.rpc('assign_depts'), sb.rpc('assign_pool_status'), sb.rpc('assign_rows', { p_from: null, p_to: null })]);
-      if (e1 || e2) throw (e1 || e2);
-      (ds || []).forEach(d => DN[d.department_code] = d.name);
-      render(ps || [], rows || []);
-    } catch (e) { showBanner('โหลดข้อมูลไม่สำเร็จ (ตรวจว่ารัน assign.sql ล่าสุดแล้ว): ' + (e.message || e), true); }
-  }
+  const DN = {}; let ROWS = [], CAN_EXPORT = false, VIEW = [];
   const dl = c => c ? (c + ' ' + (DN[c] || '')).trim() : '-';
-  function render(pool, rows){
-    const t = todayISO(), act = rows.filter(r => r.status === 'active');
-    const cur = act.filter(r => r.start_date <= t && r.end_date >= t);
-    const curP = new Set(cur.map(r => r.employee_code));
-    const end7 = act.filter(r => r.end_date >= t && r.end_date <= addD(t, 7) && r.start_date <= t);
-    const up = act.filter(r => r.start_date > t);
-    el('asof').textContent = 'ณ วันที่ ' + fmtThai(t);
-    const busy = pool.filter(p => p.busy).length;
-    el('tiles').innerHTML = [
-      ['พนักงานในส่วนกลาง', pool.length, ''], ['ว่าง (พร้อมถูกเลือก)', pool.length - busy, 'good'],
-      ['ถูกใช้งานวันนี้ (ทั้งบริษัท)', busy, ''], ['รายการที่ใช้งานอยู่ (ตามสิทธิ์ของท่าน)', new Set(cur.map(r => r.request_id)).size, ''],
-      ['สิ้นสุดภายใน 7 วัน', end7.length, end7.length ? 'warn' : ''], ['กำลังจะเริ่ม', up.length, '']
-    ].map(([k, v, c]) => `<div class="tile ${c}"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('');
-    const by = {}; cur.forEach(r => by[r.dept_code] = (by[r.dept_code] || 0) + 1);
-    const ent = Object.entries(by).sort((a, b) => b[1] - a[1]); const mx = Math.max(1, ...ent.map(x => x[1]));
-    el('bars').innerHTML = ent.map(([c, n]) => `<div class="bar-row"><span>${escapeHtml(dl(c))}</span>
-      <div class="bar-track"><div class="bar-fill" style="width:${n / mx * 100}%"></div></div><span class="n">${n}</span></div>`).join('')
-      || '<div class="empty-state">วันนี้ยังไม่มีการกำหนด</div>';
-    const days = []; for (let i = 0; i < 14; i++) days.push(addD(t, i));
-    const cnt = days.map(d => new Set(act.filter(r => r.start_date <= d && r.end_date >= d).map(r => r.employee_code)).size);
-    const m2 = Math.max(1, ...cnt);
-    el('days').innerHTML = days.map((d, i) => { const w = [0, 6].includes(parseISO(d).getUTCDay());
-      return `<div class="day ${w ? 'we' : ''}" title="${escapeHtml(fmtThai(d))}: ${cnt[i]} คน"><b>${cnt[i]}</b><div class="col" style="height:${cnt[i] / m2 * 100 * .8}%"></div>${d.slice(8)}</div>`; }).join('');
-    const row = (r, k) => `<tr><td>${escapeHtml(r.full_name || r.employee_code)}</td><td>${escapeHtml(dl(r.dept_code))}</td><td class="nowrap">${escapeHtml(fmtThai(r[k]))}</td></tr>`;
-    el('ending').innerHTML = end7.sort((a, b) => a.end_date < b.end_date ? -1 : 1).map(r => row(r, 'end_date')).join('') || '<tr><td colspan="3" class="empty-state">ไม่มี</td></tr>';
-    el('upcoming').innerHTML = up.sort((a, b) => a.start_date < b.start_date ? -1 : 1).slice(0, 50).map(r => row(r, 'start_date')).join('') || '<tr><td colspan="3" class="empty-state">ไม่มี</td></tr>';
+  const diffDays = (a, b) => Math.round((parseISO(b) - parseISO(a)) / 86400000) + 1;
+  async function init(){
+    const t = todayISO();
+    el('f-from').value = t.slice(0, 8) + '01'; el('f-to').value = lastDayOfMonth(t.slice(0, 7));
+    try {
+      const { data: ds } = await sb.rpc('assign_depts');
+      (ds || []).forEach(d => DN[d.department_code] = d.name);
+      el('f-dept').innerHTML = '<option value="">ทุกแผนก</option>' + (ds || []).map(d => `<option value="${escapeHtml(d.department_code)}">${escapeHtml(dl(d.department_code))}</option>`).join('');
+      const { data: hr } = await sb.rpc('is_hr_admin'); CAN_EXPORT = hr === true;   // เหมือนหน้ารายงานเดิม: ธุรการออก PDF ได้อย่างเดียว
+      el('x-csv').style.display = el('x-xlsx').style.display = CAN_EXPORT ? '' : 'none';
+    } catch (e) {}
+    await load();
   }
+  async function load(){
+    const { data, error } = await sb.rpc('assign_rows', { p_from: el('f-from').value || null, p_to: el('f-to').value || null });
+    if (error) { showBanner('โหลดไม่สำเร็จ (ตรวจว่ารัน assign.sql ล่าสุดแล้ว): ' + error.message, true); return; }
+    ROWS = data || []; draw();
+  }
+  function draw(){
+    const d = el('f-dept').value, s = el('f-status').value, q = el('f-q').value.trim().toLowerCase();
+    VIEW = ROWS.filter(r => (!d || r.dept_code === d) && (!s || r.status === s) && (!q || (r.employee_code + ' ' + (r.full_name || '')).toLowerCase().includes(q)));
+    el('body').innerHTML = VIEW.map(r => `<tr><td>${r.request_id}</td><td>${escapeHtml(dl(r.dept_code))}</td><td class="code-cell">${escapeHtml(r.employee_code)}</td>
+      <td>${escapeHtml(r.full_name || '')}${r.has_loan ? ' ⚠' : ''}</td><td>${escapeHtml(r.home_dept_name || '')}</td>
+      <td class="nowrap">${escapeHtml(fmtThai(r.start_date))}</td><td class="nowrap">${escapeHtml(fmtThai(r.end_date))}</td><td>${diffDays(r.start_date, r.end_date)}</td>
+      <td>${r.status === 'active' ? 'ใช้งาน' : 'ยกเลิกแล้ว'}</td><td>${escapeHtml(r.created_by_name || '')}</td><td>${escapeHtml(r.note || '')}</td></tr>`).join('')
+      || '<tr><td colspan="11" class="empty-state">ไม่พบรายการ</td></tr>';
+    const people = new Set(VIEW.filter(r => r.status === 'active').map(r => r.employee_code)).size;
+    el('sum').textContent = `${VIEW.length} แถว · พนักงานที่ใช้งาน ${people} คน · ⚠ = เคยมีการเตือนจากระบบยืมพนักงาน`;
+    el('p-sub').textContent = `(${fmtThai(el('f-from').value || todayISO())} – ${fmtThai(el('f-to').value || todayISO())})`;
+  }
+  ['f-from', 'f-to'].forEach(i => el(i).addEventListener('change', load));
+  ['f-dept', 'f-status'].forEach(i => el(i).addEventListener('change', draw)); el('f-q').addEventListener('input', draw);
+  const HEAD = ['เลขที่', 'แผนกปลายทาง', 'รหัสพนักงาน', 'ชื่อ-นามสกุล', 'แผนกต้นสังกัด', 'วันเริ่ม', 'วันสิ้นสุด', 'จำนวนวัน', 'สถานะ', 'ผู้บันทึก', 'หมายเหตุ', 'เคยเตือนจากระบบยืม'];
+  const aoa = () => [HEAD].concat(VIEW.map(r => [r.request_id, dl(r.dept_code), r.employee_code, r.full_name || '', r.home_dept_name || '', r.start_date, r.end_date,
+    diffDays(r.start_date, r.end_date), r.status === 'active' ? 'ใช้งาน' : 'ยกเลิกแล้ว', r.created_by_name || '', r.note || '', r.has_loan ? 'ใช่' : '']));
+  el('x-pdf').addEventListener('click', () => window.print());
+  el('x-csv').addEventListener('click', () => {
+    if (!CAN_EXPORT) return;
+    const csv = aoa().map(r => r.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(',')).join('\r\n');
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' }));
+    a.download = 'assign-report.csv'; a.click();
+  });
+  el('x-xlsx').addEventListener('click', () => {
+    if (!CAN_EXPORT) return;
+    const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(aoa()), 'รายงาน'); XLSX.writeFile(wb, 'assign-report.xlsx');
+  });
 </script>
 </body>
 </html>
