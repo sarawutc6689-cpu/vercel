@@ -653,8 +653,11 @@
   el('h-dept').addEventListener('change', loadHist);
   el('hist-body').addEventListener('click', async (ev) => {
     const b = ev.target.closest('[data-cancel]'); if (!b) return;
-    const note = prompt('เหตุผลที่ยกเลิกรายการ #' + b.dataset.cancel + ' (ไม่บังคับ)');
-    if (note === null) return;
+    const ok = await ask({ title: 'ยกเลิกรายการ #' + b.dataset.cancel,
+      html: '<div class="field"><label for="cn-note">เหตุผล (ไม่บังคับ)</label><input id="cn-note" type="text" maxlength="200"></div>',
+      yes: 'ยืนยันยกเลิกรายการ', no: 'ไม่ยกเลิก' });
+    if (!ok) return;
+    const note = el('cn-note').value;
     const { error } = await sb.rpc('assign_cancel', { p_id: Number(b.dataset.cancel), p_note: note });
     if (error) showBanner('ยกเลิกไม่สำเร็จ: ' + error.message, true); else { showBanner('ยกเลิกแล้ว'); loadHist(); }
   });
