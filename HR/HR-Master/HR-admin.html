@@ -729,7 +729,10 @@
 
   function renderTable(rows){
     const tbody = el('employee-tbody');
-    el('count-tag').textContent = rows.length + ' คน';
+    // นับเฉพาะพนักงานสถานะ "กำลังทำงาน" (ตารางยังแสดงทุกสถานะ)
+    const activeCount = rows.filter(r => r.status === 'active').length;
+    el('count-tag').textContent = 'กำลังทำงาน ' + activeCount + ' คน';
+    el('count-tag').title = 'ทั้งหมดที่แสดง ' + rows.length + ' คน';
     if (rows.length === 0) {
       tbody.innerHTML = '';
       el('empty-state').style.display = 'block';
