@@ -128,16 +128,23 @@
   .banner.err{color:var(--danger); border:1px solid var(--danger-soft);}
   .app-footer{text-align:center; color:var(--ink-soft); font-size:12.5px; padding:8px 20px 32px;}
 
-  /* ---------- top navigation ---------- */
+  /* ---------- page tabs (แดชบอร์ด / รายงาน) ---------- */
   header{flex-wrap:wrap; gap:10px 24px;}
   .topnav{display:flex; gap:4px; flex-wrap:wrap; align-items:center;}
-  .topnav a{
-    padding:7px 13px; border-radius:9px; font-size:13.5px; font-weight:600;
-    color:var(--ink-soft); text-decoration:none; white-space:nowrap; transition:.15s;
+  .topnav button{
+    padding:7px 16px; border-radius:9px; font-size:13.5px; font-weight:600; font-family:inherit;
+    color:var(--ink-soft); background:none; border:none; cursor:pointer; white-space:nowrap; transition:.15s;
   }
-  .topnav a:hover{background:var(--accent-soft-2); color:var(--accent-dark);}
-  .topnav a.active{background:var(--accent-soft); color:var(--accent-dark);}
-  @media (max-width:1100px){ .topnav{order:3; width:100%;} }
+  .topnav button:hover{background:var(--accent-soft-2); color:var(--accent-dark);}
+  .topnav button.active{background:var(--accent-soft); color:var(--accent-dark);}
+  @media (max-width:700px){ .topnav{order:3; width:100%;} }
+  .view{display:none; gap:24px;}
+  .view.active{display:grid;}
+  .view > *{min-width:0;}
+  .charts{display:grid; grid-template-columns:repeat(auto-fit, minmax(340px, 1fr)); gap:24px;}
+  .hrow{display:grid; grid-template-columns:130px 1fr 44px; gap:10px; align-items:center; font-size:13.5px; margin:9px 0;}
+  .hrow .lab{overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .hrow .val{text-align:right; font-variant-numeric:tabular-nums; font-weight:600;}
 
 
   .tiles{display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:12px;}
@@ -179,16 +186,9 @@
         <div class="brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="m9 14 2 2 4-4"/></svg></div>
         <h1>สำรวจยานพาหนะ</h1>
       </div>
-      <nav class="topnav" aria-label="เมนู">
-        <a href="index.html">หน้าหลัก</a>
-        <a href="shift-schedule.html">ตารางกะ</a>
-        <a href="approval.html">อนุมัติตารางกะ</a>
-        <a href="calendar.html">ปฏิทินวันหยุด</a>
-        <a href="report.html">รายงาน</a>
-        <a href="dashboard.html">แดชบอร์ด</a>
-        <a href="vehicle-survey-admin.html" data-hr>สำรวจยานพาหนะ</a>
-        <a href="guide.html">คู่มือ</a>
-        <a href="clerk-admin.html" data-hr>บัญชีธุรการ</a>
+      <nav class="topnav" aria-label="หน้า">
+        <button type="button" data-view="dashboard" class="active">แดชบอร์ด</button>
+        <button type="button" data-view="report">รายงาน</button>
       </nav>
       <div style="display:flex; align-items:center; gap:14px;">
         <span class="who" id="who-label"></span>
@@ -197,10 +197,22 @@
     </header>
 
     <main id="main-area">
+     <div class="view active" id="view-dashboard">
       <section class="panel">
         <div class="panel-head"><h2>ภาพรวมแบบสำรวจยานพาหนะ</h2><span class="sub-note" id="asof"></span></div>
         <div class="tiles" id="tiles"></div>
       </section>
+
+      <div class="charts">
+        <section class="panel">
+          <div class="panel-head"><h2>สัดส่วนการเดินทาง</h2><span class="sub-note">จำนวนคน (นับเฉพาะที่ตอบแล้ว)</span></div>
+          <div id="chart-modes"></div>
+        </section>
+        <section class="panel">
+          <div class="panel-head"><h2>ทะเบียนรถตามจังหวัด</h2><span class="sub-note">10 อันดับแรก (คัน)</span></div>
+          <div id="chart-prov"></div>
+        </section>
+      </div>
 
       <section class="panel">
         <div class="panel-head"><h2>ความคืบหน้ารายแผนก</h2><span class="sub-note">เรียงจากตอบน้อยไปมาก</span></div>
@@ -211,7 +223,9 @@
           </table>
         </div>
       </section>
+     </div>
 
+     <div class="view" id="view-report">
       <section class="panel">
         <div class="panel-head"><h2>รายละเอียดรายคน</h2>
           <div style="display:flex; gap:8px; flex-wrap:wrap;">
@@ -236,6 +250,7 @@
         </div>
         <div class="empty-state" id="rows-empty" style="display:none;">ไม่พบข้อมูลตามเงื่อนไข</div>
       </section>
+     </div>
     </main>
     <footer class="app-footer">ระบบฐานข้อมูลฝ่ายบุคคล | ใช้ภายในบริษัทเท่านั้น</footer>
   </div>
@@ -253,21 +268,13 @@
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBwemR5dm9tcmZpaXRhaHh3cnd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwMjQ0MjIsImV4cCI6MjEwNDYwMDQyMn0.iArUz6swMfwhFT_1qEvCwK1B3aiCxdWt46_FBjT6_Y0";
   const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  // ---------- เมนูนำทาง: ไฮไลต์หน้าปัจจุบัน และซ่อนเมนูเฉพาะ HR ถ้าไม่ใช่ HR ----------
-  (function(){
-    const here = decodeURIComponent(location.pathname.split('/').pop() || 'index.html');
-    document.querySelectorAll('.topnav a').forEach(a => { if (a.getAttribute('href') === here) a.classList.add('active'); });
-    let doneFor = null;
-    sb.auth.onAuthStateChange((_e, session) => {
-      if (!session || doneFor === session.user.id) return;
-      doneFor = session.user.id;
-      setTimeout(async () => {
-        const { data, error } = await sb.rpc('is_hr_admin');
-        if (error) return;                       // ยังไม่ได้รัน calendar.sql → ไม่ซ่อนเมนู
-        document.querySelectorAll('.topnav [data-hr]').forEach(a => { a.style.display = data === true ? '' : 'none'; });
-      }, 0);
-    });
-  })();
+  // ---------- สลับหน้า แดชบอร์ด / รายงาน ----------
+  function showView(name){
+    document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === 'view-' + name));
+    document.querySelectorAll('.topnav button').forEach(b => b.classList.toggle('active', b.dataset.view === name));
+    try { history.replaceState(null, '', '#' + name); } catch (e) {}
+  }
+  document.querySelectorAll('.topnav button').forEach(b => b.addEventListener('click', () => showView(b.dataset.view)));
 
   const el = (id) => document.getElementById(id);
   const WEEKDAYS = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
@@ -400,14 +407,37 @@
       return;
     }
     let data, error = null;
-try { data = await fetchAll(() => sb.rpc('get_vehicle_survey_overview')); }
-catch (e) { error = e; }
+    try { data = await fetchAll(() => sb.rpc('get_vehicle_survey_overview')); }   // ดึงครบทุกหน้า (เกิน 1,000 แถวได้)
+    catch (e) { error = e; }
     if (error) { showBanner('โหลดข้อมูลไม่สำเร็จ: ' + error.message + ' (ตรวจว่ารัน vehicle-survey.sql แล้ว)', true); return; }
     all = data;
     el('asof').textContent = 'ข้อมูล ณ ' + fmtDT(new Date().toISOString());
     const depts = [...new Map(all.map(r => [r.department_code, r.department_name])).entries()].sort((a, b) => a[1].localeCompare(b[1], 'th'));
     el('f-dept').innerHTML = '<option value="">ทั้งหมด</option>' + depts.map(([c, n]) => `<option value="${escapeHtml(c)}">${escapeHtml(n)}</option>`).join('');
-    renderSummary(); renderDepts(); applyFilter();
+    renderSummary(); renderCharts(); renderDepts(); applyFilter();
+    showView(location.hash === '#report' ? 'report' : 'dashboard');
+  }
+
+  function hbars(el_, items, emptyMsg){
+    const max = Math.max(1, ...items.map(i => i.n));
+    el_.innerHTML = items.length ? items.map(i => `
+      <div class="hrow"><span class="lab" title="${escapeHtml(i.label)}">${escapeHtml(i.label)}</span>
+        <div class="bar"><i style="width:${Math.round(i.n * 100 / max)}%"></i></div><span class="val">${i.n}</span></div>`).join('')
+      : `<div class="empty-state">${emptyMsg}</div>`;
+  }
+  function renderCharts(){
+    const done = all.filter(r => r.responded);
+    hbars(el('chart-modes'), [
+      { label: 'มีรถยนต์', n: done.filter(r => cars(r).length).length },
+      { label: 'มีมอเตอร์ไซค์', n: done.filter(r => motos(r).length).length },
+      { label: 'ใช้จักรยาน', n: done.filter(r => r.uses_bicycle).length },
+      { label: 'ใช้ขนส่งสาธารณะ', n: done.filter(r => r.uses_public_transport).length },
+      { label: 'ไม่มีพาหนะส่วนตัว', n: done.filter(r => r.no_vehicle).length }
+    ], 'ยังไม่มีคำตอบ');
+    const prov = new Map();
+    done.forEach(r => r.vehicles.forEach(v => prov.set(v.province, (prov.get(v.province) || 0) + 1)));
+    hbars(el('chart-prov'), [...prov.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'th')).slice(0, 10)
+      .map(([label, n]) => ({ label, n })), 'ยังไม่มีข้อมูลทะเบียน');
   }
 
   function renderSummary(){
