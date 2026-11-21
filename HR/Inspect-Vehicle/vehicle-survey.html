@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>แบบสำรวจยานพาหนะพนักงาน</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1B2B3E; --ink-soft:#6E85A0;
+    --bg-a:#EAF3FB; --bg-b:#F7FBFE; --panel:#FFFFFF; --line:#DCE9F5;
+    --accent:#2F7FB8; --accent-dark:#24628F; --accent-ink:#FFFFFF;
+    --accent-soft:#E7F2FB; --accent-soft-2:#F1F8FD;
+    --danger:#C1596A; --danger-soft:#FBEBEE;
+    --ok:#1F8A4C; --ok-soft:#E5F5EC;
+    --warn:#B4791F; --warn-soft:#FDF3E0;
+    --radius:16px;
+    --shadow:0 1px 2px rgba(27,60,90,.04), 0 10px 30px rgba(27,60,90,.06);
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    min-height:100vh; background:linear-gradient(180deg, var(--bg-a) 0%, var(--bg-b) 320px, var(--bg-b) 100%);
+    color:var(--ink); font-family:'Inter', Tahoma, 'Noto Sans Thai', system-ui, sans-serif; font-size:15px; line-height:1.55;
+  }
+  .wrap{max-width:680px; margin:0 auto; padding:24px 16px 48px;}
+  .topbar{display:flex; align-items:center; gap:12px; margin-bottom:18px;}
+  .mark{
+    width:40px; height:40px; border-radius:12px; flex-shrink:0; display:flex; align-items:center; justify-content:center;
+    background:linear-gradient(135deg, var(--accent), #6FB4E0);
+  }
+  .topbar h1{font-size:18px; font-weight:700;}
+  .topbar .sub{font-size:12.5px; color:var(--ink-soft);}
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); padding:24px;}
+  .card + .card{margin-top:16px;}
+  h2{font-size:16.5px; font-weight:700; margin-bottom:4px;}
+  .muted{color:var(--ink-soft); font-size:13.5px;}
+  .field{margin-top:16px;}
+  label.lbl{display:block; font-size:13px; font-weight:600; color:var(--ink-soft); margin-bottom:6px;}
+  input[type=text], input[type=password], select{
+    width:100%; padding:11px 13px; border:1.5px solid var(--line); border-radius:10px; background:#fff;
+    font:inherit; font-size:16px; color:var(--ink);
+  }
+  input:focus, select:focus{outline:none; border-color:var(--accent); box-shadow:0 0 0 4px var(--accent-soft);}
+  input.bad, select.bad{border-color:var(--danger); background:var(--danger-soft);}
+  .hint{font-size:12.5px; color:var(--ink-soft); margin-top:5px;}
+  .row{display:flex; gap:8px;}
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px; width:100%;
+    padding:13px 18px; border:none; border-radius:12px; font:inherit; font-size:15.5px; font-weight:600; cursor:pointer; transition:.15s;
+  }
+  .btn-primary{background:var(--accent); color:var(--accent-ink);}
+  .btn-primary:hover{background:var(--accent-dark);}
+  .btn:disabled{opacity:.55; cursor:not-allowed;}
+  .btn-ghost{background:#fff; color:var(--ink-soft); border:1px solid var(--line); border-radius:10px; width:auto; padding:10px 16px; font-size:14px; font-weight:500;}
+  .btn-ghost:hover{border-color:var(--accent); color:var(--accent-dark);}
+  .btn-add{
+    width:100%; padding:11px; border:1.5px dashed #9CC4E4; border-radius:12px; background:var(--accent-soft-2);
+    color:var(--accent-dark); font:inherit; font-size:14.5px; font-weight:600; cursor:pointer;
+  }
+  .btn-add:hover:not(:disabled){background:var(--accent-soft);}
+  .btn-add:disabled{opacity:.5; cursor:not-allowed;}
+  .alert{margin-top:16px; padding:11px 14px; border-radius:10px; font-size:14px; display:none;}
+  .alert.show{display:block;}
+  .alert.err{background:var(--danger-soft); border:1px solid var(--danger); color:var(--danger);}
+  .alert.ok{background:var(--ok-soft); border:1px solid #A9DDBF; color:var(--ok);}
+  .alert.info{background:var(--accent-soft-2); border:1px solid var(--line); color:var(--accent-dark);}
+  .who{display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap;}
+  .who b{font-size:16px;}
+  .opts{display:flex; flex-direction:column; gap:8px; margin-top:12px;}
+  .opt{
+    display:flex; align-items:center; gap:12px; padding:12px 14px; border:1.5px solid var(--line); border-radius:12px;
+    cursor:pointer; background:#fff; font-size:15px; transition:.15s;
+  }
+  .opt:hover{border-color:var(--accent);}
+  .opt.on{background:var(--accent-soft); border-color:var(--accent);}
+  .opt input{width:20px; height:20px; accent-color:var(--accent); flex-shrink:0;}
+  .sect{margin-top:22px; padding-top:20px; border-top:1px solid var(--line);}
+  .sect.off{opacity:.45; pointer-events:none;}
+  .sect-head{display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:10px;}
+  .count{font-size:13px; color:var(--ink-soft);}
+  .veh{border:1.5px solid var(--line); border-radius:14px; padding:14px; margin-bottom:10px; background:var(--accent-soft-2);}
+  .veh-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; font-weight:600; font-size:14px;}
+  .rm{border:none; background:none; color:var(--danger); font:inherit; font-size:13.5px; cursor:pointer; padding:4px 6px; border-radius:8px;}
+  .rm:hover{background:var(--danger-soft);}
+  .plate{display:grid; grid-template-columns:84px 1fr 1fr; gap:8px;}
+  .plate .prov{grid-column:1 / -1;}
+  .plate label.lbl{font-size:12px; margin-bottom:4px;}
+  .preview{
+    margin-top:10px; padding:8px 12px; background:#fff; border:1px dashed var(--line); border-radius:10px;
+    font-size:15px; font-weight:600; text-align:center; letter-spacing:.02em; min-height:38px;
+  }
+  .preview.empty{color:var(--ink-soft); font-weight:400; font-size:13px;}
+  .consent{margin-top:22px; padding:14px; border-radius:12px; background:var(--warn-soft); border:1px solid #F2DEB8; font-size:13.5px;}
+  .consent label{display:flex; gap:10px; align-items:flex-start; margin-top:10px; font-weight:600; cursor:pointer;}
+  .consent input{width:20px; height:20px; margin-top:2px; accent-color:var(--accent); flex-shrink:0;}
+  .done{text-align:center; padding:12px 4px;}
+  .done .tick{
+    width:64px; height:64px; margin:0 auto 14px; border-radius:50%; background:var(--ok-soft); display:flex; align-items:center; justify-content:center;
+  }
+  .sum{margin:16px 0 4px; text-align:left; border:1px solid var(--line); border-radius:12px; overflow:hidden;}
+  .sum div{padding:10px 14px; font-size:14.5px; border-bottom:1px solid var(--line);}
+  .sum div:last-child{border-bottom:none;}
+  .sum small{display:block; color:var(--ink-soft); font-size:12px;}
+  .hide{display:none !important;}
+  .foot{text-align:center; color:var(--ink-soft); font-size:12.5px; margin-top:22px;}
+  @media (max-width:420px){ .card{padding:18px;} .plate{grid-template-columns:76px 1fr 1fr;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="mark"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h14M5 17a2 2 0 1 0 4 0M15 17a2 2 0 1 0 4 0M3 13l2-6h10l4 6v4H3z"/></svg></div>
+    <div><h1>แบบสำรวจยานพาหนะพนักงาน</h1><div class="sub">ฝ่ายบุคคล</div></div>
+  </div>
+
+  <!-- 1) เข้าสู่ระบบ -->
+  <section class="card" id="login-card">
+    <h2>ยืนยันตัวตน</h2>
+    <p class="muted">กรอกรหัสพนักงานและวันที่เริ่มงานของคุณ เพื่อเริ่มตอบแบบสำรวจ</p>
+    <div class="field">
+      <label class="lbl" for="l-code">รหัสพนักงาน</label>
+      <input id="l-code" type="text" inputmode="numeric" autocomplete="username" maxlength="20" placeholder="เช่น 103608">
+    </div>
+    <div class="field">
+      <label class="lbl" for="l-hire">วันที่เริ่มงาน (วัน เดือน ปี พ.ศ. รวม 8 หลัก)</label>
+      <div class="row">
+        <input id="l-hire" type="password" inputmode="numeric" autocomplete="off" maxlength="8" placeholder="เช่น 18112562">
+        <button type="button" class="btn-ghost" id="l-eye" aria-label="แสดงหรือซ่อนวันที่">แสดง</button>
+      </div>
+      <div class="hint">ตัวอย่าง เริ่มงานวันที่ 18 พฤศจิกายน 2562 กรอก 18112562</div>
+    </div>
+    <div class="alert err" id="l-err" role="alert"></div>
+    <div class="field"><button type="button" class="btn btn-primary" id="l-btn">เข้าสู่แบบสำรวจ</button></div>
+  </section>
+
+  <!-- 2) แบบสำรวจ -->
+  <section class="card hide" id="form-card">
+    <div class="who">
+      <div><b id="w-name"></b><div class="muted" id="w-sub"></div></div>
+      <button type="button" class="btn-ghost" id="logout">ออก</button>
+    </div>
+    <div class="alert info" id="prev-note">คุณเคยส่งแบบสำรวจไว้แล้ว แก้ไขคำตอบและส่งใหม่ได้</div>
+
+    <h2 style="margin-top:20px;">คุณเดินทางมาทำงานอย่างไร</h2>
+    <p class="muted">เลือกได้มากกว่า 1 ข้อ</p>
+    <div class="opts">
+      <label class="opt" id="o-none"><input type="checkbox" id="c-none"> ไม่มีพาหนะส่วนตัว / เดินมา</label>
+      <label class="opt" id="o-bike"><input type="checkbox" id="c-bike"> ใช้จักรยาน</label>
+      <label class="opt" id="o-pub"><input type="checkbox" id="c-pub"> ใช้ขนส่งสาธารณะ</label>
+    </div>
+
+    <div class="sect" id="s-car">
+      <div class="sect-head"><h2>รถยนต์</h2><span class="count" id="n-car"></span></div>
+      <div id="list-car"></div>
+      <button type="button" class="btn-add" id="add-car">+ เพิ่มรถยนต์</button>
+    </div>
+    <div class="sect" id="s-motorcycle">
+      <div class="sect-head"><h2>มอเตอร์ไซค์</h2><span class="count" id="n-motorcycle"></span></div>
+      <div id="list-motorcycle"></div>
+      <button type="button" class="btn-add" id="add-motorcycle">+ เพิ่มมอเตอร์ไซค์</button>
+    </div>
+
+    <div class="consent">
+      ข้อมูลทะเบียนและลักษณะการเดินทางนี้ ฝ่ายบุคคลเก็บเพื่อใช้วางแผนที่จอดรถและการเดินทางของพนักงานเท่านั้น
+      และจะเปิดเผยเฉพาะผู้ที่ได้รับอนุญาต
+      <label><input type="checkbox" id="c-consent"> ฉันรับทราบและยินยอมให้เก็บและใช้ข้อมูลตามวัตถุประสงค์ข้างต้น</label>
+    </div>
+    <div class="alert err" id="f-err" role="alert"></div>
+    <div class="field"><button type="button" class="btn btn-primary" id="submit">ส่งแบบสำรวจ</button></div>
+  </section>
+
+  <!-- 3) เสร็จสิ้น -->
+  <section class="card hide" id="done-card">
+    <div class="done">
+      <div class="tick"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#1F8A4C" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+      <h2>ส่งแบบสำรวจเรียบร้อย</h2>
+      <p class="muted">ขอบคุณที่ให้ข้อมูล คำตอบของคุณมีดังนี้</p>
+    </div>
+    <div class="sum" id="sum"></div>
+    <div class="field row" style="gap:10px;">
+      <button type="button" class="btn btn-primary" id="edit-again">แก้ไขคำตอบ</button>
+      <button type="button" class="btn btn-ghost" id="done-out" style="flex-shrink:0;">ออก</button>
+    </div>
+  </section>
+
+  <div class="foot">ระบบฐานข้อมูลฝ่ายบุคคล | ใช้ภายในบริษัทเท่านั้น</div>
+</div>
+
+<script>
+  // ตั้งค่า: ที่อยู่ Edge Function vehicle-survey ของโปรเจกต์ Supabase
+  const FUNCTION_URL = 'https://ppzdyvomrfiitahxwrwz.supabase.co/functions/v1/vehicle-survey';
+
+  const PROVINCES = ['กรุงเทพมหานคร','กระบี่','กาญจนบุรี','กาฬสินธุ์','กำแพงเพชร','ขอนแก่น','จันทบุรี','ฉะเชิงเทรา','ชลบุรี','ชัยนาท',
+    'ชัยภูมิ','ชุมพร','เชียงราย','เชียงใหม่','ตรัง','ตราด','ตาก','นครนายก','นครปฐม','นครพนม',
+    'นครราชสีมา','นครศรีธรรมราช','นครสวรรค์','นนทบุรี','นราธิวาส','น่าน','บึงกาฬ','บุรีรัมย์','ปทุมธานี','ประจวบคีรีขันธ์',
+    'ปราจีนบุรี','ปัตตานี','พระนครศรีอยุธยา','พะเยา','พังงา','พัทลุง','พิจิตร','พิษณุโลก','เพชรบุรี','เพชรบูรณ์',
+    'แพร่','ภูเก็ต','มหาสารคาม','มุกดาหาร','แม่ฮ่องสอน','ยโสธร','ยะลา','ร้อยเอ็ด','ระนอง','ระยอง',
+    'ราชบุรี','ลพบุรี','ลำปาง','ลำพูน','เลย','ศรีสะเกษ','สกลนคร','สงขลา','สตูล','สมุทรปราการ',
+    'สมุทรสงคราม','สมุทรสาคร','สระแก้ว','สระบุรี','สิงห์บุรี','สุโขทัย','สุพรรณบุรี','สุราษฎร์ธานี','สุรินทร์','หนองคาย',
+    'หนองบัวลำภู','อ่างทอง','อำนาจเจริญ','อุดรธานี','อุตรดิตถ์','อุทัยธานี','อุบลราชธานี'];
+  const MAX = 5;
+  const LABEL = { car: 'รถยนต์', motorcycle: 'มอเตอร์ไซค์' };
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  let token = '', employee = null;
+  let state = { car: [], motorcycle: [] };           // รายการทะเบียนที่กำลังกรอก
+  let busy = false;
+
+  async function api(action, payload) {
+    let res;
+    try {
+      res = await fetch(FUNCTION_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action, ...payload }) });
+    } catch (e) { throw Object.assign(new Error('เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ตรวจสอบอินเทอร์เน็ตแล้วลองใหม่'), { status: 0 }); }
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) throw Object.assign(new Error(j.error || 'เกิดข้อผิดพลาด กรุณาลองใหม่'), { status: res.status });
+    return j;
+  }
+  function show(id) { ['login-card', 'form-card', 'done-card'].forEach((x) => $(x).classList.toggle('hide', x !== id)); window.scrollTo({ top: 0 }); }
+  function showErr(id, msg) { const e = $(id); e.textContent = msg; e.classList.toggle('show', !!msg); }
+
+  // ---------- เข้าสู่ระบบ ----------
+  $('l-hire').addEventListener('input', (e) => { e.target.value = e.target.value.replace(/\D/g, '').slice(0, 8); });
+  $('l-eye').addEventListener('click', () => {
+    const i = $('l-hire'), on = i.type === 'password';
+    i.type = on ? 'text' : 'password'; $('l-eye').textContent = on ? 'ซ่อน' : 'แสดง';
+  });
+  ['l-code', 'l-hire'].forEach((id) => $(id).addEventListener('keydown', (e) => { if (e.key === 'Enter') $('l-btn').click(); }));
+  $('l-btn').addEventListener('click', async () => {
+    if (busy) return;
+    const code = $('l-code').value.trim(), hire = $('l-hire').value.trim();
+    showErr('l-err', '');
+    if (!code) { showErr('l-err', 'กรุณากรอกรหัสพนักงาน'); $('l-code').focus(); return; }
+    if (hire.length !== 8) { showErr('l-err', 'กรุณากรอกวันที่เริ่มงานเป็นตัวเลข 8 หลัก เช่น 18112562'); $('l-hire').focus(); return; }
+    busy = true; $('l-btn').disabled = true; $('l-btn').textContent = 'กำลังตรวจสอบ...';
+    try {
+      const r = await api('login', { employee_code: code, hire_date: hire });
+      token = r.token; employee = r.employee;
+      $('l-hire').value = '';
+      loadForm(r.response);
+    } catch (e) { showErr('l-err', e.message); }
+    finally { busy = false; $('l-btn').disabled = false; $('l-btn').textContent = 'เข้าสู่แบบสำรวจ'; }
+  });
+  function logout() {
+    token = ''; employee = null; state = { car: [], motorcycle: [] };
+    $('l-code').value = ''; $('l-hire').value = ''; showErr('l-err', ''); showErr('f-err', '');
+    show('login-card');
+  }
+  $('logout').addEventListener('click', logout);
+  $('done-out').addEventListener('click', logout);
+  function expired(e) { if (e.status === 401) { logout(); showErr('l-err', e.message); return true; } return false; }
+
+  // ---------- แบบสำรวจ ----------
+  function loadForm(resp) {
+    $('w-name').textContent = employee.name;
+    $('w-sub').textContent = [employee.code, employee.department, employee.position].filter(Boolean).join(' · ');
+    $('prev-note').classList.toggle('hide', !resp);
+    state = { car: [], motorcycle: [] };
+    $('c-none').checked = !!(resp && resp.no_vehicle);
+    $('c-bike').checked = !!(resp && resp.uses_bicycle);
+    $('c-pub').checked = !!(resp && resp.uses_public_transport);
+    $('c-consent').checked = false;
+    (resp ? resp.vehicles : []).forEach((v) => state[v.type].push({ digit: v.digit ? String(v.digit) : '', letters: v.letters, number: v.number, province: v.province }));
+    showErr('f-err', '');
+    renderAll(); show('form-card');
+  }
+  const plateText = (v) => (v.letters || v.number)
+    ? `${v.digit || ''}${v.letters || ''} ${v.number || ''} ${v.province || ''}`.replace(/\s+/g, ' ').trim() : '';
+
+  function renderList(type) {
+    const list = state[type];
+    $('list-' + type).innerHTML = list.map((v, i) => `
+      <div class="veh" data-type="${type}" data-i="${i}">
+        <div class="veh-head"><span>${LABEL[type]}คันที่ ${i + 1}</span><button type="button" class="rm" data-rm>ลบ</button></div>
+        <div class="plate">
+          <div><label class="lbl">หมวด</label>
+            <select data-f="digit" aria-label="หมวดตัวเลข"><option value="">-</option>${[1,2,3,4,5,6,7,8,9].map((n) => `<option value="${n}" ${String(n) === v.digit ? 'selected' : ''}>${n}</option>`).join('')}</select></div>
+          <div><label class="lbl">อักษร (ก-ฮ)</label>
+            <input type="text" data-f="letters" value="${esc(v.letters)}" maxlength="2" autocomplete="off" placeholder="กก"></div>
+          <div><label class="lbl">ตัวเลข</label>
+            <input type="text" data-f="number" value="${esc(v.number)}" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="1234"></div>
+          <div class="prov"><label class="lbl">จังหวัด</label>
+            <select data-f="province"><option value="">เลือกจังหวัด</option>${PROVINCES.map((p) => `<option ${p === v.province ? 'selected' : ''}>${p}</option>`).join('')}</select></div>
+        </div>
+        <div class="preview ${plateText(v) ? '' : 'empty'}" data-prev>${esc(plateText(v)) || 'ตัวอย่างทะเบียนจะแสดงที่นี่'}</div>
+      </div>`).join('');
+    $('n-' + type).textContent = `${list.length} / ${MAX} คัน`;
+    $('add-' + type).disabled = list.length >= MAX;
+    $('add-' + type).textContent = `+ เพิ่ม${LABEL[type]}` + (list.length >= MAX ? ' (ครบ 5 คันแล้ว)' : '');
+  }
+  function renderAll() { renderList('car'); renderList('motorcycle'); syncOpts(); }
+  function syncOpts() {
+    const none = $('c-none').checked;
+    [['o-none', 'c-none'], ['o-bike', 'c-bike'], ['o-pub', 'c-pub']].forEach(([o, c]) => $(o).classList.toggle('on', $(c).checked));
+    ['s-car', 's-motorcycle'].forEach((s) => $(s).classList.toggle('off', none));
+    ['c-bike', 'c-pub'].forEach((c) => { $(c).disabled = none; $(c.replace('c-', 'o-')).style.opacity = none ? .45 : 1; });
+  }
+  $('c-none').addEventListener('change', () => {
+    if ($('c-none').checked) { $('c-bike').checked = false; $('c-pub').checked = false; }
+    syncOpts();
+  });
+  ['c-bike', 'c-pub'].forEach((c) => $(c).addEventListener('change', syncOpts));
+
+  ['car', 'motorcycle'].forEach((type) => {
+    $('add-' + type).addEventListener('click', () => {
+      if (state[type].length >= MAX) return;
+      state[type].push({ digit: '', letters: '', number: '', province: '' });
+      renderList(type);
+      const last = $('list-' + type).lastElementChild; if (last) last.querySelector('[data-f=letters]').focus();
+    });
+    const list = $('list-' + type);
+    list.addEventListener('input', (e) => {
+      const f = e.target.dataset.f; if (!f) return;
+      const box = e.target.closest('.veh'), v = state[type][+box.dataset.i];
+      if (f === 'letters') e.target.value = e.target.value.replace(/[^ก-ฮ]/g, '').slice(0, 2);
+      if (f === 'number') e.target.value = e.target.value.replace(/\D/g, '').slice(0, 4);
+      v[f] = e.target.value; e.target.classList.remove('bad');
+      const p = box.querySelector('[data-prev]'), t = plateText(v);
+      p.textContent = t || 'ตัวอย่างทะเบียนจะแสดงที่นี่'; p.classList.toggle('empty', !t);
+    });
+    list.addEventListener('click', (e) => {
+      if (!e.target.closest('[data-rm]')) return;
+      state[type].splice(+e.target.closest('.veh').dataset.i, 1); renderList(type);
+    });
+  });
+
+  // ---------- ตรวจและส่ง ----------
+  function collect() {
+    const none = $('c-none').checked, vehicles = [];
+    let bad = null;
+    if (!none) ['car', 'motorcycle'].forEach((type) => state[type].forEach((v, i) => {
+      const box = $('list-' + type).children[i];
+      const miss = [];
+      if (!/^[ก-ฮ]{1,2}$/.test(v.letters)) miss.push('letters');
+      if (!/^[0-9]{1,4}$/.test(v.number)) miss.push('number');
+      if (!v.province) miss.push('province');
+      if (miss.length && !bad) bad = `${LABEL[type]}คันที่ ${i + 1} กรอกทะเบียนไม่ครบ (หมวดอักษร ก-ฮ 1-2 ตัว ตัวเลข 1-4 หลัก และจังหวัด)`;
+      miss.forEach((m) => box && box.querySelector(`[data-f=${m}]`).classList.add('bad'));
+      vehicles.push({ type, digit: v.digit, letters: v.letters, number: v.number, province: v.province });
+    }));
+    return { bad, data: {
+      no_vehicle: none, uses_bicycle: !none && $('c-bike').checked, uses_public_transport: !none && $('c-pub').checked,
+      consent: $('c-consent').checked, vehicles } };
+  }
+  $('submit').addEventListener('click', async () => {
+    if (busy) return;
+    showErr('f-err', '');
+    const { bad, data } = collect();
+    if (bad) { showErr('f-err', bad); return; }
+    if (!data.no_vehicle && !data.vehicles.length && !data.uses_bicycle && !data.uses_public_transport) {
+      showErr('f-err', 'กรุณาเลือกอย่างน้อย 1 ข้อ หรือเพิ่มรถยนต์/มอเตอร์ไซค์'); return;
+    }
+    if (!data.consent) { showErr('f-err', 'กรุณาติ๊กรับทราบและยินยอมการเก็บข้อมูลก่อนส่ง'); $('c-consent').focus(); return; }
+    busy = true; $('submit').disabled = true; $('submit').textContent = 'กำลังส่ง...';
+    try {
+      const r = await api('save', { token, data });
+      renderDone(r.response); show('done-card');
+    } catch (e) { if (!expired(e)) showErr('f-err', e.message); }
+    finally { busy = false; $('submit').disabled = false; $('submit').textContent = 'ส่งแบบสำรวจ'; }
+  });
+
+  function renderDone(r) {
+    const rows = [];
+    if (r.no_vehicle) rows.push(['ไม่มีพาหนะส่วนตัว / เดินมา', '']);
+    ['car', 'motorcycle'].forEach((t) => r.vehicles.filter((v) => v.type === t).forEach((v, i) =>
+      rows.push([`${LABEL[t]}คันที่ ${i + 1}`, `${v.digit || ''}${v.letters} ${v.number} ${v.province}`])));
+    if (r.uses_bicycle) rows.push(['ใช้จักรยาน', '']);
+    if (r.uses_public_transport) rows.push(['ใช้ขนส่งสาธารณะ', '']);
+    $('sum').innerHTML = rows.map(([a, b]) => `<div>${b ? `<small>${esc(a)}</small><b>${esc(b)}</b>` : `<b>${esc(a)}</b>`}</div>`).join('');
+    $('edit-again').onclick = () => loadForm(r);
+  }
+</script>
+</body>
+</html>
