@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>กำหนดพนักงานไปแผนก — HR Admin</title>
+<title>เลือกพนักงานจากส่วนกลาง — HR Admin</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600&display=swap" rel="stylesheet">
 <style>
@@ -230,7 +230,7 @@
   <div id="login-screen">
     <div class="login-card">
       <div class="login-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
-      <h1>กำหนดพนักงานไปแผนก</h1>
+      <h1>เลือกพนักงานจากส่วนกลาง</h1>
       <p class="sub">เข้าสู่ระบบด้วยบัญชีของตนเอง</p>
       <div class="field"><label for="login-email">อีเมล</label><input id="login-email" type="email" autocomplete="username"></div>
       <div class="field"><label for="login-password">รหัสผ่าน</label><input id="login-password" type="password" autocomplete="current-password"></div>
@@ -244,13 +244,14 @@
     <header>
       <div class="brand">
         <div class="brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
-        <h1>กำหนดพนักงานไปแผนก</h1>
+        <h1>เลือกพนักงานจากส่วนกลาง</h1>
       </div>
       <nav class="topnav" aria-label="เมนู">
         <a href="index.html">หน้าหลัก</a>
         <a href="shift-schedule.html">ตารางกะ</a>
         <a href="approval.html">อนุมัติตารางกะ</a>
-        <a href="assign.html">กำหนดพนักงานไปแผนก</a>
+        <a href="assign.html">เลือกพนักงานจากส่วนกลาง</a>
+        <a href="central-pool.html" data-hr>โอนเข้าส่วนกลาง (HR)</a>
         <a href="report.html">รายงาน</a>
       </nav>
       <div style="display:flex; align-items:center; gap:14px;">
@@ -271,7 +272,7 @@
       </section>
 
       <section class="panel">
-        <div class="panel-head"><h2>2) เลือกพนักงานจากรายชื่อกลาง</h2><span class="sub-note" id="pick-note"></span></div>
+        <div class="panel-head"><h2>2) เลือกพนักงานจากส่วนกลางไปแผนกของท่าน</h2><span class="sub-note" id="pick-note"></span></div>
         <div class="grid2">
           <div>
             <div class="pick-tools">
@@ -495,7 +496,7 @@
         <input type="checkbox" ${SEL.has(e.employee_code) ? 'checked' : ''}>
         <span class="nm"><b>${escapeHtml(e.full_name)}</b> <span class="sm">${escapeHtml(e.employee_code)}</span><br>
           <span class="sm">${escapeHtml(e.department_name || '')}${e.position_name ? ' · ' + escapeHtml(e.position_name) : ''}</span></span>
-      </label>`).join('') || '<div class="empty-state" style="padding:22px">ไม่พบพนักงาน</div>';
+      </label>`).join('') || '<div class="empty-state" style="padding:22px">ไม่พบพนักงานในส่วนกลาง (ฝ่ายบุคคลต้องเพิ่มเข้าส่วนกลางก่อน)</div>';
     el('pick-count').textContent = rows.length > shown.length
       ? `แสดง ${shown.length} จาก ${rows.length} คน — พิมพ์ค้นหาเพื่อกรองเพิ่ม` : `${rows.length} คน`;
   }
