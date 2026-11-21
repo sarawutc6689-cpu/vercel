@@ -433,9 +433,9 @@
       const { data: pm } = await sb.from('assign_pool').select('employee_code, note, added_by, added_by_name, added_at');
       const meta = {}; (pm || []).forEach(p => meta[p.employee_code] = p);
       POOL.forEach(p => p.meta = meta[p.employee_code] || {});
-      const { data: rq } = await sb.from('assign_requests').select('dept_code,start_date,end_date,assign_items(employee_code)')
-        .eq('status', 'active').gte('end_date', todayISO());
-      USE = {}; (rq || []).forEach(r => (r.assign_items || []).forEach(i => (USE[i.employee_code] ||= []).push(r)));
+      const { data: rq, error: e2 } = await sb.rpc('pool_usage');
+      if (e2) throw e2;
+      USE = {}; (rq || []).forEach(r => (USE[r.employee_code] ||= []).push(r));
       const homes = [...new Map(CAND.map(e => [e.department_code, e.department_name])).entries()].sort();
       el('q-dept').innerHTML = '<option value="">ทุกแผนกต้นสังกัด</option>' +
         homes.map(([c, n]) => `<option value="${escapeHtml(c)}">${escapeHtml((c || '') + ' ' + (n || ''))}</option>`).join('');
@@ -470,7 +470,7 @@
     el('pool-count').textContent = '(' + POOL.length + ' คน)';
     el('pool-body').innerHTML = rows.map(e => {
       const u = USE[e.employee_code] || [];
-      const st = u.length ? u.map(r => `<span class="tag">${escapeHtml(r.dept_code)} ${escapeHtml(fmtRange(r.start_date, r.end_date))}</span>`).join('') : '<span class="badge done">ว่าง</span>';
+      const st = u.length ? u.map(r => `<div style="margin-bottom:4px"><span class="tag">${escapeHtml(r.dept_code)} ${escapeHtml(fmtRange(r.start_date, r.end_date))}</span> <button class="btn-ghost" style="padding:2px 10px;font-size:12px" data-cancel="${r.request_id}" data-n="${r.item_count}">ยกเลิกรายการ #${r.request_id}</button></div>`).join('') : '<span class="badge done">ว่าง</span>';
       return `<tr><td class="code-cell">${escapeHtml(e.employee_code)}</td><td>${escapeHtml(e.full_name)}</td>
         <td>${escapeHtml(e.department_name || '')}</td><td>${escapeHtml(e.position_name || '')}</td><td>${st}</td>
         <td>${escapeHtml(e.meta.added_by_name || e.meta.added_by || '')}<div class="hint">${e.meta.added_at ? escapeHtml(fmtThai(e.meta.added_at.slice(0, 10))) : ''}${e.meta.note ? ' · ' + escapeHtml(e.meta.note) : ''}</div></td>
@@ -507,6 +507,13 @@
     showBanner('โอนเข้าส่วนกลางแล้ว ' + data + ' คน'); SEL.clear(); el('f-note').value = ''; reload();
   });
   el('pool-body').addEventListener('click', async (ev) => {
+    const c = ev.target.closest('[data-cancel]');
+    if (c) {
+      if (!(await askConfirm('ยกเลิกรายการ #' + c.dataset.cancel, 'ยกเลิกการกำหนดนี้ทั้งรายการ (' + c.dataset.n + ' คน) ใช่หรือไม่?'))) return;
+      const { error } = await sb.rpc('assign_cancel', { p_id: Number(c.dataset.cancel), p_note: 'ยกเลิกโดยฝ่ายบุคคลจากหน้าส่วนกลาง' });
+      if (error) showBanner('ยกเลิกไม่สำเร็จ: ' + error.message, true); else { showBanner('ยกเลิกแล้ว'); reload(); }
+      return;
+    }
     const b = ev.target.closest('[data-del]'); if (!b) return;
     const p = POOL.find(x => x.employee_code === b.dataset.del);
     if (!(await askConfirm('นำออกจากส่วนกลาง', 'นำ <b>' + escapeHtml(p ? p.full_name : b.dataset.del) + '</b> ออกจากส่วนกลาง?'))) return;
