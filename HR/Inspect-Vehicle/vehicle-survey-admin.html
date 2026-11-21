@@ -399,7 +399,9 @@
       el('main-area').innerHTML = '<section class="panel"><div class="empty-state">หน้านี้สำหรับฝ่ายบุคคลเท่านั้น</div></section>';
       return;
     }
-    const { data, error } = await sb.rpc('get_vehicle_survey_overview');
+    let data, error = null;
+try { data = await fetchAll(() => sb.rpc('get_vehicle_survey_overview')); }
+catch (e) { error = e; }
     if (error) { showBanner('โหลดข้อมูลไม่สำเร็จ: ' + error.message + ' (ตรวจว่ารัน vehicle-survey.sql แล้ว)', true); return; }
     all = data;
     el('asof').textContent = 'ข้อมูล ณ ' + fmtDT(new Date().toISOString());
