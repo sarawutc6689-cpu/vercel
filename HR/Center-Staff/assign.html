@@ -224,7 +224,10 @@
   }
   .modal-close:hover{background:var(--danger-soft); color:var(--danger);}
   .form-actions{display:flex; gap:10px; margin-top:24px;}
-  .form-actions .btn{flex:1;}</style>
+  .form-actions .btn{flex:1;}  .hdr-links{display:flex; gap:14px; font-size:13px;} .hdr-links a{color:var(--ink-soft); text-decoration:none;} .hdr-links a:hover{color:var(--accent-dark);} .hdr-links a.cur{color:var(--ink); font-weight:600;}
+  .login-foot{position:fixed; left:0; right:0; bottom:14px; text-align:center; color:var(--ink-soft); font-size:12.5px; padding:0 16px;}
+  @media print{ .app-footer{display:block !important; font-size:8pt;} }
+</style>
 </head>
 <body>
   <div id="login-screen">
@@ -237,6 +240,7 @@
       <button id="login-btn" class="btn btn-primary">เข้าสู่ระบบ</button>
       <p id="login-error" style="color:var(--danger); font-size:13px; margin-top:12px; display:none;"></p>
     </div>
+    <div class="login-foot">แบบฟอร์มการโอนย้ายพนักงานเข้าส่วนกลาง | ใช้ภายในบริษัทเท่านั้น | พัฒนาโดย Sarawut.C</div>
   </div>
 
   <div id="status-banner"><div class="banner" id="banner-inner"></div></div>
@@ -247,7 +251,7 @@
         <h1>เลือกพนักงานจากส่วนกลาง</h1>
       </div>
       <div style="display:flex; align-items:center; gap:14px;">
-        <span class="who" id="who-label"></span>
+        <span class="hdr-links no-print"><a href="assign.html" class="cur">เลือกพนักงาน</a> <a href="central-pool.html" data-hr>โอนเข้าส่วนกลาง</a> <a href="pool-dashboard.html">แดชบอร์ด</a> <a href="pool-report.html">รายงาน</a></span><span class="who" id="who-label"></span>
         <button class="btn-ghost" id="logout-btn">ออกจากระบบ</button>
       </div>
     </header>
@@ -293,6 +297,7 @@
         </tr></thead><tbody id="hist-body"></tbody></table></div>
       </section>
     </main>
+    <footer class="app-footer">แบบฟอร์มการโอนย้ายพนักงานเข้าส่วนกลาง | ใช้ภายในบริษัทเท่านั้น | พัฒนาโดย Sarawut.C</footer>
   </div>
 
   <div id="warn-modal" class="modal-overlay">
@@ -330,7 +335,7 @@
       setTimeout(async () => {
         const { data, error } = await sb.rpc('is_hr_admin');
         if (error) return;                       // ยังไม่ได้รัน calendar.sql → ไม่ซ่อนเมนู
-        document.querySelectorAll('.topnav [data-hr]').forEach(a => { a.style.display = data === true ? '' : 'none'; });
+        document.querySelectorAll('.topnav [data-hr], .hdr-links [data-hr]').forEach(a => { a.style.display = data === true ? '' : 'none'; });
       }, 0);
     });
   })();
@@ -633,11 +638,16 @@
   // ---------- ประวัติ ----------
   async function loadHist(){
     const body = el('hist-body');
-    let q = sb.from('assign_requests').select('*, assign_items(employee_code, full_name, loan_info)')
-      .order('created_at', { ascending: false }).limit(200);
-    if (el('h-dept').value) q = q.eq('dept_code', el('h-dept').value);
-    const { data, error } = await q;
+    const { data: rows, error } = await sb.rpc('assign_rows', { p_from: null, p_to: null });
     if (error) { body.innerHTML = `<tr><td colspan="7" class="empty-state">${escapeHtml(error.message)}</td></tr>`; return; }
+    const map = new Map();
+    rows.forEach(x => {
+      if (!map.has(x.request_id)) map.set(x.request_id, { id: x.request_id, dept_code: x.dept_code, start_date: x.start_date, end_date: x.end_date,
+        status: x.status, note: x.note, created_by_name: x.created_by_name, created_by: x.created_by_name, created_at: x.created_at, assign_items: [] });
+      map.get(x.request_id).assign_items.push({ employee_code: x.employee_code, full_name: x.full_name, loan_info: x.has_loan ? {} : null });
+    });
+    const hd = el('h-dept').value;
+    const data = [...map.values()].filter(r => !hd || r.dept_code === hd).slice(0, 200);
     body.innerHTML = data.map(r => {
       const off = r.status === 'cancelled';
       const chips = (r.assign_items || []).map(i => `<span class="chip" title="${escapeHtml(i.employee_code)}">${escapeHtml(i.full_name || i.employee_code)}${i.loan_info ? ' ⚠' : ''}</span>`).join('');
