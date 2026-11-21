@@ -280,7 +280,7 @@
         <button class="btn-ghost" id="x-xlsx" type="button" style="display:none">ส่งออก Excel</button>
         <button class="btn-ghost btn-pdf" id="x-pdf" type="button">ส่งออก PDF</button></span></div></section>
       <section class="panel"><h2 class="print-title">รายงานการกำหนดพนักงานจากส่วนกลาง <span id="p-sub"></span></h2>
-        <div style="overflow-x:auto"><table class="list"><thead><tr><th>#</th><th>แผนกปลายทาง</th><th>รหัส</th><th>ชื่อ-นามสกุล</th><th>แผนกต้นสังกัด</th>
+        <div style="overflow-x:auto"><table class="list"><thead><tr><th>ลำดับ</th><th>เลขที่รายการ</th><th>แผนกปลายทาง</th><th>รหัส</th><th>ชื่อ-นามสกุล</th><th>แผนกต้นสังกัด</th>
           <th>เริ่ม</th><th>สิ้นสุด</th><th>วัน</th><th>สถานะ</th><th>ผู้บันทึก</th><th>หมายเหตุ</th></tr></thead><tbody id="body"></tbody></table></div></section>
     </main>
     <footer class="app-footer">แบบฟอร์มการโอนย้ายพนักงานเข้าส่วนกลาง | ใช้ภายในบริษัทเท่านั้น | พัฒนาโดย Sarawut.C</footer>
@@ -450,19 +450,19 @@
   function draw(){
     const d = el('f-dept').value, s = el('f-status').value, q = el('f-q').value.trim().toLowerCase();
     VIEW = ROWS.filter(r => (!d || r.dept_code === d) && (!s || r.status === s) && (!q || (r.employee_code + ' ' + (r.full_name || '')).toLowerCase().includes(q)));
-    el('body').innerHTML = VIEW.map(r => `<tr><td>${r.request_id}</td><td>${escapeHtml(dl(r.dept_code))}</td><td class="code-cell">${escapeHtml(r.employee_code)}</td>
+    el('body').innerHTML = VIEW.map((r, n) => `<tr><td>${n + 1}</td><td>${r.request_id}</td><td>${escapeHtml(dl(r.dept_code))}</td><td><span class="code-cell">${escapeHtml(r.employee_code)}</span></td>
       <td>${escapeHtml(r.full_name || '')}${r.has_loan ? ' ⚠' : ''}</td><td>${escapeHtml(r.home_dept_name || '')}</td>
       <td class="nowrap">${escapeHtml(fmtThai(r.start_date))}</td><td class="nowrap">${escapeHtml(fmtThai(r.end_date))}</td><td>${diffDays(r.start_date, r.end_date)}</td>
       <td>${r.status === 'active' ? 'ใช้งาน' : 'ยกเลิกแล้ว'}</td><td>${escapeHtml(r.created_by_name || '')}</td><td>${escapeHtml(r.note || '')}</td></tr>`).join('')
-      || '<tr><td colspan="11" class="empty-state">ไม่พบรายการ</td></tr>';
+      || '<tr><td colspan="12" class="empty-state">ไม่พบรายการ</td></tr>';
     const people = new Set(VIEW.filter(r => r.status === 'active').map(r => r.employee_code)).size;
     el('sum').textContent = `${VIEW.length} แถว · พนักงานที่ใช้งาน ${people} คน · ⚠ = เคยมีการเตือนจากระบบยืมพนักงาน`;
     el('p-sub').textContent = `(${fmtThai(el('f-from').value || todayISO())} – ${fmtThai(el('f-to').value || todayISO())})`;
   }
   ['f-from', 'f-to'].forEach(i => el(i).addEventListener('change', load));
   ['f-dept', 'f-status'].forEach(i => el(i).addEventListener('change', draw)); el('f-q').addEventListener('input', draw);
-  const HEAD = ['เลขที่', 'แผนกปลายทาง', 'รหัสพนักงาน', 'ชื่อ-นามสกุล', 'แผนกต้นสังกัด', 'วันเริ่ม', 'วันสิ้นสุด', 'จำนวนวัน', 'สถานะ', 'ผู้บันทึก', 'หมายเหตุ', 'เคยเตือนจากระบบยืม'];
-  const aoa = () => [HEAD].concat(VIEW.map(r => [r.request_id, dl(r.dept_code), r.employee_code, r.full_name || '', r.home_dept_name || '', r.start_date, r.end_date,
+  const HEAD = ['ลำดับ', 'เลขที่รายการ', 'แผนกปลายทาง', 'รหัสพนักงาน', 'ชื่อ-นามสกุล', 'แผนกต้นสังกัด', 'วันเริ่ม', 'วันสิ้นสุด', 'จำนวนวัน', 'สถานะ', 'ผู้บันทึก', 'หมายเหตุ', 'เคยเตือนจากระบบยืม'];
+  const aoa = () => [HEAD].concat(VIEW.map((r, n) => [n + 1, r.request_id, dl(r.dept_code), r.employee_code, r.full_name || '', r.home_dept_name || '', r.start_date, r.end_date,
     diffDays(r.start_date, r.end_date), r.status === 'active' ? 'ใช้งาน' : 'ยกเลิกแล้ว', r.created_by_name || '', r.note || '', r.has_loan ? 'ใช่' : '']));
   el('x-pdf').addEventListener('click', () => window.print());
   el('x-csv').addEventListener('click', () => {
