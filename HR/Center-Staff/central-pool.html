@@ -270,6 +270,11 @@
       </section></div>
     </main>
   </div>
+  <div id="warn-modal" class="modal-overlay"><div class="modal-card narrow">
+      <div class="modal-header"><h2 id="warn-title">ยืนยัน</h2></div>
+      <div id="warn-body"></div>
+      <div class="form-actions"><button class="btn btn-ghost" id="warn-no" type="button" style="border:1px solid var(--line)">ยกเลิก</button>
+        <button class="btn btn-primary" id="warn-yes" type="button">ยืนยัน</button></div></div></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -472,6 +477,14 @@
         <td><button class="btn-ghost" data-del="${escapeHtml(e.employee_code)}">นำออก</button></td></tr>`;
     }).join('') || '<tr><td colspan="7" class="empty-state">ยังไม่มีพนักงานในส่วนกลาง</td></tr>';
   }
+  function askConfirm(title, html){
+    return new Promise(resolve => {
+      el('warn-title').textContent = title; el('warn-body').innerHTML = '<p style="margin:0">' + html + '</p>';
+      el('warn-modal').classList.add('open');
+      const done = v => { el('warn-modal').classList.remove('open'); el('warn-yes').onclick = el('warn-no').onclick = null; resolve(v); };
+      el('warn-yes').onclick = () => done(true); el('warn-no').onclick = () => done(false);
+    });
+  }
   function fmtRange(s, e){ return s === e ? fmtThai(s) : fmtThai(s) + ' – ' + fmtThai(e); }
 
   el('pick-list').addEventListener('change', (ev) => {
@@ -496,7 +509,7 @@
   el('pool-body').addEventListener('click', async (ev) => {
     const b = ev.target.closest('[data-del]'); if (!b) return;
     const p = POOL.find(x => x.employee_code === b.dataset.del);
-    if (!confirm('นำ ' + (p ? p.full_name : b.dataset.del) + ' ออกจากส่วนกลาง?')) return;
+    if (!(await askConfirm('นำออกจากส่วนกลาง', 'นำ <b>' + escapeHtml(p ? p.full_name : b.dataset.del) + '</b> ออกจากส่วนกลาง?'))) return;
     const { error } = await sb.rpc('pool_remove', { p_code: b.dataset.del });
     if (error) showBanner(error.message, true); else { showBanner('นำออกแล้ว'); reload(); }
   });
