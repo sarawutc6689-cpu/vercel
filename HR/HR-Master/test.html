@@ -541,7 +541,7 @@
   // เรียก Edge Function "sync-employees" ที่ deploy ไว้บนโปรเจค Transfer
   // (คนละโปรเจคกับ hr-master) ให้ดึงข้อมูลคนนี้ไปสร้าง/อัปเดตในฝั่ง Transfer เอง
   const TRANSFER_URL = "https://fpsdntchtoxtcpfwkkom.supabase.co";
-  const TRANSFER_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZwc2RudGNodG94dGNwZndra29tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcwNDM1OTYsImV4cCI6MjEwMjYxOTU5Nn0.B8WZ4jPd2rVrquUCFLH406WG_GBykGs3zINhWrbf9rc";
+  const TRANSFER_ANON_KEY = "key-anon";
 
   function syncToTransfer(employeeCode){
     fetch(`${TRANSFER_URL}/functions/v1/sync-employees`, {
@@ -555,7 +555,7 @@
   }
 
   const OT_TRACKING_URL = "https://gjmgzjsbgqaaxlpbyykt.supabase.co";
-  const OT_TRACKING_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdqbWd6anNiZ3FhYXhscGJ5eWt0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwMjQyMjUsImV4cCI6MjEwMTYwMDIyNX0.wacphD2FPgaaETYc0N-Ze4q9gPr2BaO0MKNo9RBnlm0";
+  const OT_TRACKING_ANON_KEY = "key-anon";
 
   function syncToOtTracking(employeeCode){
     fetch(`${OT_TRACKING_URL}/functions/v1/sync-employees`, {
@@ -569,7 +569,7 @@
   }
 
   const CAR_REPAIR_URL = "https://clowvcraydxpvwdbpkhi.supabase.co";
-  const CAR_REPAIR_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNsb3d2Y3JheWR4cHZ3ZGJwa2hpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3NTA3NTAsImV4cCI6MjEwMzMyNjc1MH0.pXV0g3JfakqNRgKjgCe87Reie5ZhXzqYXpZ3OVkluHk";
+  const CAR_REPAIR_ANON_KEY = "key-anon";
 
   function syncToCarRepair(employeeCode){
     fetch(`${CAR_REPAIR_URL}/functions/v1/sync-employees`, {
@@ -583,7 +583,7 @@
   }
 
   const LOGIN_USER_URL = "https://dhgjbpvbbixipxksqqzu.supabase.co";
-  const LOGIN_USER_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRoZ2picHZiYml4aXB4a3NxcXp1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5OTIxMjgsImV4cCI6MjEwMTU2ODEyOH0.kZBAN01vbe8kENacfofZewHvxQBCCd2OaTFKbcFYlpM";
+  const LOGIN_USER_ANON_KEY = "key-anon";
 
   function syncToLoginUser(employeeCode){
     fetch(`${LOGIN_USER_URL}/functions/v1/sync-employees`, {
@@ -597,7 +597,7 @@
   }
 
   const ITHELPDESK_URL = "https://fnbkcgkuykdabbensvif.supabase.co";
-  const ITHELPDESK_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZuYmtjZ2t1eWtkYWJiZW5zdmlmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkzMDE0MTQsImV4cCI6MjEwNDg3NzQxNH0.L6x3nqAy2rqcxdtzyTs4MHLPubtBqD3Tnk9e97EfEJE";
+  const ITHELPDESK_ANON_KEY = "key-anon";
 
   function syncToItHelpdesk(employeeCode){
     fetch(`${ITHELPDESK_URL}/functions/v1/sync-employees`, {
@@ -729,7 +729,10 @@
 
   function renderTable(rows){
     const tbody = el('employee-tbody');
-    el('count-tag').textContent = rows.length + ' คน';
+    // นับเฉพาะพนักงานสถานะ "กำลังทำงาน" (ตารางยังแสดงทุกสถานะ)
+    const activeCount = rows.filter(r => r.status === 'active').length;
+    el('count-tag').textContent = 'กำลังทำงาน ' + activeCount + ' คน';
+    el('count-tag').title = 'ทั้งหมดที่แสดง ' + rows.length + ' คน';
     if (rows.length === 0) {
       tbody.innerHTML = '';
       el('empty-state').style.display = 'block';
