@@ -665,8 +665,6 @@
                <a href="#" data-rcancel="${i.ret_id}" class="hint">ยกเลิกคำขอคืน</a>`;
     else {
       if (i.ret_status === 'rejected') extra += '<span class="tag bad">คำขอคืนไม่ผ่าน</span> ';
-      const first = r.start_date > todayISO() ? r.start_date : todayISO();
-      if (r.status === 'active' && first < r.end_date) extra += `<button class="btn-sm" data-rtn="${i.item_id}">ขอคืนก่อนกำหนด</button>`;
     }
     return `<div style="margin-bottom:4px"><span class="chip" title="${escapeHtml(i.employee_code)}">${escapeHtml(i.full_name || i.employee_code)}${i.has_loan ? ' ⚠' : ''}</span> ${extra}</div>`;
   }
@@ -689,7 +687,13 @@
       const acts = [];
       if (r.can_decide) acts.push(`<button class="btn-sm ok" data-inb="t" data-id="${r.request_id}" data-act="1" data-label="${escapeHtml(label)}">อนุมัติ</button>`,
                                   `<button class="btn-sm no" data-inb="t" data-id="${r.request_id}" data-act="0" data-label="${escapeHtml(label)}">ไม่อนุมัติ</button>`);
-      if (r.status === 'pending' || r.status === 'active') acts.push(`<button class="btn-ghost" data-cancel="${r.request_id}">ยกเลิก</button>`);
+      // ปุ่มขอคืนก่อนกำหนด (รายคน) อยู่ข้างปุ่มยกเลิก
+      const first = r.start_date > todayISO() ? r.start_date : todayISO();
+      if (r.status === 'active' && first < r.end_date) {
+        const can = r.items.filter(i => !i.returned_on && i.ret_status !== 'pending_mgr' && i.ret_status !== 'pending_hr');
+        can.forEach(i => acts.push(`<button class="btn-sm ok" data-rtn="${i.item_id}" title="ขอคืน ${escapeHtml(i.full_name || i.employee_code)} ก่อนกำหนด">ขอคืนก่อนกำหนด${can.length > 1 ? ' · ' + escapeHtml(i.full_name || i.employee_code) : ''}</button>`));
+      }
+      if (r.status === 'pending' || r.status === 'active') acts.push(`<button class="btn-sm no" data-cancel="${r.request_id}">ยกเลิก</button>`);
       const info = r.status === 'rejected' ? `<div class="hint">เหตุผล: ${escapeHtml(r.reject_reason || '')} (${escapeHtml(r.decided_by_name || '')})</div>`
                  : r.status === 'active' && r.decided_by_name ? `<div class="hint">อนุมัติโดย ${escapeHtml(r.decided_by_name)}</div>` : '';
       return `<tr><td class="${off ? 'cancelled' : ''}">${r.request_id}</td>
