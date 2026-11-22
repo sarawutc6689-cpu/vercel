@@ -140,7 +140,7 @@
   @media (max-width:1100px){ .topnav{order:3; width:100%;} }
 
 
-  main{max-width:1280px;}
+  main{max-width:none;}
   .grid2{display:grid; grid-template-columns:1fr 1fr; gap:18px; align-items:start;}
   @media (max-width:900px){ .grid2{grid-template-columns:1fr;} }
   .ctl{display:grid; grid-template-columns:2fr 1fr 1fr 2fr; gap:14px; align-items:end;}
@@ -176,6 +176,13 @@
   .btn-warn:hover{filter:brightness(.95);}
   .row-actions{display:flex; justify-content:flex-end; gap:10px; margin-top:14px; align-items:center;}
   td.cancelled{color:#98a3b0; text-decoration:line-through;}
+
+  .inb{border:1px solid var(--line); border-radius:12px; padding:12px 14px; margin-bottom:10px; display:flex; gap:14px; align-items:center; justify-content:space-between; flex-wrap:wrap; background:var(--accent-soft-2);}
+  .inb .t{font-weight:600; font-size:14px;} .inb .s{font-size:13px; color:var(--ink-soft); margin-top:2px;}
+  .inb .acts{display:flex; gap:8px;}
+  .btn-sm{padding:6px 14px; font-size:13px; border-radius:9px; border:1px solid var(--line); background:#fff; cursor:pointer; font-family:inherit; font-weight:600;}
+  .btn-sm.ok{background:var(--ok-soft); color:var(--ok); border-color:#BFE6CB;} .btn-sm.no{background:var(--danger-soft); color:var(--danger); border-color:#EBC0C8;}
+  textarea.note{width:100%; padding:10px 13px; border:1.5px solid var(--line); border-radius:10px; font-family:inherit; font-size:14px; min-height:70px;}
   /* ---------- modal ---------- */
   .modal-overlay{
     display:none;
@@ -247,6 +254,7 @@
     .no-print{display:none !important;} .print-title{display:block; font-size:14pt; font-weight:600; margin:0 0 6px;}
     table.list{font-size:8.5pt;} .panel{border:none !important; box-shadow:none !important; padding:0 !important;}
   }
+  main{max-width:1280px;}
   .hero{display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;}
   .hero h2{font-size:22px;} .hero p{margin:4px 0 0; color:var(--ink-soft); font-size:14px;}
   .role{font-size:12.5px; font-weight:600; padding:5px 12px; border-radius:100px; background:var(--accent-soft); color:var(--accent-dark);}
@@ -275,7 +283,7 @@
   <div id="app">
     <header class="no-print">
       <div class="brand"><div class="brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg></div><h1>หน้ารวม</h1></div>
-      <div style="display:flex; align-items:center; gap:14px;"><span class="hdr-links no-print"><a href="pool-index.html" class="cur">หน้ารวม</a> <a href="assign.html">เลือกพนักงาน</a> <a href="central-pool.html" data-hr>โอนเข้าส่วนกลาง</a> <a href="pool-dashboard.html">แดชบอร์ด</a> <a href="pool-report.html">รายงาน</a></span><span class="who" id="who-label"></span>
+      <div style="display:flex; align-items:center; gap:14px;"><span class="hdr-links no-print"><a href="pool-index.html" class="cur">หน้ารวม</a> <a href="assign.html">เลือกพนักงาน</a> <a href="central-pool.html" data-hr>โอนเข้าส่วนกลาง</a> <a href="pool-dashboard.html">แดชบอร์ด</a> <a href="pool-report.html">รายงาน</a> <a href="pool-guide.html">คู่มือ</a></span><span class="who" id="who-label"></span>
         <button class="btn-ghost" id="logout-btn">ออกจากระบบ</button></div>
     </header>
     <main>
@@ -430,12 +438,14 @@
     pool: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>',
     pick: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
     dash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>',
+    guide: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>',
     rep: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>'
   };
   const TILES = [
     { href: 'central-pool.html',  icon: IC.pool, title: 'โอนเข้าส่วนกลาง', hr: true, desc: 'ฝ่ายบุคคลเลือกพนักงานที่จะโอนย้ายเข้าส่วนกลาง ดูสถานะว่าง/ถูกใช้งาน และนำออกจากส่วนกลาง' },
     { href: 'assign.html',        icon: IC.pick, title: 'เลือกพนักงานจากส่วนกลาง', desc: 'ธุรการเลือกพนักงานจากส่วนกลางไปแผนกของตนเองตามช่วงเวลา พร้อมแจ้งเตือนเมื่อมีรายการในระบบยืมพนักงาน' },
     { href: 'pool-dashboard.html', icon: IC.dash, title: 'แดชบอร์ด', desc: 'ภาพรวมจำนวนพนักงานในส่วนกลาง คนว่าง คนที่ถูกใช้งาน และรายการที่ใกล้สิ้นสุด' },
+    { href: 'pool-guide.html',   icon: IC.guide, title: 'คู่มือการใช้งาน', desc: 'ขั้นตอนการใช้งานแยกตามบทบาท ฝ่ายบุคคล ธุรการ และผู้จัดการแผนก พร้อมคำถามที่พบบ่อย' },
     { href: 'pool-report.html',   icon: IC.rep,  title: 'รายงาน', desc: 'รายงานการกำหนดพนักงานตามช่วงวันที่ แผนก และสถานะ ส่งออก PDF (HR ส่งออก Excel / CSV ได้)' }
   ];
   async function init(){
