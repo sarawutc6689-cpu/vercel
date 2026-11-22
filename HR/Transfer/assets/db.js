@@ -24,6 +24,7 @@ const db = {
       .from('employees')
       .select('id, employee_code, full_name, home_department_id, status')
       .eq('home_department_id', departmentId)
+      .eq('is_active', true) // ไม่แสดงพนักงานที่ปิดใช้งาน (ลาออก/ไม่มีใน hr-master)
       .order('employee_code');
     if (error) throw error;
     return data;
