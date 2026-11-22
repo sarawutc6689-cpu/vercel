@@ -32,44 +32,6 @@
 
       <div id="admin-area" style="display:none;">
         <div class="panel">
-          <div class="panel-head">
-            <div>
-              <h3>เพิ่มพนักงานใหม่</h3>
-              <div class="hint">กรอกรหัสพนักงานที่มีอยู่แล้วเพื่อแก้ไขข้อมูล หรือรหัสใหม่เพื่อเพิ่มพนักงาน</div>
-            </div>
-          </div>
-          <div class="panel-pad">
-            <form id="employee-form">
-              <div class="field-row">
-                <div class="field">
-                  <label class="field-label">รหัสพนักงาน <span class="req">*</span></label>
-                  <input type="text" id="f-code" class="input" placeholder="เช่น 104590" required>
-                </div>
-                <div class="field">
-                  <label class="field-label">ชื่อ-นามสกุล <span class="req">*</span></label>
-                  <input type="text" id="f-name" class="input" required>
-                </div>
-              </div>
-              <div class="field-row">
-                <div class="field">
-                  <label class="field-label">แผนกต้นสังกัด <span class="req">*</span></label>
-                  <select class="input" id="f-dept" required></select>
-                </div>
-                <div class="field">
-                  <label class="field-label">วันที่เริ่มงาน</label>
-                  <input type="date" id="f-hire-date" class="input">
-                  <div class="field-sub">ใส่ทันทีถ้าอยากให้สร้างบัญชีล็อกอินได้เลย (จำเป็นสำหรับสร้างบัญชี)</div>
-                </div>
-              </div>
-              <div class="flex" style="justify-content:flex-end; gap:10px;">
-                <button type="button" class="btn btn-ghost" id="btn-reset-form">ล้างฟอร์ม</button>
-                <button type="submit" class="btn btn-accent" id="btn-save-employee">บันทึก</button>
-              </div>
-            </form>
-          </div>
-        </div>
-
-        <div class="panel">
           <div class="filter-bar" style="border-radius: var(--radius-lg) var(--radius-lg) 0 0;">
             <input class="input search" id="f-search" placeholder="ค้นหารหัสหรือชื่อพนักงาน...">
           </div>
@@ -134,46 +96,10 @@
 renderShell('admin', {
   eyebrow: 'ผู้ดูแลระบบ',
   title: 'จัดการพนักงาน',
-  desc: 'เพิ่ม/แก้ไขข้อมูลพนักงาน และตั้งบทบาทผู้อนุมัติ',
+  desc: 'ตั้งบทบาทผู้อนุมัติ (ข้อมูลพนักงานซิงก์จาก hr-master อัตโนมัติ)',
 });
 
-let editingCode = null; // ถ้าไม่ null = กำลังแก้ไขคนนี้อยู่ (จากปุ่มแก้ไขในตาราง)
 let allDepts = [];
-
-function populateDeptSelect() {
-  document.getElementById('f-dept').innerHTML = allDepts.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
-}
-
-function resetForm() {
-  document.getElementById('employee-form').reset();
-  document.getElementById('f-code').disabled = false;
-  editingCode = null;
-}
-
-document.getElementById('btn-reset-form').addEventListener('click', resetForm);
-
-document.getElementById('employee-form').addEventListener('submit', async (ev) => {
-  ev.preventDefault();
-  const code = document.getElementById('f-code').value.trim();
-  const name = document.getElementById('f-name').value.trim();
-  const deptId = document.getElementById('f-dept').value;
-  const hireDate = document.getElementById('f-hire-date').value;
-
-  if (!code || !name || !deptId) return showToast('กรอกข้อมูลให้ครบ');
-
-  const btn = document.getElementById('btn-save-employee');
-  btn.disabled = true; btn.textContent = 'กำลังบันทึก...';
-  try {
-    await db.upsertEmployee({ employeeCode: code, fullName: name, homeDeptId: deptId, hireDate });
-    showToast(`บันทึกข้อมูล ${name} สำเร็จ`);
-    resetForm();
-    await renderTable();
-  } catch (err) {
-    showError(err, 'บันทึกไม่สำเร็จ');
-  } finally {
-    btn.disabled = false; btn.textContent = 'บันทึก';
-  }
-});
 
 async function renderTable() {
   const tbody = document.getElementById('emp-tbody');
@@ -204,12 +130,11 @@ async function renderTable() {
       <td class="cell-code">${r.employee_code}</td>
       <td>${r.full_name}</td>
       <td>${deptChipHtml(r.home_department_id)}</td>
-      <td>${badgeHtml(r.status)}</td>
+      <td>${r.is_active === false ? '<span class="badge badge-rejected">ปิดใช้งาน</span>' : badgeHtml(r.status)}</td>
       <td>${r.has_account ? '<span class="badge badge-approved">มีบัญชีแล้ว</span>' : '<span class="badge badge-normal">ยังไม่มีบัญชี</span>'}</td>
       <td>${r.role ? roleLabel[r.role] : '-'}</td>
       <td>
         <div class="flex gap-8">
-          <button class="btn btn-ghost btn-sm" data-action="edit" data-code="${r.employee_code}">แก้ไข</button>
           ${r.has_account ? `<button class="btn btn-ghost btn-sm" data-action="role" data-code="${r.employee_code}">สิทธิ์</button>` : ''}
         </div>
       </td>
@@ -217,20 +142,7 @@ async function renderTable() {
   `).join('');
 
   window.__rows = rows;
-  tbody.querySelectorAll('[data-action=edit]').forEach(btn => btn.addEventListener('click', () => startEdit(btn.dataset.code)));
   tbody.querySelectorAll('[data-action=role]').forEach(btn => btn.addEventListener('click', () => openRoleModal(btn.dataset.code)));
-}
-
-function startEdit(code) {
-  const r = (window.__rows || []).find(x => x.employee_code === code);
-  if (!r) return;
-  editingCode = code;
-  document.getElementById('f-code').value = r.employee_code;
-  document.getElementById('f-code').disabled = true; // แก้รหัสพนักงานเดิมไม่ได้ กันสับสน
-  document.getElementById('f-name').value = r.full_name;
-  document.getElementById('f-dept').value = r.home_department_id;
-  document.getElementById('f-hire-date').value = r.hire_date || '';
-  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 let activeRoleCode = null;
@@ -294,7 +206,6 @@ document.getElementById('f-search').addEventListener('input', () => {
 
     const { depts } = await initLookups();
     allDepts = depts;
-    populateDeptSelect();
     await renderTable();
   } catch (err) {
     showError(err, 'โหลดข้อมูลเริ่มต้นไม่สำเร็จ');
