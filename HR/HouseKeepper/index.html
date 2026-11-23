@@ -8,7 +8,6 @@
 <section id="login" class="card">
   <h1>เบิกของใช้</h1><p class="muted">เข้าสู่ระบบด้วยรหัสพนักงาน</p>
   <label for="code">รหัสพนักงาน</label><input id="code" inputmode="numeric" autocomplete="username">
-  <label for="pw">รหัสผ่าน</label><input id="pw" type="password" autocomplete="current-password">
   <p><button id="loginBtn">เข้าสู่ระบบ</button></p>
 </section>
 
@@ -42,6 +41,7 @@ async function show(session){
   const email = session.user.email;
   if(email === "hr@local.com"){ location.href = "admin.html"; return; }
   $("who").textContent = "รหัสพนักงาน " + email.split("@")[0];
+  sb.from("housekeepers").select("name").maybeSingle().then(({data}) => { if(data) $("who").textContent = data.name + " (รหัส " + email.split("@")[0] + ")"; });
   await load();
 }
 async function load(){
@@ -57,10 +57,11 @@ async function load(){
 }
 $("loginBtn").onclick = async () => {
   const code = $("code").value.trim();
-  if(!code || !$("pw").value) return say("กรอกรหัสพนักงานและรหัสผ่าน", true);
-  const { error } = await sb.auth.signInWithPassword({ email: `${code}@${EMAIL_DOMAIN}`, password: $("pw").value });
-  if(error) say("รหัสพนักงานหรือรหัสผ่านไม่ถูกต้อง", true); else say("");
+  if(!code) return say("กรอกรหัสพนักงาน", true);
+  const { error } = await sb.auth.signInWithPassword({ email: `${code}@${EMAIL_DOMAIN}`, password: code + CODE_SUFFIX });
+  if(error) say("ไม่พบรหัสพนักงานนี้ หรือถูกปิดการใช้งาน", true); else say("");
 };
+$("code").addEventListener("keydown", e => { if(e.key === "Enter") $("loginBtn").click(); });
 $("logout").onclick = () => sb.auth.signOut();
 $("send").onclick = async () => {
   const qty = parseInt($("qty").value, 10);
