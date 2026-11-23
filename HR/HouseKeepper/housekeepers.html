@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="th"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>จัดการแม่บ้าน</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head><body><main>
+<section id="login" class="card hide">
+  <h1>จัดการแม่บ้าน</h1><p class="muted">ต้องเข้าสู่ระบบผู้ดูแลก่อน</p>
+  <p><a href="admin.html">ไปหน้าเข้าสู่ระบบผู้ดูแล</a></p>
+</section>
+
+<section id="app" class="hide">
+  <div class="top"><div><h1>จัดการแม่บ้าน</h1><a href="admin.html">← กลับหน้าผู้ดูแล</a></div><button class="ghost" id="logout">ออกจากระบบ</button></div>
+
+  <div class="card"><div class="row">
+    <div><label for="nCode">รหัสพนักงาน</label><input id="nCode" inputmode="numeric" autocomplete="off"></div>
+    <div><label for="nName">ชื่อ</label><input id="nName" autocomplete="off"></div>
+    <div><label for="nPw">รหัสผ่านเริ่มต้น</label><input id="nPw" type="text" autocomplete="off" placeholder="อย่างน้อย 6 ตัว"></div>
+    <button id="add">เพิ่มแม่บ้าน</button>
+  </div></div>
+
+  <h2>รายชื่อแม่บ้าน</h2>
+  <div class="card scroll"><table><thead><tr><th>รหัส</th><th>ชื่อ</th><th>สถานะ</th><th></th></tr></thead><tbody id="list"></tbody></table></div>
+</section>
+<p id="msg" role="status"></p>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<script>
+const ADMIN = "hr@local.com";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const $ = id => document.getElementById(id);
+let token = "";
+function say(t, bad){ $("msg").textContent = t; $("msg").className = bad ? "err" : ""; }
+const esc = s => s.replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+async function call(body){
+  const r = await fetch("/api/housekeepers", { method:"POST", headers:{ "Content-Type":"application/json", Authorization:"Bearer " + token }, body: JSON.stringify(body) });
+  const j = await r.json().catch(() => ({ error: "เรียกเซิร์ฟเวอร์ไม่สำเร็จ" }));
+  if(!r.ok) throw new Error(j.error || "ไม่สำเร็จ");
+  return j;
+}
+async function show(session){
+  const ok = session && session.user.email === ADMIN;
+  token = ok ? session.access_token : "";
+  $("login").classList.toggle("hide", !!ok);
+  $("app").classList.toggle("hide", !ok);
+  if(ok) load();
+}
+async function load(){
+  const { data, error } = await sb.from("housekeepers").select("*").order("code");
+  if(error) return say(error.message, true);
+  $("list").innerHTML = data.length ? data.map(x => `<tr><td>${esc(x.code)}</td><td>${esc(x.name)}</td>
+    <td><span class="tag ${x.active ? "approved" : "rejected"}">${x.active ? "ใช้งานอยู่" : "ปิดใช้งาน"}</span></td>
+    <td style="white-space:nowrap"><button class="ghost" data-reset="${esc(x.code)}">ตั้งรหัสผ่านใหม่</button>
+    <button class="${x.active ? "bad" : ""}" data-toggle="${esc(x.code)}" data-active="${x.active ? 0 : 1}">${x.active ? "ปิดใช้งาน" : "เปิดใช้งาน"}</button></td></tr>`).join("")
+    : `<tr><td colspan="4" class="muted">ยังไม่มีแม่บ้าน กรอกข้อมูลด้านบนเพื่อเพิ่มคนแรก</td></tr>`;
+}
+$("add").onclick = async () => {
+  $("add").disabled = true;
+  try {
+    await call({ action:"create", code:$("nCode").value.trim(), name:$("nName").value, password:$("nPw").value });
+    say("เพิ่มแม่บ้านแล้ว ให้เขา login ด้วยรหัสพนักงานและรหัสผ่านที่ตั้งไว้");
+    $("nCode").value = $("nName").value = $("nPw").value = ""; load();
+  } catch(e){ say(e.message, true); }
+  $("add").disabled = false;
+};
+$("list").onclick = async e => {
+  const b = e.target.closest("button"); if(!b) return;
+  try {
+    if(b.dataset.reset){
+      const pw = prompt("รหัสผ่านใหม่ของ " + b.dataset.reset + " (อย่างน้อย 6 ตัว)");
+      if(!pw) return;
+      await call({ action:"reset", code:b.dataset.reset, password:pw }); say("เปลี่ยนรหัสผ่านแล้ว");
+    } else if(b.dataset.toggle){
+      const on = b.dataset.active === "1";
+      if(!on && !confirm("ปิดใช้งาน " + b.dataset.toggle + " ? เขาจะ login ไม่ได้")) return;
+      await call({ action:"toggle", code:b.dataset.toggle, active:on }); say(on ? "เปิดใช้งานแล้ว" : "ปิดใช้งานแล้ว");
+    }
+    load();
+  } catch(err){ say(err.message, true); }
+};
+$("logout").onclick = () => sb.auth.signOut();
+sb.auth.onAuthStateChange((_e, s) => show(s));
+sb.auth.getSession().then(({data}) => show(data.session));
+</script></body></html>
