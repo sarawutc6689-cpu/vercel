@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="th"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ผู้ดูแล - เบิกของใช้</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head><body><main>
+<section id="login" class="card">
+  <h1>ผู้ดูแลระบบ</h1><p class="muted">สำหรับ HR เท่านั้น</p>
+  <label for="pw">รหัสผ่าน (hr@local.com)</label><input id="pw" type="password" autocomplete="current-password">
+  <p><button id="loginBtn">เข้าสู่ระบบ</button></p>
+</section>
+
+<section id="app" class="hide">
+  <div class="top"><h1>ผู้ดูแลระบบ</h1><button class="ghost" id="logout">ออกจากระบบ</button></div>
+
+  <h2>คำขอรออนุมัติ</h2>
+  <div class="card scroll"><table><thead><tr><th>วันที่</th><th>รหัส</th><th>รายการ</th><th>จำนวน</th><th></th></tr></thead><tbody id="pending"></tbody></table></div>
+
+  <h2>สต็อกของใช้</h2>
+  <div class="card scroll"><table><thead><tr><th>รายการ</th><th>คงเหลือ</th><th>เพิ่มสต็อก</th></tr></thead><tbody id="stock"></tbody></table></div>
+  <div class="card" style="margin-top:12px"><div class="row">
+    <div><label for="nName">เพิ่มรายการใหม่</label><input id="nName" placeholder="เช่น น้ำยาถูพื้น"></div>
+    <div><label for="nUnit">หน่วย</label><input id="nUnit" value="ชิ้น"></div>
+    <div><label for="nStock">จำนวนเริ่มต้น</label><input id="nStock" type="number" min="0" value="0"></div>
+    <button id="addItem">เพิ่มรายการ</button></div></div>
+
+  <h2>ประวัติล่าสุด</h2>
+  <div class="card scroll"><table><thead><tr><th>วันที่</th><th>รหัส</th><th>รายการ</th><th>จำนวน</th><th>สถานะ</th></tr></thead><tbody id="hist"></tbody></table></div>
+</section>
+<p id="msg" role="status"></p>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<script>
+const ADMIN = "hr@local.com";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const $ = id => document.getElementById(id);
+const label = {pending:"รออนุมัติ", approved:"อนุมัติแล้ว", rejected:"ไม่อนุมัติ"};
+const d = s => new Date(s).toLocaleDateString("th-TH");
+function say(t, bad){ $("msg").textContent = t; $("msg").className = bad ? "err" : ""; }
+
+async function show(session){
+  const ok = session && session.user.email === ADMIN;
+  if(session && !ok){ await sb.auth.signOut(); return say("บัญชีนี้ไม่มีสิทธิ์ผู้ดูแล", true); }
+  $("login").classList.toggle("hide", ok);
+  $("app").classList.toggle("hide", !ok);
+  if(ok) load();
+}
+async function load(){
+  const [i, r] = await Promise.all([
+    sb.from("items").select("*").order("name"),
+    sb.from("requests").select("*, items(name,unit)").order("created_at", {ascending:false}).limit(100)
+  ]);
+  if(i.error || r.error) return say((i.error||r.error).message, true);
+  const pend = r.data.filter(x => x.status === "pending");
+  $("pending").innerHTML = pend.length ? pend.map(x => `<tr><td>${d(x.created_at)}</td><td>${x.employee_code}</td><td>${x.items.name}</td><td>${x.qty} ${x.items.unit}</td>
+    <td style="white-space:nowrap"><button data-a="1" data-id="${x.id}">อนุมัติ</button> <button class="bad" data-a="0" data-id="${x.id}">ไม่อนุมัติ</button></td></tr>`).join("")
+    : `<tr><td colspan="5" class="muted">ไม่มีคำขอที่รออนุมัติ</td></tr>`;
+  $("stock").innerHTML = i.data.map(x => `<tr><td>${x.name}</td><td>${x.stock} ${x.unit}</td>
+    <td><button class="ghost" data-add="${x.id}" data-n="10">+10</button> <button class="ghost" data-add="${x.id}" data-n="50">+50</button></td></tr>`).join("");
+  $("hist").innerHTML = r.data.filter(x => x.status !== "pending").map(x => `<tr><td>${d(x.created_at)}</td><td>${x.employee_code}</td><td>${x.items.name}</td><td>${x.qty} ${x.items.unit}</td><td><span class="tag ${x.status}">${label[x.status]}</span></td></tr>`).join("")
+    || `<tr><td colspan="5" class="muted">ยังไม่มีประวัติ</td></tr>`;
+}
+$("loginBtn").onclick = async () => {
+  const { error } = await sb.auth.signInWithPassword({ email: ADMIN, password: $("pw").value });
+  if(error) say("รหัสผ่านไม่ถูกต้อง", true); else say("");
+};
+$("logout").onclick = () => sb.auth.signOut();
+$("pending").onclick = async e => {
+  const b = e.target.closest("button[data-id]"); if(!b) return;
+  b.disabled = true;
+  const { error } = await sb.rpc("decide_request", { req_id: +b.dataset.id, approve: b.dataset.a === "1" });
+  if(error) say(error.message, true); else say(b.dataset.a === "1" ? "อนุมัติแล้ว และตัดสต็อกให้แล้ว" : "ไม่อนุมัติคำขอแล้ว");
+  load();
+};
+$("stock").onclick = async e => {
+  const b = e.target.closest("button[data-add]"); if(!b) return;
+  const { data } = await sb.from("items").select("stock").eq("id", b.dataset.add).single();
+  const { error } = await sb.from("items").update({ stock: data.stock + +b.dataset.n }).eq("id", b.dataset.add);
+  if(error) say(error.message, true); else say("เพิ่มสต็อกแล้ว");
+  load();
+};
+$("addItem").onclick = async () => {
+  const name = $("nName").value.trim(); if(!name) return say("กรอกชื่อรายการ", true);
+  const { error } = await sb.from("items").insert({ name, unit: $("nUnit").value.trim() || "ชิ้น", stock: +$("nStock").value || 0 });
+  if(error) say(error.message, true); else { say("เพิ่มรายการแล้ว"); $("nName").value = ""; load(); }
+};
+sb.auth.onAuthStateChange((_e, s) => show(s));
+sb.auth.getSession().then(({data}) => show(data.session));
+</script></body></html>
