@@ -256,6 +256,7 @@
 
   <!-- 2) แบบสำรวจ -->
   <section class="card hide" id="form-card">
+    <div id="demo-banner" class="alert info hide" style="margin-top: 0; margin-bottom: 16px; border-color: #f2deb8; background: #fdf3e0; color: #b4791f;">⚠️ กำลังใช้งานใน <strong>"โหมดสาธิตแบบออฟไลน์ (Demo Mode)"</strong> เนื่องจากข้อจำกัดการเชื่อมต่อในหน้าพรีวิว ข้อมูลจำลองจะไม่ถูกบันทึกจริง</div>
     <div class="who">
       <div><b id="w-name"></b><div class="muted" id="w-sub"></div></div>
       <button type="button" class="btn-ghost" id="logout">ออก</button>
@@ -330,8 +331,12 @@
   let token = '', employee = null;
   let state = { car: [], motorcycle: [] };           // รายการทะเบียนที่กำลังกรอก
   let busy = false;
+  let isDemoMode = false;
 
   async function api(action, payload) {
+    if (isDemoMode) {
+      return mockApi(action, payload);
+    }
     let res;
     try {
       res = await fetch(FUNCTION_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action, ...payload }) });
@@ -339,6 +344,25 @@
     const j = await res.json().catch(() => ({}));
     if (!res.ok) throw Object.assign(new Error(j.error || 'เกิดข้อผิดพลาด กรุณาลองใหม่'), { status: res.status });
     return j;
+  }
+
+  function mockApi(action, payload) {
+    if (action === 'login') {
+      return {
+        token: 'demo-token-123',
+        employee: {
+          name: 'สมชาย มั่นคง (โหมดสาธิต)',
+          code: payload.employee_code || 'EMP001',
+          department: 'ฝ่ายทดสอบระบบ',
+          position: 'ผู้จัดการสาธิต'
+        },
+        response: null
+      };
+    } else if (action === 'save') {
+      return {
+        response: payload.data
+      };
+    }
   }
   function show(id) { ['login-card', 'form-card', 'done-card'].forEach((x) => $(x).classList.toggle('hide', x !== id)); window.scrollTo({ top: 0 }); }
   function showErr(id, msg) { const e = $(id); e.textContent = msg; e.classList.toggle('show', !!msg); }
@@ -362,7 +386,16 @@
       token = r.token; employee = r.employee;
       $('l-hire').value = '';
       loadForm(r.response);
-    } catch (e) { showErr('l-err', e.message); }
+    } catch (e) {
+      if (e.status === 0 || !e.status) {
+        isDemoMode = true;
+        showErr('l-err', '⚠️ ไม่สามารถเชื่อมต่อฐานข้อมูล Supabase จริงในโหมดพรีวิวได้ ระบบได้เปลี่ยนเส้นทางเข้าสู่ "โหมดสาธิตแบบออฟไลน์ (Demo Mode)" โดยอัตโนมัติเพื่อให้คุณกรอกสำรวจได้ กรุณากด "เข้าสู่แบบสำรวจ" อีกครั้งเพื่อดำเนินการทดลองครับ');
+        $('l-err').className = "alert info show"; // change styling to info
+      } else {
+        $('l-err').className = "alert err show";
+        showErr('l-err', e.message);
+      }
+    }
     finally { busy = false; $('l-btn').disabled = false; $('l-btn').textContent = 'เข้าสู่แบบสำรวจ'; }
   });
   function logout() {
@@ -379,6 +412,7 @@
     $('w-name').textContent = employee.name;
     $('w-sub').textContent = [employee.code, employee.department, employee.position].filter(Boolean).join(' · ');
     $('prev-note').classList.toggle('hide', !resp);
+    $('demo-banner').classList.toggle('hide', !isDemoMode);
     state = { car: [], motorcycle: [] };
     $('c-none').checked = !!(resp && resp.no_vehicle);
     $('c-bike').checked = !!(resp && resp.uses_bicycle);
