@@ -400,7 +400,7 @@
           <div><label class="lbl">หมวด</label>
             <select data-f="digit" aria-label="หมวดตัวเลข"><option value="">-</option>${[1,2,3,4,5,6,7,8,9].map((n) => `<option value="${n}" ${String(n) === v.digit ? 'selected' : ''}>${n}</option>`).join('')}</select></div>
           <div><label class="lbl">อักษร (ก-ฮ)</label>
-            <input type="text" data-f="letters" value="${esc(v.letters)}" maxlength="2" autocomplete="off" placeholder="กก"></div>
+            <input type="text" data-f="letters" value="${esc(v.letters)}" maxlength="3" autocomplete="off" placeholder="กกก"></div>
           <div><label class="lbl">ตัวเลข</label>
             <input type="text" data-f="number" value="${esc(v.number)}" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="1234"></div>
           <div class="prov"><label class="lbl">จังหวัด</label>
