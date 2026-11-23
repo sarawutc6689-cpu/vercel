@@ -50,11 +50,13 @@
         <h2>เพิ่มของใช้</h2>
         <form id="itemForm" class="row">
           <div><label>ชื่อ</label><input id="iName" required></div>
+          <div><label>ประเภท</label><input id="iCat" list="catList" value="ทั่วไป" required></div>
           <div><label>หน่วย</label><input id="iUnit" value="ชิ้น" required></div>
           <div><label>จำนวนเริ่มต้น</label><input id="iStock" type="number" min="0" value="0" required></div>
           <button>เพิ่ม</button>
         </form>
       </div>
+      <datalist id="catList"><option value="น้ำยา"><option value="ผ้า"><option value="ถุง"><option value="อุปกรณ์"><option value="ทั่วไป"></datalist>
       <div class="card tbl" id="stockList"></div>
     </section>
   </main>
@@ -105,13 +107,15 @@ $('#reqList').addEventListener('click', async e => {
 });
 
 async function loadStock() {
-  const { data, error } = await sb.from('items').select('*').order('name');
+  const { data, error } = await sb.from('items').select('*').order('category').order('name');
   if (error) return toast(error.message, true);
-  $('#stockList').innerHTML = `<table><tr><th>ชื่อ</th><th>หน่วย</th><th>คงเหลือ</th><th>สถานะ</th><th></th></tr>` +
-    data.map(i => `<tr><td>${esc(i.name)}</td><td>${esc(i.unit)}</td>
+  $('#stockList').innerHTML = `<table><tr><th>ชื่อ</th><th>ประเภท</th><th>หน่วย</th><th>คงเหลือ</th><th>สถานะ</th><th></th></tr>` +
+    data.map(i => `<tr><td>${esc(i.name)}</td>
+      <td><input list="catList" value="${esc(i.category)}" style="width:130px" data-cat="${i.id}"></td>
+      <td>${esc(i.unit)}</td>
       <td><input type="number" min="0" value="${i.stock}" style="width:90px" data-stock="${i.id}"></td>
       <td>${i.active ? '<span class="badge approved">เปิดให้เบิก</span>' : '<span class="badge off">ปิด</span>'}</td>
-      <td><button class="ghost sm" data-save="${i.id}">บันทึกสต็อก</button>
+      <td><button class="ghost sm" data-save="${i.id}">บันทึก</button>
           <button class="ghost sm" data-toggle="${i.id}" data-active="${i.active}">${i.active ? 'ปิด' : 'เปิด'}</button></td></tr>`).join('') + '</table>';
 }
 
@@ -120,7 +124,8 @@ $('#stockList').addEventListener('click', async e => {
   let error;
   if (b.dataset.save) {
     const v = Number($(`[data-stock="${b.dataset.save}"]`).value);
-    ({ error } = await sb.from('items').update({ stock: v }).eq('id', b.dataset.save));
+    const cat = $(`[data-cat="${b.dataset.save}"]`).value.trim() || 'ทั่วไป';
+    ({ error } = await sb.from('items').update({ stock: v, category: cat }).eq('id', b.dataset.save));
   } else if (b.dataset.toggle) {
     ({ error } = await sb.from('items').update({ active: b.dataset.active !== 'true' }).eq('id', b.dataset.toggle));
   } else return;
@@ -130,9 +135,9 @@ $('#stockList').addEventListener('click', async e => {
 
 $('#itemForm').addEventListener('submit', async e => {
   e.preventDefault();
-  const { error } = await sb.from('items').insert({ name: $('#iName').value.trim(), unit: $('#iUnit').value.trim(), stock: Number($('#iStock').value) });
+  const { error } = await sb.from('items').insert({ name: $('#iName').value.trim(), category: $('#iCat').value.trim() || 'ทั่วไป', unit: $('#iUnit').value.trim(), stock: Number($('#iStock').value) });
   if (error) return toast(error.message, true);
-  e.target.reset(); $('#iUnit').value = 'ชิ้น'; $('#iStock').value = 0;
+  e.target.reset(); $('#iCat').value = 'ทั่วไป'; $('#iUnit').value = 'ชิ้น'; $('#iStock').value = 0;
   toast('เพิ่มของใช้แล้ว'); loadStock();
 });
 </script>
