@@ -60,13 +60,13 @@ setupAuth({
 });
 
 async function loadItems() {
-  const { data, error } = await sb.from('items').select('*').eq('active', true).order('name');
+  const { data, error } = await sb.from('items').select('*').eq('active', true).order('category').order('name');
   if (error) return toast(error.message, true);
   items = data; cart = {}; renderItems();
 }
 
 function renderItems() {
-  $('#items').innerHTML = items.map(i => `
+  const itemHtml = i => `
     <div class="item">
       <div class="nm">${esc(i.name)}<br><small>คงเหลือ ${i.stock} ${esc(i.unit)}</small></div>
       <div class="qty">
@@ -74,7 +74,12 @@ function renderItems() {
         <span>${cart[i.id] || 0}</span>
         <button class="ghost" data-id="${i.id}" data-d="1">+</button>
       </div>
-    </div>`).join('') || '<p class="mut">ยังไม่มีรายการของใช้</p>';
+    </div>`;
+  const groups = {};
+  items.forEach(i => (groups[i.category || 'ทั่วไป'] ||= []).push(i));
+  $('#items').innerHTML = Object.entries(groups).map(([c, list]) =>
+    `<h3 style="margin:14px 0 2px;font-size:15px;color:var(--mut)">${esc(c)}</h3>` + list.map(itemHtml).join('')
+  ).join('') || '<p class="mut">ยังไม่มีรายการของใช้</p>';
 }
 
 $('#items').addEventListener('click', e => {
