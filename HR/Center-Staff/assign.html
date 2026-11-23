@@ -550,7 +550,7 @@
                         : 'ถูกโอนย้ายไปแผนกอื่นแล้วในระบบยืมพนักงาน'}
           <ul>
             <li>แผนกต้นสังกัด: ${escapeHtml(l.home_dept_name || '-')}</li>
-            <li>ปัจจุบันอยู่แผนก: <b>${escapeHtml(l.current_dept_name || '-')}</b></li>
+            <li>ปัจจุบันอยู่: <b>${escapeHtml(l.current_dept_name || '-')}</b>${l.current_unit_name ? ' · ' + escapeHtml(l.current_unit_name) : ''}</li>
             <li>เลขที่คำขอ: ${escapeHtml(l.request_no || '-')}</li>
             <li>ช่วงเวลา: ${l.start_date && l.end_date ? escapeHtml(fmtRange(l.start_date, l.end_date)) : '-'}
               ${l.overlaps ? '<span class="tag bad">ซ้อนกับช่วงที่เลือก</span>' : '<span class="tag off">ไม่ซ้อนกับช่วงที่เลือก</span>'}</li>
@@ -737,10 +737,11 @@
         const ok = await ask({ title: 'ขอคืน ' + (item.full_name || item.employee_code) + ' ก่อนกำหนด',
           html: `<p class="hint" style="margin:0 0 10px">สิ้นสุดเดิม ${escapeHtml(fmtThai(req.end_date))} — ต้องได้รับอนุมัติจาก ผจก.แผนก และฝ่ายบุคคล จึงจะกลับส่วนกลาง</p>
                  <div class="field"><label for="rt-date">วันที่คืน</label><input id="rt-date" type="date" min="${min}" max="${max}" value="${dateVal}"></div>
-                 <div class="field" style="margin-top:10px"><label for="rt-reason">เหตุผล</label><input id="rt-reason" type="text" maxlength="200" value="${escapeHtml(reasonVal)}"></div>`,
+                 <div class="field" style="margin-top:10px"><label for="rt-reason">เหตุผล <span style="color:#b42318">*</span></label><input id="rt-reason" type="text" maxlength="200" required placeholder="ระบุเหตุผลที่ขอคืนก่อนกำหนด" value="${escapeHtml(reasonVal)}"></div>`,
           yes: 'ส่งคำขอคืน', no: 'ยกเลิก' });
         if (!ok) return;
         dateVal = el('rt-date').value; reasonVal = el('rt-reason').value;
+        if (!reasonVal.trim()) { showBanner('กรุณาระบุเหตุผลที่ขอคืนก่อนกำหนด', true); continue; }
         if (!dateVal || dateVal < min || dateVal > max) { showBanner('วันที่คืนต้องอยู่ระหว่าง ' + fmtThai(min) + ' ถึง ' + fmtThai(max), true); continue; }
         const { error } = await sb.rpc('assign_return_request', { p_item_id: id, p_date: dateVal, p_reason: reasonVal });
         if (error) { showBanner(error.message, true); return; }
