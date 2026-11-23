@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>จัดการแม่บ้าน</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div id="login" hidden>
+  <div class="card">
+    <h2>👥 จัดการแม่บ้าน (HR)</h2>
+    <form id="loginForm">
+      <label>อีเมล</label>
+      <input id="loginId" type="email" required value="hr@local.com" autocomplete="username">
+      <label>รหัสผ่าน</label>
+      <input id="loginPw" type="password" required autocomplete="current-password">
+      <br><br><button style="width:100%">เข้าสู่ระบบ</button>
+    </form>
+  </div>
+</div>
+
+<div id="app" hidden>
+  <header>
+    <h1>👥 จัดการแม่บ้าน</h1>
+    <a href="admin.html">← หน้าผู้ดูแล</a>
+    <button id="logoutBtn" class="sm">ออกจากระบบ</button>
+  </header>
+  <main>
+    <div class="card">
+      <h2>เพิ่มแม่บ้าน</h2>
+      <form id="hkForm" class="row">
+        <div><label>รหัสพนักงาน</label><input id="hCode" required placeholder="M001"></div>
+        <div><label>ชื่อ-นามสกุล</label><input id="hName" required></div>
+        <div><label>พื้นที่รับผิดชอบ</label><input id="hArea" placeholder="เช่น ชั้น 2"></div>
+        <div><label>รหัสผ่านเริ่มต้น (≥6 ตัว)</label><input id="hPw" value="123456" minlength="6" required></div>
+        <button>เพิ่ม</button>
+      </form>
+      <p class="mut" style="font-size:13px">แม่บ้านจะ login ด้วยรหัสพนักงาน (ระบบแปลงเป็นอีเมล <code>รหัส@local.com</code> ให้อัตโนมัติ)</p>
+    </div>
+    <div class="card tbl" id="list"></div>
+  </main>
+</div>
+
+<script src="config.js"></script>
+<script src="common.js"></script>
+<script>
+setupAuth({
+  loginToEmail: e => e.toLowerCase(),
+  allow: async u => isHR(u),
+  onReady: load
+});
+
+async function load() {
+  const { data, error } = await sb.from('housekeepers').select('*').order('emp_code');
+  if (error) return toast(error.message, true);
+  $('#list').innerHTML = data.length ? `<table><tr><th>รหัส</th><th>ชื่อ</th><th>พื้นที่</th><th>สถานะ</th><th></th></tr>` +
+    data.map(h => `<tr><td>${esc(h.emp_code)}</td>
+      <td><input value="${esc(h.name)}" data-name="${h.id}"></td>
+      <td><input value="${esc(h.area || '')}" data-area="${h.id}"></td>
+      <td>${h.active ? '<span class="badge approved">ใช้งาน</span>' : '<span class="badge off">ปิดใช้งาน</span>'}</td>
+      <td><button class="ghost sm" data-save="${h.id}">บันทึก</button>
+          <button class="ghost sm" data-toggle="${h.id}" data-active="${h.active}">${h.active ? 'ปิดใช้งาน' : 'เปิดใช้งาน'}</button></td></tr>`).join('') + '</table>'
+    : '<p class="mut">ยังไม่มีแม่บ้าน</p>';
+}
+
+$('#list').addEventListener('click', async e => {
+  const b = e.target.closest('button'); if (!b) return;
+  let error;
+  if (b.dataset.save) {
+    const id = b.dataset.save;
+    ({ error } = await sb.from('housekeepers').update({
+      name: $(`[data-name="${id}"]`).value.trim(), area: $(`[data-area="${id}"]`).value.trim() || null }).eq('id', id));
+  } else if (b.dataset.toggle) {
+    ({ error } = await sb.from('housekeepers').update({ active: b.dataset.active !== 'true' }).eq('id', b.dataset.toggle));
+  } else return;
+  if (error) return toast(error.message, true);
+  toast('บันทึกแล้ว'); load();
+});
+
+$('#hkForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const code = $('#hCode').value.trim(), pw = $('#hPw').value;
+  const btn = e.target.querySelector('button'); btn.disabled = true;
+  // client แยก ไม่เก็บ session เพื่อไม่ให้ HR หลุดออกจากระบบ
+  const tmp = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY,
+    { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } });
+  const { data, error } = await tmp.auth.signUp({ email: code.toLowerCase() + EMAIL_DOMAIN, password: pw });
+  if (error || !data.user) { btn.disabled = false; return toast('สร้างบัญชีไม่สำเร็จ: ' + (error?.message || 'ไม่ทราบสาเหตุ'), true); }
+  const { error: e2 } = await sb.from('housekeepers').insert({
+    user_id: data.user.id, emp_code: code, name: $('#hName').value.trim(), area: $('#hArea').value.trim() || null });
+  btn.disabled = false;
+  if (e2) return toast(e2.message, true);
+  e.target.reset(); $('#hPw').value = '123456';
+  toast('เพิ่มแม่บ้านแล้ว'); load();
+});
+</script>
+</body>
+</html>
