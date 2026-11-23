@@ -39,7 +39,7 @@ async function setupAuth({ allow, loginToEmail, onReady }) {
     e.preventDefault();
     const id = $('#loginId').value.trim(), pw = $('#loginPw').value;
     const { error } = await sb.auth.signInWithPassword({ email: loginToEmail(id), password: pw });
-    if (error) return toast('เข้าสู่ระบบไม่สำเร็จ: รหัสหรือรหัสผ่านไม่ถูกต้อง', true);
+    if (error) return toast('เข้าสู่ระบบไม่สำเร็จ: ' + error.message, true);
     refresh();
   });
   $('#logoutBtn').addEventListener('click', async () => { await sb.auth.signOut(); refresh(); });
