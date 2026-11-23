@@ -12,10 +12,8 @@
   <div class="card">
     <h2>🧹 เบิกของใช้ (แม่บ้าน)</h2>
     <form id="loginForm">
-      <label>รหัสพนักงาน</label>
-      <input id="loginId" required autocomplete="username" placeholder="เช่น M001">
-      <label>รหัสผ่าน</label>
-      <input id="loginPw" type="password" required autocomplete="current-password">
+      <label>รหัสพนักงาน (ตัวเลข 6 หลัก)</label>
+      <input id="loginId" required inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="off" placeholder="เช่น 123456" style="font-size:22px;letter-spacing:6px;text-align:center">
       <br><br><button style="width:100%">เข้าสู่ระบบ</button>
     </form>
   </div>
