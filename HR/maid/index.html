@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>เบิกของใช้ - แม่บ้าน</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div id="login" hidden>
+  <div class="card">
+    <h2>🧹 เบิกของใช้ (แม่บ้าน)</h2>
+    <form id="loginForm">
+      <label>รหัสพนักงาน</label>
+      <input id="loginId" required autocomplete="username" placeholder="เช่น M001">
+      <label>รหัสผ่าน</label>
+      <input id="loginPw" type="password" required autocomplete="current-password">
+      <br><br><button style="width:100%">เข้าสู่ระบบ</button>
+    </form>
+  </div>
+</div>
+
+<div id="app" hidden>
+  <header>
+    <h1>🧹 เบิกของใช้ — <span id="who"></span></h1>
+    <button id="logoutBtn" class="sm">ออกจากระบบ</button>
+  </header>
+  <main>
+    <div class="card">
+      <h2>เลือกของที่ต้องการเบิก</h2>
+      <div id="items"></div>
+      <label>หมายเหตุ (ถ้ามี)</label>
+      <textarea id="note" rows="2" placeholder="เช่น ใช้ที่ชั้น 3"></textarea>
+      <br><br>
+      <button id="submitBtn">ส่งคำขอเบิก</button>
+    </div>
+    <div class="card">
+      <h2>ประวัติการเบิกของฉัน</h2>
+      <div id="history" class="tbl"></div>
+    </div>
+  </main>
+</div>
+
+<script src="config.js"></script>
+<script src="common.js"></script>
+<script>
+let me = null, items = [], cart = {};
+
+setupAuth({
+  loginToEmail: code => code.toLowerCase() + EMAIL_DOMAIN,
+  allow: async user => {
+    const { data } = await sb.from('housekeepers').select('*').eq('user_id', user.id).eq('active', true).maybeSingle();
+    me = data; return !!data;
+  },
+  onReady: async () => {
+    $('#who').textContent = me.name + ' (' + me.emp_code + ')';
+    await loadItems(); await loadHistory();
+  }
+});
+
+async function loadItems() {
+  const { data, error } = await sb.from('items').select('*').eq('active', true).order('name');
+  if (error) return toast(error.message, true);
+  items = data; cart = {}; renderItems();
+}
+
+function renderItems() {
+  $('#items').innerHTML = items.map(i => `
+    <div class="item">
+      <div class="nm">${esc(i.name)}<br><small>คงเหลือ ${i.stock} ${esc(i.unit)}</small></div>
+      <div class="qty">
+        <button class="ghost" data-id="${i.id}" data-d="-1">−</button>
+        <span>${cart[i.id] || 0}</span>
+        <button class="ghost" data-id="${i.id}" data-d="1">+</button>
+      </div>
+    </div>`).join('') || '<p class="mut">ยังไม่มีรายการของใช้</p>';
+}
+
+$('#items').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  const id = b.dataset.id, it = items.find(x => x.id === id);
+  const n = Math.max(0, Math.min(it.stock, (cart[id] || 0) + Number(b.dataset.d)));
+  if (n) cart[id] = n; else delete cart[id];
+  renderItems();
+});
+
+$('#submitBtn').addEventListener('click', async () => {
+  const lines = Object.entries(cart).map(([item_id, qty]) => ({ item_id, qty }));
+  if (!lines.length) return toast('กรุณาเลือกของอย่างน้อย 1 รายการ', true);
+  $('#submitBtn').disabled = true;
+  const { data: req, error } = await sb.from('requests')
+    .insert({ housekeeper_id: me.id, note: $('#note').value.trim() || null }).select().single();
+  if (error) { $('#submitBtn').disabled = false; return toast(error.message, true); }
+  const { error: e2 } = await sb.from('request_items').insert(lines.map(l => ({ ...l, request_id: req.id })));
+  $('#submitBtn').disabled = false;
+  if (e2) return toast(e2.message, true);
+  toast('ส่งคำขอเรียบร้อย รอผู้ดูแลอนุมัติ');
+  $('#note').value = ''; cart = {}; renderItems(); loadHistory();
+});
+
+async function loadHistory() {
+  const { data, error } = await sb.from('requests')
+    .select('id,status,note,created_at,request_items(qty,items(name,unit))')
+    .eq('housekeeper_id', me.id).order('created_at', { ascending: false }).limit(30);
+  if (error) return toast(error.message, true);
+  $('#history').innerHTML = data.length ? `<table><tr><th>วันที่</th><th>รายการ</th><th>สถานะ</th></tr>` +
+    data.map(r => `<tr><td>${fmtDate(r.created_at)}</td>
+      <td>${r.request_items.map(x => `${esc(x.items.name)} × ${x.qty} ${esc(x.items.unit)}`).join('<br>')}
+        ${r.note ? `<br><small class="mut">📝 ${esc(r.note)}</small>` : ''}</td>
+      <td><span class="badge ${r.status}">${STATUS[r.status]}</span></td></tr>`).join('') + '</table>'
+    : '<p class="mut">ยังไม่เคยเบิก</p>';
+}
+</script>
+</body>
+</html>
