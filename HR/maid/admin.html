@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ผู้ดูแล - อนุมัติเบิกของใช้</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div id="login" hidden>
+  <div class="card">
+    <h2>🛠 ผู้ดูแล (HR)</h2>
+    <form id="loginForm">
+      <label>อีเมล</label>
+      <input id="loginId" type="email" required value="hr@local.com" autocomplete="username">
+      <label>รหัสผ่าน</label>
+      <input id="loginPw" type="password" required autocomplete="current-password">
+      <br><br><button style="width:100%">เข้าสู่ระบบ</button>
+    </form>
+  </div>
+</div>
+
+<div id="app" hidden>
+  <header>
+    <h1>🛠 ผู้ดูแล — อนุมัติ &amp; สต็อก</h1>
+    <a href="manage.html">จัดการแม่บ้าน →</a>
+    <button id="logoutBtn" class="sm">ออกจากระบบ</button>
+  </header>
+  <main>
+    <div class="tabs">
+      <button data-tab="req" class="on">คำขอเบิก</button>
+      <button data-tab="stock">สต็อกของใช้</button>
+    </div>
+
+    <section id="tab-req">
+      <div class="card">
+        <div class="row">
+          <div><label>กรองสถานะ</label>
+            <select id="filter"><option value="pending">รออนุมัติ</option><option value="">ทั้งหมด</option>
+              <option value="approved">อนุมัติแล้ว</option><option value="rejected">ไม่อนุมัติ</option></select></div>
+          <button class="ghost" id="reload">รีเฟรช</button>
+        </div>
+      </div>
+      <div class="card tbl" id="reqList"></div>
+    </section>
+
+    <section id="tab-stock" hidden>
+      <div class="card">
+        <h2>เพิ่มของใช้</h2>
+        <form id="itemForm" class="row">
+          <div><label>ชื่อ</label><input id="iName" required></div>
+          <div><label>หน่วย</label><input id="iUnit" value="ชิ้น" required></div>
+          <div><label>จำนวนเริ่มต้น</label><input id="iStock" type="number" min="0" value="0" required></div>
+          <button>เพิ่ม</button>
+        </form>
+      </div>
+      <div class="card tbl" id="stockList"></div>
+    </section>
+  </main>
+</div>
+
+<script src="config.js"></script>
+<script src="common.js"></script>
+<script>
+setupAuth({
+  loginToEmail: e => e.toLowerCase(),
+  allow: async u => isHR(u),
+  onReady: () => { loadReq(); loadStock(); }
+});
+
+document.querySelector('.tabs').addEventListener('click', e => {
+  const t = e.target.dataset.tab; if (!t) return;
+  document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('on', b === e.target));
+  $('#tab-req').hidden = t !== 'req'; $('#tab-stock').hidden = t !== 'stock';
+});
+
+async function loadReq() {
+  let q = sb.from('requests')
+    .select('id,status,note,created_at,housekeepers(name,emp_code,area),request_items(qty,items(name,unit,stock))')
+    .order('created_at', { ascending: false }).limit(100);
+  if ($('#filter').value) q = q.eq('status', $('#filter').value);
+  const { data, error } = await q;
+  if (error) return toast(error.message, true);
+  $('#reqList').innerHTML = data.length ? `<table><tr><th>วันที่</th><th>แม่บ้าน</th><th>รายการ</th><th>สถานะ</th><th></th></tr>` +
+    data.map(r => `<tr><td>${fmtDate(r.created_at)}</td>
+      <td>${esc(r.housekeepers?.name)}<br><small class="mut">${esc(r.housekeepers?.emp_code)} ${esc(r.housekeepers?.area || '')}</small></td>
+      <td>${r.request_items.map(x => `${esc(x.items.name)} × ${x.qty} ${esc(x.items.unit)} <small class="mut">(คลัง ${x.items.stock})</small>`).join('<br>')}
+        ${r.note ? `<br><small class="mut">📝 ${esc(r.note)}</small>` : ''}</td>
+      <td><span class="badge ${r.status}">${STATUS[r.status]}</span></td>
+      <td>${r.status === 'pending' ? `<button class="ok sm" data-a="approve" data-id="${r.id}">อนุมัติ</button>
+        <button class="bad sm" data-a="reject" data-id="${r.id}">ไม่อนุมัติ</button>` : ''}</td></tr>`).join('') + '</table>'
+    : '<p class="mut">ไม่มีรายการ</p>';
+}
+$('#filter').onchange = loadReq; $('#reload').onclick = loadReq;
+
+$('#reqList').addEventListener('click', async e => {
+  const b = e.target.closest('button[data-a]'); if (!b) return;
+  b.disabled = true;
+  let error;
+  if (b.dataset.a === 'approve') ({ error } = await sb.rpc('approve_request', { req_id: b.dataset.id }));
+  else ({ error } = await sb.from('requests').update({ status: 'rejected', decided_at: new Date().toISOString() }).eq('id', b.dataset.id));
+  if (error) { toast(error.message, true); b.disabled = false; return; }
+  toast('บันทึกแล้ว'); loadReq(); loadStock();
+});
+
+async function loadStock() {
+  const { data, error } = await sb.from('items').select('*').order('name');
+  if (error) return toast(error.message, true);
+  $('#stockList').innerHTML = `<table><tr><th>ชื่อ</th><th>หน่วย</th><th>คงเหลือ</th><th>สถานะ</th><th></th></tr>` +
+    data.map(i => `<tr><td>${esc(i.name)}</td><td>${esc(i.unit)}</td>
+      <td><input type="number" min="0" value="${i.stock}" style="width:90px" data-stock="${i.id}"></td>
+      <td>${i.active ? '<span class="badge approved">เปิดให้เบิก</span>' : '<span class="badge off">ปิด</span>'}</td>
+      <td><button class="ghost sm" data-save="${i.id}">บันทึกสต็อก</button>
+          <button class="ghost sm" data-toggle="${i.id}" data-active="${i.active}">${i.active ? 'ปิด' : 'เปิด'}</button></td></tr>`).join('') + '</table>';
+}
+
+$('#stockList').addEventListener('click', async e => {
+  const b = e.target.closest('button'); if (!b) return;
+  let error;
+  if (b.dataset.save) {
+    const v = Number($(`[data-stock="${b.dataset.save}"]`).value);
+    ({ error } = await sb.from('items').update({ stock: v }).eq('id', b.dataset.save));
+  } else if (b.dataset.toggle) {
+    ({ error } = await sb.from('items').update({ active: b.dataset.active !== 'true' }).eq('id', b.dataset.toggle));
+  } else return;
+  if (error) return toast(error.message, true);
+  toast('บันทึกแล้ว'); loadStock();
+});
+
+$('#itemForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const { error } = await sb.from('items').insert({ name: $('#iName').value.trim(), unit: $('#iUnit').value.trim(), stock: Number($('#iStock').value) });
+  if (error) return toast(error.message, true);
+  e.target.reset(); $('#iUnit').value = 'ชิ้น'; $('#iStock').value = 0;
+  toast('เพิ่มของใช้แล้ว'); loadStock();
+});
+</script>
+</body>
+</html>
