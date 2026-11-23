@@ -3,6 +3,7 @@
 const URL_ = process.env.SUPABASE_URL;
 const KEY = process.env.SUPABASE_SERVICE_KEY;
 const DOMAIN = process.env.EMAIL_DOMAIN || "local.com";
+const SUFFIX = process.env.CODE_SUFFIX || "-supply"; // ต้องตรงกับ config.js
 const ADMIN = "hr@local.com";
 const H = { apikey: KEY, Authorization: `Bearer ${KEY}`, "Content-Type": "application/json" };
 
@@ -20,10 +21,9 @@ module.exports = async (req, res) => {
     const me = await fetch(`${URL_}/auth/v1/user`, { headers: { apikey: KEY, Authorization: `Bearer ${token}` } }).then(r => r.json());
     if (me.email !== ADMIN) return res.status(403).json({ error: "ไม่มีสิทธิ์" });
 
-    const { action, code, name, password, active } = req.body || {};
+    const { action, code, name, active } = req.body || {};
+    const password = (code || "") + SUFFIX;
     if (!/^[A-Za-z0-9]{1,20}$/.test(code || "")) return res.status(400).json({ error: "รหัสพนักงานใช้ได้เฉพาะตัวอักษร/ตัวเลข ไม่เกิน 20 ตัว" });
-    if ((action === "create" || action === "reset") && (password || "").length < 6)
-      return res.status(400).json({ error: "รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร" });
 
     if (action === "create") {
       if (!(name || "").trim()) return res.status(400).json({ error: "กรอกชื่อแม่บ้าน" });
