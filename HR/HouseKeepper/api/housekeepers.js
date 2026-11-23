@@ -3,7 +3,7 @@
 const URL_ = process.env.SUPABASE_URL;
 const KEY = process.env.SUPABASE_SERVICE_KEY;
 const DOMAIN = process.env.EMAIL_DOMAIN || "local.com";
-const SUFFIX = process.env.CODE_SUFFIX || "-mm"; // ต้องตรงกับ config.js
+const SUFFIX = process.env.CODE_SUFFIX || ""; // รหัสผ่าน = รหัสพนักงานล้วน (ต้องตรงกับ config.js)
 const ADMIN = "hr@local.com";
 const H = { apikey: KEY, Authorization: `Bearer ${KEY}`, "Content-Type": "application/json" };
 
