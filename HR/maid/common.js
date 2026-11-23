@@ -37,9 +37,9 @@ async function setupAuth({ allow, loginToEmail, onReady }) {
   }
   $('#loginForm').addEventListener('submit', async e => {
     e.preventDefault();
-    const id = $('#loginId').value.trim(), pw = $('#loginPw').value;
+    const id = $('#loginId').value.trim(), pw = $('#loginPw') ? $('#loginPw').value : id; // หน้าแม่บ้านไม่มีช่องรหัสผ่าน ใช้รหัส 6 หลักแทน
     const { error } = await sb.auth.signInWithPassword({ email: loginToEmail(id), password: pw });
-    if (error) return toast('เข้าสู่ระบบไม่สำเร็จ: ' + error.message, true);
+    if (error) return toast('เข้าสู่ระบบไม่สำเร็จ: รหัสหรือรหัสผ่านไม่ถูกต้อง', true);
     refresh();
   });
   $('#logoutBtn').addEventListener('click', async () => { await sb.auth.signOut(); refresh(); });
