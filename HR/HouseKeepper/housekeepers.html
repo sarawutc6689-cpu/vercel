@@ -16,7 +16,6 @@
   <div class="card"><div class="row">
     <div><label for="nCode">รหัสพนักงาน</label><input id="nCode" inputmode="numeric" autocomplete="off"></div>
     <div><label for="nName">ชื่อ</label><input id="nName" autocomplete="off"></div>
-    <div><label for="nPw">รหัสผ่านเริ่มต้น</label><input id="nPw" type="text" autocomplete="off" placeholder="อย่างน้อย 6 ตัว"></div>
     <button id="add">เพิ่มแม่บ้าน</button>
   </div></div>
 
@@ -53,16 +52,16 @@ async function load(){
   if(error) return say(error.message, true);
   $("list").innerHTML = data.length ? data.map(x => `<tr><td>${esc(x.code)}</td><td>${esc(x.name)}</td>
     <td><span class="tag ${x.active ? "approved" : "rejected"}">${x.active ? "ใช้งานอยู่" : "ปิดใช้งาน"}</span></td>
-    <td style="white-space:nowrap"><button class="ghost" data-reset="${esc(x.code)}">ตั้งรหัสผ่านใหม่</button>
+    <td style="white-space:nowrap"><button class="ghost" data-reset="${esc(x.code)}">รีเซ็ตการเข้าใช้</button>
     <button class="${x.active ? "bad" : ""}" data-toggle="${esc(x.code)}" data-active="${x.active ? 0 : 1}">${x.active ? "ปิดใช้งาน" : "เปิดใช้งาน"}</button></td></tr>`).join("")
     : `<tr><td colspan="4" class="muted">ยังไม่มีแม่บ้าน กรอกข้อมูลด้านบนเพื่อเพิ่มคนแรก</td></tr>`;
 }
 $("add").onclick = async () => {
   $("add").disabled = true;
   try {
-    await call({ action:"create", code:$("nCode").value.trim(), name:$("nName").value, password:$("nPw").value });
-    say("เพิ่มแม่บ้านแล้ว ให้เขา login ด้วยรหัสพนักงานและรหัสผ่านที่ตั้งไว้");
-    $("nCode").value = $("nName").value = $("nPw").value = ""; load();
+    await call({ action:"create", code:$("nCode").value.trim(), name:$("nName").value });
+    say("เพิ่มแม่บ้านแล้ว เขา login ด้วยรหัสพนักงานได้ทันที");
+    $("nCode").value = $("nName").value = ""; load();
   } catch(e){ say(e.message, true); }
   $("add").disabled = false;
 };
@@ -70,9 +69,7 @@ $("list").onclick = async e => {
   const b = e.target.closest("button"); if(!b) return;
   try {
     if(b.dataset.reset){
-      const pw = prompt("รหัสผ่านใหม่ของ " + b.dataset.reset + " (อย่างน้อย 6 ตัว)");
-      if(!pw) return;
-      await call({ action:"reset", code:b.dataset.reset, password:pw }); say("เปลี่ยนรหัสผ่านแล้ว");
+      await call({ action:"reset", code:b.dataset.reset }); say("รีเซ็ตแล้ว เข้าด้วยรหัสพนักงานได้");
     } else if(b.dataset.toggle){
       const on = b.dataset.active === "1";
       if(!on && !confirm("ปิดใช้งาน " + b.dataset.toggle + " ? เขาจะ login ไม่ได้")) return;
