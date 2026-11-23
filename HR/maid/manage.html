@@ -31,13 +31,12 @@
     <div class="card">
       <h2>เพิ่มแม่บ้าน</h2>
       <form id="hkForm" class="row">
-        <div><label>รหัสพนักงาน</label><input id="hCode" required placeholder="M001"></div>
+        <div><label>รหัสพนักงาน (ตัวเลข 6 หลัก)</label><input id="hCode" required inputmode="numeric" pattern="[0-9]{6}" maxlength="6" placeholder="123456"></div>
         <div><label>ชื่อ-นามสกุล</label><input id="hName" required></div>
         <div><label>พื้นที่รับผิดชอบ</label><input id="hArea" placeholder="เช่น ชั้น 2"></div>
-        <div><label>รหัสผ่านเริ่มต้น (≥6 ตัว)</label><input id="hPw" value="123456" minlength="6" required></div>
         <button>เพิ่ม</button>
       </form>
-      <p class="mut" style="font-size:13px">แม่บ้านจะ login ด้วยรหัสพนักงาน (ระบบแปลงเป็นอีเมล <code>รหัส@local.com</code> ให้อัตโนมัติ)</p>
+      <p class="mut" style="font-size:13px">แม่บ้านจะ login ด้วยรหัส 6 หลักนี้อย่างเดียว (ระบบใช้ <code>รหัส@local.com</code> และตั้งรหัสผ่านเป็นรหัสเดียวกันให้อัตโนมัติ)</p>
     </div>
     <div class="card tbl" id="list"></div>
   </main>
@@ -81,7 +80,8 @@ $('#list').addEventListener('click', async e => {
 
 $('#hkForm').addEventListener('submit', async e => {
   e.preventDefault();
-  const code = $('#hCode').value.trim(), pw = $('#hPw').value;
+  const code = $('#hCode').value.trim(), pw = code;
+  if (!/^\d{6}$/.test(code)) return toast('รหัสพนักงานต้องเป็นตัวเลข 6 หลัก', true);
   const btn = e.target.querySelector('button'); btn.disabled = true;
   // client แยก ไม่เก็บ session เพื่อไม่ให้ HR หลุดออกจากระบบ
   const tmp = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY,
@@ -92,7 +92,7 @@ $('#hkForm').addEventListener('submit', async e => {
     user_id: data.user.id, emp_code: code, name: $('#hName').value.trim(), area: $('#hArea').value.trim() || null });
   btn.disabled = false;
   if (e2) return toast(e2.message, true);
-  e.target.reset(); $('#hPw').value = '123456';
+  e.target.reset();
   toast('เพิ่มแม่บ้านแล้ว'); load();
 });
 </script>
