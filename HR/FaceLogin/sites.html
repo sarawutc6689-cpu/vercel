@@ -336,15 +336,21 @@ function onCoordInput(e){
   if(e.target.id!=='f-rad'&&lat!==null&&lng!==null&&Math.abs(lat)<=90&&Math.abs(lng)<=180) mapObj.setView([lat,lng],Math.max(mapObj.getZoom(),17),{animate:false});
 }
 function useMyLocation(){
-  if(!navigator.geolocation){ toast('error','เบราว์เซอร์นี้ไม่รองรับ GPS'); return; }
+  if(!window.isSecureContext||!navigator.geolocation){ toast('error','ต้องเปิดผ่าน https:// และอุปกรณ์ต้องรองรับตำแหน่ง'); return; }
   const b=$('btn-gps'); b.disabled=true; b.textContent='กำลังหาตำแหน่ง...';
+  let done=false, t=null;
+  const finish=()=>{ done=true; clearTimeout(t); b.disabled=false; b.textContent='ใช้ตำแหน่งปัจจุบันของฉัน'; };
+  t=setTimeout(()=>{ if(done) return; finish();
+    toast('error','หาตำแหน่งนานเกินไป ตรวจว่าเปิด GPS ในมือถือและอนุญาตเบราว์เซอร์แล้ว หรือแตะบนแผนที่เลือกเอง'); },20000);
   navigator.geolocation.getCurrentPosition(p=>{
-    b.disabled=false; b.textContent='ใช้ตำแหน่งปัจจุบันของฉัน';
+    if(done) return; finish();
     setPick(p.coords.latitude,p.coords.longitude,true);
-  },()=>{
-    b.disabled=false; b.textContent='ใช้ตำแหน่งปัจจุบันของฉัน';
-    toast('error','หาตำแหน่งไม่ได้ ตรวจสอบการอนุญาตตำแหน่งของเบราว์เซอร์');
-  },{enableHighAccuracy:true,timeout:15000});
+  },err=>{
+    if(done) return; finish();
+    toast('error',err.code===1
+      ? 'ไม่ได้รับอนุญาตใช้ตำแหน่ง เปิดการอนุญาตตำแหน่งให้เบราว์เซอร์แล้วลองใหม่'
+      : 'หาตำแหน่งไม่ได้ ลองออกไปที่โล่ง หรือแตะบนแผนที่เลือกเอง');
+  },{enableHighAccuracy:true,timeout:15000,maximumAge:0});
 }
 
 /* ================= ฟอร์ม เพิ่ม/แก้ไข ================= */
