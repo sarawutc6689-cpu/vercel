@@ -6,20 +6,27 @@
 <title>เบิกของใช้ - แม่บ้าน</title>
 <link rel="stylesheet" href="style.css">
 <style>
-  table.req th, table.req td { vertical-align: middle; }
-  table.req th.c, table.req td.c { text-align: center; }
-  table.req td.cat { font-weight: 600; background: #f9fafb; border-right: 1px solid var(--bd); width: 22%; }
-  table.req tr.grp td { border-top: 2px solid var(--bd); }
-  table.req td.stk { white-space: nowrap; text-align: center; }
-  table.req td.stk.out { color: var(--bad); font-weight: 600; }
-  table.req td.stk small { color: var(--mut); }
-  table.req .qty { justify-content: center; }
-  table.req .qty .on { color: var(--pri); }
-  table.req .qty button:disabled { opacity: .35; }
-  @media (max-width: 520px) {
-    table.req { font-size: 13px; }
-    table.req th, table.req td { padding: 6px 4px; }
-    table.req .qty button { width: 30px; height: 30px; }
+  .step { display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:50%; background:var(--pri); color:#fff; font-size:13px; margin-right:6px }
+  table.req th, table.req td, table.bk th, table.bk td { vertical-align: middle }
+  table .c { text-align:center }
+  table.req input[type=checkbox] { width:22px; height:22px; accent-color: var(--pri); cursor:pointer }
+  table.req input[type=number] { width:80px; text-align:center }
+  table.req input[type=number]:disabled { background:#f3f4f6; color:#9ca3af }
+  table.req tr.off td { color:#9ca3af }
+  table.req td.stk { text-align:center; white-space:nowrap }
+  table.req td.stk.out { color:var(--bad); font-weight:600 }
+  table.req td.stk small { color:var(--mut) }
+  table.req tr.sel td { background:#eff6ff }
+  .actions { display:flex; gap:8px; justify-content:flex-end; margin-top:12px; flex-wrap:wrap }
+  .actions .hint { flex:1; align-self:center; color:var(--mut); font-size:13px }
+  .empty { padding:18px 0; text-align:center; color:var(--mut) }
+  .total { font-size:13px; color:var(--mut); margin-top:8px }
+  tr.flash td { animation: fl 1.2s }
+  @keyframes fl { from { background:#fef3c7 } to { background:transparent } }
+  @media (max-width:520px) {
+    table { font-size:13px }
+    th, td { padding:6px 4px }
+    table.req input[type=number] { width:64px; padding:6px }
   }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -42,14 +49,31 @@
     <button id="logoutBtn" class="sm">ออกจากระบบ</button>
   </header>
   <main>
+
+    <!-- ขั้นที่ 1: เลือกประเภท + ติ๊กรายการ -->
     <div class="card">
-      <h2>เลือกของที่ต้องการเบิก</h2>
-      <div id="items" class="tbl"></div>
+      <h2><span class="step">1</span>เลือกประเภทและรายการพัสดุ</h2>
+      <label for="catSel">ประเภท</label>
+      <select id="catSel"></select>
+      <div id="items" class="tbl" style="margin-top:12px"></div>
+      <div class="actions" id="saveBar" hidden>
+        <span class="hint">ติ๊กรายการที่ต้องการ ใส่จำนวน แล้วกดบันทึก (เลือกประเภทอื่นต่อได้)</span>
+        <button id="saveBtn" class="ok">💾 บันทึก</button>
+      </div>
+    </div>
+
+    <!-- ขั้นที่ 2: รายการที่บันทึกไว้ แก้ไขได้ -->
+    <div class="card">
+      <h2><span class="step">2</span>รายการที่เลือกไว้ (ตรวจสอบก่อนส่ง)</h2>
+      <div id="basket" class="tbl"></div>
       <label>หมายเหตุ (ถ้ามี)</label>
       <textarea id="note" rows="2" placeholder="เช่น ใช้ที่ชั้น 3"></textarea>
-      <br><br>
-      <button id="submitBtn">ส่งคำขอเบิก</button>
+      <div class="actions">
+        <button id="clearBtn" class="ghost">ล้างทั้งหมด</button>
+        <button id="submitBtn">📨 ส่งคำขอเบิก</button>
+      </div>
     </div>
+
     <div class="card">
       <h2>ประวัติการเบิกของฉัน</h2>
       <div id="history" class="tbl"></div>
@@ -60,7 +84,10 @@
 <script src="config.js"></script>
 <script src="common.js"></script>
 <script>
-let me = null, items = [], cart = {};
+let me = null, items = [];
+let basket = {};   // item_id -> qty ที่กดบันทึกแล้ว
+let draft = {};    // item_id -> qty ที่ติ๊กอยู่ในประเภทที่เปิด (ยังไม่บันทึก)
+let curCat = '';
 
 setupAuth({
   loginToEmail: code => code.toLowerCase() + EMAIL_DOMAIN,
@@ -74,57 +101,146 @@ setupAuth({
   }
 });
 
+const catOf = i => i.category || 'ทั่วไป';
+
 async function loadItems() {
   const { data, error } = await sb.from('items').select('*').eq('active', true).order('category').order('name');
   if (error) return toast(error.message, true);
-  items = data; cart = {}; renderItems();
+  items = data;
+  // ตัดรายการในตะกร้าที่ไม่มีแล้ว/สต็อกลดลง
+  Object.keys(basket).forEach(id => {
+    const it = items.find(x => x.id === id);
+    if (!it || it.stock <= 0) delete basket[id]; else basket[id] = Math.min(basket[id], it.stock);
+  });
+  renderCats(); renderItems(); renderBasket();
 }
 
-// ตาราง 4 ช่อง: ประเภท | รายการพัสดุที่เบิก | จำนวนคงเหลือ | จำนวนที่ต้องการเบิก
+/* ---------- ขั้นที่ 1 ---------- */
+function renderCats() {
+  const cats = [...new Set(items.map(catOf))];
+  if (curCat && !cats.includes(curCat)) curCat = '';
+  $('#catSel').innerHTML = '<option value="">— เลือกประเภท —</option>' +
+    cats.map(c => {
+      const n = items.filter(i => catOf(i) === c && basket[i.id]).length;
+      return `<option value="${esc(c)}" ${c === curCat ? 'selected' : ''}>${esc(c)}${n ? ` (เลือกแล้ว ${n})` : ''}</option>`;
+    }).join('');
+}
+
 function renderItems() {
-  const groups = {};
-  items.forEach(i => (groups[i.category || 'ทั่วไป'] ||= []).push(i));
-  const rows = Object.entries(groups).map(([cat, list]) => list.map((i, idx) => {
-    const q = cart[i.id] || 0;
-    return `<tr class="${idx === 0 ? 'grp' : ''}">
-      ${idx === 0 ? `<td class="cat" rowspan="${list.length}">${esc(cat)}</td>` : ''}
-      <td>${esc(i.name)}</td>
-      <td class="stk ${i.stock <= 0 ? 'out' : ''}">${i.stock} <small>${esc(i.unit)}</small></td>
-      <td><div class="qty">
-        <button class="ghost" data-id="${i.id}" data-d="-1" ${q ? '' : 'disabled'}>−</button>
-        <span class="${q ? 'on' : ''}">${q}</span>
-        <button class="ghost" data-id="${i.id}" data-d="1" ${q >= i.stock ? 'disabled' : ''}>+</button>
-      </div></td>
-    </tr>`;
-  }).join('')).join('');
-  $('#items').innerHTML = rows
-    ? `<table class="req"><thead><tr>
-        <th>ประเภท</th><th>รายการพัสดุที่เบิก</th>
-        <th class="c">จำนวนคงเหลือ</th><th class="c">จำนวนที่ต้องการเบิก</th>
-      </tr></thead><tbody>${rows}</tbody></table>`
-    : '<p class="mut">ยังไม่มีรายการของใช้</p>';
+  const box = $('#items');
+  if (!curCat) {
+    $('#saveBar').hidden = true;
+    box.innerHTML = '<div class="empty">กรุณาเลือกประเภทก่อน</div>';
+    return;
+  }
+  const list = items.filter(i => catOf(i) === curCat);
+  draft = {};
+  list.forEach(i => { if (basket[i.id]) draft[i.id] = basket[i.id]; });
+  box.innerHTML = `<table class="req"><thead><tr>
+      <th class="c" style="width:48px">เลือก</th><th>รายการพัสดุที่เบิก</th>
+      <th class="c">จำนวนคงเหลือ</th><th class="c">จำนวนที่ต้องการเบิก</th>
+    </tr></thead><tbody>` +
+    list.map(i => {
+      const on = draft[i.id] != null, out = i.stock <= 0;
+      return `<tr class="${on ? 'sel' : ''} ${out ? 'off' : ''}" data-row="${i.id}">
+        <td class="c"><input type="checkbox" data-chk="${i.id}" ${on ? 'checked' : ''} ${out ? 'disabled' : ''} aria-label="เลือก ${esc(i.name)}"></td>
+        <td>${esc(i.name)}</td>
+        <td class="stk ${out ? 'out' : ''}">${i.stock} <small>${esc(i.unit)}</small></td>
+        <td class="c"><input type="number" min="1" max="${i.stock}" step="1" inputmode="numeric" data-qty="${i.id}" value="${on ? draft[i.id] : ''}" placeholder="0" ${on ? '' : 'disabled'}></td>
+      </tr>`;
+    }).join('') + '</tbody></table>';
+  $('#saveBar').hidden = false;
 }
 
-$('#items').addEventListener('click', e => {
-  const b = e.target.closest('button'); if (!b) return;
-  const id = b.dataset.id, it = items.find(x => x.id === id);
-  const n = Math.max(0, Math.min(it.stock, (cart[id] || 0) + Number(b.dataset.d)));
-  if (n) cart[id] = n; else delete cart[id];
-  renderItems();
+$('#catSel').addEventListener('change', e => { curCat = e.target.value; renderItems(); });
+
+$('#items').addEventListener('change', e => {
+  const t = e.target, row = t.closest('tr');
+  if (t.dataset.chk) {
+    const id = t.dataset.chk, q = row.querySelector('[data-qty]');
+    if (t.checked) { q.disabled = false; if (!q.value) q.value = 1; draft[id] = Number(q.value); q.focus(); q.select(); }
+    else { q.disabled = true; q.value = ''; delete draft[id]; }
+    row.classList.toggle('sel', t.checked);
+  } else if (t.dataset.qty) {
+    const id = t.dataset.qty, it = items.find(x => x.id === id);
+    let n = Math.floor(Number(t.value)) || 1;
+    n = Math.max(1, Math.min(it.stock, n));
+    t.value = n; draft[id] = n;
+  }
 });
 
+$('#saveBtn').addEventListener('click', () => {
+  if (!curCat) return;
+  const list = items.filter(i => catOf(i) === curCat);
+  // ค่าจากช่องตัวเลขที่ยังพิมพ์ค้างอยู่
+  document.querySelectorAll('#items [data-qty]:not(:disabled)').forEach(q => {
+    const it = items.find(x => x.id === q.dataset.qty);
+    let n = Math.floor(Number(q.value)) || 1;
+    draft[it.id] = Math.max(1, Math.min(it.stock, n));
+  });
+  let count = 0;
+  list.forEach(i => { if (draft[i.id]) { basket[i.id] = draft[i.id]; count++; } else delete basket[i.id]; });
+  renderCats(); renderBasket();
+  toast(count ? `บันทึกแล้ว ${count} รายการในประเภท "${curCat}"` : 'ไม่ได้เลือกรายการในประเภทนี้');
+  $('#basket').scrollIntoView({ behavior: 'smooth', block: 'center' });
+});
+
+/* ---------- ขั้นที่ 2 ---------- */
+function renderBasket(flashId) {
+  const rows = items.filter(i => basket[i.id]);
+  $('#submitBtn').disabled = !rows.length;
+  $('#clearBtn').disabled = !rows.length;
+  if (!rows.length) { $('#basket').innerHTML = '<div class="empty">ยังไม่มีรายการ — เลือกประเภทด้านบนแล้วกดบันทึก</div>'; return; }
+  const total = rows.reduce((s, i) => s + basket[i.id], 0);
+  $('#basket').innerHTML = `<table class="bk"><thead><tr>
+      <th>ประเภท</th><th>รายการ</th><th class="c">จำนวนที่เบิก</th><th></th>
+    </tr></thead><tbody>` +
+    rows.map(i => `<tr class="${i.id === flashId ? 'flash' : ''}">
+      <td>${esc(catOf(i))}</td><td>${esc(i.name)}</td>
+      <td class="c"><b>${basket[i.id]}</b> <small class="mut">${esc(i.unit)}</small></td>
+      <td style="text-align:right;white-space:nowrap">
+        <button class="ghost sm" data-edit="${i.id}">✏️ แก้ไข</button>
+        <button class="ghost sm" data-del="${i.id}">🗑 ลบ</button></td>
+    </tr>`).join('') + `</tbody></table>
+    <div class="total">รวม ${rows.length} รายการ · ${total} หน่วย</div>`;
+}
+
+$('#basket').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.del) {
+    delete basket[b.dataset.del]; renderCats(); renderBasket();
+    if (curCat) renderItems();
+  } else if (b.dataset.edit) {
+    // พาไปที่ประเภทของรายการนั้น พร้อมค่าที่เลือกไว้ ให้แก้แล้วกดบันทึกอีกครั้ง
+    const it = items.find(x => x.id === b.dataset.edit);
+    curCat = catOf(it); renderCats(); renderItems();
+    const row = document.querySelector(`#items [data-row="${it.id}"]`);
+    if (row) { row.classList.remove('flash'); void row.offsetWidth; row.classList.add('flash');
+      const q = row.querySelector('[data-qty]'); q.focus(); q.select(); }
+    $('#catSel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    toast('แก้ไขจำนวนแล้วกด "บันทึก" อีกครั้ง');
+  }
+});
+
+$('#clearBtn').addEventListener('click', () => {
+  if (!confirm('ล้างรายการที่เลือกทั้งหมด?')) return;
+  basket = {}; renderCats(); renderBasket(); if (curCat) renderItems();
+});
+
+/* ---------- ส่งคำขอ ---------- */
 $('#submitBtn').addEventListener('click', async () => {
-  const lines = Object.entries(cart).map(([item_id, qty]) => ({ item_id, qty }));
-  if (!lines.length) return toast('กรุณาเลือกของอย่างน้อย 1 รายการ', true);
+  const lines = Object.entries(basket).map(([item_id, qty]) => ({ item_id, qty }));
+  if (!lines.length) return toast('กรุณาเลือกและบันทึกอย่างน้อย 1 รายการ', true);
+  if (!confirm(`ยืนยันส่งคำขอเบิก ${lines.length} รายการ?`)) return;
   $('#submitBtn').disabled = true;
   const { data: req, error } = await sb.from('requests')
     .insert({ housekeeper_id: me.id, note: $('#note').value.trim() || null }).select().single();
   if (error) { $('#submitBtn').disabled = false; return toast(error.message, true); }
   const { error: e2 } = await sb.from('request_items').insert(lines.map(l => ({ ...l, request_id: req.id })));
-  $('#submitBtn').disabled = false;
-  if (e2) return toast(e2.message, true);
+  if (e2) { $('#submitBtn').disabled = false; return toast(e2.message, true); }
   toast('ส่งคำขอเรียบร้อย รอผู้ดูแลอนุมัติ');
-  $('#note').value = ''; cart = {}; renderItems(); loadHistory();
+  $('#note').value = ''; basket = {}; curCat = '';
+  await loadItems(); loadHistory();
 });
 
 async function loadHistory() {
