@@ -29,7 +29,7 @@
 <div id="app" hidden>
   <header>
     <h1>🛠 ผู้ดูแล — อนุมัติ &amp; สต็อก</h1>
-    <a href="manage.html">จัดการแม่บ้าน →</a>
+    <nav class="hnav" aria-label="เมนูผู้ดูแล"><a href="dashboard.html">📊 ภาพรวม</a><a href="admin.html" class="on">✅ อนุมัติ/สต็อก</a><a href="report.html">📄 รายงาน</a><a href="manage.html">👥 แม่บ้าน</a></nav>
     <button id="logoutBtn" class="sm">ออกจากระบบ</button>
   </header>
   <main>
@@ -99,14 +99,19 @@ async function loadReq() {
       <td>${r.request_items.map(x => `${esc(x.items.name)} × ${x.qty} ${esc(x.items.unit)} <small class="mut">(คลัง ${x.items.stock})</small>`).join('<br>')}
         ${r.note ? `<br><small class="mut">📝 ${esc(r.note)}</small>` : ''}</td>
       <td><span class="badge ${r.status}">${STATUS[r.status]}</span></td>
-      <td>${r.status === 'pending' ? `<button class="ok sm" data-a="approve" data-id="${r.id}">อนุมัติ</button>
-        <button class="bad sm" data-a="reject" data-id="${r.id}">ไม่อนุมัติ</button>` : ''}</td></tr>`).join('') + '</table>'
+      <td>${r.status === 'pending' ? `<button class="ok sm" data-a="approve" data-id="${r.id}" data-who="${esc(r.housekeepers?.name)}">อนุมัติ</button>
+        <button class="bad sm" data-a="reject" data-id="${r.id}" data-who="${esc(r.housekeepers?.name)}">ไม่อนุมัติ</button>` : ''}</td></tr>`).join('') + '</table>'
     : '<p class="mut">ไม่มีรายการ</p>';
 }
 $('#filter').onchange = loadReq; $('#reload').onclick = loadReq;
 
 $('#reqList').addEventListener('click', async e => {
   const b = e.target.closest('button[data-a]'); if (!b) return;
+  const approve = b.dataset.a === 'approve';
+  const ok = await confirmBox(approve
+    ? { icon: '✅', title: 'อนุมัติคำขอเบิก?', text: `คำขอของ ${b.dataset.who}\nระบบจะตัดสต็อกตามจำนวนที่เบิก`, okText: 'อนุมัติ' }
+    : { icon: '⚠️', title: 'ไม่อนุมัติคำขอนี้?', text: `คำขอของ ${b.dataset.who}`, okText: 'ไม่อนุมัติ', danger: true });
+  if (!ok) return;
   b.disabled = true;
   let error;
   if (b.dataset.a === 'approve') ({ error } = await sb.rpc('approve_request', { req_id: b.dataset.id }));
