@@ -273,10 +273,8 @@ let emp=null, gps=null, inArea=null, photo=null, facing='user', stream=null, emp
 document.addEventListener('DOMContentLoaded',()=>{
   clk(); setInterval(clk,1000);
   initMap(); initGPS(); initCam();
-  try{
-    const last=localStorage.getItem(LAST_KEY);
-    if(last){ $('emp-id').value=last; onEmp(); }
-  }catch(e){}
+  // ล้างรหัสที่เคยจำไว้จากเวอร์ชันก่อน เพื่อให้ต้องกรอกใหม่ทุกครั้ง
+  try{ localStorage.removeItem(LAST_KEY); }catch(e){}
 });
 
 function clk(){
@@ -308,7 +306,6 @@ function onEmp(){
       emp={id:data[0].employee_code,name:data[0].full_name};
       r.className='emp-result ok'; r.textContent=emp.name;
       setStep(1,'done');
-      try{localStorage.setItem(LAST_KEY,emp.id);}catch(e){}
     }else{
       r.className='emp-result err'; r.textContent='ไม่พบรหัสนี้ ตรวจสอบรหัสอีกครั้ง';
       setStep(1,'bad');
