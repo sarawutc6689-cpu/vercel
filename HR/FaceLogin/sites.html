@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#10294a">
+<meta name="robots" content="noindex">
+<title>จัดการจุดลงเวลา</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<style>
+:root{
+  --ink:#10294a;--ink-soft:#c9d6e8;
+  --paper:#f4f6f9;--surface:#fff;--line:#d9e0ea;
+  --text:#14202e;--muted:#5b6b7d;
+  --in:#15803d;--bad:#b42318;--link:#1d5fbf;--off:#8a97a6;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%}
+body{
+  font-family:'IBM Plex Sans Thai','Noto Sans Thai','Sarabun',system-ui,sans-serif;
+  background:var(--paper);color:var(--text);font-size:16px;line-height:1.5;min-height:100vh;
+  padding-bottom:calc(28px + env(safe-area-inset-bottom));
+}
+[hidden]{display:none!important}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid #2f7de1;outline-offset:2px}
+
+/* เข้าสู่ระบบ */
+.login{min-height:100vh;display:flex;flex-direction:column;justify-content:center;background:var(--ink);color:#fff;
+  padding:calc(32px + env(safe-area-inset-top)) 22px calc(32px + env(safe-area-inset-bottom))}
+.login-in{width:100%;max-width:380px;margin:0 auto}
+.login h1{font-size:30px;font-weight:700;line-height:1.2}
+.login p.lead{color:var(--ink-soft);margin:6px 0 28px}
+.login label{display:block;font-size:15px;font-weight:500;margin:14px 0 6px}
+.login input{width:100%;height:54px;padding:0 14px;font-size:18px;border-radius:12px;border:2px solid transparent;background:#fff;color:var(--text);outline:none}
+.login input:focus{border-color:#7ab4ff}
+.login .go{width:100%;height:58px;margin-top:22px;border:0;border-radius:14px;background:#fff;color:var(--ink);font-size:19px;font-weight:700}
+.login .go:disabled{opacity:.5}
+.login .alt{display:block;width:100%;margin-top:14px;padding:12px;background:none;border:0;color:var(--ink-soft);font-size:16px;text-decoration:underline}
+.login .lmsg{min-height:48px;margin-top:14px;font-size:15px;line-height:1.4;color:#ffd3cc}
+.login .lmsg.ok{color:#b8f0cb}
+.login .back{display:block;margin-top:10px;text-align:center;color:var(--ink-soft);font-size:15px}
+
+/* หัวหน้า */
+.top{background:var(--ink);color:#fff;padding:calc(14px + env(safe-area-inset-top)) 20px 22px}
+.top-in{max-width:760px;margin:0 auto}
+.top-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.top-name{font-size:16px;font-weight:500;color:var(--ink-soft)}
+.top-act{display:flex;gap:8px}
+.pill{color:#fff;text-decoration:none;font-size:15px;font-weight:500;padding:8px 14px;border:1.5px solid rgba(255,255,255,.35);border-radius:999px;background:none;line-height:1.3}
+.pill:active{background:rgba(255,255,255,.12)}
+.who{font-size:13px;color:var(--ink-soft);margin-top:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hero-lbl{font-size:17px;margin-top:16px;color:var(--ink-soft)}
+.hero-num{font-size:clamp(56px,19vw,88px);font-weight:700;line-height:1.05;font-variant-numeric:tabular-nums}
+.hero-num small{font-size:.32em;font-weight:500;margin-left:8px;color:var(--ink-soft)}
+.hero-sub{font-size:15px;color:var(--ink-soft);margin-top:2px;min-height:23px}
+
+main{max-width:760px;margin:0 auto;padding:18px 16px 0}
+h2.sec{font-size:18px;font-weight:700;margin:26px 0 10px}
+h2.sec:first-of-type{margin-top:4px}
+.hint{font-size:14px;color:var(--muted);margin:-4px 0 10px}
+
+#msg{padding:12px 14px;border-radius:10px;font-size:15px;font-weight:500;margin-bottom:14px}
+#msg.error{background:#fdecea;color:var(--bad)}
+#msg.ok{background:#dcfce7;color:var(--in)}
+
+/* รายการจุด */
+.list{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:0 14px}
+.row{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;padding:14px 0;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:0}
+.row.off .nm{color:var(--off)}
+.nm{font-size:18px;font-weight:700;line-height:1.3;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tag{font-size:13px;font-weight:700;padding:1px 9px;border-radius:999px;background:#e8edf3;color:var(--muted)}
+.sub{font-size:14px;color:var(--muted)}
+.sub a{color:var(--link);text-decoration:none;font-weight:500}
+.ctl{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.sw{width:60px;height:34px;border-radius:999px;border:0;background:#b9c3cf;position:relative;transition:background .15s;flex-shrink:0}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:28px;height:28px;border-radius:50%;background:#fff;transition:transform .15s;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.sw[aria-checked="true"]{background:var(--in)}
+.sw[aria-checked="true"]::after{transform:translateX(26px)}
+.sw:disabled{opacity:.5}
+.edit{background:none;border:0;color:var(--link);font-size:16px;font-weight:700;padding:4px 0}
+.empty{padding:30px 10px;text-align:center;color:var(--muted)}
+
+/* แผนที่ + ฟอร์ม */
+#map{height:280px;border-radius:14px;border:1px solid var(--line);background:#e5ebf2}
+.site-tip{background:rgba(255,255,255,.92);border:0;box-shadow:none;font-weight:700;font-size:13px;padding:1px 6px;color:var(--ink)}
+.site-tip::before{display:none}
+.form{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;margin-top:12px}
+.form label{display:block;font-size:15px;font-weight:500;margin:14px 0 6px}
+.form label:first-of-type{margin-top:0}
+.form input{width:100%;height:52px;padding:0 14px;font-size:18px;background:var(--surface);border:2px solid var(--line);border-radius:12px;outline:none}
+.form input:focus{border-color:var(--ink)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn{width:100%;height:54px;border-radius:12px;border:2px solid var(--line);background:var(--surface);font-size:18px;font-weight:700;margin-top:12px}
+.btn.primary{background:var(--ink);border-color:var(--ink);color:#fff;margin-top:18px}
+.btn:disabled{opacity:.5}
+.btn.link{border:0;background:none;color:var(--muted);font-size:16px;height:44px;margin-top:4px}
+</style>
+</head>
+<body>
+
+<!-- ───── เข้าสู่ระบบ ───── -->
+<section class="login" id="login" hidden>
+  <div class="login-in">
+    <h1>จัดการจุดลงเวลา</h1>
+    <p class="lead">สำหรับผู้ดูแลระบบเท่านั้น</p>
+    <form onsubmit="login(event)">
+      <label for="lg-email">อีเมล</label>
+      <input id="lg-email" type="email" autocomplete="username" inputmode="email" autocapitalize="none" spellcheck="false" required>
+      <label for="lg-pw">รหัสผ่าน</label>
+      <input id="lg-pw" type="password" autocomplete="current-password">
+      <button class="go" id="lg-go" type="submit">เข้าสู่ระบบ</button>
+    </form>
+    <button class="alt" type="button" onclick="magic()">ส่งลิงก์เข้าสู่ระบบทางอีเมลแทน</button>
+    <div class="lmsg" id="lg-msg" role="alert"></div>
+    <a class="back" href="index.html">กลับไปหน้าลงเวลา</a>
+  </div>
+</section>
+
+<!-- ───── แอป ───── -->
+<div id="app" hidden>
+  <header class="top">
+    <div class="top-in">
+      <div class="top-row">
+        <span class="top-name">จัดการจุดลงเวลา</span>
+        <div class="top-act">
+          <a class="pill" href="admin.html">รายงาน</a>
+          <button class="pill" onclick="logout()">ออกจากระบบ</button>
+        </div>
+      </div>
+      <div class="who" id="who"></div>
+      <div class="hero-lbl">จุดที่เปิดใช้งาน</div>
+      <div class="hero-num" id="h-n">–</div>
+      <div class="hero-sub" id="h-sub"></div>
+    </div>
+  </header>
+
+  <main>
+    <div id="msg" role="status" hidden></div>
+
+    <h2 class="sec">จุดลงเวลาทั้งหมด</h2>
+    <div id="list"></div>
+
+    <h2 class="sec">แผนที่</h2>
+    <p class="hint">แตะบนแผนที่เพื่อเลือกตำแหน่งสำหรับจุดใหม่ วงกลมสีเทาคือจุดที่ปิดอยู่</p>
+    <div id="map"></div>
+
+    <div class="form" id="form">
+      <h2 class="sec" id="f-title" style="margin:0 0 12px">เพิ่มจุดใหม่</h2>
+      <label for="f-name">ชื่อจุด</label>
+      <input id="f-name" type="text" maxlength="60" autocomplete="off" placeholder="เช่น โรงงาน 2">
+      <div class="two">
+        <div><label for="f-lat">ละติจูด</label><input id="f-lat" type="text" inputmode="decimal" autocomplete="off" placeholder="14.5774" oninput="onCoordInput(event)"></div>
+        <div><label for="f-lng">ลองจิจูด</label><input id="f-lng" type="text" inputmode="decimal" autocomplete="off" placeholder="100.7937" oninput="onCoordInput(event)"></div>
+      </div>
+      <p class="hint" style="margin:6px 0 0">วางพิกัดจาก Google Maps (เช่น 14.5774, 100.7937) ลงช่องละติจูดได้เลย</p>
+      <button class="btn" type="button" onclick="useMyLocation()" id="btn-gps">ใช้ตำแหน่งปัจจุบันของฉัน</button>
+      <label for="f-rad">รัศมีที่ลงเวลาได้ (เมตร)</label>
+      <input id="f-rad" type="text" inputmode="numeric" autocomplete="off" value="100" oninput="onCoordInput(event)">
+      <button class="btn primary" id="btn-save" type="button" onclick="save()">บันทึกจุดใหม่</button>
+      <button class="btn link" id="btn-cancel" type="button" onclick="resetForm()" hidden>ยกเลิกการแก้ไข</button>
+    </div>
+  </main>
+</div>
+
+<script>
+// ===== ตั้งค่า: Supabase Dashboard → Project Settings → API =====
+const SUPABASE_URL      = "https://ppzdyvomrfiitahxwrwz.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBwemR5dm9tcmZpaXRhaHh3cnd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwMjQ0MjIsImV4cCI6MjEwNDYwMDQyMn0.iArUz6swMfwhFT_1qEvCwK1B3aiCxdWt46_FBjT6_Y0";   // ใช้ anon key เท่านั้น ห้ามใส่ service_role
+
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+let sites=[], editId=null, mapObj=null, siteLayer=null, pickMarker=null, pickCircle=null;
+let sessUid=null, authBusy=false;
+
+/* ================= เข้าสู่ระบบ (เหมือนหน้ารายงาน) ================= */
+function showLogin(msg){ $('app').hidden=true; $('login').hidden=false; if(msg!==undefined) loginMsg(msg); }
+function showApp(email){ $('login').hidden=true; $('app').hidden=false; $('who').textContent=email||''; }
+function loginMsg(t,ok){ const m=$('lg-msg'); m.textContent=t||''; m.className='lmsg'+(ok?' ok':''); }
+
+async function handleSession(session){
+  if(!session){ sessUid=null; showLogin(); return; }
+  if(sessUid===session.user.id || authBusy) return;
+  authBusy=true;
+  try{
+    const{data,error}=await sb.rpc('is_hr_admin');
+    if(error||data!==true){
+      const mail=session.user.email;
+      await sb.auth.signOut(); sessUid=null;
+      showLogin('บัญชี '+mail+' ไม่มีสิทธิ์จัดการจุดลงเวลา ติดต่อผู้ดูแลระบบ');
+      return;
+    }
+    sessUid=session.user.id;
+    showApp(session.user.email);
+    initMap();
+    await loadSites(true);
+  }finally{ authBusy=false; }
+}
+async function login(e){
+  e.preventDefault();
+  const email=$('lg-email').value.trim().toLowerCase(), password=$('lg-pw').value;
+  if(!email||!password){ loginMsg('กรอกอีเมลและรหัสผ่าน'); return; }
+  $('lg-go').disabled=true; loginMsg('กำลังตรวจสอบ...',true);
+  const{error}=await sb.auth.signInWithPassword({email,password});
+  $('lg-go').disabled=false;
+  if(error) loginMsg('อีเมลหรือรหัสผ่านไม่ถูกต้อง'); else loginMsg('');
+}
+async function magic(){
+  const email=$('lg-email').value.trim().toLowerCase();
+  if(!email){ loginMsg('กรอกอีเมลก่อน แล้วกดส่งลิงก์'); return; }
+  loginMsg('กำลังส่งลิงก์...',true);
+  const{error}=await sb.auth.signInWithOtp({email,options:{shouldCreateUser:false,emailRedirectTo:location.origin+location.pathname}});
+  if(error) loginMsg('ส่งลิงก์ไม่สำเร็จ ตรวจสอบอีเมลหรือรอสักครู่แล้วลองใหม่');
+  else loginMsg('ส่งลิงก์ไปที่อีเมลแล้ว เปิดลิงก์นั้นบนเครื่องนี้',true);
+}
+async function logout(){ await sb.auth.signOut(); sites=[]; }
+
+(async()=>{
+  const{data:{session}}=await sb.auth.getSession();
+  await handleSession(session);
+  sb.auth.onAuthStateChange((ev,s)=>{ if(ev==='SIGNED_IN'||ev==='SIGNED_OUT') setTimeout(()=>handleSession(s),0); });
+})();
+
+/* ================= ข้อความแจ้งผล ================= */
+let msgT=null;
+function toast(kind,text){
+  const m=$('msg'); m.className=kind; m.textContent=text; m.hidden=false;
+  clearTimeout(msgT);
+  if(kind==='ok') msgT=setTimeout(()=>{m.hidden=true;},4000);
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+async function authGuard(err){
+  if(err&&(err.code==='PGRST301'||err.status===401||/JWT/i.test(err.message||''))){
+    await logout(); showLogin('หมดเวลาเข้าสู่ระบบ กรุณาเข้าสู่ระบบอีกครั้ง'); return true;
+  }
+  return false;
+}
+
+/* ================= ข้อมูลจุดลงเวลา ================= */
+async function loadSites(fit){
+  const{data,error}=await sb.from('attendance_sites').select('id,name,latitude,longitude,radius_m,is_active').order('id');
+  if(error){ if(!(await authGuard(error))) toast('error','โหลดรายการจุดไม่สำเร็จ ตรวจสอบสัญญาณอินเทอร์เน็ตแล้วลองใหม่'); return; }
+  sites=data; renderList(); drawSites(fit);
+}
+
+function renderList(){
+  const act=sites.filter(s=>s.is_active).length;
+  $('h-n').innerHTML=esc(act)+'<small>จุด</small>';
+  $('h-sub').textContent='ทั้งหมด '+sites.length+' จุด'+(act===0&&sites.length?' · ตอนนี้ไม่มีใครลงเวลาได้':'');
+  if(!sites.length){ $('list').innerHTML='<div class="list"><div class="empty">ยังไม่มีจุดลงเวลา เพิ่มจุดแรกด้านล่าง</div></div>'; return; }
+  $('list').innerHTML='<div class="list">'+sites.map(s=>
+    '<div class="row'+(s.is_active?'':' off')+'">'+
+      '<div style="min-width:0"><div class="nm">'+esc(s.name)+(s.is_active?'':'<span class="tag">ปิดอยู่</span>')+'</div>'+
+      '<div class="sub">รัศมี '+esc(s.radius_m)+' ม. · '+esc(s.latitude.toFixed(5))+', '+esc(s.longitude.toFixed(5))+'</div>'+
+      '<div class="sub"><a href="https://www.google.com/maps?q='+encodeURIComponent(s.latitude+','+s.longitude)+'" target="_blank" rel="noopener">ดูบน Google Maps</a></div></div>'+
+      '<div class="ctl"><button class="sw" role="switch" aria-checked="'+(s.is_active?'true':'false')+'" aria-label="เปิดใช้งาน '+esc(s.name)+'" data-act="toggle" data-id="'+s.id+'"></button>'+
+      '<button class="edit" data-act="edit" data-id="'+s.id+'">แก้ไข</button></div>'+
+    '</div>').join('')+'</div>';
+}
+
+$('list').addEventListener('click',e=>{
+  const b=e.target.closest('[data-act]'); if(!b) return;
+  const id=Number(b.dataset.id);
+  if(b.dataset.act==='toggle') toggle(id,b); else startEdit(id);
+});
+
+async function toggle(id,btn){
+  const s=sites.find(x=>x.id===id); if(!s) return;
+  const next=!s.is_active;
+  if(!next && sites.filter(x=>x.is_active).length===1 &&
+     !confirm('นี่คือจุดสุดท้ายที่เปิดอยู่ ถ้าปิดจะไม่มีใครลงเวลาได้เลย ต้องการปิดหรือไม่?')) return;
+  btn.disabled=true;
+  const{data,error}=await sb.from('attendance_sites').update({is_active:next}).eq('id',id).select('id');
+  btn.disabled=false;
+  if(error||!data||!data.length){
+    if(!(await authGuard(error))) toast('error','บันทึกไม่สำเร็จ ตรวจสอบสิทธิ์ผู้ดูแลหรือสัญญาณอินเทอร์เน็ต');
+    return;
+  }
+  toast('ok',(next?'เปิดใช้งาน ':'ปิดใช้งาน ')+s.name+' แล้ว');
+  await loadSites(false);
+}
+
+/* ================= แผนที่ ================= */
+function initMap(){
+  if(mapObj){ setTimeout(()=>mapObj.invalidateSize(),50); return; }
+  mapObj=L.map('map',{attributionControl:false}).setView([14.2,100.79],11);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(mapObj);
+  L.control.attribution({prefix:false}).addAttribution('© OpenStreetMap').addTo(mapObj);
+  mapObj.on('click',e=>setPick(e.latlng.lat,e.latlng.lng,false));
+  setTimeout(()=>mapObj.invalidateSize(),50);
+}
+function drawSites(fit){
+  if(!mapObj) return;
+  if(siteLayer) mapObj.removeLayer(siteLayer);
+  siteLayer=L.layerGroup().addTo(mapObj);
+  sites.forEach(s=>{
+    const on=s.is_active;
+    L.circle([s.latitude,s.longitude],{radius:s.radius_m,color:on?'#10294a':'#8a97a6',fillColor:on?'#10294a':'#8a97a6',fillOpacity:on?.14:.08,weight:2,dashArray:on?null:'6 6'})
+      .bindTooltip(s.name,{permanent:true,direction:'center',className:'site-tip'}).addTo(siteLayer);
+  });
+  if(fit&&sites.length) mapObj.fitBounds(L.latLngBounds(sites.map(s=>[s.latitude,s.longitude])).pad(.6),{maxZoom:17,animate:false});
+}
+
+function num(v){ const n=parseFloat(String(v).replace(',','.')); return Number.isFinite(n)?n:null; }
+function setPick(lat,lng,moveMap){
+  $('f-lat').value=lat.toFixed(6); $('f-lng').value=lng.toFixed(6);
+  drawPick();
+  if(moveMap) mapObj.setView([lat,lng],Math.max(mapObj.getZoom(),17),{animate:false});
+}
+function drawPick(){
+  const lat=num($('f-lat').value), lng=num($('f-lng').value);
+  if(pickMarker){ mapObj.removeLayer(pickMarker); pickMarker=null; }
+  if(pickCircle){ mapObj.removeLayer(pickCircle); pickCircle=null; }
+  if(lat===null||lng===null||Math.abs(lat)>90||Math.abs(lng)>180) return;
+  const r=Math.max(parseInt($('f-rad').value,10)||0,0);
+  pickMarker=L.circleMarker([lat,lng],{radius:8,color:'#fff',weight:3,fillColor:'#e8590c',fillOpacity:1}).addTo(mapObj);
+  if(r>0) pickCircle=L.circle([lat,lng],{radius:r,color:'#e8590c',fillColor:'#e8590c',fillOpacity:.12,weight:2}).addTo(mapObj);
+}
+function onCoordInput(e){
+  // วางพิกัดแบบ "14.5774, 100.7937" ลงช่องละติจูด → แยกให้อัตโนมัติ
+  if(e.target.id==='f-lat'){
+    const m=e.target.value.match(/^\s*(-?\d+(?:\.\d+)?)\s*[,\s]\s*(-?\d+(?:\.\d+)?)\s*$/);
+    if(m){ $('f-lat').value=m[1]; $('f-lng').value=m[2]; }
+  }
+  drawPick();
+  const lat=num($('f-lat').value), lng=num($('f-lng').value);
+  if(e.target.id!=='f-rad'&&lat!==null&&lng!==null&&Math.abs(lat)<=90&&Math.abs(lng)<=180) mapObj.setView([lat,lng],Math.max(mapObj.getZoom(),17),{animate:false});
+}
+function useMyLocation(){
+  if(!navigator.geolocation){ toast('error','เบราว์เซอร์นี้ไม่รองรับ GPS'); return; }
+  const b=$('btn-gps'); b.disabled=true; b.textContent='กำลังหาตำแหน่ง...';
+  navigator.geolocation.getCurrentPosition(p=>{
+    b.disabled=false; b.textContent='ใช้ตำแหน่งปัจจุบันของฉัน';
+    setPick(p.coords.latitude,p.coords.longitude,true);
+  },()=>{
+    b.disabled=false; b.textContent='ใช้ตำแหน่งปัจจุบันของฉัน';
+    toast('error','หาตำแหน่งไม่ได้ ตรวจสอบการอนุญาตตำแหน่งของเบราว์เซอร์');
+  },{enableHighAccuracy:true,timeout:15000});
+}
+
+/* ================= ฟอร์ม เพิ่ม/แก้ไข ================= */
+function resetForm(){
+  editId=null;
+  $('f-name').value=''; $('f-lat').value=''; $('f-lng').value=''; $('f-rad').value='100';
+  $('f-title').textContent='เพิ่มจุดใหม่'; $('btn-save').textContent='บันทึกจุดใหม่'; $('btn-cancel').hidden=true;
+  drawPick();
+}
+function startEdit(id){
+  const s=sites.find(x=>x.id===id); if(!s) return;
+  editId=id;
+  $('f-name').value=s.name; $('f-lat').value=s.latitude; $('f-lng').value=s.longitude; $('f-rad').value=s.radius_m;
+  $('f-title').textContent='แก้ไข: '+s.name; $('btn-save').textContent='บันทึกการแก้ไข'; $('btn-cancel').hidden=false;
+  drawPick(); mapObj.setView([s.latitude,s.longitude],17,{animate:false});
+  $('form').scrollIntoView({behavior:'smooth',block:'start'});
+}
+async function save(){
+  const name=$('f-name').value.trim(), lat=num($('f-lat').value), lng=num($('f-lng').value), r=parseInt($('f-rad').value,10);
+  if(!name){ toast('error','กรอกชื่อจุด'); $('f-name').focus(); return; }
+  if(lat===null||lng===null||Math.abs(lat)>90||Math.abs(lng)>180){ toast('error','พิกัดไม่ถูกต้อง แตะบนแผนที่หรือใช้ตำแหน่งปัจจุบัน'); return; }
+  if(!Number.isInteger(r)||r<10||r>5000){ toast('error','รัศมีต้องอยู่ระหว่าง 10 ถึง 5,000 เมตร'); $('f-rad').focus(); return; }
+  const payload={name,latitude:lat,longitude:lng,radius_m:r};
+  const b=$('btn-save'); const label=b.textContent; b.disabled=true; b.textContent='กำลังบันทึก...';
+  const q=editId?sb.from('attendance_sites').update(payload).eq('id',editId).select('id')
+                :sb.from('attendance_sites').insert(payload).select('id');
+  const{data,error}=await q;
+  b.disabled=false; b.textContent=label;
+  if(error||!data||!data.length){
+    if(!(await authGuard(error))) toast('error','บันทึกไม่สำเร็จ ตรวจสอบสิทธิ์ผู้ดูแลหรือสัญญาณอินเทอร์เน็ต');
+    return;
+  }
+  const was=editId; resetForm();
+  toast('ok',(was?'แก้ไข ':'เพิ่ม ')+name+' แล้ว');
+  await loadSites(false);
+}
+</script>
+</body>
+</html>
