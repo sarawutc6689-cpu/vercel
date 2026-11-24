@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ภาพรวม - ระบบเบิกของใช้</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<!-- ยังไม่ login -->
+<div id="login" hidden>
+  <header>
+    <h1>📊 ภาพรวม (HR)</h1>
+    <form id="loginForm" class="hdr-login two">
+      <input id="loginId" type="email" required value="hr@local.com" autocomplete="username" aria-label="อีเมล">
+      <input id="loginPw" type="password" required autocomplete="current-password" placeholder="รหัสผ่าน" aria-label="รหัสผ่าน">
+      <button class="go">เข้าสู่ระบบ</button>
+    </form>
+  </header>
+  <main>
+    <div class="card lock">
+      <div style="font-size:36px">🔒</div>
+      <p>กรุณากรอก <b>อีเมลและรหัสผ่านผู้ดูแล</b> ที่แถบด้านบน แล้วกด “เข้าสู่ระบบ”<br>เพื่อเข้าใช้งานหน้านี้</p>
+    </div>
+  </main>
+</div>
+
+<div id="app" hidden>
+  <header>
+    <h1>📊 ภาพรวมการเบิกของใช้</h1>
+    <nav class="hnav" aria-label="เมนูผู้ดูแล"><a href="dashboard.html" class="on">📊 ภาพรวม</a><a href="admin.html">✅ อนุมัติ/สต็อก</a><a href="report.html">📄 รายงาน</a><a href="manage.html">👥 แม่บ้าน</a></nav>
+    <button id="logoutBtn" class="sm">ออกจากระบบ</button>
+  </header>
+  <main class="wide">
+    <div class="toolbar">
+      <div class="tabs" id="range" role="group" aria-label="ช่วงเวลา">
+        <button data-r="7">7 วัน</button>
+        <button data-r="30" class="on">30 วัน</button>
+        <button data-r="90">90 วัน</button>
+        <button data-r="mtd">เดือนนี้</button>
+      </div>
+      <span class="mut" id="period"></span>
+      <span class="sp"></span>
+      <button class="ghost sm" id="reload">↻ รีเฟรช</button>
+    </div>
+
+    <div class="kpis" id="kpis"></div>
+
+    <div class="card">
+      <div class="ch-head">
+        <h2>คำขอเบิกรายวัน</h2>
+        <div class="legend" id="dLegend"></div>
+      </div>
+      <div id="daily"></div>
+      <details class="tv"><summary>ดูเป็นตาราง</summary><div id="dailyTbl" class="tbl"></div></details>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <div class="ch-head"><h2>พัสดุที่เบิกมากที่สุด</h2><span class="mut" style="font-size:13px">อนุมัติแล้ว · 8 อันดับ</span></div>
+        <div id="topItems"></div>
+      </div>
+      <div class="card">
+        <div class="ch-head"><h2>เบิกตามประเภท</h2><span class="mut" style="font-size:13px">อนุมัติแล้ว · จำนวนรวม</span></div>
+        <div id="byCat"></div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <div class="ch-head"><h2>แม่บ้านที่ส่งคำขอมากที่สุด</h2><span class="mut" style="font-size:13px">จำนวนคำขอ · 5 อันดับ</span></div>
+        <div id="topHk"></div>
+      </div>
+      <div class="card">
+        <div class="ch-head">
+          <h2>พัสดุใกล้หมด</h2>
+          <label class="thr" style="margin:0">เหลือไม่เกิน <input id="thr" type="number" min="0" value="5" inputmode="numeric" aria-label="เกณฑ์ใกล้หมด"></label>
+        </div>
+        <div id="low"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="ch-head"><h2>คำขอที่รออนุมัติ</h2><a href="admin.html" class="mut" style="font-size:13px">ไปหน้าอนุมัติ →</a></div>
+      <div id="pending"></div>
+    </div>
+  </main>
+</div>
+
+<footer>
+  <span>ระบบเบิกของใช้แม่บ้าน</span><span>ใช้ภายในบริษัทเท่านั้น</span><span>พัฒนาโดย Sarawut.C</span>
+</footer>
+
+<script src="config.js"></script>
+<script src="common.js"></script>
+<script>
+const ST = {
+  approved: { c: '#0ca30c', l: 'อนุมัติแล้ว' },
+  pending:  { c: '#fab219', l: 'รออนุมัติ' },
+  rejected: { c: '#d03b3b', l: 'ไม่อนุมัติ' }
+};
+const BLUE = '#2a78d6';
+let range = '30', last = null;
+
+setupAuth({
+  loginToEmail: e => e.toLowerCase(),
+  allow: async u => isHR(u),
+  onReady: init
+});
+
+/* ---------- tooltip ---------- */
+const tip = document.createElement('div'); tip.id = 'tip'; document.body.appendChild(tip);
+function moveTip(e) {
+  const r = tip.getBoundingClientRect();
+  let x = e.clientX + 14, y = e.clientY + 14;
+  if (x + r.width > innerWidth - 8) x = e.clientX - r.width - 14;
+  if (y + r.height > innerHeight - 8) y = e.clientY - r.height - 14;
+  tip.style.left = Math.max(8, x) + 'px'; tip.style.top = Math.max(8, y) + 'px';
+}
+document.addEventListener('pointermove', e => {
+  const t = e.target.closest && e.target.closest('[data-tip],.hit');
+  if (!t || !last) { tip.classList.remove('on'); return; }
+  tip.innerHTML = t.dataset.tip || dayTip(+t.dataset.i);
+  tip.classList.add('on'); moveTip(e);
+});
+document.addEventListener('pointerout', e => { if (!e.relatedTarget) tip.classList.remove('on'); });
+
+/* ---------- init ---------- */
+let inited = false;
+function init() {
+  if (!inited) {
+    inited = true;
+    try { const v = localStorage.getItem('lowThr'); if (v !== null && v !== '') $('#thr').value = v; } catch (_) {}
+    $('#range').addEventListener('click', e => {
+      const b = e.target.closest('button[data-r]'); if (!b) return;
+      range = b.dataset.r;
+      document.querySelectorAll('#range button').forEach(x => x.classList.toggle('on', x === b));
+      load();
+    });
+    $('#reload').addEventListener('click', load);
+    $('#thr').addEventListener('input', () => {
+      try { localStorage.setItem('lowThr', $('#thr').value); } catch (_) {}
+      if (last) { renderKpis(); renderLow(); }
+    });
+    let t; addEventListener('resize', () => { clearTimeout(t); t = setTimeout(() => last && renderDaily(), 150); });
+  }
+  load();
+}
+
+const q = async b => { const { data, error } = await b; if (error) throw error; return data; };
+const thr = () => Math.max(0, Number($('#thr').value) || 0);
+
+async function load() {
+  $('#kpis').innerHTML = '<div class="mut">กำลังโหลด…</div>';
+  const now = new Date(), today0 = startOfDay(now);
+  const start = range === 'mtd' ? new Date(now.getFullYear(), now.getMonth(), 1)
+                                : new Date(today0.getTime() - (Number(range) - 1) * 864e5);
+  const len = Math.round((today0 - start) / 864e5) + 1;
+  const prevStart = new Date(start.getTime() - len * 864e5);
+  let lines, items, pend;
+  try {
+    [lines, items, pend] = await Promise.all([
+      fetchAll(() => sb.from('request_items')
+        .select('qty,items(name,unit,category),requests!inner(id,status,created_at,housekeepers(name,emp_code))')
+        .gte('requests.created_at', prevStart.toISOString()).order('id')),
+      q(sb.from('items').select('id,name,category,unit,stock').eq('active', true)),
+      q(sb.from('requests').select('id,created_at,note,housekeepers(name,emp_code),request_items(qty,items(name,unit))')
+        .eq('status', 'pending').order('created_at', { ascending: true }).limit(200))
+    ]);
+  } catch (e) { $('#kpis').innerHTML = ''; return toast(e.message || 'โหลดข้อมูลไม่สำเร็จ', true); }
+
+  const inCur = l => new Date(l.requests.created_at) >= start;
+  lines = lines.filter(l => l.requests);
+  const cur = lines.filter(inCur), prev = lines.filter(l => !inCur(l));
+  const uniq = ls => [...new Map(ls.map(l => [l.requests.id, l.requests])).values()];
+  const cr = uniq(cur), pr = uniq(prev);
+  const apprQty = ls => ls.filter(l => l.requests.status === 'approved').reduce((s, l) => s + l.qty, 0);
+
+  // รายวัน
+  const days = [];
+  for (let i = 0; i < len; i++) { const d = new Date(start.getTime() + i * 864e5); days.push({ k: ymd(d), d, a: 0, p: 0, r: 0 }); }
+  const idx = new Map(days.map((x, i) => [x.k, i]));
+  cr.forEach(r => { const i = idx.get(ymd(new Date(r.created_at))); if (i != null) days[i][r.status === 'approved' ? 'a' : r.status === 'pending' ? 'p' : 'r']++; });
+
+  const group = (ls, keyFn, unitFn) => {
+    const m = new Map();
+    ls.forEach(l => { const k = keyFn(l); const o = m.get(k) || { name: k, v: 0, unit: unitFn ? unitFn(l) : '' }; o.v += l.qty; m.set(k, o); });
+    return [...m.values()].sort((a, b) => b.v - a.v);
+  };
+  const appr = cur.filter(l => l.requests.status === 'approved');
+  const hk = new Map();
+  cr.forEach(r => { const n = r.housekeepers ? `${r.housekeepers.name}` : '-'; hk.set(n, (hk.get(n) || 0) + 1); });
+
+  last = {
+    start, today0, len, days,
+    cnt: { all: cr.length, prevAll: pr.length, a: cr.filter(r => r.status === 'approved').length, x: cr.filter(r => r.status === 'rejected').length },
+    qty: apprQty(cur), prevQty: apprQty(prev),
+    top: group(appr, l => l.items?.name || '-', l => l.items?.unit || ''),
+    cats: group(appr, l => l.items?.category || 'ทั่วไป'),
+    hk: [...hk.entries()].map(([name, v]) => ({ name, v })).sort((a, b) => b.v - a.v),
+    items, pend
+  };
+  $('#period').textContent = `${start.toLocaleDateString('th-TH', { dateStyle: 'medium' })} – ${today0.toLocaleDateString('th-TH', { dateStyle: 'medium' })}`;
+  renderKpis(); renderDaily(); renderHbars(); renderLow(); renderPending();
+}
+
+/* ---------- KPI ---------- */
+function delta(c, p) {
+  if (!p) return c ? 'ช่วงก่อนหน้าไม่มีข้อมูล' : '';
+  const pc = Math.round((c - p) / p * 100);
+  return `${pc > 0 ? '▲' : pc < 0 ? '▼' : '■'} ${Math.abs(pc)}% จากช่วงก่อนหน้า`;
+}
+function renderKpis() {
+  const L = last, nLow = L.items.filter(i => i.stock <= thr()).length, np = L.pend.length;
+  const tile = (label, val, sub, cls = '', unit = '') =>
+    `<div class="kpi ${cls}"><div class="k-l">${label}</div><div class="k-v">${val}${unit ? `<small>${unit}</small>` : ''}</div><div class="k-d">${sub || '&nbsp;'}</div></div>`;
+  $('#kpis').innerHTML =
+    tile('คำขอทั้งหมด', L.cnt.all.toLocaleString('th-TH'), delta(L.cnt.all, L.cnt.prevAll)) +
+    tile('⏳ รออนุมัติ', np.toLocaleString('th-TH'), np ? 'ต้องดำเนินการ (ทุกช่วงเวลา)' : 'ไม่มีคำขอค้าง', np ? 'warn' : '') +
+    tile('อนุมัติแล้ว', L.cnt.a.toLocaleString('th-TH'), `ไม่อนุมัติ ${L.cnt.x.toLocaleString('th-TH')} คำขอ`) +
+    tile('จำนวนที่เบิกจริง', L.qty.toLocaleString('th-TH'), delta(L.qty, L.prevQty), '', 'หน่วย') +
+    tile('⚠ พัสดุใกล้หมด', nLow.toLocaleString('th-TH'), `เหลือไม่เกิน ${thr()} หน่วย`, nLow ? 'bad' : '');
+}
+
+/* ---------- กราฟรายวัน (แท่งซ้อนตามสถานะ) ---------- */
+const fmtShort = d => d.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
+const fmtLong = d => d.toLocaleDateString('th-TH', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+function roundTop(x, y, w, h, r) {
+  r = Math.min(r, w / 2, h);
+  return `M${x},${y + h}L${x},${y + r}Q${x},${y} ${x + r},${y}L${x + w - r},${y}Q${x + w},${y} ${x + w},${y + r}L${x + w},${y + h}Z`;
+}
+function dayTip(i) {
+  const d = last.days[i];
+  return `<b>${fmtLong(d.d)}</b><br>` + [['approved', d.a], ['pending', d.p], ['rejected', d.r]]
+    .map(([k, v]) => `<i style="background:${ST[k].c}"></i>${ST[k].l} ${v}`).join('<br>') + `<br>รวม ${d.a + d.p + d.r} คำขอ`;
+}
+function renderDaily() {
+  const el = $('#daily'), days = last.days;
+  $('#dLegend').innerHTML = Object.values(ST).map(s => `<span><i style="background:${s.c}"></i>${s.l}</span>`).join('');
+  const W = Math.max(300, el.clientWidth || 600), H = 240, m = { l: 34, r: 8, t: 12, b: 28 };
+  const iw = W - m.l - m.r, ih = H - m.t - m.b;
+  const maxV = Math.max(1, ...days.map(d => d.a + d.p + d.r));
+  const step = [1, 2, 5, 10, 20, 25, 50, 100, 200, 500, 1000, 2000, 5000].find(s => s * 4 >= maxV) || Math.ceil(maxV / 4);
+  const top = step * 4, y = v => m.t + ih - v / top * ih;
+  const band = iw / days.length, bw = Math.min(24, Math.max(2, band - 2));
+  let g = '';
+  for (let i = 0; i <= 4; i++) {
+    const v = step * i;
+    g += `<line x1="${m.l}" x2="${W - m.r}" y1="${y(v)}" y2="${y(v)}" stroke="${i ? '#e1e0d9' : '#c3c2b7'}"/>` +
+         `<text x="${m.l - 6}" y="${y(v) + 4}" text-anchor="end" class="ax">${v}</text>`;
+  }
+  days.forEach((d, i) => {
+    const x = m.l + band * i + (band - bw) / 2;
+    const segs = [['a', ST.approved.c], ['p', ST.pending.c], ['r', ST.rejected.c]].filter(s => d[s[0]] > 0);
+    let cum = 0;
+    segs.forEach(([k, c], si) => {
+      const y1 = y(cum + d[k]), h = y(cum) - y1, hh = Math.max(1, h - (si ? 2 : 0));
+      g += si === segs.length - 1 ? `<path d="${roundTop(x, y1, bw, hh, 4)}" fill="${c}"/>`
+                                  : `<rect x="${x}" y="${y1}" width="${bw}" height="${hh}" fill="${c}"/>`;
+      cum += d[k];
+    });
+  });
+  const per = Math.ceil(days.length / Math.max(1, Math.floor(iw / 62)));
+  days.forEach((d, i) => { if (i % per === 0) g += `<text x="${m.l + band * i + band / 2}" y="${H - 8}" text-anchor="middle" class="ax">${fmtShort(d.d)}</text>`; });
+  days.forEach((d, i) => { g += `<rect class="hit" data-i="${i}" x="${m.l + band * i}" y="${m.t}" width="${band}" height="${ih}"/>`; });
+  el.innerHTML = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="กราฟแท่งแสดงจำนวนคำขอเบิกรายวัน แยกตามสถานะ">${g}</svg>`;
+  $('#dailyTbl').innerHTML = `<table><tr><th>วันที่</th><th class="n">อนุมัติแล้ว</th><th class="n">รออนุมัติ</th><th class="n">ไม่อนุมัติ</th></tr>` +
+    days.map(d => `<tr><td>${fmtShort(d.d)}</td><td class="n">${d.a}</td><td class="n">${d.p}</td><td class="n">${d.r}</td></tr>`).join('') + '</table>';
+}
+
+/* ---------- แท่งแนวนอน ---------- */
+function hbar(el, rows, valHead, total) {
+  if (!rows.length) { el.innerHTML = '<div class="empty">ยังไม่มีข้อมูลในช่วงนี้</div>'; return; }
+  const max = Math.max(...rows.map(r => r.v));
+  el.innerHTML = '<div class="hbars">' + rows.map(r => {
+    const share = total ? Math.round(r.v / total * 100) : 0;
+    const t = `<b>${esc(r.name)}</b><br>${r.v.toLocaleString('th-TH')} ${esc(r.unit || '')}${total ? ` · ${share}%` : ''}`;
+    return `<div class="hb" data-tip="${esc(t)}"><div class="nm" title="${esc(r.name)}">${esc(r.name)}</div>
+      <div class="tr"><div class="bar" style="width:${(r.v / max * 100).toFixed(1)}%"></div></div><div class="v">${r.v.toLocaleString('th-TH')}</div></div>`;
+  }).join('') + '</div>' +
+  `<details class="tv"><summary>ดูเป็นตาราง</summary><div class="tbl"><table><tr><th>รายการ</th><th class="n">${valHead}</th>${total ? '<th class="n">สัดส่วน</th>' : ''}</tr>` +
+  rows.map(r => `<tr><td>${esc(r.name)}</td><td class="n">${r.v.toLocaleString('th-TH')} ${esc(r.unit || '')}</td>${total ? `<td class="n">${Math.round(r.v / total * 100)}%</td>` : ''}</tr>`).join('') + '</table></div></details>';
+}
+function renderHbars() {
+  const sum = a => a.reduce((s, r) => s + r.v, 0);
+  hbar($('#topItems'), last.top.slice(0, 8), 'จำนวน', sum(last.top));
+  hbar($('#byCat'), last.cats, 'จำนวนรวม (หน่วย)', sum(last.cats));
+  hbar($('#topHk'), last.hk.slice(0, 5).map(r => ({ ...r, unit: 'คำขอ' })), 'คำขอ', sum(last.hk));
+}
+
+/* ---------- พัสดุใกล้หมด ---------- */
+function renderLow() {
+  const t = thr(), rows = last.items.filter(i => i.stock <= t).sort((a, b) => a.stock - b.stock || a.name.localeCompare(b.name, 'th'));
+  if (!rows.length) { $('#low').innerHTML = `<div class="empty">✅ ไม่มีพัสดุที่เหลือไม่เกิน ${t} หน่วย</div>`; return; }
+  $('#low').innerHTML = '<div class="ls">' + rows.slice(0, 8).map(i => {
+    const out = i.stock <= 0, pct = t ? Math.max(4, i.stock / t * 100) : 4;
+    return `<div><div class="t"><span>${esc(i.name)} <small>· ${esc(i.category || 'ทั่วไป')}</small></span>
+      <span>${out ? '⛔ หมดแล้ว' : `⚠ เหลือ ${i.stock} ${esc(i.unit)}`}</span></div>
+      <div class="meter ${out ? 'c' : 'w'}" role="img" aria-label="${esc(i.name)} เหลือ ${i.stock}"><b style="width:${pct}%"></b></div></div>`;
+  }).join('') + '</div>' + (rows.length > 8 ? `<div class="mut" style="font-size:13px;margin-top:10px">และอีก ${rows.length - 8} รายการ (ดูทั้งหมดที่หน้าอนุมัติ/สต็อก)</div>` : '');
+}
+
+/* ---------- รออนุมัติ ---------- */
+function renderPending() {
+  const p = last.pend;
+  if (!p.length) { $('#pending').innerHTML = '<div class="empty">✅ ไม่มีคำขอค้างอนุมัติ</div>'; return; }
+  $('#pending').innerHTML = p.slice(0, 5).map(r => `<div class="pl"><b>${esc(r.housekeepers?.name || '-')}</b> <span class="mut">(${esc(r.housekeepers?.emp_code || '')})</span>
+    <br><small>${fmtDate(r.created_at)} · ${r.request_items.map(x => `${esc(x.items?.name)} × ${x.qty}`).join(', ')}</small></div>`).join('') +
+    (p.length > 5 ? `<div class="mut" style="font-size:13px;margin-top:8px">และอีก ${p.length - 5} คำขอ</div>` : '');
+}
+</script>
+</body>
+</html>
