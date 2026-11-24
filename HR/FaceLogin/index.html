@@ -90,6 +90,7 @@ main{padding:24px 16px 8px;max-width:520px;margin:0 auto}
 .dot.pulse{animation:blink 1.2s infinite}
 @keyframes blink{50%{opacity:.25}}
 .gps-sub{font-size:14px;color:var(--muted)}
+.retry{height:46px;padding:0 18px;margin:0 0 10px;border-radius:12px;border:2px solid var(--ink);background:var(--surface);color:var(--ink);font-weight:700;font-size:16px}
 #map{height:140px;border-radius:12px;border:1px solid var(--line);overflow:hidden;background:#e5ebf2}
 
 /* กล้อง */
@@ -208,6 +209,7 @@ main{padding:24px 16px 8px;max-width:520px;margin:0 auto}
         <span class="dot pulse" id="gps-dot"></span>
         <div><div id="gps-txt">กำลังหาตำแหน่ง...</div><div class="gps-sub" id="gps-sub"></div></div>
       </div>
+      <button class="retry" id="gps-retry" type="button" onclick="retryGPS()" hidden>ลองหาตำแหน่งใหม่</button>
       <div id="map"></div>
     </div>
   </section>
@@ -368,17 +370,53 @@ function updateArea(){
     'ห่างจาก'+n.s.name+' '+d+' ม. · '+acc);
   chk();
 }
+let watchId=null, gpsTimer=null, envNote='';
+
+function gotFix(pos){
+  clearTimeout(gpsTimer);
+  const{latitude:lat,longitude:lng,accuracy}=pos.coords;
+  gps={lat,lng,accuracy};
+  $('gps-retry').hidden=true;
+  updateArea();
+}
+function gpsFail(code){
+  clearTimeout(gpsTimer);
+  if(gps) return;                       // มีตำแหน่งเดิมอยู่แล้ว ไม่ต้องแจ้งซ้ำ
+  const m={1:'ไม่ได้รับอนุญาตใช้ตำแหน่ง',2:'หาตำแหน่งไม่ได้',3:'หาตำแหน่งนานเกินไป'};
+  const h={
+    1:'เปิดการอนุญาตตำแหน่งให้เบราว์เซอร์ในการตั้งค่าของมือถือ แล้วกดลองใหม่',
+    2:'เปิด GPS ของมือถือ และออกไปที่โล่ง แล้วกดลองใหม่',
+    3:'ตรวจว่าเปิด GPS ของมือถือ ออกไปที่โล่ง แล้วกดลองใหม่'
+  };
+  setGPS('err',m[code]||'หาตำแหน่งไม่ได้',(h[code]||h[3])+(envNote?' · '+envNote:''));
+  $('gps-retry').hidden=false; chk();
+}
+function retryGPS(){
+  if(watchId!==null){ navigator.geolocation.clearWatch(watchId); watchId=null; }
+  gps=null; inArea=null; chk(); initGPS();
+}
 function initGPS(){
-  if(!navigator.geolocation){ setGPS('err','เบราว์เซอร์นี้ไม่รองรับ GPS'); return; }
-  navigator.geolocation.watchPosition(pos=>{
-    const{latitude:lat,longitude:lng,accuracy}=pos.coords;
-    gps={lat,lng,accuracy};
-    updateArea();
-  },err=>{
-    const m={1:'ไม่ได้รับอนุญาตใช้ตำแหน่ง',2:'หาตำแหน่งไม่ได้',3:'GPS หมดเวลา'};
-    const s={1:'เปิดการอนุญาตตำแหน่งของเบราว์เซอร์ในการตั้งค่า แล้วโหลดหน้าใหม่',2:'ลองออกไปที่โล่ง',3:'ลองโหลดหน้าใหม่'};
-    gps=null; setGPS('err',m[err.code]||'GPS ผิดพลาด',s[err.code]||''); chk();
-  },{enableHighAccuracy:true,timeout:15000,maximumAge:5000});
+  if(!window.isSecureContext){ setGPS('err','ต้องเปิดผ่าน https:// เท่านั้น','เปิดลิงก์ของเว็บที่ deploy แล้ว ไม่ใช่ไฟล์ในเครื่องหรือ http://'); return; }
+  if(!navigator.geolocation){ setGPS('err','เบราว์เซอร์นี้ไม่รองรับ GPS','ลองเปิดด้วย Chrome หรือ Safari'); return; }
+  envNote=/Line\/|FBAN|FBAV|Instagram|MicroMessenger/i.test(navigator.userAgent||'')
+    ? 'ตอนนี้เปิดอยู่ในแอปอื่น (เช่น LINE) ให้เปิดลิงก์นี้ด้วย Chrome หรือ Safari แทน' : '';
+  $('gps-retry').hidden=true;
+  setGPS('pulse','กำลังหาตำแหน่ง...','ถ้ามีหน้าต่างขออนุญาตตำแหน่ง ให้กด "อนุญาต"'+(envNote?' · '+envNote:''));
+
+  // ตรวจสิทธิ์ล่วงหน้า: ถ้าถูกบล็อกไว้ จะแจ้งทันทีแทนที่จะรอเฉยๆ
+  if(navigator.permissions&&navigator.permissions.query){
+    navigator.permissions.query({name:'geolocation'}).then(p=>{
+      if(p.state==='denied') gpsFail(1);
+      p.onchange=()=>{ if(p.state==='granted'&&!gps) retryGPS(); };
+    }).catch(()=>{});
+  }
+  // 1) ขอตำแหน่งแบบเร็วก่อน (ไม่บังคับความแม่นยำสูง) จะได้ไม่ค้างตอนอยู่ในอาคาร
+  navigator.geolocation.getCurrentPosition(gotFix,()=>{},{enableHighAccuracy:false,timeout:8000,maximumAge:60000});
+  // 2) แล้วติดตามต่อด้วยความแม่นยำสูง
+  watchId=navigator.geolocation.watchPosition(gotFix,e=>gpsFail(e.code),{enableHighAccuracy:true,timeout:20000,maximumAge:5000});
+  // 3) กันค้าง: ถ้า 20 วินาทียังไม่ได้ตำแหน่งเลย ให้บอกวิธีแก้
+  clearTimeout(gpsTimer);
+  gpsTimer=setTimeout(()=>{ if(!gps) gpsFail(3); },20000);
 }
 
 /* ---------- ขั้นตอนที่ 3: กล้อง ---------- */
