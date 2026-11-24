@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>รายงาน - ระบบเบิกของใช้</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<!-- ยังไม่ login -->
+<div id="login" hidden>
+  <header>
+    <h1>📄 รายงาน (HR)</h1>
+    <form id="loginForm" class="hdr-login two">
+      <input id="loginId" type="email" required value="hr@local.com" autocomplete="username" aria-label="อีเมล">
+      <input id="loginPw" type="password" required autocomplete="current-password" placeholder="รหัสผ่าน" aria-label="รหัสผ่าน">
+      <button class="go">เข้าสู่ระบบ</button>
+    </form>
+  </header>
+  <main>
+    <div class="card lock">
+      <div style="font-size:36px">🔒</div>
+      <p>กรุณากรอก <b>อีเมลและรหัสผ่านผู้ดูแล</b> ที่แถบด้านบน แล้วกด “เข้าสู่ระบบ”<br>เพื่อเข้าใช้งานหน้านี้</p>
+    </div>
+  </main>
+</div>
+
+<div id="app" hidden>
+  <header>
+    <h1>📄 รายงานการเบิกของใช้</h1>
+    <nav class="hnav" aria-label="เมนูผู้ดูแล"><a href="dashboard.html">📊 ภาพรวม</a><a href="admin.html">✅ อนุมัติ/สต็อก</a><a href="report.html" class="on">📄 รายงาน</a><a href="manage.html">👥 แม่บ้าน</a></nav>
+    <button id="logoutBtn" class="sm">ออกจากระบบ</button>
+  </header>
+  <main class="wide">
+
+    <div class="card noprint">
+      <div class="filters">
+        <div><label for="from">ตั้งแต่วันที่</label><input id="from" type="date"></div>
+        <div><label for="to">ถึงวันที่</label><input id="to" type="date"></div>
+        <div><label for="fStatus">สถานะ</label>
+          <select id="fStatus"><option value="">ทั้งหมด</option><option value="approved">อนุมัติแล้ว</option><option value="pending">รออนุมัติ</option><option value="rejected">ไม่อนุมัติ</option></select></div>
+        <div><label for="fCat">ประเภท</label><select id="fCat"><option value="">ทั้งหมด</option></select></div>
+        <div><label for="fHk">แม่บ้าน</label><select id="fHk"><option value="">ทั้งหมด</option></select></div>
+        <div><label for="fQ">ค้นหา</label><input id="fQ" placeholder="ชื่อพัสดุ / แม่บ้าน / หมายเหตุ"></div>
+      </div>
+      <div class="presets">
+        <span class="mut" style="font-size:13px">ช่วงเร็ว:</span>
+        <button class="ghost sm" data-p="today">วันนี้</button>
+        <button class="ghost sm" data-p="7">7 วัน</button>
+        <button class="ghost sm" data-p="month">เดือนนี้</button>
+        <button class="ghost sm" data-p="lastmonth">เดือนก่อน</button>
+        <button class="ghost sm" data-p="year">ปีนี้</button>
+        <span class="sp"></span>
+        <button class="ghost sm" id="resetBtn">ล้างตัวกรอง</button>
+        <button class="sm" id="goBtn">🔍 ค้นหา</button>
+      </div>
+    </div>
+
+    <div class="print-only">
+      <h2>รายงานการเบิกของใช้แม่บ้าน</h2>
+      <p id="printInfo"></p>
+    </div>
+
+    <div class="kpis" id="sum"></div>
+
+    <div class="toolbar noprint">
+      <div class="tabs" id="tabs" role="tablist">
+        <button data-t="detail" class="on">รายละเอียดรายการเบิก</button>
+        <button data-t="item">สรุปตามพัสดุ</button>
+        <button data-t="hk">สรุปตามแม่บ้าน</button>
+      </div>
+      <span class="sp"></span>
+      <button class="ghost sm" id="csvBtn">⬇ ส่งออก CSV</button>
+      <button class="ghost sm" id="printBtn">🖨 พิมพ์</button>
+    </div>
+
+    <div class="card">
+      <div id="tbl" class="tbl"></div>
+      <div class="more noprint" id="more" hidden><button class="ghost" id="moreBtn"></button></div>
+    </div>
+  </main>
+</div>
+
+<footer>
+  <span>ระบบเบิกของใช้แม่บ้าน</span><span>ใช้ภายในบริษัทเท่านั้น</span><span>พัฒนาโดย Sarawut.C</span>
+</footer>
+
+<script src="config.js"></script>
+<script src="common.js"></script>
+<script>
+let rows = [], tab = 'detail', shown = 100;
+const PAGE = 100;
+
+setupAuth({
+  loginToEmail: e => e.toLowerCase(),
+  allow: async u => isHR(u),
+  onReady: init
+});
+
+let inited = false;
+function init() {
+  if (!inited) {
+    inited = true;
+    setRange(new Date(new Date().getFullYear(), new Date().getMonth(), 1), new Date());
+    $('#goBtn').onclick = load;
+    $('#from').onchange = $('#to').onchange = load;
+    ['#fStatus', '#fCat', '#fHk'].forEach(s => $(s).onchange = () => { shown = PAGE; render(); });
+    $('#fQ').oninput = () => { shown = PAGE; render(); };
+    $('#resetBtn').onclick = () => { $('#fStatus').value = $('#fCat').value = $('#fHk').value = $('#fQ').value = ''; shown = PAGE; render(); };
+    document.querySelector('.presets').addEventListener('click', e => {
+      const p = e.target.closest('[data-p]')?.dataset.p; if (!p) return;
+      const now = new Date(), t0 = startOfDay(now);
+      if (p === 'today') setRange(t0, now);
+      else if (p === '7') setRange(new Date(t0.getTime() - 6 * 864e5), now);
+      else if (p === 'month') setRange(new Date(now.getFullYear(), now.getMonth(), 1), now);
+      else if (p === 'lastmonth') setRange(new Date(now.getFullYear(), now.getMonth() - 1, 1), new Date(now.getFullYear(), now.getMonth(), 0));
+      else if (p === 'year') setRange(new Date(now.getFullYear(), 0, 1), now);
+      load();
+    });
+    $('#tabs').addEventListener('click', e => {
+      const b = e.target.closest('button[data-t]'); if (!b) return;
+      tab = b.dataset.t; shown = PAGE;
+      document.querySelectorAll('#tabs button').forEach(x => x.classList.toggle('on', x === b));
+      render();
+    });
+    $('#moreBtn').onclick = () => { shown += PAGE; render(); };
+    $('#csvBtn').onclick = exportCSV;
+    $('#printBtn').onclick = () => { const s = shown; shown = Infinity; render(); window.print(); shown = s; render(); };
+  }
+  load();
+}
+function setRange(a, b) { $('#from').value = ymd(a); $('#to').value = ymd(b); }
+
+async function load() {
+  const f = $('#from').value, t = $('#to').value;
+  if (!f || !t) return toast('กรุณาเลือกช่วงวันที่', true);
+  const from = new Date(f + 'T00:00:00'), to = new Date(t + 'T23:59:59.999');
+  if (from > to) return toast('วันที่เริ่มต้องไม่เกินวันที่สิ้นสุด', true);
+  $('#tbl').innerHTML = '<div class="empty">กำลังโหลด…</div>';
+  try {
+    const data = await fetchAll(() => sb.from('request_items')
+      .select('id,qty,items(name,unit,category),requests!inner(id,status,created_at,note,housekeepers(name,emp_code,area))')
+      .gte('requests.created_at', from.toISOString()).lte('requests.created_at', to.toISOString()).order('id'));
+    rows = data.filter(l => l.requests).map(l => {
+      const r = l.requests, h = r.housekeepers || {}, it = l.items || {};
+      return { at: r.created_at, rid: r.id, status: r.status, note: r.note || '', hk: h.name || '-', code: h.emp_code || '', area: h.area || '',
+               cat: it.category || 'ทั่วไป', item: it.name || '-', unit: it.unit || '', qty: l.qty };
+    }).sort((a, b) => b.at.localeCompare(a.at));
+  } catch (e) { rows = []; toast(e.message || 'โหลดข้อมูลไม่สำเร็จ', true); }
+  shown = PAGE; fillFilters(); render();
+}
+
+function fillFilters() {
+  const fill = (sel, vals) => {
+    const el = $(sel), keep = el.value;
+    el.innerHTML = '<option value="">ทั้งหมด</option>' + vals.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
+    el.value = vals.includes(keep) ? keep : '';
+  };
+  fill('#fCat', [...new Set(rows.map(r => r.cat))].sort((a, b) => a.localeCompare(b, 'th')));
+  fill('#fHk', [...new Set(rows.map(r => r.hk))].sort((a, b) => a.localeCompare(b, 'th')));
+}
+
+function filtered() {
+  const st = $('#fStatus').value, cat = $('#fCat').value, hk = $('#fHk').value, k = $('#fQ').value.trim().toLowerCase();
+  return rows.filter(r => (!st || r.status === st) && (!cat || r.cat === cat) && (!hk || r.hk === hk) &&
+    (!k || [r.item, r.hk, r.code, r.note, r.cat].some(v => String(v).toLowerCase().includes(k))));
+}
+
+const num = n => n.toLocaleString('th-TH');
+const badge = s => `<span class="badge ${s}">${STATUS[s]}</span>`;
+
+// สร้างข้อมูลตารางของแท็บปัจจุบัน -> ใช้ทั้งแสดงผลและส่งออก CSV
+function tableData(list) {
+  if (tab === 'detail') {
+    return {
+      head: ['วันที่-เวลา', 'รหัส', 'แม่บ้าน', 'พื้นที่', 'ประเภท', 'พัสดุ', 'จำนวน', 'หน่วย', 'สถานะ', 'หมายเหตุ'],
+      cls: ['', '', '', '', '', '', 'n', '', '', ''],
+      body: list.map(r => [fmtDate(r.at), r.code, r.hk, r.area, r.cat, r.item, r.qty, r.unit, STATUS[r.status], r.note]),
+      cell: { 8: (v, i) => badge(list[i].status) }
+    };
+  }
+  const m = new Map();
+  list.forEach(r => {
+    const k = tab === 'item' ? r.cat + '\u0000' + r.item : r.code + '\u0000' + r.hk;
+    const o = m.get(k) || { r, a: 0, p: 0, x: 0, reqs: new Set() };
+    if (r.status === 'approved') o.a += r.qty; else if (r.status === 'pending') o.p += r.qty; else o.x += r.qty;
+    o.reqs.add(r.rid); m.set(k, o);
+  });
+  const arr = [...m.values()].sort((u, v) => v.a - u.a || (v.a + v.p + v.x) - (u.a + u.p + u.x));
+  if (tab === 'item') return {
+    head: ['ประเภท', 'พัสดุ', 'หน่วย', 'จำนวนคำขอ', 'อนุมัติแล้ว', 'รออนุมัติ', 'ไม่อนุมัติ'],
+    cls: ['', '', '', 'n', 'n', 'n', 'n'],
+    body: arr.map(o => [o.r.cat, o.r.item, o.r.unit, o.reqs.size, o.a, o.p, o.x])
+  };
+  return {
+    head: ['รหัส', 'แม่บ้าน', 'พื้นที่', 'จำนวนคำขอ', 'หน่วยที่อนุมัติแล้ว', 'หน่วยที่รออนุมัติ', 'หน่วยที่ไม่อนุมัติ'],
+    cls: ['', '', '', 'n', 'n', 'n', 'n'],
+    body: arr.map(o => [o.r.code, o.r.hk, o.r.area, o.reqs.size, o.a, o.p, o.x])
+  };
+}
+
+function render() {
+  const list = filtered();
+  const reqs = new Set(list.map(r => r.rid)).size;
+  const approved = list.filter(r => r.status === 'approved').reduce((s, r) => s + r.qty, 0);
+  const pending = new Set(list.filter(r => r.status === 'pending').map(r => r.rid)).size;
+  $('#sum').innerHTML =
+    `<div class="kpi"><div class="k-l">จำนวนคำขอ</div><div class="k-v">${num(reqs)}</div></div>` +
+    `<div class="kpi"><div class="k-l">จำนวนรายการเบิก</div><div class="k-v">${num(list.length)}</div></div>` +
+    `<div class="kpi"><div class="k-l">หน่วยที่อนุมัติแล้ว</div><div class="k-v">${num(approved)}<small>หน่วย</small></div></div>` +
+    `<div class="kpi ${pending ? 'warn' : ''}"><div class="k-l">⏳ คำขอรออนุมัติ</div><div class="k-v">${num(pending)}</div></div>`;
+
+  const f = $('#from').value, t = $('#to').value;
+  $('#printInfo').textContent = `ช่วงวันที่ ${f} ถึง ${t} · สถานะ: ${$('#fStatus').selectedOptions[0].text} · ประเภท: ${$('#fCat').value || 'ทั้งหมด'} · แม่บ้าน: ${$('#fHk').value || 'ทั้งหมด'} · พิมพ์เมื่อ ${fmtDate(new Date())}`;
+
+  if (!list.length) { $('#tbl').innerHTML = '<div class="empty">ไม่พบข้อมูลตามเงื่อนไขที่เลือก</div>'; $('#more').hidden = true; return; }
+  const d = tableData(list);
+  const body = tab === 'detail' ? d.body.slice(0, shown) : d.body;
+  $('#tbl').innerHTML = `<table><thead><tr>${d.head.map((h, i) => `<th class="${d.cls[i]}">${esc(h)}</th>`).join('')}</tr></thead><tbody>` +
+    body.map((r, ri) => `<tr>${r.map((v, i) => `<td class="${d.cls[i]}">${d.cell && d.cell[i] ? d.cell[i](v, ri) : esc(typeof v === 'number' ? num(v) : v)}</td>`).join('')}</tr>`).join('') + '</tbody></table>';
+  const more = tab === 'detail' && shown < d.body.length;
+  $('#more').hidden = !more;
+  if (more) $('#moreBtn').textContent = `แสดงเพิ่ม (แสดงแล้ว ${num(shown)} จาก ${num(d.body.length)} รายการ)`;
+}
+
+function exportCSV() {
+  const list = filtered();
+  if (!list.length) return toast('ไม่มีข้อมูลให้ส่งออก', true);
+  const d = tableData(list);
+  downloadCSV(`report_${tab}_${$('#from').value}_${$('#to').value}.csv`, d.head, d.body);
+  toast(`ส่งออก ${num(d.body.length)} แถวแล้ว`);
+}
+</script>
+</body>
+</html>
