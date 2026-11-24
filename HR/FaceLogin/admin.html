@@ -49,9 +49,9 @@ button{cursor:pointer}
 /* ── หัวหน้า ── */
 .top{background:var(--ink);color:#fff;padding:calc(14px + env(safe-area-inset-top)) 20px 22px}
 .top-in{max-width:960px;margin:0 auto}
-.top-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.top-row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .top-name{font-size:16px;font-weight:500;color:var(--ink-soft)}
-.top-act{display:flex;gap:8px}
+.top-act{display:flex;gap:8px;flex-wrap:wrap}
 .pill{color:#fff;text-decoration:none;font-size:15px;font-weight:500;padding:8px 14px;border:1.5px solid rgba(255,255,255,.35);border-radius:999px;background:none;line-height:1.3}
 .pill:active{background:rgba(255,255,255,.12)}
 .who{font-size:13px;color:var(--ink-soft);margin-top:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -163,6 +163,7 @@ h2.sec{font-size:18px;font-weight:700;margin:4px 0 10px}
         <span class="top-name">รายงานลงเวลา</span>
         <div class="top-act">
           <a class="pill" href="index.html">หน้าลงเวลา</a>
+          <a class="pill" href="sites.html">จุดลงเวลา</a>
           <button class="pill" onclick="logout()">ออกจากระบบ</button>
         </div>
       </div>
