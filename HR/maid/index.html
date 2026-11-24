@@ -5,6 +5,23 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>เบิกของใช้ - แม่บ้าน</title>
 <link rel="stylesheet" href="style.css">
+<style>
+  table.req th, table.req td { vertical-align: middle; }
+  table.req th.c, table.req td.c { text-align: center; }
+  table.req td.cat { font-weight: 600; background: #f9fafb; border-right: 1px solid var(--bd); width: 22%; }
+  table.req tr.grp td { border-top: 2px solid var(--bd); }
+  table.req td.stk { white-space: nowrap; text-align: center; }
+  table.req td.stk.out { color: var(--bad); font-weight: 600; }
+  table.req td.stk small { color: var(--mut); }
+  table.req .qty { justify-content: center; }
+  table.req .qty .on { color: var(--pri); }
+  table.req .qty button:disabled { opacity: .35; }
+  @media (max-width: 520px) {
+    table.req { font-size: 13px; }
+    table.req th, table.req td { padding: 6px 4px; }
+    table.req .qty button { width: 30px; height: 30px; }
+  }
+</style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -27,7 +44,7 @@
   <main>
     <div class="card">
       <h2>เลือกของที่ต้องการเบิก</h2>
-      <div id="items"></div>
+      <div id="items" class="tbl"></div>
       <label>หมายเหตุ (ถ้ามี)</label>
       <textarea id="note" rows="2" placeholder="เช่น ใช้ที่ชั้น 3"></textarea>
       <br><br>
@@ -63,21 +80,29 @@ async function loadItems() {
   items = data; cart = {}; renderItems();
 }
 
+// ตาราง 4 ช่อง: ประเภท | รายการพัสดุที่เบิก | จำนวนคงเหลือ | จำนวนที่ต้องการเบิก
 function renderItems() {
-  const itemHtml = i => `
-    <div class="item">
-      <div class="nm">${esc(i.name)}<br><small>คงเหลือ ${i.stock} ${esc(i.unit)}</small></div>
-      <div class="qty">
-        <button class="ghost" data-id="${i.id}" data-d="-1">−</button>
-        <span>${cart[i.id] || 0}</span>
-        <button class="ghost" data-id="${i.id}" data-d="1">+</button>
-      </div>
-    </div>`;
   const groups = {};
   items.forEach(i => (groups[i.category || 'ทั่วไป'] ||= []).push(i));
-  $('#items').innerHTML = Object.entries(groups).map(([c, list]) =>
-    `<h3 style="margin:14px 0 2px;font-size:15px;color:var(--mut)">${esc(c)}</h3>` + list.map(itemHtml).join('')
-  ).join('') || '<p class="mut">ยังไม่มีรายการของใช้</p>';
+  const rows = Object.entries(groups).map(([cat, list]) => list.map((i, idx) => {
+    const q = cart[i.id] || 0;
+    return `<tr class="${idx === 0 ? 'grp' : ''}">
+      ${idx === 0 ? `<td class="cat" rowspan="${list.length}">${esc(cat)}</td>` : ''}
+      <td>${esc(i.name)}</td>
+      <td class="stk ${i.stock <= 0 ? 'out' : ''}">${i.stock} <small>${esc(i.unit)}</small></td>
+      <td><div class="qty">
+        <button class="ghost" data-id="${i.id}" data-d="-1" ${q ? '' : 'disabled'}>−</button>
+        <span class="${q ? 'on' : ''}">${q}</span>
+        <button class="ghost" data-id="${i.id}" data-d="1" ${q >= i.stock ? 'disabled' : ''}>+</button>
+      </div></td>
+    </tr>`;
+  }).join('')).join('');
+  $('#items').innerHTML = rows
+    ? `<table class="req"><thead><tr>
+        <th>ประเภท</th><th>รายการพัสดุที่เบิก</th>
+        <th class="c">จำนวนคงเหลือ</th><th class="c">จำนวนที่ต้องการเบิก</th>
+      </tr></thead><tbody>${rows}</tbody></table>`
+    : '<p class="mut">ยังไม่มีรายการของใช้</p>';
 }
 
 $('#items').addEventListener('click', e => {
