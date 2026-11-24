@@ -29,7 +29,7 @@
 <div id="app" hidden>
   <header>
     <h1>👥 จัดการแม่บ้าน</h1>
-    <a href="admin.html">← หน้าผู้ดูแล</a>
+    <nav class="hnav" aria-label="เมนูผู้ดูแล"><a href="dashboard.html">📊 ภาพรวม</a><a href="admin.html">✅ อนุมัติ/สต็อก</a><a href="report.html">📄 รายงาน</a><a href="manage.html" class="on">👥 แม่บ้าน</a></nav>
     <button id="logoutBtn" class="sm">ออกจากระบบ</button>
   </header>
   <main>
@@ -81,6 +81,10 @@ $('#list').addEventListener('click', async e => {
     ({ error } = await sb.from('housekeepers').update({
       name: $(`[data-name="${id}"]`).value.trim(), area: $(`[data-area="${id}"]`).value.trim() || null }).eq('id', id));
   } else if (b.dataset.toggle) {
+    if (b.dataset.active === 'true') {
+      const nm = $(`[data-name="${b.dataset.toggle}"]`).value;
+      if (!(await confirmBox({ icon: '🚫', title: 'ปิดใช้งานแม่บ้าน?', text: `${nm}\nจะเข้าสู่ระบบเบิกของไม่ได้`, okText: 'ปิดใช้งาน', danger: true }))) return;
+    }
     ({ error } = await sb.from('housekeepers').update({ active: b.dataset.active !== 'true' }).eq('id', b.dataset.toggle));
   } else return;
   if (error) return toast(error.message, true);
