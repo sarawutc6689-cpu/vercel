@@ -261,9 +261,9 @@ const SUPABASE_URL      = "https://ppzdyvomrfiitahxwrwz.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBwemR5dm9tcmZpaXRhaHh3cnd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwMjQ0MjIsImV4cCI6MjEwNDYwMDQyMn0.iArUz6swMfwhFT_1qEvCwK1B3aiCxdWt46_FBjT6_Y0";   // ใช้ anon key เท่านั้น ห้ามใส่ service_role
 const PHOTO_BUCKET      = "attendance-photos";
 
-// ใช้แสดงบนแผนที่เท่านั้น — เซิร์ฟเวอร์เป็นผู้ตัดสินว่าอยู่ในพื้นที่หรือไม่
-const O_LAT=13.83135619038678, O_LNG=100.79379214129247, RADIUS=100;
-const O_LAT=14.577496821243612, O_LNG=100.79374668077259, RADIUS=100;
+// จุดลงเวลาดึงจากตาราง attendance_sites ใน Supabase (เพิ่ม/แก้จุดได้ที่ฐานข้อมูล ไม่ต้องแก้ไฟล์นี้)
+// ใช้แสดงผลบนหน้าจอเท่านั้น — เซิร์ฟเวอร์เป็นผู้ตัดสินว่าอยู่ในพื้นที่หรือไม่
+let SITES=[], siteLayer=null;
 const LAST_KEY="attendance:last_code";
 
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -318,33 +318,62 @@ function onEmp(){
 /* ---------- ขั้นตอนที่ 2: แผนที่ / GPS ---------- */
 function initMap(){
   mapObj=L.map('map',{zoomControl:false,attributionControl:false,dragging:false,touchZoom:false,scrollWheelZoom:false,doubleClickZoom:false,boxZoom:false,keyboard:false,tap:false})
-    .setView([O_LAT,O_LNG],17);
+    .setView([14.2,100.79],11);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapObj);
-  L.circle([O_LAT,O_LNG],{radius:RADIUS,color:'#10294a',fillColor:'#10294a',fillOpacity:.12,weight:2}).addTo(mapObj);
+  loadSites();
 }
-function setPin(lat,lng){
+async function loadSites(){
+  const{data,error}=await sb.rpc('attendance_get_sites');
+  if(error||!data||!data.length){ setHint('error','โหลดจุดลงเวลาไม่ได้ ลองโหลดหน้าใหม่'); return; }
+  SITES=data;
+  if(siteLayer) mapObj.removeLayer(siteLayer);
+  siteLayer=L.layerGroup().addTo(mapObj);
+  SITES.forEach(s=>{
+    L.circle([s.latitude,s.longitude],{radius:s.radius_m,color:'#10294a',fillColor:'#10294a',fillOpacity:.12,weight:2}).addTo(siteLayer);
+  });
+  if(gps) updateArea();
+  else mapObj.fitBounds(L.latLngBounds(SITES.map(s=>[s.latitude,s.longitude])).pad(.5),{maxZoom:17,animate:false});
+}
+function nearestSite(lat,lng){
+  let best=null;
+  for(const s of SITES){
+    const d=dist(lat,lng,s.latitude,s.longitude);
+    if(!best||d<best.d) best={d,s};
+  }
+  return best;
+}
+function setPin(lat,lng,site){
   if(pin) mapObj.removeLayer(pin);
   pin=L.circleMarker([lat,lng],{radius:8,color:'#fff',weight:3,fillColor:'#2f7de1',fillOpacity:1}).addTo(mapObj);
-  mapObj.fitBounds(L.latLngBounds([[O_LAT,O_LNG],[lat,lng]]).pad(.5),{maxZoom:18,animate:false});
+  const pts=[[lat,lng]];
+  if(site) pts.push([site.latitude,site.longitude]);
+  mapObj.fitBounds(L.latLngBounds(pts).pad(.5),{maxZoom:18,animate:false});
 }
 function setGPS(state,text,sub){
   $('gps-dot').className='dot '+(state==='ok'?'ok':state==='err'?'err':'pulse');
   $('gps-txt').textContent=text; $('gps-sub').textContent=sub||'';
   setStep(2, state==='ok'?'done':state==='err'?'bad':'wait');
 }
+function updateArea(){
+  if(!gps) return;
+  const n=SITES.length?nearestSite(gps.lat,gps.lng):null;
+  setPin(gps.lat,gps.lng,n&&n.s);
+  const weak=gps.accuracy>50?' · สัญญาณ GPS ไม่แม่นยำ ลองออกไปที่โล่ง':'';
+  const acc='คลาดเคลื่อน ±'+Math.round(gps.accuracy)+' ม.'+weak;
+  if(!n){ inArea=null; setGPS('ok','ได้ตำแหน่งแล้ว',acc); chk(); return; }
+  const d=Math.round(n.d);
+  inArea=d<=n.s.radius_m;
+  setGPS(inArea?'ok':'err',
+    inArea?'อยู่ในพื้นที่ทำงาน · '+n.s.name:'อยู่นอกพื้นที่ทำงาน',
+    'ห่างจาก'+n.s.name+' '+d+' ม. · '+acc);
+  chk();
+}
 function initGPS(){
   if(!navigator.geolocation){ setGPS('err','เบราว์เซอร์นี้ไม่รองรับ GPS'); return; }
   navigator.geolocation.watchPosition(pos=>{
     const{latitude:lat,longitude:lng,accuracy}=pos.coords;
     gps={lat,lng,accuracy};
-    setPin(lat,lng);
-    const d=Math.round(dist(lat,lng,O_LAT,O_LNG));
-    inArea=d<=RADIUS;
-    const weak=accuracy>50?' · สัญญาณ GPS ไม่แม่นยำ ลองออกไปที่โล่ง':'';
-    setGPS(inArea?'ok':'err',
-      inArea?'อยู่ในพื้นที่ทำงาน':'อยู่นอกพื้นที่ทำงาน',
-      'ห่างจุดลงเวลา '+d+' ม. · คลาดเคลื่อน ±'+Math.round(accuracy)+' ม.'+weak);
-    chk();
+    updateArea();
   },err=>{
     const m={1:'ไม่ได้รับอนุญาตใช้ตำแหน่ง',2:'หาตำแหน่งไม่ได้',3:'GPS หมดเวลา'};
     const s={1:'เปิดการอนุญาตตำแหน่งของเบราว์เซอร์ในการตั้งค่า แล้วโหลดหน้าใหม่',2:'ลองออกไปที่โล่ง',3:'ลองโหลดหน้าใหม่'};
