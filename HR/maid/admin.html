@@ -8,17 +8,22 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
+<!-- ยังไม่ login: แถบหัวมีช่องกรอกอีเมล/รหัสผ่าน -->
 <div id="login" hidden>
-  <div class="card">
-    <h2>🛠 ผู้ดูแล (HR)</h2>
-    <form id="loginForm">
-      <label>อีเมล</label>
-      <input id="loginId" type="email" required value="hr@local.com" autocomplete="username">
-      <label>รหัสผ่าน</label>
-      <input id="loginPw" type="password" required autocomplete="current-password">
-      <br><br><button style="width:100%">เข้าสู่ระบบ</button>
+  <header>
+    <h1>🛠 ผู้ดูแล (HR)</h1>
+    <form id="loginForm" class="hdr-login two">
+      <input id="loginId" type="email" required value="hr@local.com" autocomplete="username" aria-label="อีเมล">
+      <input id="loginPw" type="password" required autocomplete="current-password" placeholder="รหัสผ่าน" aria-label="รหัสผ่าน">
+      <button class="go">เข้าสู่ระบบ</button>
     </form>
-  </div>
+  </header>
+  <main>
+    <div class="card lock">
+      <div style="font-size:36px">🔒</div>
+      <p>กรุณากรอก <b>อีเมลและรหัสผ่านผู้ดูแล</b> ที่แถบด้านบน แล้วกด “เข้าสู่ระบบ”<br>เพื่อเข้าใช้งานหน้านี้</p>
+    </div>
+  </main>
 </div>
 
 <div id="app" hidden>
@@ -61,6 +66,10 @@
     </section>
   </main>
 </div>
+
+<footer>
+  <span>ระบบเบิกของใช้แม่บ้าน</span><span>ใช้ภายในบริษัทเท่านั้น</span><span>พัฒนาโดย Sarawut.C</span>
+</footer>
 
 <script src="config.js"></script>
 <script src="common.js"></script>
