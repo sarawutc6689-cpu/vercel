@@ -232,8 +232,8 @@ $('#basket').addEventListener('click', e => {
   }
 });
 
-$('#clearBtn').addEventListener('click', () => {
-  if (!confirm('ล้างรายการที่เลือกทั้งหมด?')) return;
+$('#clearBtn').addEventListener('click', async () => {
+  if (!(await confirmBox({ icon: '🗑', title: 'ล้างรายการทั้งหมด?', text: 'รายการที่เลือกไว้จะถูกลบออกทั้งหมด', okText: 'ล้างทั้งหมด', danger: true }))) return;
   basket = {}; renderCats(); renderBasket(); if (curCat) renderItems();
 });
 
@@ -241,14 +241,18 @@ $('#clearBtn').addEventListener('click', () => {
 $('#submitBtn').addEventListener('click', async () => {
   const lines = Object.entries(basket).map(([item_id, qty]) => ({ item_id, qty }));
   if (!lines.length) return toast('กรุณาเลือกและบันทึกอย่างน้อย 1 รายการ', true);
-  if (!confirm(`ยืนยันส่งคำขอเบิก ${lines.length} รายการ?`)) return;
+  const listHtml = '<div class="m-list">' + items.filter(x => basket[x.id]).map(x =>
+    `<div><span>${esc(x.name)}</span><b>${basket[x.id]} ${esc(x.unit)}</b></div>`).join('') + '</div>';
+  const note = $('#note').value.trim();
+  if (!(await confirmBox({ icon: '📨', title: `ยืนยันส่งคำขอเบิก ${lines.length} รายการ?`,
+        html: listHtml + (note ? `<div style="margin-top:10px;text-align:left">📝 ${esc(note)}</div>` : ''), okText: 'ส่งคำขอ' }))) return;
   $('#submitBtn').disabled = true;
   const { data: req, error } = await sb.from('requests')
     .insert({ housekeeper_id: me.id, note: $('#note').value.trim() || null }).select().single();
   if (error) { $('#submitBtn').disabled = false; return toast(error.message, true); }
   const { error: e2 } = await sb.from('request_items').insert(lines.map(l => ({ ...l, request_id: req.id })));
   if (e2) { $('#submitBtn').disabled = false; return toast(e2.message, true); }
-  toast('ส่งคำขอเรียบร้อย รอผู้ดูแลอนุมัติ');
+  infoBox({ icon: '✅', title: 'ส่งคำขอเรียบร้อย', text: 'คำขอของคุณอยู่ระหว่างรอผู้ดูแลอนุมัติ' });
   $('#note').value = ''; basket = {}; curCat = '';
   await loadItems(); loadHistory();
 });
