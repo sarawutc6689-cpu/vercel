@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ระบบเบิกของใช้แม่บ้าน — หน้ารวมระบบ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --border: #e2e8f0;
+      --ink: #0f172a;
+      --muted: #64748b;
+      --brand: #0284c7;
+      --brand-light: #e0f2fe;
+      --brand-ink: #ffffff;
+      --accent: #0ea5e9;
+      --radius: 16px;
+      --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+      --shadow-md: 0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.04);
+      --space-1: 4px;
+      --space-2: 8px;
+      --space-3: 12px;
+      --space-4: 16px;
+      --space-6: 24px;
+      --space-8: 32px;
+      --space-12: 48px;
+      --font: "Prompt", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: var(--font);
+      color: var(--ink);
+      background-color: var(--bg);
+      background-image: radial-gradient(circle at 50% 0%, #e0f2fe 0%, transparent 55%);
+      background-repeat: no-repeat;
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .app-header {
+      padding: var(--space-12) var(--space-6) var(--space-8);
+      text-align: center;
+    }
+
+    .header-inner {
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    .header-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 14px;
+      background: var(--brand);
+      color: var(--brand-ink);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: var(--space-4);
+      box-shadow: 0 8px 16px -4px rgba(2, 132, 199, 0.35);
+    }
+
+    .app-title {
+      margin: 0 0 var(--space-2);
+      font-size: clamp(24px, 4vw, 32px);
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: var(--ink);
+    }
+
+    .app-subtitle {
+      margin: 0;
+      font-size: 15px;
+      color: var(--muted);
+      font-weight: 400;
+    }
+
+    .main-container {
+      flex: 1;
+      width: 100%;
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 0 var(--space-6) var(--space-12);
+    }
+
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: var(--space-6);
+    }
+
+    .portal-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: var(--space-6);
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: var(--shadow-sm);
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .portal-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-md);
+      border-color: #bae6fd;
+    }
+
+    .portal-card:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 3px;
+    }
+
+    .portal-card:active {
+      transform: translateY(-1px);
+    }
+
+    .card-top {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-4);
+      margin-bottom: var(--space-6);
+    }
+
+    .card-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .icon-index { background: #e0f2fe; color: #0284c7; }
+    .icon-admin { background: #f3e8ff; color: #7e22ce; }
+    .icon-manage { background: #dcfce7; color: #15803d; }
+    .icon-report { background: #fef3c7; color: #b45309; }
+    .icon-dashboard { background: #ffe4e6; color: #be123c; }
+
+    .card-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .card-title {
+      margin: 0 0 4px;
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    .card-desc {
+      margin: 0;
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: var(--space-4);
+      border-top: 1px solid #f1f5f9;
+      gap: var(--space-3);
+    }
+
+    .card-path {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 12px;
+      color: var(--muted);
+      background: #f8fafc;
+      padding: 4px 8px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .card-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--brand);
+      flex-shrink: 0;
+      transition: transform 0.15s ease;
+    }
+
+    .portal-card:hover .card-action {
+      transform: translateX(3px);
+    }
+
+    .app-footer {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: var(--space-6);
+      text-align: center;
+      font-size: 14px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    @media (max-width: 640px) {
+      .app-header {
+        padding: var(--space-8) var(--space-4) var(--space-6);
+      }
+      .main-container {
+        padding: 0 var(--space-4) var(--space-8);
+      }
+      .cards-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="header-icon" aria-hidden="true">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+          <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+          <line x1="12" y1="22.08" x2="12" y2="12"></line>
+        </svg>
+      </div>
+      <h1 class="app-title">ระบบเบิกของใช้แม่บ้าน</h1>
+      <p class="app-subtitle">เลือกเมนูที่ต้องการใช้งานจากรายการด้านล่าง</p>
+    </div>
+  </header>
+
+  <main class="main-container">
+    <div class="cards-grid">
+
+      <!-- 1. index.html -->
+      <a class="portal-card" href="https://mouldmate.vercel.app/HR/maid/index.html" target="_blank" rel="noopener">
+        <div class="card-top">
+          <div class="card-icon icon-index" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+              <polyline points="9 22 9 12 15 12 15 22"></polyline>
+            </svg>
+          </div>
+          <div class="card-content">
+            <h2 class="card-title">หน้าหลักเบิกของใช้ (Index)</h2>
+            <p class="card-desc">หน้าสำหรับทำรายการเบิกของใช้แม่บ้าน</p>
+          </div>
+        </div>
+        <div class="card-footer">
+          <span class="card-path">/HR/maid/index.html</span>
+          <span class="card-action">
+            เข้าใช้งาน
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </span>
+        </div>
+      </a>
+
+      <!-- 2. admin.html -->
+      <a class="portal-card" href="https://mouldmate.vercel.app/HR/maid/admin.html" target="_blank" rel="noopener">
+        <div class="card-top">
+          <div class="card-icon icon-admin" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+          </div>
+          <div class="card-content">
+            <h2 class="card-title">ผู้ดูแลระบบ (Admin)</h2>
+            <p class="card-desc">ส่วนจัดการและตรวจสอบสำหรับผู้ดูแลระบบ</p>
+          </div>
+        </div>
+        <div class="card-footer">
+          <span class="card-path">/HR/maid/admin.html</span>
+          <span class="card-action">
+            เข้าใช้งาน
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </span>
+        </div>
+      </a>
+
+      <!-- 3. manage.html -->
+      <a class="portal-card" href="https://mouldmate.vercel.app/HR/maid/manage.html" target="_blank" rel="noopener">
+        <div class="card-top">
+          <div class="card-icon icon-manage" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+          </div>
+          <div class="card-content">
+            <h2 class="card-title">จัดการข้อมูล (Manage)</h2>
+            <p class="card-desc">จัดการรายการพัสดุและข้อมูลของใช้แม่บ้าน</p>
+          </div>
+        </div>
+        <div class="card-footer">
+          <span class="card-path">/HR/maid/manage.html</span>
+          <span class="card-action">
+            เข้าใช้งาน
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </span>
+        </div>
+      </a>
+
+      <!-- 4. report.html -->
+      <a class="portal-card" href="https://mouldmate.vercel.app/HR/maid/report.html" target="_blank" rel="noopener">
+        <div class="card-top">
+          <div class="card-icon icon-report" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+          </div>
+          <div class="card-content">
+            <h2 class="card-title">รายงาน (Report)</h2>
+            <p class="card-desc">ดูและตรวจสอบรายงานการเบิกจ่ายของใช้แม่บ้าน</p>
+          </div>
+        </div>
+        <div class="card-footer">
+          <span class="card-path">/HR/maid/report.html</span>
+          <span class="card-action">
+            เข้าใช้งาน
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </span>
+        </div>
+      </a>
+
+      <!-- 5. dashboard.html -->
+      <a class="portal-card" href="https://mouldmate.vercel.app/HR/maid/dashboard.html" target="_blank" rel="noopener">
+        <div class="card-top">
+          <div class="card-icon icon-dashboard" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="20" x2="18" y2="10"></line>
+              <line x1="12" y1="20" x2="12" y2="4"></line>
+              <line x1="6" y1="20" x2="6" y2="14"></line>
+            </svg>
+          </div>
+          <div class="card-content">
+            <h2 class="card-title">แดชบอร์ด (Dashboard)</h2>
+            <p class="card-desc">ภาพรวมข้อมูลและสถิติการเบิกของใช้แม่บ้าน</p>
+          </div>
+        </div>
+        <div class="card-footer">
+          <span class="card-path">/HR/maid/dashboard.html</span>
+          <span class="card-action">
+            เข้าใช้งาน
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </span>
+        </div>
+      </a>
+
+    </div>
+  </main>
+
+  <footer class="app-footer">
+    ระบบเบิกของใช้แม่บ้านใช้ภายในบริษัทเท่านั้นพัฒนาโดย Sarawut.C
+  </footer>
+
+</body>
+</html>
