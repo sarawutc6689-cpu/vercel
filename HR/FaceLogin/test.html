@@ -2,193 +2,258 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>ระบบลงเวลา</title>
-<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#10294a">
+<title>ลงเวลาทำงาน</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <style>
 :root{
-  --bg:#f0f5fb;--s1:#ffffff;--s2:#e8f0fb;--bd:#c5d6ee;
-  --ac:#1a5fa8;--ac2:#2176d2;--gr:#1a7a4a;--rd:#c0392b;--yw:#d4860a;
-  --tx:#1a2a3a;--mu:#6b85a0;--hdr:#1a3d6b;--sidebar-w:250px;
+  --ink:#10294a;
+  --ink-soft:#c9d6e8;
+  --paper:#f4f6f9;
+  --surface:#ffffff;
+  --line:#d9e0ea;
+  --text:#14202e;
+  --muted:#5b6b7d;
+  --in:#15803d;
+  --out:#c2410c;
+  --bad:#b42318;
+  --warn:#a15c07;
+  --bar-h:150px;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-body{font-family:'Angsana New','Angsana','Sarabun',serif;background:var(--bg);color:var(--tx);min-height:100vh;display:flex;flex-direction:column;font-size:16px}
+html{-webkit-text-size-adjust:100%}
+body{
+  font-family:'IBM Plex Sans Thai','Noto Sans Thai','Sarabun',system-ui,sans-serif;
+  background:var(--paper);color:var(--text);
+  font-size:16px;line-height:1.5;min-height:100vh;
+  padding-bottom:calc(var(--bar-h) + env(safe-area-inset-bottom));
+}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:3px solid #2f7de1;outline-offset:2px}
 
-#overlay{position:fixed;inset:0;background:rgba(10,30,60,.45);backdrop-filter:blur(2px);z-index:90;opacity:0;pointer-events:none;transition:opacity .3s}
-#overlay.open{opacity:1;pointer-events:all}
+/* ── หัวหน้า: นาฬิกาเป็นตัวเอก ── */
+.top{
+  background:var(--ink);color:#fff;
+  padding:calc(14px + env(safe-area-inset-top)) 20px 22px;
+}
+.top-row{display:flex;align-items:center;justify-content:space-between}
+.top-name{font-size:16px;font-weight:500;color:var(--ink-soft)}
+.top-link{
+  color:#fff;text-decoration:none;font-size:15px;font-weight:500;
+  padding:8px 14px;border:1.5px solid rgba(255,255,255,.35);border-radius:999px;
+}
+.top-link:active{background:rgba(255,255,255,.12)}
+#clock{
+  font-size:clamp(52px,17vw,76px);font-weight:700;line-height:1.05;
+  font-variant-numeric:tabular-nums;letter-spacing:.01em;margin-top:18px;
+}
+#date-lbl{font-size:16px;color:var(--ink-soft);margin-top:4px}
 
-#sidebar{position:fixed;top:0;left:0;height:100%;width:var(--sidebar-w);background:var(--s1);border-right:2px solid var(--bd);z-index:100;transform:translateX(-100%);transition:transform .32s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;box-shadow:4px 0 24px rgba(26,63,107,.12)}
-#sidebar.open{transform:translateX(0)}
-.sb-head{padding:28px 20px 18px;border-bottom:2px solid var(--bd);background:linear-gradient(160deg,var(--hdr),var(--ac2));color:#fff}
-.sb-logo{font-size:32px;margin-bottom:4px}
-.sb-title{font-size:18px;font-weight:700;letter-spacing:.5px}
-.sb-sub{font-size:11px;opacity:.75;letter-spacing:1.5px;text-transform:uppercase;margin-top:2px;font-family:'Sarabun',sans-serif}
-.sb-nav{padding:16px 10px;flex:1}
-.sb-nav-lbl{font-size:11px;font-weight:700;color:var(--mu);letter-spacing:2px;text-transform:uppercase;padding:6px 10px 8px;font-family:'Sarabun',sans-serif}
-.nav-item{display:flex;align-items:center;gap:12px;padding:13px 16px;border-radius:8px;font-size:17px;font-weight:600;cursor:pointer;color:var(--tx);text-decoration:none;transition:background .15s,color .15s;margin-bottom:4px;border:1px solid transparent}
-.nav-item:hover{background:var(--s2);border-color:var(--bd)}
-.nav-item.active{background:rgba(26,95,168,.08);color:var(--ac);border-color:rgba(26,95,168,.25)}
-.nav-item .ni{font-size:20px;flex-shrink:0}
-.sb-close{position:absolute;top:12px;right:12px;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center}
-.sb-foot{padding:14px 16px;border-top:1px solid var(--bd);font-size:13px;color:var(--mu);text-align:center;line-height:1.7}
+/* ── ขั้นตอน ── */
+main{padding:24px 16px 8px;max-width:520px;margin:0 auto}
+.step{display:grid;grid-template-columns:32px 1fr;column-gap:14px;position:relative;padding-bottom:28px}
+.step:not(:last-child)::before{content:"";position:absolute;left:15px;top:36px;bottom:4px;width:2px;background:var(--line)}
+.badge{
+  width:32px;height:32px;border-radius:50%;
+  display:grid;place-items:center;
+  border:2px solid var(--line);background:var(--surface);
+  font-weight:700;font-size:15px;color:var(--muted);
+}
+.step.done .badge{background:var(--in);border-color:var(--in);color:#fff}
+.step.bad  .badge{background:var(--bad);border-color:var(--bad);color:#fff}
+.step.wait .badge{border-color:var(--warn);color:var(--warn)}
+.step h2{font-size:18px;font-weight:700;line-height:32px;margin-bottom:8px}
 
-.hdr{background:linear-gradient(135deg,var(--hdr) 0%,var(--ac2) 100%);border-bottom:2px solid rgba(255,255,255,.15);padding:16px 20px 14px;text-align:center;position:relative;flex-shrink:0;box-shadow:0 3px 12px rgba(26,63,107,.25);color:#fff}
-.hdr-menu{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:42px;height:42px;border-radius:8px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s}
-.hdr-menu:hover{background:rgba(255,255,255,.25)}
-.hdr-icon{font-size:30px;margin-bottom:2px}
-.hdr-title{font-size:20px;font-weight:700;letter-spacing:.5px}
-.hdr-sub{font-size:10px;opacity:.8;letter-spacing:2px;text-transform:uppercase;font-family:'Sarabun',sans-serif}
-#clock{font-family:'IBM Plex Mono',monospace;font-size:28px;font-weight:600;color:#fff;letter-spacing:3px;margin:8px 0 2px;text-shadow:0 0 20px rgba(255,255,255,.3)}
-#date-lbl{font-size:13px;opacity:.8;margin-bottom:2px}
+/* รหัสพนักงาน */
+#emp-id{
+  width:100%;height:58px;padding:0 16px;
+  font-size:26px;font-weight:500;letter-spacing:.08em;font-variant-numeric:tabular-nums;
+  background:var(--surface);border:2px solid var(--line);border-radius:12px;
+  outline:none;-webkit-appearance:none;appearance:none;
+}
+#emp-id:focus{border-color:var(--ink)}
+#emp-id::placeholder{font-size:17px;letter-spacing:0;color:var(--muted);font-weight:400}
+.emp-result{min-height:26px;margin-top:8px;font-size:17px;font-weight:500}
+.emp-result.ok{color:var(--in)}
+.emp-result.err{color:var(--bad)}
 
-.page{display:none;flex:1;flex-direction:column}
-.page.active{display:flex}
-.wrap{padding:0 14px;flex:1}
-.card{background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:16px;margin-top:12px;box-shadow:0 2px 8px rgba(26,63,107,.07)}
-.lbl{font-size:13px;font-weight:700;color:var(--ac);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px;font-family:'Sarabun',sans-serif}
-.lbl::after{content:'';flex:1;height:1px;background:var(--bd);margin-left:6px}
+/* GPS */
+.gps-line{display:flex;gap:10px;align-items:flex-start;font-size:16px;margin-bottom:10px}
+.dot{width:12px;height:12px;border-radius:50%;background:var(--warn);flex-shrink:0;margin-top:7px}
+.dot.ok{background:var(--in)}.dot.err{background:var(--bad)}
+.dot.pulse{animation:blink 1.2s infinite}
+@keyframes blink{50%{opacity:.25}}
+.gps-sub{font-size:14px;color:var(--muted)}
+#map{height:140px;border-radius:12px;border:1px solid var(--line);overflow:hidden;background:#e5ebf2}
 
-.emp-in{width:100%;background:var(--s2);border:1.5px solid var(--bd);border-radius:8px;padding:12px 14px;font-size:20px;font-family:'IBM Plex Mono',monospace;color:var(--tx);outline:none;-webkit-appearance:none;transition:border-color .2s,box-shadow .2s}
-.emp-in:focus{border-color:var(--ac);box-shadow:0 0 0 3px rgba(26,95,168,.12)}
-.emp-in::placeholder{color:var(--mu);font-size:14px;font-family:'Angsana New','Angsana','Sarabun',serif}
-.emp-badge{display:none;margin-top:10px;padding:10px 14px;background:var(--s2);border-radius:8px;border-left:4px solid var(--gr);align-items:center;gap:10px}
-.emp-badge.show{display:flex}.emp-badge.err{border-left-color:var(--rd)}
-.emp-badge .ico{font-size:20px;flex-shrink:0}
-.emp-badge .nm{font-weight:700;font-size:16px}
-.emp-badge .sid{font-size:12px;color:var(--mu);font-family:'IBM Plex Mono',monospace}
+/* กล้อง */
+.cam{position:relative;aspect-ratio:4/3;border-radius:12px;overflow:hidden;background:#0b1118}
+#video,#preview{width:100%;height:100%;object-fit:cover;display:block}
+#video{transform:scaleX(-1)}
+#preview{display:none}
+.cam-msg{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  text-align:center;padding:20px;color:#e6edf5;font-size:16px;background:rgba(11,17,24,.82);
+}
+.cam-msg.hidden{display:none}
+.flip{
+  position:absolute;top:10px;right:10px;width:46px;height:46px;border-radius:50%;
+  background:rgba(0,0,0,.45);border:1.5px solid rgba(255,255,255,.5);color:#fff;
+  display:grid;place-items:center;cursor:pointer;
+}
+.flip svg{width:22px;height:22px}
+.shutter-row{display:flex;justify-content:center;margin-top:14px}
+.shutter{
+  width:76px;height:76px;border-radius:50%;cursor:pointer;
+  background:var(--surface);border:4px solid var(--ink);
+  box-shadow:inset 0 0 0 5px var(--surface),inset 0 0 0 40px var(--ink);
+  transition:transform .08s;
+}
+.shutter:active{transform:scale(.92)}
+.shutter:disabled{opacity:.3}
+.retake{
+  display:none;width:100%;height:50px;margin-top:12px;
+  background:var(--surface);border:2px solid var(--line);border-radius:12px;
+  font-weight:500;font-size:17px;cursor:pointer;
+}
+.retake.show{display:block}
 
-#map{height:175px;border-radius:8px;border:1px solid var(--bd);overflow:hidden}
-.gps-row{display:flex;align-items:flex-start;gap:8px;margin-top:8px;font-size:13px;color:var(--mu);line-height:1.5}
-.dot{width:8px;height:8px;border-radius:50%;background:var(--yw);flex-shrink:0;margin-top:4px}
-.dot.ok{background:var(--gr)}.dot.err{background:var(--rd)}.dot.pulse{animation:blink 1.2s infinite}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+/* แถบปุ่มด้านล่าง (โซนนิ้วโป้ง) */
+.bar{
+  position:fixed;left:0;right:0;bottom:0;z-index:20;
+  background:var(--surface);border-top:1px solid var(--line);
+  box-shadow:0 -6px 20px rgba(16,41,74,.08);
+  padding:10px 16px calc(12px + env(safe-area-inset-bottom));
+}
+.bar-in{max-width:520px;margin:0 auto}
+#hint{min-height:44px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:15px;line-height:1.35;color:var(--muted);padding:0 4px 8px}
+#hint.ready{color:var(--in);font-weight:500}
+#hint.error{color:var(--bad);font-weight:500}
+#hint.busy{color:var(--ink);font-weight:500}
+.acts{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.act{
+  height:64px;border:0;border-radius:14px;cursor:pointer;
+  font-size:21px;font-weight:700;color:#fff;
+  transition:transform .08s,opacity .15s;
+}
+.act:active{transform:scale(.97)}
+.act:disabled{opacity:.3;cursor:not-allowed;transform:none}
+.act.in{background:var(--in)}
+.act.out{background:var(--out)}
 
-.cam-box{position:relative;border-radius:8px;overflow:hidden;background:#0a0a0a;aspect-ratio:4/3;border:1px solid var(--bd)}
-#video{width:100%;height:100%;object-fit:cover;display:block;transform:scaleX(-1)}
-#preview{width:100%;height:100%;object-fit:cover;display:none}
-.cam-msg{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,.72);color:#bbb;font-size:13px;text-align:center;padding:16px;gap:6px;font-family:'Sarabun',sans-serif}
-.cam-msg .mi{font-size:34px}.cam-msg.hidden{display:none}
-.sh-row{display:flex;align-items:center;justify-content:center;gap:24px;margin-top:12px}
-.shutter{width:62px;height:62px;border-radius:50%;background:var(--ac);border:3px solid var(--ac2);color:#fff;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .1s,box-shadow .15s;flex-shrink:0;box-shadow:0 4px 14px rgba(26,95,168,.3)}
-.shutter:active{transform:scale(.9)}.shutter:disabled{opacity:.3}
-.flip-btn{width:42px;height:42px;border-radius:50%;background:var(--s2);border:1px solid var(--bd);color:var(--ac);font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center}
-.photo-ok{display:none;margin-top:8px;padding:8px 12px;border-radius:8px;background:rgba(26,122,74,.08);border:1px solid var(--gr);color:var(--gr);font-size:14px;font-weight:700;text-align:center}
-.photo-ok.show{display:block}
-.retake-btn{display:none;width:100%;margin-top:8px;padding:11px;border:1.5px solid var(--bd);border-radius:8px;background:var(--s2);color:var(--mu);font-size:15px;font-family:'Angsana New','Angsana','Sarabun',serif;font-weight:700;cursor:pointer}
-.retake-btn.show{display:block}
+.credit{text-align:center;font-size:13px;color:var(--muted);padding:6px 0 18px}
 
-.sub-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;margin-bottom:14px}
-.sub-btn{padding:15px 8px;border:none;border-radius:10px;font-size:18px;font-family:'Angsana New','Angsana','Sarabun',serif;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:transform .1s,opacity .15s,box-shadow .15s}
-.sub-btn:active{transform:scale(.96)}
-.sub-btn:disabled{opacity:.3;cursor:not-allowed;transform:none}
-.btn-in{background:var(--gr);color:#fff;box-shadow:0 4px 14px rgba(26,122,74,.25)}
-.btn-out{background:var(--rd);color:#fff;box-shadow:0 4px 14px rgba(192,57,43,.25)}
-
-#toast{display:none;margin:12px 0 0;padding:14px 16px;border-radius:10px;border:1px solid;text-align:center}
-#toast.show{display:block;animation:fi .25s}
-#toast.success{background:rgba(26,122,74,.07);border-color:var(--gr)}
-#toast.error{background:rgba(192,57,43,.07);border-color:var(--rd)}
-#toast.loading{background:rgba(26,95,168,.07);border-color:var(--ac)}
-.t-icon{font-size:24px;margin-bottom:4px}.t-text{font-size:16px;font-weight:700}
-@keyframes fi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-
-footer{background:var(--hdr);border-top:2px solid rgba(255,255,255,.1);padding:12px 16px;text-align:center;flex-shrink:0;box-shadow:0 -2px 8px rgba(26,63,107,.15)}
-.ft-main{font-size:15px;font-weight:700;color:#fff;letter-spacing:.3px;margin-bottom:3px}
-.ft-row{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap}
-.ft-dev{font-size:12px;color:rgba(255,255,255,.7)}
-.ft-dev span{color:#7ec8ff;font-weight:700}
-.ft-sep{width:3px;height:3px;border-radius:50%;background:rgba(255,255,255,.3)}
-.ft-note{font-size:12px;color:rgba(255,255,255,.7)}
-.ft-note span{color:#ffd77a}
+/* ผลลัพธ์เต็มจอ */
+.done{
+  position:fixed;inset:0;z-index:50;display:none;
+  flex-direction:column;align-items:center;justify-content:center;text-align:center;
+  padding:32px 24px calc(32px + env(safe-area-inset-bottom));
+  color:#fff;background:var(--in);
+}
+.done.show{display:flex}
+.done.out{background:var(--out)}
+.done-mark{width:112px;height:112px;border-radius:50%;background:rgba(255,255,255,.18);display:grid;place-items:center;margin-bottom:24px}
+.done-mark svg{width:60px;height:60px}
+.done.show .done-mark{animation:pop .45s cubic-bezier(.2,1.4,.4,1)}
+@keyframes pop{from{transform:scale(.5);opacity:0}to{transform:scale(1);opacity:1}}
+.done h2{font-size:34px;font-weight:700;line-height:1.2}
+.done .who{font-size:21px;margin-top:10px}
+.done .when{font-size:44px;font-weight:700;margin-top:18px;font-variant-numeric:tabular-nums}
+.done button{
+  margin-top:36px;height:56px;padding:0 44px;border-radius:14px;border:2px solid rgba(255,255,255,.7);
+  background:transparent;color:#fff;font-size:19px;font-weight:700;cursor:pointer;
+}
+.done button:active{background:rgba(255,255,255,.15)}
+@media (prefers-reduced-motion:reduce){
+  .dot.pulse,.done.show .done-mark{animation:none}
+  *{transition:none!important}
+}
 </style>
 </head>
 <body>
 
-<div id="overlay" onclick="closeSidebar()"></div>
-
-<div id="sidebar">
-  <button class="sb-close" onclick="closeSidebar()">✕</button>
-  <div class="sb-head">
-    <div class="sb-logo">🏢</div>
-    <div class="sb-title">ระบบลงเวลา</div>
-    <div class="sb-sub">Attendance System</div>
+<header class="top">
+  <div class="top-row">
+    <span class="top-name">ลงเวลาทำงาน</span>
+    <!-- หน้ารายงานตรวจสิทธิ์ด้วย Supabase Auth ใน admin.html -->
+    <a class="top-link" href="admin.html">รายงาน</a>
   </div>
-  <div class="sb-nav">
-    <div class="sb-nav-lbl">เมนูหลัก</div>
-    <a class="nav-item active" href="index.html"><span class="ni">🕐</span><span>ลงเวลาทำงาน</span></a>
-    <!-- หน้ารายงานตรวจสิทธิ์ด้วย Supabase Auth ในหน้า admin.html เอง ไม่ใช้รหัสผ่านในหน้านี้อีก -->
-    <a class="nav-item" href="admin.html"><span class="ni">📊</span><span>รายงาน</span></a>
-  </div>
-  <div class="sb-foot">
-    v2.0 · ระบบลงเวลาทำงานนอกสถานที่<br>
-    <span style="color:var(--ac2);font-weight:700">พัฒนาโดย Sarawut.C</span>
-  </div>
-</div>
+  <div id="clock" aria-live="off">--:--:--</div>
+  <div id="date-lbl">&nbsp;</div>
+</header>
 
-<div class="hdr">
-  <button class="hdr-menu" onclick="openSidebar()">☰</button>
-  <div class="hdr-icon">🏢</div>
-  <div class="hdr-title">ระบบลงเวลาทำงาน</div>
-  <div class="hdr-sub">Attendance System</div>
-  <div id="clock">--:--:--</div>
-  <div id="date-lbl">--</div>
-</div>
+<main>
+  <section class="step" id="s1">
+    <div class="badge" id="b1">1</div>
+    <div>
+      <h2>รหัสพนักงาน</h2>
+      <input id="emp-id" type="text" inputmode="numeric" pattern="[0-9]*"
+             autocomplete="off" spellcheck="false" placeholder="กรอกรหัสพนักงาน"
+             aria-label="รหัสพนักงาน" oninput="onEmp()" onfocus="this.select()">
+      <div class="emp-result" id="emp-result" aria-live="polite"></div>
+    </div>
+  </section>
 
-<div class="page active" id="page-attendance">
-  <div class="wrap">
-    <div id="toast"><div class="t-icon" id="t-icon"></div><div class="t-text" id="t-text"></div></div>
-
-    <div class="card">
-      <div class="lbl">👤 รหัสพนักงาน</div>
-      <input class="emp-in" id="emp-id" type="text" placeholder="กรอกรหัสพนักงาน"
-        inputmode="numeric" autocomplete="off" spellcheck="false" oninput="onEmp()">
-      <div class="emp-badge" id="emp-badge">
-        <div class="ico" id="emp-ico">👤</div>
-        <div><div class="nm" id="emp-nm"></div><div class="sid" id="emp-sid"></div></div>
+  <section class="step wait" id="s2">
+    <div class="badge" id="b2">2</div>
+    <div>
+      <h2>ตำแหน่ง</h2>
+      <div class="gps-line">
+        <span class="dot pulse" id="gps-dot"></span>
+        <div><div id="gps-txt">กำลังหาตำแหน่ง...</div><div class="gps-sub" id="gps-sub"></div></div>
       </div>
-    </div>
-
-    <div class="card">
-      <div class="lbl">📍 ตำแหน่ง GPS</div>
       <div id="map"></div>
-      <div class="gps-row"><div class="dot pulse" id="gps-dot"></div><span id="gps-txt">กำลังหาตำแหน่ง...</span></div>
     </div>
+  </section>
 
-    <div class="card">
-      <div class="lbl">📷 ถ่ายภาพยืนยัน</div>
-      <div class="cam-box">
+  <section class="step" id="s3">
+    <div class="badge" id="b3">3</div>
+    <div>
+      <h2>ถ่ายภาพยืนยัน</h2>
+      <div class="cam">
         <video id="video" autoplay playsinline muted></video>
-        <img id="preview" alt="">
-        <div class="cam-msg" id="cam-msg"><div class="mi">⏳</div><span>กำลังเปิดกล้อง...</span></div>
+        <img id="preview" alt="ภาพที่ถ่าย">
+        <div class="cam-msg" id="cam-msg">กำลังเปิดกล้อง...</div>
+        <button class="flip" id="flip" onclick="flipCam()" aria-label="สลับกล้องหน้า/หลัง">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M3 21v-5h5"/></svg>
+        </button>
       </div>
       <canvas id="canvas" style="display:none"></canvas>
-      <div class="sh-row" id="sh-row">
-        <button class="flip-btn" onclick="flipCam()">🔄</button>
-        <button class="shutter" id="shutter" onclick="snap()" disabled>📸</button>
-        <div style="width:42px"></div>
+      <div class="shutter-row" id="sh-row">
+        <button class="shutter" id="shutter" onclick="snap()" disabled aria-label="ถ่ายภาพ"></button>
       </div>
-      <div class="photo-ok" id="photo-ok">✅ บันทึกภาพแล้ว — กดเข้า/ออกงานได้เลย</div>
-      <button class="retake-btn" id="retake-btn" onclick="retake()">🔄 ถ่ายใหม่</button>
+      <button class="retake" id="retake" onclick="retake()">ถ่ายใหม่</button>
     </div>
+  </section>
 
-    <div class="sub-row">
-      <button class="sub-btn btn-in"  id="btn-in"  onclick="go('IN')"  disabled>🟢 เข้างาน</button>
-      <button class="sub-btn btn-out" id="btn-out" onclick="go('OUT')" disabled>🔴 ออกงาน</button>
+  <p class="credit">ใช้ภายในบริษัทเท่านั้น · พัฒนาโดย Sarawut.C</p>
+</main>
+
+<div class="bar">
+  <div class="bar-in">
+    <div id="hint" role="status" aria-live="polite">กรอกรหัสพนักงานเพื่อเริ่มต้น</div>
+    <div class="acts">
+      <button class="act in"  id="btn-in"  onclick="go('IN')"  disabled>เข้างาน</button>
+      <button class="act out" id="btn-out" onclick="go('OUT')" disabled>ออกงาน</button>
     </div>
   </div>
 </div>
 
-<footer>
-  <div class="ft-main">🗂️ ระบบลงเวลาทำงานนอกสถานที่</div>
-  <div class="ft-row">
-    <span class="ft-dev">พัฒนาโดย <span>Sarawut.C</span></span>
-    <span class="ft-sep"></span>
-    <span class="ft-note"><span>⚠️</span> ใช้ภายในบริษัทเท่านั้น</span>
+<div class="done" id="done" role="dialog" aria-modal="true" aria-labelledby="done-title">
+  <div class="done-mark">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
   </div>
-</footer>
+  <h2 id="done-title"></h2>
+  <div class="who" id="done-who"></div>
+  <div class="when" id="done-when"></div>
+  <button onclick="location.reload()">เสร็จสิ้น</button>
+</div>
 
 <script>
 // ===== ตั้งค่า: Supabase Dashboard → Project Settings → API =====
@@ -196,190 +261,196 @@ const SUPABASE_URL      = "https://ppzdyvomrfiitahxwrwz.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBwemR5dm9tcmZpaXRhaHh3cnd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwMjQ0MjIsImV4cCI6MjEwNDYwMDQyMn0.iArUz6swMfwhFT_1qEvCwK1B3aiCxdWt46_FBjT6_Y0";   // ใช้ anon key เท่านั้น ห้ามใส่ service_role
 const PHOTO_BUCKET      = "attendance-photos";
 
-// ใช้แสดงผลบนแผนที่เท่านั้น — การตัดสินว่าอยู่ในพื้นที่หรือไม่ ทำที่ฝั่งเซิร์ฟเวอร์
+// ใช้แสดงบนแผนที่เท่านั้น — เซิร์ฟเวอร์เป็นผู้ตัดสินว่าอยู่ในพื้นที่หรือไม่
 const O_LAT=13.83135619038678, O_LNG=100.79379214129247, RADIUS=100;
+const LAST_KEY="attendance:last_code";
 
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const $ = id => document.getElementById(id);
 
-let emp=null, gps=null, photo=null, facing='user', stream=null, empT=null, mapObj, pin;
-
-function openSidebar(){
-  document.getElementById('sidebar').classList.add('open');
-  document.getElementById('overlay').classList.add('open');
-}
-function closeSidebar(){
-  document.getElementById('sidebar').classList.remove('open');
-  document.getElementById('overlay').classList.remove('open');
-}
+let emp=null, gps=null, inArea=null, photo=null, facing='user', stream=null, empT=null, lookupSeq=0, mapObj, pin, busy=false;
 
 document.addEventListener('DOMContentLoaded',()=>{
   clk(); setInterval(clk,1000);
   initMap(); initGPS(); initCam();
+  try{
+    const last=localStorage.getItem(LAST_KEY);
+    if(last){ $('emp-id').value=last; onEmp(); }
+  }catch(e){}
 });
 
 function clk(){
   const n=new Date();
-  document.getElementById('clock').textContent=n.toLocaleTimeString('th-TH',{hour12:false});
-  document.getElementById('date-lbl').textContent=n.toLocaleDateString('th-TH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  $('clock').textContent=n.toLocaleTimeString('th-TH',{hour12:false});
+  $('date-lbl').textContent=n.toLocaleDateString('th-TH',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
 }
 
-/* ---------- แผนที่ / GPS ---------- */
+/* ---------- ขั้นตอนที่ 1: พนักงาน ---------- */
+function setStep(n,state){
+  const s=$('s'+n), b=$('b'+n);
+  s.classList.remove('done','bad','wait');
+  if(state) s.classList.add(state);
+  b.textContent = state==='done' ? '✓' : state==='bad' ? '!' : String(n);
+}
+
+function onEmp(){
+  emp=null; setStep(1,null);
+  const r=$('emp-result'); r.className='emp-result'; r.textContent='';
+  clearTimeout(empT); chk();
+  const v=$('emp-id').value.trim();
+  if(!v) return;
+  const seq=++lookupSeq;
+  empT=setTimeout(async()=>{
+    const{data,error}=await sb.rpc('attendance_get_employee',{p_code:v});
+    if(seq!==lookupSeq) return;               // ข้ามผลของคำค้นเก่า
+    if(error){ r.className='emp-result err'; r.textContent='เชื่อมต่อเซิร์ฟเวอร์ไม่ได้'; setStep(1,'bad'); chk(); return; }
+    if(data&&data.length){
+      emp={id:data[0].employee_code,name:data[0].full_name};
+      r.className='emp-result ok'; r.textContent=emp.name;
+      setStep(1,'done');
+      try{localStorage.setItem(LAST_KEY,emp.id);}catch(e){}
+    }else{
+      r.className='emp-result err'; r.textContent='ไม่พบรหัสนี้ ตรวจสอบรหัสอีกครั้ง';
+      setStep(1,'bad');
+    }
+    chk();
+  },500);
+}
+
+/* ---------- ขั้นตอนที่ 2: แผนที่ / GPS ---------- */
 function initMap(){
-  mapObj=L.map('map',{zoomControl:false,attributionControl:false}).setView([O_LAT,O_LNG],17);
+  mapObj=L.map('map',{zoomControl:false,attributionControl:false,dragging:false,touchZoom:false,scrollWheelZoom:false,doubleClickZoom:false,boxZoom:false,keyboard:false,tap:false})
+    .setView([O_LAT,O_LNG],17);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapObj);
-  L.circle([O_LAT,O_LNG],{radius:RADIUS,color:'#1a5fa8',fillColor:'#1a5fa8',fillOpacity:.1,weight:2}).addTo(mapObj);
-  L.marker([O_LAT,O_LNG],{icon:L.divIcon({html:'🏢',className:'',iconSize:[24,24],iconAnchor:[12,12]})}).addTo(mapObj);
+  L.circle([O_LAT,O_LNG],{radius:RADIUS,color:'#10294a',fillColor:'#10294a',fillOpacity:.12,weight:2}).addTo(mapObj);
 }
 function setPin(lat,lng){
   if(pin) mapObj.removeLayer(pin);
-  pin=L.marker([lat,lng],{icon:L.divIcon({html:'📍',className:'',iconSize:[24,24],iconAnchor:[12,24]})}).addTo(mapObj);
-  mapObj.setView([lat,lng],17);
+  pin=L.circleMarker([lat,lng],{radius:8,color:'#fff',weight:3,fillColor:'#2f7de1',fillOpacity:1}).addTo(mapObj);
+  mapObj.fitBounds(L.latLngBounds([[O_LAT,O_LNG],[lat,lng]]).pad(.5),{maxZoom:18,animate:false});
+}
+function setGPS(state,text,sub){
+  $('gps-dot').className='dot '+(state==='ok'?'ok':state==='err'?'err':'pulse');
+  $('gps-txt').textContent=text; $('gps-sub').textContent=sub||'';
+  setStep(2, state==='ok'?'done':state==='err'?'bad':'wait');
 }
 function initGPS(){
-  if(!navigator.geolocation){setGPS('err','❌ Browser ไม่รองรับ GPS');return;}
-  setGPS('pulse','กำลังหาตำแหน่ง...');
+  if(!navigator.geolocation){ setGPS('err','เบราว์เซอร์นี้ไม่รองรับ GPS'); return; }
   navigator.geolocation.watchPosition(pos=>{
     const{latitude:lat,longitude:lng,accuracy}=pos.coords;
     gps={lat,lng,accuracy};
     setPin(lat,lng);
-    const d=dist(lat,lng,O_LAT,O_LNG),ok=d<=RADIUS;
-    setGPS(ok?'ok':'err',(ok?'✅ อยู่ในพื้นที่':'❌ นอกพื้นที่')+' · ±'+Math.round(accuracy)+'m · '+Math.round(d)+'m จากบริษัท');
+    const d=Math.round(dist(lat,lng,O_LAT,O_LNG));
+    inArea=d<=RADIUS;
+    const weak=accuracy>50?' · สัญญาณ GPS ไม่แม่นยำ ลองออกไปที่โล่ง':'';
+    setGPS(inArea?'ok':'err',
+      inArea?'อยู่ในพื้นที่ทำงาน':'อยู่นอกพื้นที่ทำงาน',
+      'ห่างจุดลงเวลา '+d+' ม. · คลาดเคลื่อน ±'+Math.round(accuracy)+' ม.'+weak);
     chk();
   },err=>{
-    const m={1:'❌ กรุณาอนุญาต GPS',2:'❌ หาตำแหน่งไม่ได้',3:'❌ GPS หมดเวลา'};
-    setGPS('err',m[err.code]||'❌ GPS error');
+    const m={1:'ไม่ได้รับอนุญาตใช้ตำแหน่ง',2:'หาตำแหน่งไม่ได้',3:'GPS หมดเวลา'};
+    const s={1:'เปิดการอนุญาตตำแหน่งของเบราว์เซอร์ในการตั้งค่า แล้วโหลดหน้าใหม่',2:'ลองออกไปที่โล่ง',3:'ลองโหลดหน้าใหม่'};
+    gps=null; setGPS('err',m[err.code]||'GPS ผิดพลาด',s[err.code]||''); chk();
   },{enableHighAccuracy:true,timeout:15000,maximumAge:5000});
 }
-function setGPS(s,t){
-  document.getElementById('gps-dot').className='dot'+(s==='pulse'?' pulse':s==='ok'?' ok':' err');
-  document.getElementById('gps-txt').textContent=t;
-}
 
-/* ---------- กล้อง ---------- */
-async function initCam(){await startCam('user');}
+/* ---------- ขั้นตอนที่ 3: กล้อง ---------- */
+async function initCam(){ await startCam('user'); }
 async function startCam(f){
   if(stream) stream.getTracks().forEach(t=>t.stop());
-  const msg=document.getElementById('cam-msg');
-  msg.className='cam-msg'; msg.innerHTML='<div class="mi">⏳</div><span>กำลังเปิดกล้อง...</span>';
-  document.getElementById('shutter').disabled=true;
+  const msg=$('cam-msg');
+  msg.className='cam-msg'; msg.textContent='กำลังเปิดกล้อง...';
+  $('shutter').disabled=true;
   try{
     stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:f},width:{ideal:640},height:{ideal:480}},audio:false});
-    const v=document.getElementById('video');
-    v.srcObject=stream; await v.play();
+    const v=$('video'); v.srcObject=stream; await v.play();
     v.style.transform=f==='user'?'scaleX(-1)':'scaleX(1)';
     msg.classList.add('hidden');
-    document.getElementById('shutter').disabled=false;
+    $('shutter').disabled=false;
   }catch(e){
-    let t='❌ เปิดกล้องไม่ได้';
-    if(e.name==='NotAllowedError') t='❌ กรุณาอนุญาตกล้อง<br>กดไอคอนกล้องใน address bar แล้ว Allow';
-    if(e.name==='NotFoundError')   t='❌ ไม่พบกล้อง';
-    if(e.name==='NotReadableError')t='❌ กล้องถูกใช้อยู่ ปิดแอปอื่นก่อน';
-    msg.innerHTML='<div class="mi">📷</div><span>'+t+'</span>';
+    let t='เปิดกล้องไม่ได้';
+    if(e.name==='NotAllowedError')  t='ไม่ได้รับอนุญาตใช้กล้อง เปิดการอนุญาตกล้องในการตั้งค่าเบราว์เซอร์ แล้วโหลดหน้าใหม่';
+    if(e.name==='NotFoundError')    t='ไม่พบกล้องบนอุปกรณ์นี้';
+    if(e.name==='NotReadableError') t='กล้องกำลังถูกใช้อยู่ ปิดแอปอื่นแล้วโหลดหน้าใหม่';
+    msg.textContent=t;
   }
 }
-function flipCam(){facing=facing==='user'?'environment':'user';retake();startCam(facing);}
+function flipCam(){ facing=facing==='user'?'environment':'user'; retake(); startCam(facing); }
 
 function snap(){
-  const v=document.getElementById('video'),c=document.getElementById('canvas');
+  const v=$('video'),c=$('canvas');
   c.width=480; c.height=360;
   const ctx=c.getContext('2d');
   ctx.setTransform(1,0,0,1,0,0);
   if(facing==='user'){ctx.translate(480,0);ctx.scale(-1,1);}
   ctx.drawImage(v,0,0,480,360);
   photo=c.toDataURL('image/jpeg',0.7).split(',')[1];
-  const p=document.getElementById('preview');
-  p.src='data:image/jpeg;base64,'+photo; p.style.display='block';
-  document.getElementById('video').style.display='none';
-  document.getElementById('sh-row').style.display='none';
-  document.getElementById('cam-msg').classList.add('hidden');
-  document.getElementById('photo-ok').classList.add('show');
-  document.getElementById('retake-btn').classList.add('show');
-  chk();
+  const p=$('preview'); p.src='data:image/jpeg;base64,'+photo; p.style.display='block';
+  v.style.display='none'; $('flip').style.display='none'; $('sh-row').style.display='none';
+  $('cam-msg').classList.add('hidden');
+  $('retake').classList.add('show');
+  setStep(3,'done'); chk();
 }
 function retake(){
   photo=null;
-  document.getElementById('preview').style.display='none';
-  document.getElementById('preview').src='';
-  document.getElementById('video').style.display='block';
-  document.getElementById('sh-row').style.display='';
-  document.getElementById('photo-ok').classList.remove('show');
-  document.getElementById('retake-btn').classList.remove('show');
-  chk();
+  const p=$('preview'); p.style.display='none'; p.removeAttribute('src');
+  $('video').style.display='block'; $('flip').style.display='grid'; $('sh-row').style.display='';
+  $('retake').classList.remove('show');
+  setStep(3,null); chk();
 }
 
-/* ---------- ค้นหาพนักงาน (เรียกฟังก์ชันใน Supabase) ---------- */
-function onEmp(){
-  emp=null; document.getElementById('emp-badge').className='emp-badge';
-  clearTimeout(empT); chk();
-  const v=document.getElementById('emp-id').value.trim();
-  if(!v) return;
-  empT=setTimeout(async()=>{
-    const b=document.getElementById('emp-badge');
-    const{data,error}=await sb.rpc('attendance_get_employee',{p_code:v});
-    if(error){toast('error','❌','เชื่อมต่อ server ไม่ได้');return;}
-    if(data&&data.length){
-      emp={id:data[0].employee_code,name:data[0].full_name};
-      b.className='emp-badge show';
-      document.getElementById('emp-ico').textContent='✅';
-      document.getElementById('emp-nm').textContent=emp.name;
-      document.getElementById('emp-sid').textContent='รหัส: '+emp.id;
-    }else{
-      b.className='emp-badge show err';
-      document.getElementById('emp-ico').textContent='❌';
-      document.getElementById('emp-nm').textContent='ไม่พบรหัสพนักงาน';
-      document.getElementById('emp-sid').textContent='';
-    }
-    chk();
-  },600);
-}
-
+/* ---------- แถบปุ่ม / คำบอกสถานะ ---------- */
+function setHint(kind,text){ const h=$('hint'); h.className=kind||''; h.textContent=text; }
 function chk(){
+  if(busy) return;
   const ok=!!emp&&!!gps&&!!photo;
-  document.getElementById('btn-in').disabled=!ok;
-  document.getElementById('btn-out').disabled=!ok;
+  $('btn-in').disabled=!ok; $('btn-out').disabled=!ok;
+  if(ok){
+    if(inArea===false) setHint('error','คุณอยู่นอกพื้นที่ทำงาน ระบบอาจไม่บันทึกการลงเวลา');
+    else setHint('ready','พร้อมลงเวลา');
+  }else if(!emp) setHint('','กรอกรหัสพนักงานให้ถูกต้อง');
+  else if(!gps)  setHint('','รอสัญญาณ GPS...');
+  else if(!photo)setHint('','ถ่ายภาพยืนยันเพื่อลงเวลา');
 }
+function setBusy(b){ busy=b; $('btn-in').disabled=b; $('btn-out').disabled=b; if(!b) chk(); }
 
-/* ---------- ลงเวลา: อัปโหลดรูป → เรียกฟังก์ชันลงเวลา ---------- */
+/* ---------- ลงเวลา ---------- */
 function b64ToBlob(b64){
-  const bin=atob(b64), arr=new Uint8Array(bin.length);
+  const bin=atob(b64),arr=new Uint8Array(bin.length);
   for(let i=0;i<bin.length;i++) arr[i]=bin.charCodeAt(i);
   return new Blob([arr],{type:'image/jpeg'});
 }
-
 async function go(type){
-  if(!emp||!gps||!photo) return;
-  toast('loading','⏳',type==='IN'?'กำลังลงเวลาเข้างาน...':'กำลังลงเวลาออกงาน...');
-  setBtns(true);
+  if(busy||!emp||!gps||!photo) return;
+  setBusy(true);
+  setHint('busy',type==='IN'?'กำลังบันทึกเข้างาน...':'กำลังบันทึกออกงาน...');
   try{
     const path=emp.id+'/'+Date.now()+'-'+Math.random().toString(36).slice(2,8)+'.jpg';
     const up=await sb.storage.from(PHOTO_BUCKET).upload(path,b64ToBlob(photo),{contentType:'image/jpeg'});
     if(up.error) throw up.error;
 
     const{data,error}=await sb.rpc('attendance_clock',{
-      p_code:emp.id, p_status:type,
-      p_lat:gps.lat, p_lng:gps.lng,
-      p_accuracy:Math.round(gps.accuracy), p_photo_path:path
+      p_code:emp.id,p_status:type,
+      p_lat:gps.lat,p_lng:gps.lng,
+      p_accuracy:Math.round(gps.accuracy),p_photo_path:path
     });
     if(error) throw error;
 
-    const ok=data.result==='success';
-    toast(ok?'success':'error',ok?'✅':'❌',data.message);
-    if(ok) setTimeout(()=>location.reload(),2000);
-    else setBtns(false);
+    if(data.result==='success'){ showDone(type); }
+    else{ setBusy(false); setHint('error',data.message); }
   }catch(e){
-    toast('error','❌','ลงเวลาไม่สำเร็จ กรุณาลองใหม่');
-    setBtns(false);
+    setBusy(false);
+    setHint('error','ลงเวลาไม่สำเร็จ ตรวจสอบสัญญาณอินเทอร์เน็ตแล้วลองอีกครั้ง');
   }
 }
-function setBtns(d){document.getElementById('btn-in').disabled=d;document.getElementById('btn-out').disabled=d;}
-
-function toast(type,icon,text){
-  const t=document.getElementById('toast');
-  if(!type){t.className='';return;}
-  t.className='show '+type;
-  document.getElementById('t-icon').textContent=icon;
-  document.getElementById('t-text').textContent=text;
-  t.scrollIntoView({behavior:'smooth',block:'nearest'});
+function showDone(type){
+  const d=$('done');
+  d.className='done show'+(type==='OUT'?' out':'');
+  $('done-title').textContent=type==='IN'?'เข้างานแล้ว':'ออกงานแล้ว';
+  $('done-who').textContent=emp.name;
+  $('done-when').textContent=new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',hour12:false})+' น.';
+  if(navigator.vibrate) navigator.vibrate(120);
+  setTimeout(()=>location.reload(),6000);
 }
 
 function dist(a,b,c,d){
