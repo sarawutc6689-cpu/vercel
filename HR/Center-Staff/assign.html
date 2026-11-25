@@ -258,7 +258,7 @@
         <h1>เลือกพนักงานจากส่วนกลาง</h1>
       </div>
       <div style="display:flex; align-items:center; gap:14px;">
-        <span class="hdr-links no-print"><a href="pool-index.html">หน้ารวม</a> <a href="assign.html" class="cur">เลือกพนักงาน</a> <a href="central-pool.html" data-hr>โอนเข้าส่วนกลาง</a> <a href="pool-dashboard.html">แดชบอร์ด</a> <a href="pool-report.html">รายงาน</a> <a href="pool-guide.html">คู่มือ</a></span><span class="who" id="who-label"></span>
+        <span class="hdr-links no-print"><a href="pool-index.html">หน้ารวม</a> <a href="assign.html" class="cur">เลือกพนักงาน</a> <a href="central-pool.html" data-hr>โอนเข้าส่วนกลาง</a> <a href="assign-clerks.html" data-hr>บัญชีธุรการ</a> <a href="pool-dashboard.html">แดชบอร์ด</a> <a href="pool-report.html">รายงาน</a> <a href="pool-guide.html">คู่มือ</a></span><span class="who" id="who-label"></span>
         <button class="btn-ghost" id="logout-btn">ออกจากระบบ</button>
       </div>
     </header>
@@ -680,7 +680,7 @@
     });
     const hd = el('h-dept').value;
     const data = [...HIST.values()].filter(r => !hd || r.dept_code === hd).slice(0, 200);
-    body.innerHTML = data.map(r => {
+    body.innerHTML = data.map((r, n) => {
       const off = r.status === 'cancelled' || r.status === 'rejected';
       const [cls, txt] = ST[r.status] || ['tag', r.status];
       const label = `โอนย้ายเข้า ${deptLabel(r.dept_code)} ${fmtRange(r.start_date, r.end_date)}: ` + r.items.map(i => i.full_name || i.employee_code).join(', ');
@@ -696,7 +696,7 @@
       if (r.status === 'pending' || r.status === 'active') acts.push(`<button class="btn-sm no" data-cancel="${r.request_id}">ยกเลิก</button>`);
       const info = r.status === 'rejected' ? `<div class="hint">เหตุผล: ${escapeHtml(r.reject_reason || '')} (${escapeHtml(r.decided_by_name || '')})</div>`
                  : r.status === 'active' && r.decided_by_name ? `<div class="hint">อนุมัติโดย ${escapeHtml(r.decided_by_name)}</div>` : '';
-      return `<tr><td class="${off ? 'cancelled' : ''}">${r.request_id}</td>
+      return `<tr><td><span style="${off ? 'color:#98a3b0;text-decoration:line-through' : ''}">${n + 1}</span><div class="hint" title="เลขที่คำขอ ใช้อ้างอิงกับข้อความแจ้งเตือน">#${r.request_id}</div></td>
         <td class="${off ? 'cancelled' : ''}">${escapeHtml(deptLabel(r.dept_code))}</td>
         <td class="nowrap ${off ? 'cancelled' : ''}">${escapeHtml(fmtRange(r.start_date, r.end_date))}</td>
         <td>${r.items.map(i => personLine(r, i)).join('')}${r.note ? `<div class="hint">${escapeHtml(r.note)}</div>` : ''}</td>
