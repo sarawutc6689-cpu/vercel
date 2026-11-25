@@ -9,24 +9,22 @@
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bench:#E8EAE6; --panel:#F8F9F7; --ink:#1B2328; --muted:#5C676E; --line:#C9CEC9;
-  --accent:#1F4E79; --accent-d:#173B5C; --warn:#9B2C2C; --ok:#2F6B4F;
+  --bench:#EAF3FC; --panel:#FFFFFF; --ink:#0F2A43; --muted:#58718A; --line:#C3D7EB;
+  --accent:#1B6FD1; --accent-d:#1557A8; --brand:#0F4C99; --warn:#9B2C2C; --ok:#2F6B4F;
   --font:'Sarabun',system-ui,-apple-system,"Segoe UI",sans-serif;
 }
 *{box-sizing:border-box}
-body{margin:0;font-family:var(--font);font-size:14px;line-height:1.5;color:var(--ink);background:var(--bench)}
+body{margin:0;min-height:100vh;display:flex;flex-direction:column;font-family:var(--font);font-size:14px;line-height:1.5;color:var(--ink);background:var(--bench)}
 button,input,select{font-family:inherit;font-size:inherit}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
 /* ---------- top bar ---------- */
-.topbar{background:var(--ink);color:#fff;display:flex;align-items:center;gap:16px;padding:10px 24px}
+.topbar{background:var(--brand);color:#fff;border-bottom:3px solid #6FB1F2;display:flex;align-items:center;gap:16px;padding:10px 24px}
 .topbar h1{margin:0;font-size:17px;font-weight:600;flex:1}
-.topbar small{color:#AEB8BE;font-weight:400;margin-left:8px}
-.icon-btn{background:transparent;color:#fff;border:1px solid #4A565D;border-radius:6px;padding:6px 12px;cursor:pointer}
-.icon-btn:hover{background:#2B363C}
+.topbar small{color:#B7D6F7;font-weight:400;margin-left:8px}
 
 /* ---------- layout ---------- */
-.shell{max-width:1400px;margin:0 auto;padding:20px 24px;display:grid;grid-template-columns:340px 1fr;gap:20px;align-items:start}
+.shell{flex:1;width:100%;max-width:none;margin:0;padding:20px 24px;display:grid;grid-template-columns:340px 1fr;gap:20px;align-items:start}
 @media(max-width:1060px){.shell{grid-template-columns:1fr}}
 .side{display:flex;flex-direction:column;gap:16px;position:sticky;top:16px}
 @media(max-width:1060px){.side{position:static}}
@@ -48,7 +46,7 @@ label{display:block;font-weight:600;font-size:13px;margin-bottom:4px}
 .results:empty{display:none}
 .results li button{display:block;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--bench);padding:8px 10px;cursor:pointer}
 .results li:last-child button{border-bottom:0}
-.results li button:hover,.results li button:focus-visible{background:#EAF0F6}
+.results li button:hover,.results li button:focus-visible{background:#E3EEFB}
 .results b{display:block;font-weight:600}
 .results span{color:var(--muted);font-size:12.5px}
 
@@ -58,8 +56,8 @@ label{display:block;font-weight:600;font-size:13px;margin-bottom:4px}
 .status.busy{border-color:var(--accent)}
 
 /* ---------- paper ---------- */
-.bench{overflow-x:auto;padding:4px 0 24px}
-.paper{width:277mm;min-width:980px;margin:0 auto;background:#fff;color:#000;padding:11mm 13mm;box-shadow:0 1px 2px rgba(0,0,0,.15),0 8px 24px rgba(0,0,0,.08)}
+.bench{overflow-x:auto;padding:0 0 8px;min-width:0}
+.paper{width:100%;min-width:980px;margin:0;background:#fff;color:#000;padding:11mm 13mm;box-shadow:0 1px 2px rgba(0,0,0,.15),0 8px 24px rgba(0,0,0,.08)}
 .f-title{text-align:center;font-size:19px;font-weight:700;margin:0 0 10px}
 .f-bar{background:#000;color:#fff;font-weight:700;font-size:13.5px;padding:4px 10px}
 .f-meta{background:#D9D9D9;padding:6px 10px;display:grid;grid-template-columns:1.2fr 1.2fr 1fr 1.3fr;gap:10px;font-size:13px;font-weight:600}
@@ -69,7 +67,7 @@ label{display:block;font-weight:600;font-size:13px;margin-bottom:4px}
 .spec{display:flex;align-items:baseline;gap:8px;font-size:12.5px}
 .spec span{font-weight:600;white-space:nowrap}
 .spec input{flex:1;min-width:0;border:0;border-bottom:1px solid #333;background:transparent;font-size:13px;padding:1px 4px;color:#000}
-.paper input:focus{outline:none;background:#EAF0F6}
+.paper input:focus{outline:none;background:#E3EEFB}
 
 table.f-table{width:100%;border-collapse:collapse;border:1px solid #000;font-size:12.5px}
 .f-table th,.f-table td{border:1px solid #000;padding:4px 6px;vertical-align:middle}
@@ -80,7 +78,7 @@ table.f-table{width:100%;border-collapse:collapse;border:1px solid #000;font-siz
 .th-rem{width:25%}
 .topic{padding-left:8px!important;font-weight:500}
 .mc{text-align:center;cursor:pointer;user-select:none;height:28px}
-.mc:hover{background:#EAF0F6}
+.mc:hover{background:#E3EEFB}
 .sym{width:20px;height:20px;border-radius:50%;margin:0 auto;position:relative;border:1.5px solid transparent}
 .mc:hover .sym[data-s="0"]{border:1px dashed #999}
 .sym[data-s="1"]{border-color:#000}
@@ -101,6 +99,9 @@ table.f-table{width:100%;border-collapse:collapse;border:1px solid #000;font-siz
 .lg.fixed{background:#000}
 .code{text-align:right;font-weight:700;font-size:12px}
 
+.site-foot{background:var(--brand);color:#DCEBFA;text-align:center;font-size:13px;padding:10px 16px}
+.site-foot span{margin:0 8px;opacity:.6}
+
 /* ---------- settings dialog ---------- */
 dialog{border:1px solid var(--line);border-radius:10px;padding:0;width:min(480px,92vw);color:var(--ink)}
 dialog::backdrop{background:rgba(0,0,0,.45)}
@@ -112,7 +113,7 @@ dialog h2{margin:0;font-size:17px}
 @page{size:A4 landscape;margin:8mm}
 @media print{
   body{background:#fff}
-  .topbar,.side,dialog{display:none!important}
+  .topbar,.side,dialog,.site-foot{display:none!important}
   .shell{display:block;padding:0;max-width:none}
   .bench{padding:0;overflow:visible}
   .paper{width:100%;min-width:0;padding:0;box-shadow:none}
@@ -125,7 +126,6 @@ dialog h2{margin:0;font-size:17px}
 
 <header class="topbar">
   <h1>แบบฟอร์มตรวจสอบบำรุงรักษาคอมพิวเตอร์<small>FOM-008-IT</small></h1>
-  <button type="button" class="icon-btn" id="openSettings">ตั้งค่าการเชื่อมต่อ</button>
 </header>
 
 <main class="shell">
@@ -206,6 +206,8 @@ dialog h2{margin:0;font-size:17px}
     </div>
   </section>
 </main>
+
+<footer class="site-foot">เอกสาร PM<span>|</span>ใช้สำหรับภายในบริษัทเท่านั้น<span>|</span>พัฒนาโดย Sarawut.C</footer>
 
 <dialog id="dlg">
   <form method="dialog" id="cfgForm">
@@ -310,7 +312,7 @@ function setStatus(msg, kind) {
 
 /* ---------- Supabase (REST) ---------- */
 async function queryAssets(term, limit) {
-  if (!cfg.url || !cfg.key) throw new Error('ยังไม่ได้ตั้งค่า URL หรือ key กด "ตั้งค่าการเชื่อมต่อ" ที่มุมขวาบน');
+  if (!cfg.url || !cfg.key) throw new Error('ยังไม่ได้ตั้งค่าการเชื่อมต่อฐานข้อมูล กรุณาติดต่อผู้ดูแลระบบ');
   const url = `${cfg.url.replace(/\/+$/, '')}/rest/v1/${encodeURIComponent(cfg.table)}` +
     `?select=*&${encodeURIComponent(cfg.col)}=ilike.${encodeURIComponent('*' + term + '*')}` +
     `&order=${encodeURIComponent(cfg.col)}.asc&limit=${limit}`;
@@ -391,10 +393,14 @@ $('goBtn').addEventListener('click', () => search(true));
 
 /* ---------- settings dialog ---------- */
 const dlg = $('dlg');
-$('openSettings').addEventListener('click', () => {
-  $('cfgUrl').value = cfg.url; $('cfgKey').value = cfg.key;
-  $('cfgTable').value = cfg.table; $('cfgCol').value = cfg.col;
-  dlg.showModal();
+/* ปุ่มตั้งค่าถูกซ่อน: ผู้ดูแลเปิดได้ด้วย Ctrl+Shift+K */
+document.addEventListener('keydown', e => {
+  if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'k') {
+    e.preventDefault();
+    $('cfgUrl').value = cfg.url; $('cfgKey').value = cfg.key;
+    $('cfgTable').value = cfg.table; $('cfgCol').value = cfg.col;
+    dlg.showModal();
+  }
 });
 $('cfgCancel').addEventListener('click', () => dlg.close());
 $('cfgForm').addEventListener('submit', () => {
@@ -408,7 +414,7 @@ $('printBtn').addEventListener('click', () => window.print());
 $('clearBtn').addEventListener('click', clearForm);
 
 buildTable();
-if (!cfg.key) setStatus('ยังไม่ได้ใส่ anon key กด "ตั้งค่าการเชื่อมต่อ" ที่มุมขวาบนก่อนค้นหา', 'err');
+if (!cfg.key) setStatus('ยังไม่ได้ตั้งค่าการเชื่อมต่อฐานข้อมูล กรุณาติดต่อผู้ดูแลระบบ', 'err');
 </script>
 </body>
 </html>
