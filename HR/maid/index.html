@@ -44,7 +44,7 @@
   <main>
     <div class="card lock">
       <div style="font-size:36px">🔒</div>
-      <p>กรุณากรอก <b>รหัสพนักงาน 6 หลัก</b> ที่แถบด้านบน แล้วกด “เข้าสู่ระบบ”<br>เพื่อเริ่มเบิกของใช้</p>
+      <p>กรุณากรอก <b>รหัสพนักงาน 6 หลัก</b> ที่แถบด้านบน แล้วกด “เข้าสู่ระบบ”<br>เพื่อเริ่มเบิกของใช้<br><a href="guide.html#hk">📖 ดูวิธีใช้งานในคู่มือ</a></p>
     </div>
   </main>
 </div>
@@ -52,6 +52,7 @@
 <div id="app" hidden>
   <header>
     <h1>🧹 เบิกของใช้ — <span id="who"></span></h1>
+    <a href="guide.html" class="hlink">📖 คู่มือ</a>
     <button id="logoutBtn" class="sm">ออกจากระบบ</button>
   </header>
   <main>
@@ -88,7 +89,7 @@
 </div>
 
 <footer>
-  <span>ระบบเบิกของใช้แม่บ้าน</span><span>ใช้ภายในบริษัทเท่านั้น</span><span>พัฒนาโดย Sarawut.C</span>
+  <span>ระบบเบิกของใช้แม่บ้าน</span><span>ใช้ภายในบริษัทเท่านั้น</span><span>พัฒนาโดย Sarawut.C</span><span><a href="guide.html">📖 คู่มือการใช้งาน</a></span>
 </footer>
 
 <script src="config.js"></script>
@@ -252,6 +253,7 @@ $('#submitBtn').addEventListener('click', async () => {
   if (error) { $('#submitBtn').disabled = false; return toast(error.message, true); }
   const { error: e2 } = await sb.from('request_items').insert(lines.map(l => ({ ...l, request_id: req.id })));
   if (e2) { $('#submitBtn').disabled = false; return toast(e2.message, true); }
+  notifyTelegram('new_request', req.id);   // ไม่รอผล ไม่ให้ขัดการทำงานหลัก
   infoBox({ icon: '✅', title: 'ส่งคำขอเรียบร้อย', text: 'คำขอของคุณอยู่ระหว่างรอผู้ดูแลอนุมัติ' });
   $('#note').value = ''; basket = {}; curCat = '';
   await loadItems(); loadHistory();
