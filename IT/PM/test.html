@@ -190,10 +190,10 @@ dialog h2{margin:0;font-size:17px}
     </section>
 
     <section class="box" id="progBox">
-      <h2>ความคืบหน้า<span id="progMonth"></span></h2>
+      <h2><span>ความคืบหน้า</span><span id="progMonth"></span></h2>
       <div class="prog-line"><span id="progText">ตรวจแล้ว 0 / 9 หัวข้อ</span><b id="progPct">0%</b></div>
       <div class="bar" aria-hidden="true"><i id="progBar"></i></div>
-      <button type="button" class="btn btn-ghost btn-wide" id="allOkBtn">ทำเครื่องหมาย ⊗ ทุกหัวข้อ (ปกติทั้งหมด)</button>
+      <button type="button" class="btn btn-ghost btn-wide" id="allOkBtn">ทำเครื่องหมาย ⊗ ทุกหัวข้อ</button>
     </section>
 
     <section class="box" id="recentBox" hidden>
@@ -353,21 +353,30 @@ function clearForm() {
 
 /* ---------- progress ---------- */
 const THAI_M = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
-const curM = new Date().getMonth();
+const nowM = new Date().getMonth();
+/* เดือนที่ใช้แสดงความคืบหน้า: ตามที่เลือกในแผนบำรุงรักษา ถ้าไม่เลือกใช้เดือนปัจจุบัน */
+function progMonth() {
+  const v = $('planMonth').value;
+  return v !== '' ? parseInt(v, 10) : nowM;
+}
 function updateProgress() {
+  const m = progMonth();
+  const name = THAI_M[m];
   let done = 0;
   for (let r = 0; r < TOPICS.length; r++) {
-    const st = $(`c_${r}_${curM}`).dataset.s;
+    const st = $(`c_${r}_${m}`).dataset.s;
     if (st === '2' || st === '3') done++;
   }
   const pct = Math.round(done * 100 / TOPICS.length);
-  $('progMonth').textContent = ' เดือน' + THAI_M[curM];
+  $('progMonth').textContent = ' เดือน' + name + ($('planMonth').value === '' ? ' (ปัจจุบัน)' : '');
   $('progText').textContent = `ตรวจแล้ว ${done} / ${TOPICS.length} หัวข้อ`;
   $('progPct').textContent = pct + '%';
   $('progBar').style.width = pct + '%';
+  $('allOkBtn').textContent = `ทำเครื่องหมาย ⊗ ทุกหัวข้อของเดือน${name}`;
 }
 $('allOkBtn').addEventListener('click', () => {
-  for (let r = 0; r < TOPICS.length; r++) $(`c_${r}_${curM}`).dataset.s = 2;
+  const m = progMonth();
+  for (let r = 0; r < TOPICS.length; r++) $(`c_${r}_${m}`).dataset.s = 2;
   updateProgress();
 });
 
