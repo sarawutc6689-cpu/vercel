@@ -1,0 +1,1023 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>บัญชีธุรการระบบส่วนกลาง — HR Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1B2B3E;
+    --ink-soft:#6E85A0;
+    --bg-a:#EAF3FB;
+    --bg-b:#F7FBFE;
+    --panel:#FFFFFF;
+    --line:#DCE9F5;
+    --accent:#2F7FB8;
+    --accent-dark:#24628F;
+    --accent-ink:#FFFFFF;
+    --accent-soft:#E7F2FB;
+    --accent-soft-2:#F1F8FD;
+    --danger:#C1596A;
+    --danger-soft:#FBEBEE;
+    --ok:#1F8A4C;
+    --ok-soft:#E5F5EC;
+    --warn:#B4791F;
+    --warn-soft:#FDF3E0;
+    --radius:16px;
+    --shadow:0 1px 2px rgba(27,60,90,.04), 0 10px 30px rgba(27,60,90,.06);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    min-height:100vh;
+    background:linear-gradient(180deg, var(--bg-a) 0%, var(--bg-b) 320px, var(--bg-b) 100%);
+    color:var(--ink);
+    font-family:'Inter',system-ui,sans-serif;
+    font-size:15px;
+    line-height:1.5;
+  }
+  h1,h2,h3{
+    font-family:'Space Grotesk',system-ui,sans-serif;
+    margin:0;
+    font-weight:600;
+    letter-spacing:-0.01em;
+  }
+
+  /* ---------- login ---------- */
+  #login-screen{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+  }
+  .login-card{
+    width:100%;
+    max-width:380px;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:38px 34px;
+    box-shadow:var(--shadow);
+    text-align:center;
+  }
+  .login-mark{
+    width:52px; height:52px;
+    margin:0 auto 18px;
+    border-radius:14px;
+    background:linear-gradient(135deg, var(--accent), #6FB4E0);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .login-mark svg{width:26px; height:26px;}
+  .login-card h1{font-size:20px; margin-bottom:6px;}
+  .login-card p.sub{color:var(--ink-soft); font-size:13.5px; margin:0 0 24px;}
+  .login-card .field{text-align:left; margin-top:16px;}
+
+  /* ---------- header ---------- */
+  #app{display:none;}
+  header{
+    background:rgba(255,255,255,.85);
+    backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line);
+    padding:16px 32px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    position:sticky;
+    top:0;
+    z-index:10;
+  }
+  .brand{display:flex; align-items:center; gap:12px;}
+  .brand-mark{
+    width:34px; height:34px;
+    border-radius:10px;
+    background:linear-gradient(135deg, var(--accent), #6FB4E0);
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+  }
+  .brand-mark svg{width:18px; height:18px;}
+  header h1{font-size:17px;}
+  header .who{font-size:13px; color:var(--ink-soft);}
+  .btn-ghost{
+    background:#fff;
+    border:1px solid var(--line);
+    color:var(--ink-soft);
+    padding:8px 16px;
+    border-radius:10px;
+    font-size:13.5px;
+    font-family:inherit;
+    cursor:pointer;
+    transition:.15s;
+  }
+  .btn-ghost:hover{border-color:var(--accent); color:var(--accent-dark);}
+
+  main{
+    max-width:1280px;
+    margin:0 auto;
+    padding:32px;
+  }
+  @media (max-width:860px){
+    main{padding:20px;}
+    header{padding:14px 20px;}
+  }
+
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:26px;
+    box-shadow:var(--shadow);
+  }
+
+  /* ---------- form controls ---------- */
+  .field{margin-top:16px;}
+  .field:first-child{margin-top:0;}
+  .field label, label.lbl{
+    display:block;
+    font-size:13px;
+    color:var(--ink-soft);
+    margin-bottom:6px;
+    font-weight:500;
+  }
+  input[type=text], input[type=email], input[type=password], input[type=search], select{
+    width:100%;
+    padding:10px 13px;
+    border:1.5px solid var(--line);
+    border-radius:10px;
+    font-size:14px;
+    font-family:inherit;
+    color:var(--ink);
+    background:#fff;
+    transition:.15s;
+  }
+  input:focus, select:focus{
+    outline:none;
+    border-color:var(--accent);
+    box-shadow:0 0 0 4px var(--accent-soft);
+  }
+  input:disabled{background:#F3F6FA; color:var(--ink-soft);}
+  input.invalid{border-color:var(--danger); background:var(--danger-soft);}
+  input[type=checkbox]{
+    width:16px; height:16px;
+    accent-color:var(--accent);
+    cursor:pointer;
+    margin:0;
+    flex-shrink:0;
+  }
+  .pw-row{display:flex; gap:8px;}
+  .pw-row input{flex:1; font-family:ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing:.02em;}
+  .hint{font-size:12.5px; color:var(--ink-soft); margin-top:6px;}
+
+  .btn{
+    padding:11px 20px;
+    border-radius:10px;
+    border:none;
+    font-size:14px;
+    font-weight:600;
+    font-family:inherit;
+    cursor:pointer;
+    transition:.15s;
+  }
+  .btn-primary{background:var(--accent); color:var(--accent-ink);}
+  .btn-primary:hover{background:var(--accent-dark);}
+  .btn-cancel{background:var(--accent-soft-2); color:var(--ink-soft);}
+  .btn-cancel:hover{color:var(--ink); background:var(--accent-soft);}
+  .btn:disabled{opacity:.6; cursor:default;}
+  #login-btn{width:100%; margin-top:22px;}
+
+  /* ---------- list ---------- */
+  .toolbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:18px;
+    flex-wrap:wrap;
+  }
+  .toolbar input[type=search]{max-width:300px;}
+  .tags{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+  .count-tag{
+    font-size:12.5px;
+    color:var(--accent-dark);
+    background:var(--accent-soft);
+    padding:5px 12px;
+    border-radius:100px;
+    white-space:nowrap;
+    font-weight:600;
+  }
+  .count-tag.warn{color:var(--warn); background:var(--warn-soft);}
+
+  table{width:100%; border-collapse:collapse; font-size:13.5px;}
+  th{
+    text-align:left;
+    font-weight:600;
+    color:var(--ink-soft);
+    font-size:12px;
+    padding:10px 12px;
+    border-bottom:1.5px solid var(--line);
+    white-space:nowrap;
+  }
+  td{
+    padding:12px;
+    border-bottom:1px solid var(--bg-a);
+    vertical-align:top;
+  }
+  tr:hover td{background:var(--accent-soft-2);}
+  .nowrap{white-space:nowrap;}
+  .name{font-weight:600;}
+  .sub{color:var(--ink-soft); font-size:12.5px;}
+  .dept-chips{display:flex; flex-wrap:wrap; gap:5px;}
+  .dchip{
+    background:var(--accent-soft);
+    color:var(--accent-dark);
+    border-radius:7px;
+    padding:2px 8px;
+    font-size:12px;
+    font-weight:500;
+    white-space:nowrap;
+  }
+  .dchip.more{background:var(--accent-soft-2); color:var(--ink-soft);}
+  .badge{
+    display:inline-block;
+    padding:3px 10px;
+    border-radius:100px;
+    font-size:12px;
+    font-weight:600;
+    white-space:nowrap;
+  }
+  .badge.active{background:var(--ok-soft); color:var(--ok);}
+  .badge.suspended{background:var(--warn-soft); color:var(--warn);}
+  .row-actions{white-space:nowrap;}
+  .link-btn{
+    background:none;
+    border:none;
+    color:var(--accent);
+    font-size:13px;
+    cursor:pointer;
+    padding:4px 8px;
+    border-radius:7px;
+    font-family:inherit;
+  }
+  .link-btn:hover{background:var(--accent-soft);}
+  .link-btn.danger{color:var(--danger);}
+  .link-btn.danger:hover{background:var(--danger-soft);}
+  .empty-state{
+    text-align:center;
+    color:var(--ink-soft);
+    padding:48px 12px;
+    font-size:14px;
+  }
+  #denied{display:none;}
+
+  /* ---------- modal ---------- */
+  .modal-overlay{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(20,40,60,.35);
+    backdrop-filter:blur(2px);
+    align-items:flex-start;
+    justify-content:center;
+    padding:6vh 20px;
+    z-index:100;
+    overflow-y:auto;
+  }
+  .modal-overlay.open{display:flex;}
+  .modal-card{
+    width:100%;
+    max-width:560px;
+    background:var(--panel);
+    border-radius:20px;
+    box-shadow:0 20px 60px rgba(20,40,60,.25);
+    padding:26px 28px 28px;
+    animation:modal-in .18s ease-out;
+  }
+  .modal-card.narrow{max-width:440px;}
+  @keyframes modal-in{
+    from{opacity:0; transform:translateY(8px) scale(.98);}
+    to{opacity:1; transform:translateY(0) scale(1);}
+  }
+  .modal-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:18px;
+  }
+  .modal-header h2{font-size:16px;}
+  .modal-close{
+    background:var(--accent-soft-2);
+    border:none;
+    width:30px; height:30px;
+    border-radius:9px;
+    color:var(--ink-soft);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    transition:.15s;
+    flex-shrink:0;
+  }
+  .modal-close:hover{background:var(--danger-soft); color:var(--danger);}
+  .form-actions{display:flex; gap:10px; margin-top:24px;}
+  .form-actions .btn{flex:1;}
+  .form-error{
+    display:none;
+    margin-top:18px;
+    padding:11px 14px;
+    border-radius:10px;
+    border:1px solid var(--danger);
+    background:var(--danger-soft);
+    color:var(--danger);
+    font-size:13.5px;
+    font-weight:500;
+  }
+  .form-error.show{display:block;}
+
+  /* ---------- department picker ---------- */
+  .picker{border:1.5px solid var(--line); border-radius:10px; overflow:hidden;}
+  .picker-top{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:10px;
+    border-bottom:1px solid var(--line);
+    background:var(--accent-soft-2);
+  }
+  .picker-top input{flex:1;}
+  .picker-top .pk-count{font-size:12.5px; color:var(--accent-dark); font-weight:600; white-space:nowrap;}
+  .picker-list{max-height:260px; overflow:auto;}
+  .pk-head{
+    position:sticky;
+    top:0;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:5px 12px;
+    background:var(--bg-b);
+    border-bottom:1px solid var(--bg-a);
+    font-size:12px;
+    font-weight:600;
+    color:var(--ink-soft);
+  }
+  .pk-item{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:7px 12px;
+    font-size:13.5px;
+    cursor:pointer;
+    border-bottom:1px solid var(--bg-a);
+  }
+  .pk-item:hover{background:var(--accent-soft-2);}
+  .pk-item small{color:var(--ink-soft);}
+  .pk-item .who{margin-left:auto; font-size:11.5px; color:var(--warn); text-align:right;}
+
+  /* ---------- credentials ---------- */
+  .cred{
+    background:var(--accent-soft-2);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:12px 14px;
+    margin-top:12px;
+  }
+  .cred .k{font-size:12px; color:var(--ink-soft);}
+  .cred .v{
+    font-family:ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size:15px;
+    font-weight:600;
+    word-break:break-all;
+  }
+
+  /* ---------- banner ---------- */
+  #status-banner{
+    display:none;
+    max-width:1280px;
+    margin:0 auto;
+    padding:16px 32px 0;
+  }
+  .banner{
+    padding:12px 18px;
+    border-radius:12px;
+    font-size:13.5px;
+    box-shadow:var(--shadow);
+    font-weight:500;
+    background:#fff;
+  }
+  .banner.ok{color:var(--accent-dark); border:1px solid var(--accent-soft);}
+  .banner.err{color:var(--danger); border:1px solid var(--danger-soft);}
+
+  .app-footer{
+    text-align:center;
+    color:var(--ink-soft);
+    font-size:12.5px;
+    padding:8px 20px 32px;
+  }
+
+  /* ---------- top navigation ---------- */
+  header{flex-wrap:wrap; gap:10px 24px;}
+  .topnav{display:flex; gap:4px; flex-wrap:wrap; align-items:center;}
+  .topnav a{
+    padding:7px 13px; border-radius:9px; font-size:13.5px; font-weight:600;
+    color:var(--ink-soft); text-decoration:none; white-space:nowrap; transition:.15s;
+  }
+  .topnav a:hover{background:var(--accent-soft-2); color:var(--accent-dark);}
+  .topnav a.active{background:var(--accent-soft); color:var(--accent-dark);}
+  @media (max-width:1100px){ .topnav{order:3; width:100%;} }
+  main{max-width:none;}
+  .hdr-links{display:flex; gap:14px; font-size:13px;} .hdr-links a{color:var(--ink-soft); text-decoration:none;} .hdr-links a:hover{color:var(--accent-dark);} .hdr-links a.cur{color:var(--ink); font-weight:600;}
+  .login-foot{position:fixed; left:0; right:0; bottom:14px; text-align:center; color:var(--ink-soft); font-size:12.5px; padding:0 16px;}
+  @media print{ .app-footer{display:block !important; font-size:8pt;} }
+</style>
+</head>
+<body>
+
+  <!-- ============ LOGIN ============ -->
+  <div id="login-screen">
+    <div class="login-card">
+      <div class="login-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2 4 5v6c0 5 3.5 9.5 8 11 4.5-1.5 8-6 8-11V5l-8-3Z"/><path d="m9 12 2 2 4-4"/>
+        </svg>
+      </div>
+      <h1>จัดการบัญชีธุรการ (ส่วนกลาง)</h1>
+      <p class="sub">สำหรับฝ่ายบุคคลเท่านั้น</p>
+      <div class="field">
+        <label for="login-email">อีเมล</label>
+        <input id="login-email" type="email" autocomplete="username">
+      </div>
+      <div class="field">
+        <label for="login-password">รหัสผ่าน</label>
+        <input id="login-password" type="password" autocomplete="current-password">
+      </div>
+      <button id="login-btn" class="btn btn-primary">เข้าสู่ระบบ</button>
+      <p id="login-error" style="color:var(--danger); font-size:13px; margin-top:12px; display:none;"></p>
+    </div>
+    <div class="login-foot">แบบฟอร์มการโอนย้ายพนักงานเข้าส่วนกลาง | ใช้ภายในบริษัทเท่านั้น | พัฒนาโดย Sarawut.C</div>
+  </div>
+
+  <!-- ============ STATUS BANNER ============ -->
+  <div id="status-banner"><div class="banner" id="banner-inner"></div></div>
+
+  <!-- ============ APP ============ -->
+  <div id="app">
+    <header>
+      <div class="brand">
+        <div class="brand-mark">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2 4 5v6c0 5 3.5 9.5 8 11 4.5-1.5 8-6 8-11V5l-8-3Z"/><path d="m9 12 2 2 4-4"/>
+          </svg>
+        </div>
+        <h1>จัดการบัญชีธุรการ (ส่วนกลาง)</h1>
+      </div>
+      <div style="display:flex; align-items:center; gap:14px;">
+        <span class="hdr-links no-print"><a href="pool-index.html">หน้ารวม</a> <a href="assign.html">เลือกพนักงาน</a> <a href="central-pool.html" data-hr>โอนเข้าส่วนกลาง</a> <a href="assign-clerks.html" data-hr class="cur">บัญชีธุรการ</a> <a href="pool-dashboard.html">แดชบอร์ด</a> <a href="pool-report.html">รายงาน</a> <a href="pool-guide.html">คู่มือ</a></span><span class="who" id="who-label"></span>
+        <button class="btn-ghost" id="logout-btn">ออกจากระบบ</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="panel" id="denied">
+        <div class="empty-state" id="denied-msg"></div>
+      </section>
+
+      <section class="panel" id="content">
+        <div class="hint" style="padding:14px 18px 0; line-height:1.6;">บัญชีที่สร้างในหน้านี้ใช้ได้<b>เฉพาะระบบโอนพนักงานส่วนกลาง</b> (เลือกพนักงานจากส่วนกลางไปแผนกที่ได้รับมอบหมาย) ไม่มีสิทธิ์ในระบบตารางกะ — บัญชีธุรการของระบบตารางกะจัดการที่หน้าเดิม</div>
+        <div class="toolbar">
+          <input id="search-box" type="search" placeholder="ค้นหาชื่อ หรือ อีเมล...">
+          <div class="tags">
+            <span class="count-tag" id="count-tag"></span>
+            <span class="count-tag warn" id="unassigned-tag" style="display:none" title="แผนกในระบบที่ยังไม่มีธุรการ (ที่เปิดใช้งาน) ดูแล"></span>
+            <button class="btn btn-primary" id="add-btn" style="display:flex; align-items:center; gap:6px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              เพิ่มบัญชีธุรการ
+            </button>
+          </div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>ชื่อ-นามสกุล</th>
+                <th>อีเมล</th>
+                <th>แผนกที่รับผิดชอบ</th>
+                <th>สถานะ</th>
+                <th>เข้าสู่ระบบล่าสุด</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="clerk-tbody"></tbody>
+          </table>
+        </div>
+        <div class="empty-state" id="empty-state" style="display:none;"></div>
+      </section>
+    </main>
+    <footer class="app-footer">แบบฟอร์มการโอนย้ายพนักงานเข้าส่วนกลาง | ใช้ภายในบริษัทเท่านั้น | พัฒนาโดย Sarawut.C</footer>
+
+  </div>
+
+  <!-- ============ CREATE / EDIT / RESET MODAL ============ -->
+  <div id="form-modal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 id="form-title"></h2>
+        <button type="button" id="modal-close-btn" class="modal-close" aria-label="ปิด">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <form id="clerk-form" novalidate>
+        <div class="field" id="row-name">
+          <label for="f-name">ชื่อ-นามสกุล</label>
+          <input id="f-name" type="text" placeholder="เช่น นางสาวสมหญิง ใจดี">
+        </div>
+        <div class="field" id="row-email">
+          <label for="f-email">อีเมล (ใช้เข้าสู่ระบบ)</label>
+          <input id="f-email" type="email" autocomplete="off" placeholder="เช่น clerk01@company.com">
+        </div>
+        <div class="field" id="row-password">
+          <label for="f-password">รหัสผ่าน</label>
+          <div class="pw-row">
+            <input id="f-password" type="text" autocomplete="off">
+            <button type="button" class="btn-ghost" id="gen-btn">สุ่มรหัสผ่าน</button>
+          </div>
+          <div class="hint">อย่างน้อย 8 ตัวอักษร ระบบจะแสดงรหัสนี้ให้คัดลอกอีกครั้งหลังบันทึก</div>
+        </div>
+        <div class="field" id="row-depts">
+          <label>แผนกที่รับผิดชอบ</label>
+          <div class="picker">
+            <div class="picker-top">
+              <input id="dept-search" type="search" placeholder="ค้นหาแผนก / ฝ่าย / รหัส...">
+              <span class="pk-count" id="pk-count"></span>
+            </div>
+            <div class="picker-list" id="picker-list"></div>
+          </div>
+        </div>
+        <div id="form-error" class="form-error" role="alert"></div>
+        <div class="form-actions">
+          <button type="button" id="cancel-btn" class="btn btn-cancel">ยกเลิก</button>
+          <button type="submit" id="save-btn" class="btn btn-primary">บันทึก</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ============ CREDENTIALS MODAL ============ -->
+  <div id="cred-modal" class="modal-overlay">
+    <div class="modal-card narrow">
+      <div class="modal-header">
+        <h2 id="cred-title">ข้อมูลเข้าสู่ระบบ</h2>
+        <button type="button" id="cred-close-x" class="modal-close" aria-label="ปิด">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="sub">ส่งข้อมูลนี้ให้ธุรการ (ใช้ได้เฉพาะระบบโอนพนักงานส่วนกลาง) รหัสผ่านจะไม่แสดงอีกหลังปิดหน้าต่างนี้</div>
+      <div class="cred"><div class="k">อีเมล</div><div class="v" id="cred-email"></div></div>
+      <div class="cred"><div class="k">รหัสผ่าน</div><div class="v" id="cred-password"></div></div>
+      <div class="form-actions">
+        <button type="button" id="cred-copy" class="btn btn-cancel">คัดลอก</button>
+        <button type="button" id="cred-done" class="btn btn-primary">ปิด</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ CONFIRM MODAL ============ -->
+  <div id="warn-modal" class="modal-overlay"><div class="modal-card narrow">
+      <div class="modal-header"><h2 id="warn-title">ยืนยัน</h2></div>
+      <div id="warn-body"></div>
+      <div class="form-actions"><button class="btn btn-cancel" id="warn-no" type="button">ยกเลิก</button>
+        <button class="btn btn-primary" id="warn-yes" type="button">ยืนยัน</button></div></div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  // ============================================================
+  // โปรเจค hr-master (โปรเจคเดียวกับหน้าฐานข้อมูลพนักงานกลาง)
+  // anon key ฝังในหน้าเว็บได้ เพราะ RLS เป็นตัวคุมสิทธิ์จริง
+  // ห้ามใส่ service_role key ที่นี่เด็ดขาด (ใช้อยู่ใน Edge Function manage-assign-clerks เท่านั้น)
+  // ============================================================
+  const SUPABASE_URL = "https://ppzdyvomrfiitahxwrwz.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBwemR5dm9tcmZpaXRhaHh3cnd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwMjQ0MjIsImV4cCI6MjEwNDYwMDQyMn0.iArUz6swMfwhFT_1qEvCwK1B3aiCxdWt46_FBjT6_Y0";
+
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // ---------- เมนูนำทาง: ไฮไลต์หน้าปัจจุบัน และซ่อนเมนูเฉพาะ HR ถ้าไม่ใช่ HR ----------
+  (function(){
+    const here = decodeURIComponent(location.pathname.split('/').pop() || 'index.html');
+    document.querySelectorAll('.topnav a').forEach(a => { if (a.getAttribute('href') === here) a.classList.add('active'); });
+    let doneFor = null;
+    sb.auth.onAuthStateChange((_e, session) => {
+      if (!session || doneFor === session.user.id) return;
+      doneFor = session.user.id;
+      setTimeout(async () => {
+        const { data, error } = await sb.rpc('is_hr_admin');
+        if (error) return;                       // ยังไม่ได้รัน calendar.sql → ไม่ซ่อนเมนู
+        document.querySelectorAll('.topnav [data-hr], .hdr-links [data-hr]').forEach(a => { a.style.display = data === true ? '' : 'none'; });
+      }, 0);
+    });
+  })();
+  const el = (id) => document.getElementById(id);
+  const UNGROUPED = 'ไม่ระบุฝ่าย';
+
+  let clerks = [];          // {id, email, full_name, suspended, last_sign_in_at, department_codes[]}
+  let departments = [];     // {code, name, section_name}
+  let modalMode = null;     // 'create' | 'edit' | 'reset'
+  let editingId = null;
+  let pickerSelected = new Set();
+
+  // ---------------- HELPERS ----------------
+  function escapeHtml(s){
+    return String(s ?? '').replace(/[&<>"']/g, c => (
+      { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]
+    ));
+  }
+  function showBanner(message, isError=false){
+    const wrap = el('status-banner');
+    const inner = el('banner-inner');
+    inner.textContent = message;
+    inner.className = 'banner ' + (isError ? 'err' : 'ok');
+    wrap.style.display = 'block';
+    clearTimeout(showBanner._t);
+    showBanner._t = setTimeout(() => wrap.style.display = 'none', isError ? 9000 : 3500);
+  }
+  function showFormError(message, fieldIds = []){
+    el('form-error').textContent = message;
+    el('form-error').classList.add('show');
+    fieldIds.forEach(id => el(id).classList.add('invalid'));
+    if (fieldIds.length) el(fieldIds[0]).focus();
+  }
+  function clearFormError(){
+    el('form-error').classList.remove('show');
+    el('form-error').textContent = '';
+    document.querySelectorAll('#clerk-form .invalid').forEach(n => n.classList.remove('invalid'));
+  }
+  const deptByCode = (code) => departments.find(d => d.code === code);
+  const clerkLabel = (c) => c.full_name || c.email;
+
+  function fmtDateTime(iso){
+    if (!iso) return 'ยังไม่เคยเข้าสู่ระบบ';
+    return new Date(iso).toLocaleString('th-TH', { dateStyle:'medium', timeStyle:'short', timeZone:'Asia/Bangkok' });
+  }
+
+  // รหัสผ่านสุ่ม ตัดตัวที่อ่านสับสน (0/O, 1/l/I)
+  function askConfirm(title, text){
+    return new Promise(resolve => {
+      el('warn-title').textContent = title; el('warn-body').innerHTML = '<p style="margin:0">' + escapeHtml(text) + '</p>';
+      el('warn-modal').classList.add('open');
+      const done = v => { el('warn-modal').classList.remove('open'); el('warn-yes').onclick = el('warn-no').onclick = null; resolve(v); };
+      el('warn-yes').onclick = () => done(true); el('warn-no').onclick = () => done(false);
+    });
+  }
+
+  function generatePassword(len = 10){
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
+    const buf = new Uint32Array(len);
+    crypto.getRandomValues(buf);
+    return Array.from(buf, n => chars[n % chars.length]).join('');
+  }
+
+  // เรียก Edge Function manage-assign-clerks พร้อม token ของผู้ใช้ที่ล็อกอิน
+  async function api(action, payload = {}){
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) throw Object.assign(new Error('กรุณาเข้าสู่ระบบใหม่'), { status: 401 });
+    let res;
+    try {
+      res = await fetch(`${SUPABASE_URL}/functions/v1/manage-assign-clerks`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': 'Bearer ' + session.access_token
+        },
+        body: JSON.stringify({ action, ...payload })
+      });
+    } catch (e) {
+      throw Object.assign(new Error('เชื่อมต่อฟังก์ชันไม่สำเร็จ (ตรวจว่า deploy manage-assign-clerks แล้ว)'), { status: 0 });
+    }
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const msg = res.status === 404 ? 'ไม่พบฟังก์ชัน manage-assign-clerks (ยังไม่ได้ deploy)' : (body.error || ('HTTP ' + res.status));
+      throw Object.assign(new Error(msg), { status: res.status });
+    }
+    return body;
+  }
+
+  // ---------------- AUTH ----------------
+  async function doLogin(){
+    const email = el('login-email').value.trim();
+    const password = el('login-password').value;
+    el('login-error').style.display = 'none';
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) {
+      el('login-error').textContent = 'เข้าสู่ระบบไม่สำเร็จ: ' + error.message;
+      el('login-error').style.display = 'block';
+    }
+  }
+  el('login-btn').addEventListener('click', doLogin);
+  el('login-password').addEventListener('keydown', (e) => { if (e.key === 'Enter') doLogin(); });
+  el('logout-btn').addEventListener('click', async () => { await sb.auth.signOut(); });
+
+  // supabase ยิง SIGNED_IN ซ้ำได้เมื่อสลับแท็บกลับมา กัน loadAll() ซ้ำ
+  // แสดงชื่อ-นามสกุลแทนอีเมล (ชื่อในบัญชี -> my_display_name() -> อีเมล) เอาเมาส์ชี้เพื่อดูอีเมล
+  const whoCache = {};
+  function showWho(session){
+    const uid = session.user.id, email = session.user.email || '';
+    const meta = session.user.user_metadata && session.user.user_metadata.full_name;
+    el('who-label').title = email;
+    el('who-label').textContent = whoCache[uid] || meta || email;
+    if (meta || uid in whoCache) return;
+    whoCache[uid] = '';
+    setTimeout(async () => {
+      try {
+        const { data } = await sb.rpc('my_display_name');
+        if (data) { whoCache[uid] = data; el('who-label').textContent = data; }
+      } catch (e) { /* ยังไม่ได้รัน approval-names.sql: แสดงอีเมลต่อไป */ }
+    }, 0);
+  }
+
+  let initializedFor = null;
+  sb.auth.onAuthStateChange((_event, session) => {
+    if (session) {
+      el('login-screen').style.display = 'none';
+      el('app').style.display = 'block';
+      showWho(session);
+      if (initializedFor !== session.user.id) {
+        initializedFor = session.user.id;
+        loadAll();
+      }
+    } else {
+      initializedFor = null;
+      clerks = []; departments = [];
+      el('login-screen').style.display = 'flex';
+      el('app').style.display = 'none';
+    }
+  });
+
+  // ---------------- LOAD / RENDER ----------------
+  async function loadAll(){
+    try {
+      const r = await api('list');
+      clerks = r.clerks;
+      departments = r.departments;
+      el('denied').style.display = 'none';
+      el('content').style.display = 'block';
+      renderClerks();
+    } catch (e) {
+      if (e.status === 401) { await sb.auth.signOut(); return; }
+      el('content').style.display = 'none';
+      el('denied').style.display = 'block';
+      el('denied-msg').textContent = e.status === 403
+        ? 'บัญชีนี้ไม่มีสิทธิ์จัดการบัญชีธุรการ ต้องเป็นบัญชีฝ่ายบุคคลที่อยู่ในตาราง hr_admins'
+        : 'โหลดข้อมูลไม่สำเร็จ: ' + e.message;
+    }
+  }
+
+  function renderClerks(){
+    const q = el('search-box').value.trim().toLowerCase();
+    const rows = clerks.filter(c => !q ||
+      String(c.full_name).toLowerCase().includes(q) || String(c.email).toLowerCase().includes(q));
+
+    el('count-tag').textContent = `${clerks.length} บัญชี`;
+    const covered = new Set();
+    clerks.filter(c => !c.suspended).forEach(c => c.department_codes.forEach(code => covered.add(code)));
+    const unassigned = departments.filter(d => !covered.has(d.code)).length;
+    el('unassigned-tag').textContent = `ยังไม่มอบหมาย ${unassigned} แผนก`;
+
+    const tbody = el('clerk-tbody');
+    if (rows.length === 0) {
+      tbody.innerHTML = '';
+      el('empty-state').style.display = 'block';
+      el('empty-state').textContent = clerks.length === 0
+        ? 'ยังไม่มีบัญชีธุรการ กด "เพิ่มบัญชีธุรการ" เพื่อเริ่มต้น'
+        : 'ไม่พบบัญชีที่ค้นหา';
+      return;
+    }
+    el('empty-state').style.display = 'none';
+    tbody.innerHTML = rows.map(c => {
+      const names = c.department_codes.map(code => {
+        const d = deptByCode(code);
+        return d ? `${d.name} (${d.code})` : code;
+      });
+      const shown = names.slice(0, 3).map(n => `<span class="dchip">${escapeHtml(n)}</span>`).join('');
+      const more = names.length > 3
+        ? `<span class="dchip more" title="${escapeHtml(names.join('\n'))}">+${names.length - 3}</span>` : '';
+      return `
+        <tr>
+          <td class="name">${escapeHtml(c.full_name || '-')}</td>
+          <td>${escapeHtml(c.email)}</td>
+          <td><div class="dept-chips">${shown}${more}${names.length ? '' : '<span class="sub">ยังไม่ได้กำหนด</span>'}</div></td>
+          <td><span class="badge ${c.suspended ? 'suspended' : 'active'}">${c.suspended ? 'ระงับ' : 'ใช้งาน'}</span></td>
+          <td class="sub nowrap">${escapeHtml(fmtDateTime(c.last_sign_in_at))}</td>
+          <td class="row-actions" data-id="${escapeHtml(c.id)}">
+            <button class="link-btn" data-act="edit">แก้ไข</button>
+            <button class="link-btn" data-act="reset">รีเซ็ตรหัสผ่าน</button>
+            <button class="link-btn" data-act="toggle">${c.suspended ? 'เปิดใช้งาน' : 'ระงับ'}</button>
+            <button class="link-btn danger" data-act="delete">ลบ</button>
+          </td>
+        </tr>`;
+    }).join('');
+  }
+
+  el('search-box').addEventListener('input', renderClerks);
+
+  el('clerk-tbody').addEventListener('click', async (ev) => {
+    const btn = ev.target.closest('[data-act]');
+    if (!btn) return;
+    const id = btn.closest('[data-id]').dataset.id;
+    const c = clerks.find(x => x.id === id);
+    if (!c) return;
+    const act = btn.dataset.act;
+    if (act === 'edit') return openForm('edit', c);
+    if (act === 'reset') return openForm('reset', c);
+    if (act === 'toggle') {
+      const activate = c.suspended;
+      const msg = activate
+        ? `เปิดใช้งานบัญชี ${clerkLabel(c)} อีกครั้ง?`
+        : `ระงับบัญชี ${clerkLabel(c)}? จะเข้าสู่ระบบใหม่ไม่ได้ (ถ้าล็อกอินค้างอยู่ จะใช้งานต่อได้อีกไม่เกินประมาณ 1 ชั่วโมง)`;
+      if (!(await askConfirm(activate ? 'เปิดใช้งานบัญชี' : 'ระงับบัญชี', msg))) return;
+      try {
+        await api('set_active', { id, active: activate });
+        showBanner(activate ? 'เปิดใช้งานบัญชีเรียบร้อย' : 'ระงับบัญชีเรียบร้อย');
+        await loadAll();
+      } catch (e) { showBanner('ทำรายการไม่สำเร็จ: ' + e.message, true); }
+    }
+    if (act === 'delete') {
+      if (!(await askConfirm('ลบบัญชี', `ลบบัญชี ${clerkLabel(c)} (${c.email}) ถาวร? รายการที่เคยบันทึกไว้ในระบบส่วนกลางจะยังอยู่`))) return;
+      try {
+        await api('delete', { id });
+        showBanner('ลบบัญชีเรียบร้อย');
+        await loadAll();
+      } catch (e) { showBanner('ลบไม่สำเร็จ: ' + e.message, true); }
+    }
+  });
+
+  // ---------------- DEPARTMENT PICKER ----------------
+  function deptMatches(d, q){
+    return !q || d.name.toLowerCase().includes(q) || d.code.toLowerCase().includes(q) ||
+      (d.section_name || '').toLowerCase().includes(q);
+  }
+  function otherClerksOf(code){
+    return clerks.filter(c => c.id !== editingId && c.department_codes.includes(code)).map(clerkLabel);
+  }
+  function renderPicker(){
+    const q = el('dept-search').value.trim().toLowerCase();
+    const groups = new Map();
+    departments.forEach(d => {
+      if (!deptMatches(d, q)) return;
+      const k = d.section_name || UNGROUPED;
+      if (!groups.has(k)) groups.set(k, []);
+      groups.get(k).push(d);
+    });
+    let html = '';
+    groups.forEach((list, key) => {
+      html += `<div class="pk-head"><span>${escapeHtml(key)} (${list.length})</span>
+        <button type="button" class="link-btn" data-section="${escapeHtml(key)}">เลือก/ยกเลิกทั้งฝ่าย</button></div>`;
+      list.forEach(d => {
+        const others = otherClerksOf(d.code);
+        html += `<label class="pk-item">
+          <input type="checkbox" data-code="${escapeHtml(d.code)}" ${pickerSelected.has(d.code) ? 'checked' : ''}>
+          <span>${escapeHtml(d.name)} <small>(${escapeHtml(d.code)})</small></span>
+          ${others.length ? `<span class="who" title="${escapeHtml(others.join(', '))}">ดูแลโดย ${escapeHtml(others[0])}${others.length > 1 ? ` +${others.length - 1}` : ''}</span>` : ''}
+        </label>`;
+      });
+    });
+    el('picker-list').innerHTML = html || '<div class="empty-state" style="padding:24px;">ไม่พบแผนก</div>';
+    el('pk-count').textContent = `เลือกแล้ว ${pickerSelected.size} แผนก`;
+  }
+  el('dept-search').addEventListener('input', renderPicker);
+  el('picker-list').addEventListener('change', (ev) => {
+    const code = ev.target.dataset.code;
+    if (!code) return;
+    ev.target.checked ? pickerSelected.add(code) : pickerSelected.delete(code);
+    el('pk-count').textContent = `เลือกแล้ว ${pickerSelected.size} แผนก`;
+    el('row-depts').querySelector('.picker').classList.remove('invalid');
+  });
+  el('picker-list').addEventListener('click', (ev) => {
+    const btn = ev.target.closest('[data-section]');
+    if (!btn) return;
+    const q = el('dept-search').value.trim().toLowerCase();
+    const list = departments.filter(d => (d.section_name || UNGROUPED) === btn.dataset.section && deptMatches(d, q));
+    const allOn = list.every(d => pickerSelected.has(d.code));
+    list.forEach(d => allOn ? pickerSelected.delete(d.code) : pickerSelected.add(d.code));
+    renderPicker();
+  });
+
+  // ---------------- FORM MODAL ----------------
+  const show = (id, on) => { el(id).style.display = on ? '' : 'none'; };
+
+  function openForm(mode, clerk){
+    modalMode = mode;
+    editingId = clerk ? clerk.id : null;
+    clearFormError();
+    el('clerk-form').reset();
+    el('dept-search').value = '';
+    pickerSelected = new Set(clerk ? clerk.department_codes : []);
+
+    const titles = { create: 'เพิ่มบัญชีธุรการ', edit: 'แก้ไขบัญชีธุรการ', reset: 'รีเซ็ตรหัสผ่าน' };
+    el('form-title').textContent = titles[mode] + (clerk ? ': ' + clerkLabel(clerk) : '');
+
+    show('row-name', mode !== 'reset');
+    // ช่องอีเมลแสดงทุกโหมด แต่แก้ได้เฉพาะตอนสร้างบัญชี (ดู disabled ด้านล่าง)
+    show('row-password', mode !== 'edit');
+    show('row-depts', mode !== 'reset');
+
+    el('f-name').value = clerk ? (clerk.full_name || '') : '';
+    el('f-email').value = clerk ? clerk.email : '';
+    el('f-email').disabled = mode !== 'create';
+    el('f-password').value = mode === 'edit' ? '' : generatePassword();
+    el('save-btn').textContent = mode === 'create' ? 'สร้างบัญชี' : mode === 'edit' ? 'บันทึกการแก้ไข' : 'ตั้งรหัสผ่านใหม่';
+
+    if (mode !== 'reset') renderPicker();
+    el('form-modal').classList.add('open');
+  }
+  function closeForm(){
+    el('form-modal').classList.remove('open');
+    modalMode = null;
+    editingId = null;
+  }
+  el('add-btn').addEventListener('click', () => openForm('create', null));
+  el('cancel-btn').addEventListener('click', closeForm);
+  el('modal-close-btn').addEventListener('click', closeForm);
+  el('form-modal').addEventListener('click', (e) => { if (e.target.id === 'form-modal') closeForm(); });
+  el('gen-btn').addEventListener('click', () => { el('f-password').value = generatePassword(); el('f-password').classList.remove('invalid'); });
+  el('clerk-form').addEventListener('input', (e) => {
+    e.target.classList.remove('invalid');
+    if (!document.querySelector('#clerk-form .invalid')) el('form-error').classList.remove('show');
+  });
+
+  el('clerk-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    clearFormError();
+    const name = el('f-name').value.trim();
+    const email = el('f-email').value.trim().toLowerCase();
+    const password = el('f-password').value;
+    const codes = [...pickerSelected];
+
+    const missing = [];
+    if (modalMode !== 'reset' && !name) missing.push(['f-name', 'ชื่อ-นามสกุล']);
+    if (modalMode === 'create' && !email) missing.push(['f-email', 'อีเมล']);
+    if (modalMode !== 'edit' && !password) missing.push(['f-password', 'รหัสผ่าน']);
+    if (missing.length) { showFormError('กรุณากรอก: ' + missing.map(m => m[1]).join(', '), missing.map(m => m[0])); return; }
+
+    if (modalMode === 'create' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      showFormError('รูปแบบอีเมลไม่ถูกต้อง', ['f-email']); return;
+    }
+    if (modalMode !== 'edit' && password.length < 8) {
+      showFormError('รหัสผ่านต้องยาวอย่างน้อย 8 ตัวอักษร', ['f-password']); return;
+    }
+    if (modalMode !== 'reset' && codes.length === 0) {
+      showFormError('กรุณาเลือกแผนกที่รับผิดชอบอย่างน้อย 1 แผนก'); return;
+    }
+
+    const btn = el('save-btn');
+    const label = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'กำลังบันทึก...';
+    try {
+      if (modalMode === 'create') {
+        await api('create', { email, password, full_name: name, department_codes: codes });
+        closeForm();
+        showCreds('สร้างบัญชีเรียบร้อย', email, password);
+      } else if (modalMode === 'edit') {
+        await api('update', { id: editingId, full_name: name, department_codes: codes });
+        closeForm();
+        showBanner('บันทึกการแก้ไขเรียบร้อย');
+      } else {
+        const c = clerks.find(x => x.id === editingId);
+        await api('reset_password', { id: editingId, password });
+        closeForm();
+        showCreds('ตั้งรหัสผ่านใหม่เรียบร้อย', c ? c.email : email, password);
+      }
+      await loadAll();
+    } catch (err) {
+      if (err.status === 401) { await sb.auth.signOut(); return; }
+      showFormError(err.message, err.status === 409 ? ['f-email'] : []);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = label;
+    }
+  });
+
+  // ---------------- CREDENTIALS MODAL ----------------
+  function showCreds(title, email, password){
+    el('cred-title').textContent = title;
+    el('cred-email').textContent = email;
+    el('cred-password').textContent = password;
+    el('cred-copy').textContent = 'คัดลอก';
+    el('cred-modal').classList.add('open');
+  }
+  function closeCreds(){
+    el('cred-modal').classList.remove('open');
+    el('cred-password').textContent = '';   // ไม่เก็บรหัสผ่านค้างในหน้า
+  }
+  el('cred-done').addEventListener('click', closeCreds);
+  el('cred-close-x').addEventListener('click', closeCreds);
+  el('cred-copy').addEventListener('click', async () => {
+    const text = `อีเมล: ${el('cred-email').textContent}\nรหัสผ่าน: ${el('cred-password').textContent}`;
+    try {
+      await navigator.clipboard.writeText(text);
+      el('cred-copy').textContent = 'คัดลอกแล้ว';
+    } catch (e) {
+      el('cred-copy').textContent = 'คัดลอกไม่ได้ ให้เลือกข้อความเอง';
+    }
+  });
+</script>
+</body>
+</html>
