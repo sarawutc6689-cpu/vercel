@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FOM-008-IT แบบฟอร์มบำรุงรักษาคอมพิวเตอร์</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bench:#EAF3FC; --panel:#FFFFFF; --ink:#0F2A43; --muted:#58718A; --line:#C3D7EB;
+  --accent:#1B6FD1; --accent-d:#1557A8; --brand:#0F4C99; --warn:#9B2C2C; --ok:#2F6B4F;
+  --font:'Sarabun',system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:flex;flex-direction:column;font-family:var(--font);font-size:14px;line-height:1.5;color:var(--ink);background:var(--bench)}
+button,input,select{font-family:inherit;font-size:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* ---------- top bar ---------- */
+.topbar{background:var(--brand);color:#fff;border-bottom:3px solid #6FB1F2;display:flex;align-items:center;gap:16px;padding:10px 24px}
+.topbar h1{margin:0;font-size:17px;font-weight:600;flex:1}
+.topbar small{color:#B7D6F7;font-weight:400;margin-left:8px}
+
+/* ---------- layout ---------- */
+.shell{flex:1;width:100%;max-width:none;margin:0;padding:20px 24px;display:grid;grid-template-columns:340px 1fr;gap:20px;align-items:start}
+@media(max-width:1060px){.shell{grid-template-columns:1fr}}
+.side{display:flex;flex-direction:column;gap:16px;position:sticky;top:16px}
+@media(max-width:1060px){.side{position:static}}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px}
+.box h2{margin:0 0 10px;font-size:15px;font-weight:700}
+label{display:block;font-weight:600;font-size:13px;margin-bottom:4px}
+.field{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink)}
+.row{display:flex;gap:8px}
+.btn{border:1px solid transparent;border-radius:6px;padding:9px 14px;font-weight:600;cursor:pointer;white-space:nowrap}
+.btn-main{background:var(--accent);color:#fff}
+.btn-main:hover{background:var(--accent-d)}
+.btn-ghost{background:#fff;border-color:var(--line);color:var(--ink)}
+.btn-ghost:hover{background:var(--bench)}
+.btn-wide{width:100%}
+.hint{color:var(--muted);font-size:12.5px;margin:6px 0 0}
+
+/* search results */
+.results{list-style:none;margin:8px 0 0;padding:0;border:1px solid var(--line);border-radius:6px;background:#fff;max-height:240px;overflow:auto}
+.results:empty{display:none}
+.results li button{display:block;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--bench);padding:8px 10px;cursor:pointer}
+.results li:last-child button{border-bottom:0}
+.results li button:hover,.results li button:focus-visible{background:#E3EEFB}
+.results b{display:block;font-weight:600}
+.results span{color:var(--muted);font-size:12.5px}
+
+/* status */
+.status{margin-top:10px;padding:8px 10px;border-radius:6px;border-left:4px solid var(--muted);background:#fff;font-size:13px}
+.status.ok{border-color:var(--ok)} .status.err{border-color:var(--warn);background:#FBEFEF;color:#6B1F1F}
+.status.busy{border-color:var(--accent)}
+
+/* ---------- paper ---------- */
+.bench{overflow-x:auto;padding:0 0 8px;min-width:0}
+.paper{width:100%;min-width:980px;margin:0;background:#fff;color:#000;padding:11mm 13mm;box-shadow:0 1px 2px rgba(0,0,0,.15),0 8px 24px rgba(0,0,0,.08)}
+.f-title{text-align:center;font-size:19px;font-weight:700;margin:0 0 10px}
+.f-bar{background:#000;color:#fff;font-weight:700;font-size:13.5px;padding:4px 10px}
+.f-meta{background:#D9D9D9;padding:6px 10px;display:grid;grid-template-columns:1.2fr 1.2fr 1fr 1.3fr;gap:10px;font-size:13px;font-weight:600}
+.dot{display:flex;align-items:baseline;gap:4px}
+.dot input{flex:1;min-width:50px;border:0;border-bottom:1px dotted #000;background:transparent;font-weight:600;font-size:13px;padding:0 4px;color:#000}
+.specs{display:grid;grid-template-columns:1fr 1fr;column-gap:44px;row-gap:5px;padding:10px 4px 14px}
+.spec{display:flex;align-items:baseline;gap:8px;font-size:12.5px}
+.spec span{font-weight:600;white-space:nowrap}
+.spec input{flex:1;min-width:0;border:0;border-bottom:1px solid #333;background:transparent;font-size:13px;padding:1px 4px;color:#000}
+.paper input:focus{outline:none;background:#E3EEFB}
+
+table.f-table{width:100%;border-collapse:collapse;border:1px solid #000;font-size:12.5px}
+.f-table th,.f-table td{border:1px solid #000;padding:4px 6px;vertical-align:middle}
+.f-table thead th{background:#D9D9D9;text-align:center;height:42px}
+.th-topic{width:28%;text-align:left!important}
+.th-m{width:3.9%;padding:2px!important}
+.th-m span{writing-mode:vertical-rl;transform:rotate(180deg);display:inline-block;font-size:11px;font-weight:700}
+.th-rem{width:25%}
+.topic{padding-left:8px!important;font-weight:500}
+.mc{text-align:center;cursor:pointer;user-select:none;height:28px}
+.mc:hover{background:#E3EEFB}
+.sym{width:20px;height:20px;border-radius:50%;margin:0 auto;position:relative;border:1.5px solid transparent}
+.mc:hover .sym[data-s="0"]{border:1px dashed #999}
+.sym[data-s="1"]{border-color:#000}
+.sym[data-s="2"]{border-color:#000}
+.sym[data-s="2"]::before,.sym[data-s="2"]::after,.lg.normal::before,.lg.normal::after{content:"";position:absolute;left:50%;top:50%;width:13px;height:1.5px;background:#000}
+.sym[data-s="2"]::before,.lg.normal::before{transform:translate(-50%,-50%) rotate(45deg)}
+.sym[data-s="2"]::after,.lg.normal::after{transform:translate(-50%,-50%) rotate(-45deg)}
+.sym[data-s="3"]{border-color:#000;background:#000}
+.rem{width:100%;border:0;background:transparent;font-size:12px;padding:2px 4px}
+.sig td{background:#F2F2F2;height:34px;font-weight:600}
+.sig input{width:100%;border:0;background:transparent;font-size:11px;text-align:center}
+.sig-note{text-align:center;font-weight:700;font-size:12.5px}
+.f-foot{margin-top:8px;font-size:12.5px}
+.legend{display:flex;flex-wrap:wrap;align-items:center;gap:24px;font-weight:600}
+.legend>span{display:inline-flex;align-items:center;gap:6px}
+.lg{width:12px;height:12px;border-radius:50%;border:1.5px solid #000;position:relative;display:inline-block}
+.lg.normal::before,.lg.normal::after{width:8px;height:1.4px}
+.lg.fixed{background:#000}
+.code{text-align:right;font-weight:700;font-size:12px}
+
+.site-foot{background:var(--brand);color:#DCEBFA;text-align:center;font-size:13px;padding:10px 16px}
+.site-foot span{margin:0 8px;opacity:.6}
+
+/* ---------- settings dialog ---------- */
+dialog{border:1px solid var(--line);border-radius:10px;padding:0;width:min(480px,92vw);color:var(--ink)}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+dialog form{padding:20px;display:flex;flex-direction:column;gap:12px}
+dialog h2{margin:0;font-size:17px}
+.dlg-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:4px}
+
+/* ---------- print (บังคับให้พอดี 1 หน้า A4 แนวนอน) ---------- */
+@page{size:A4 landscape;margin:6mm}
+@media print{
+  html,body{height:auto;min-height:0;background:#fff;display:block;overflow:visible}
+  .topbar,.side,dialog,.site-foot{display:none!important}
+  .shell{display:block;padding:0;margin:0;max-width:none;min-height:0}
+  .bench{padding:0;margin:0;overflow:visible}
+  .paper{width:100%;min-width:0;margin:0;padding:0;box-shadow:none;break-inside:avoid;page-break-inside:avoid;page-break-after:avoid}
+  .f-title{font-size:16px;margin:0 0 5px}
+  .f-bar{font-size:12px;padding:2px 8px}
+  .f-meta{padding:3px 8px;font-size:12px}
+  .dot input,.spec input{font-size:12px;padding:0 4px}
+  .specs{row-gap:4px;padding:6px 4px 9px}
+  .spec{font-size:11.5px}
+  .f-table{font-size:11.5px}
+  .f-table th,.f-table td{padding:1px 5px}
+  .f-table thead th{height:34px}
+  .th-m span{font-size:10px}
+  .mc{height:26px}
+  .sym{width:17px;height:17px}
+  .sym[data-s="2"]::before,.sym[data-s="2"]::after{width:11px}
+  .sig td{height:40px}
+  .rem{font-size:11px;padding:0 4px}
+  .f-foot{margin-top:4px;font-size:11px}
+  .code{font-size:11px}
+  .f-bar,.f-meta,.f-table thead th,.sig td,.sym[data-s="3"],.lg.fixed{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .mc:hover{background:none}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <h1>แบบฟอร์มตรวจสอบบำรุงรักษาคอมพิวเตอร์<small>FOM-008-IT</small></h1>
+</header>
+
+<main class="shell">
+  <aside class="side">
+    <section class="box">
+      <h2>ค้นหาเครื่อง</h2>
+      <label for="q">ชื่อเครื่อง</label>
+      <div class="row">
+        <input id="q" class="field" type="search" placeholder="พิมพ์ชื่อเครื่อง เช่น PC-IT-001" autocomplete="off">
+        <button type="button" class="btn btn-main" id="goBtn">ดึงข้อมูล</button>
+      </div>
+      <ul class="results" id="results" aria-label="ผลการค้นหา"></ul>
+      <div class="status" id="status" role="status">พิมพ์ชื่อเครื่อง แล้วเลือกจากรายการที่ขึ้นมา</div>
+    </section>
+
+    <section class="box">
+      <h2>แผนบำรุงรักษา</h2>
+      <label for="planMonth">เดือนที่วางแผน (ใส่ ○ ให้ทุกหัวข้อ)</label>
+      <select id="planMonth" class="field">
+        <option value="">ไม่ระบุ</option>
+        <option value="0">มกราคม</option><option value="1">กุมภาพันธ์</option><option value="2">มีนาคม</option>
+        <option value="3">เมษายน</option><option value="4">พฤษภาคม</option><option value="5">มิถุนายน</option>
+        <option value="6">กรกฎาคม</option><option value="7">สิงหาคม</option><option value="8">กันยายน</option>
+        <option value="9">ตุลาคม</option><option value="10">พฤศจิกายน</option><option value="11" selected>ธันวาคม</option>
+      </select>
+      <p class="hint">คลิกช่องเดือนในตารางเพื่อสลับ ว่าง → ○ → ⊗ → ●</p>
+    </section>
+
+    <section class="box">
+      <div class="row">
+        <button type="button" class="btn btn-main btn-wide" id="printBtn">พิมพ์ / บันทึกเป็น PDF</button>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <button type="button" class="btn btn-ghost btn-wide" id="clearBtn">ล้างแบบฟอร์ม</button>
+      </div>
+      <p class="hint">พิมพ์บนกระดาษ A4 แนวนอน</p>
+    </section>
+  </aside>
+
+  <section class="bench" aria-label="ตัวอย่างแบบฟอร์ม">
+    <div class="paper">
+      <h2 class="f-title">แบบฟอร์มตรวจสอบบำรุงรักษาคอมพิวเตอร์และอุปกรณ์สารสนเทศ</h2>
+      <div class="f-bar">ข้อมูลเฉพาะของคอมพิวเตอร์/อุปกรณ์</div>
+      <div class="f-meta">
+        <label class="dot"><span>ชื่อเครื่อง</span><input id="f_name"></label>
+        <label class="dot"><span>สถานที่ตั้ง</span><input id="f_location"></label>
+        <label class="dot"><span>หมายเลขไอพี</span><input id="f_ip"></label>
+        <label class="dot"><span>ผู้รับผิดชอบ</span><input id="f_resp"></label>
+      </div>
+      <div class="specs">
+        <label class="spec"><span>CPU</span><input id="f_cpu"></label>
+        <label class="spec"><span>MONITOR</span><input id="f_monitor"></label>
+        <label class="spec"><span>RAM</span><input id="f_ram"></label>
+        <label class="spec"><span>KEYBOARD</span><input id="f_keyboard"></label>
+        <label class="spec"><span>HDD</span><input id="f_hdd"></label>
+        <label class="spec"><span>MOUSE</span><input id="f_mouse"></label>
+        <label class="spec"><span>VGA</span><input id="f_vga"></label>
+        <label class="spec"><span>WIRELESS ADAPTER</span><input id="f_wireless"></label>
+        <label class="spec"><span>MAINBOARD</span><input id="f_mainboard"></label>
+        <label class="spec"><span>OTHERS</span><input id="f_others"></label>
+      </div>
+
+      <div class="f-bar">ประวัติการบำรุงรักษา</div>
+      <table class="f-table">
+        <thead><tr id="headRow"></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+
+      <div class="f-foot">
+        <div class="legend">
+          <span>หมายเหตุ</span>
+          <span><i class="lg"></i>แผนดำเนินการ</span>
+          <span><i class="lg normal"></i>ดำเนินการได้ตามแผน ไม่พบสิ่งผิดปกติ</span>
+          <span><i class="lg fixed"></i>ดำเนินการได้ตามแผน พบสิ่งผิดปกติและแก้ไขแล้ว</span>
+        </div>
+        <div class="code">FOM-008-IT Rev.01 (26/04/2022)</div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-foot">เอกสาร PM<span>|</span>ใช้สำหรับภายในบริษัทเท่านั้น<span>|</span>พัฒนาโดย Sarawut.C</footer>
+
+<dialog id="dlg">
+  <form method="dialog" id="cfgForm">
+    <h2>ตั้งค่าการเชื่อมต่อ Supabase</h2>
+    <div><label for="cfgUrl">Project URL</label><input id="cfgUrl" class="field" placeholder="https://xxxx.supabase.co"></div>
+    <div><label for="cfgKey">Anon public key</label><input id="cfgKey" class="field" type="password" placeholder="วาง anon key ที่นี่"></div>
+    <div class="row">
+      <div style="flex:1"><label for="cfgTable">ตาราง / view</label><input id="cfgTable" class="field"></div>
+      <div style="flex:1"><label for="cfgCol">คอลัมน์ชื่อเครื่อง</label><input id="cfgCol" class="field"></div>
+    </div>
+    <p class="hint" style="margin:0">ค่าเหล่านี้เก็บไว้ในเบราว์เซอร์ของคุณเท่านั้น ไม่ถูกอัปโหลดไปกับไฟล์</p>
+    <div class="dlg-actions">
+      <button type="button" class="btn btn-ghost" id="cfgCancel">ยกเลิก</button>
+      <button type="submit" class="btn btn-main" id="cfgSave" value="save">บันทึก</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+/* ค่าเริ่มต้น: ใส่ URL ได้เลย ส่วน key แนะนำให้ใส่ผ่านปุ่ม "ตั้งค่าการเชื่อมต่อ" */
+const DEFAULTS = {
+  url: 'https://fuarmmweqxxhczavkvqp.supabase.co',
+  key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ1YXJtbXdlcXh4aGN6YXZrdnFwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgyMjgzMTcsImV4cCI6MjEwMzgwNDMxN30.n7s4gKOkCvaOSpFSf9FGmWsqi7eAzFe28c_oJWy8NSE',
+  table: 'v_it008_assets',
+  col: 'computer_name'
+};
+
+const TOPICS = [
+  '1. ความสะอาดภายนอกตัวเครื่อง','2. ความสะอาดภายในตัวเครื่อง','3. ตรวจสอบการเชื่อมต่อเครือข่าย',
+  '4. อัพเดท ANTIVIRUS','5. ค้นหาและลบ VIRUS','6. ตรวจสอบ BAD SECTOR',
+  '7. จัดเรียงข้อมูล DISK DEFRAGMENT','8. ตรวจสอบการทำงาน SOFTWARE','9. ตรวจสอบสายไฟฟ้า, สายสัญญาณ'
+];
+const MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+const $ = id => document.getElementById(id);
+
+/* ---------- config ---------- */
+let cfg = {...DEFAULTS};
+try {
+  const saved = JSON.parse(localStorage.getItem('it008_cfg') || '{}');
+  cfg = {...DEFAULTS, ...saved};
+} catch (e) {}
+
+/* ---------- build table ---------- */
+function buildTable() {
+  $('headRow').innerHTML =
+    '<th class="th-topic">หัวข้อการตรวจสอบ/บำรุงรักษา</th>' +
+    MONTHS.map(m => `<th class="th-m"><span>${m}</span></th>`).join('') +
+    '<th class="th-rem">หมายเหตุ</th>';
+
+  const tb = $('tbody');
+  tb.innerHTML = '';
+  TOPICS.forEach((t, r) => {
+    const tr = document.createElement('tr');
+    let h = `<td class="topic">${t}</td>`;
+    for (let m = 0; m < 12; m++) h += `<td class="mc"><div class="sym" id="c_${r}_${m}" data-s="${m === 11 ? 1 : 0}"></div></td>`;
+    h += `<td><input class="rem" id="rem_${r}" aria-label="หมายเหตุข้อ ${r + 1}"></td>`;
+    tr.innerHTML = h;
+    tb.appendChild(tr);
+  });
+
+  const sigRow = (label, first) => {
+    const tr = document.createElement('tr');
+    tr.className = 'sig';
+    let h = `<td class="topic">${label}</td>`;
+    for (let m = 0; m < 12; m++) h += `<td><input aria-label="${label} ${MONTHS[m]}"></td>`;
+    if (first) h += '<td class="sig-note" rowspan="2">(กรุณาเซ็นชื่อ และลงวันที่ทุกครั้ง)</td>';
+    tr.innerHTML = h;
+    tb.appendChild(tr);
+  };
+  sigRow('ลายมือชื่อเจ้าหน้าที่สารสนเทศผู้ปฏิบัติงาน', true);
+  sigRow('ลายมือชื่อผู้ตรวจรับงาน', false);
+}
+
+$('tbody').addEventListener('click', e => {
+  const td = e.target.closest('.mc');
+  if (!td) return;
+  const s = td.firstElementChild;
+  s.dataset.s = (parseInt(s.dataset.s, 10) + 1) % 4;
+});
+
+function applyPlan() {
+  const v = $('planMonth').value;
+  document.querySelectorAll('.sym').forEach(el => {
+    const m = parseInt(el.id.split('_')[2], 10);
+    el.dataset.s = (v !== '' && m === parseInt(v, 10)) ? 1 : 0;
+  });
+}
+$('planMonth').addEventListener('change', applyPlan);
+
+function clearForm() {
+  document.querySelectorAll('.paper input').forEach(i => i.value = '');
+  applyPlan();
+  setStatus('ล้างแบบฟอร์มแล้ว', 'ok');
+}
+
+/* ---------- status ---------- */
+function setStatus(msg, kind) {
+  const s = $('status');
+  s.textContent = msg;
+  s.className = 'status' + (kind ? ' ' + kind : '');
+}
+
+/* ---------- Supabase (REST) ---------- */
+async function queryAssets(term, limit) {
+  if (!cfg.url || !cfg.key) throw new Error('ยังไม่ได้ตั้งค่าการเชื่อมต่อฐานข้อมูล กรุณาติดต่อผู้ดูแลระบบ');
+  const url = `${cfg.url.replace(/\/+$/, '')}/rest/v1/${encodeURIComponent(cfg.table)}` +
+    `?select=*&${encodeURIComponent(cfg.col)}=ilike.${encodeURIComponent('*' + term + '*')}` +
+    `&order=${encodeURIComponent(cfg.col)}.asc&limit=${limit}`;
+  const res = await fetch(url, { headers: { apikey: cfg.key, Authorization: 'Bearer ' + cfg.key } });
+  if (!res.ok) {
+    let detail = '';
+    try { detail = (await res.json()).message || ''; } catch (e) {}
+    throw new Error(`${res.status} ${detail || res.statusText}`);
+  }
+  return res.json();
+}
+
+const pick = (row, keys) => {
+  for (const k of keys) {
+    const v = row[k];
+    if (v !== undefined && v !== null && String(v).trim() !== '') return String(v).trim();
+  }
+  return '';
+};
+
+function fillForm(r) {
+  $('f_name').value = pick(r, [cfg.col, 'computer_name']);
+  $('f_location').value = pick(r, ['location', 'department']);
+  $('f_ip').value = pick(r, ['ip_address', 'ip']);
+  $('f_resp').value = pick(r, ['responsible_person', 'login_name']);
+  $('f_cpu').value = pick(r, ['cpu']);
+  $('f_ram').value = pick(r, ['ram']);
+  $('f_hdd').value = pick(r, ['hdd', 'storage']);
+  $('f_vga').value = pick(r, ['vga']);
+  $('f_mainboard').value = pick(r, ['mainboard']);
+  $('f_monitor').value = [pick(r, ['monitor']), pick(r, ['model_monitor'])].filter(Boolean).join(' ');
+  $('f_keyboard').value = pick(r, ['keyboard']);
+  $('f_mouse').value = pick(r, ['mouse']);
+  $('f_wireless').value = pick(r, ['wireless_adapter']);
+  $('f_others').value = pick(r, ['others', 'etc']);
+}
+
+function showResults(rows) {
+  const ul = $('results');
+  ul.innerHTML = '';
+  rows.forEach(r => {
+    const li = document.createElement('li');
+    const b = document.createElement('button');
+    b.type = 'button';
+    const name = document.createElement('b');
+    name.textContent = pick(r, [cfg.col, 'computer_name']) || '(ไม่มีชื่อ)';
+    const sub = document.createElement('span');
+    sub.textContent = [pick(r, ['department']), pick(r, ['login_name']), pick(r, ['ip', 'ip_address'])].filter(Boolean).join(' · ');
+    b.append(name, sub);
+    b.addEventListener('click', () => { fillForm(r); ul.innerHTML = ''; setStatus(`ดึงข้อมูล ${name.textContent} แล้ว ตรวจสอบและสั่งพิมพ์ได้เลย`, 'ok'); });
+    li.appendChild(b);
+    ul.appendChild(li);
+  });
+}
+
+let timer, seq = 0;
+async function search(autoFillSingle) {
+  const term = $('q').value.trim();
+  if (!term) { $('results').innerHTML = ''; setStatus('พิมพ์ชื่อเครื่อง แล้วเลือกจากรายการที่ขึ้นมา'); return; }
+  const my = ++seq;
+  setStatus('กำลังค้นหา...', 'busy');
+  try {
+    const rows = await queryAssets(term, 8);
+    if (my !== seq) return;
+    if (!rows.length) { $('results').innerHTML = ''; setStatus(`ไม่พบเครื่องที่ชื่อมีคำว่า "${term}" ลองพิมพ์ส่วนหนึ่งของชื่อ`, 'err'); return; }
+    if (rows.length === 1 && autoFillSingle) { showResults([]); fillForm(rows[0]); setStatus('ดึงข้อมูลแล้ว ตรวจสอบและสั่งพิมพ์ได้เลย', 'ok'); return; }
+    showResults(rows);
+    setStatus(`พบ ${rows.length} เครื่อง เลือกเครื่องที่ต้องการ`, 'ok');
+  } catch (err) {
+    if (my !== seq) return;
+    $('results').innerHTML = '';
+    setStatus('เชื่อมต่อไม่สำเร็จ: ' + err.message, 'err');
+  }
+}
+$('q').addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(() => search(false), 350); });
+$('q').addEventListener('keydown', e => { if (e.key === 'Enter') { clearTimeout(timer); search(true); } });
+$('goBtn').addEventListener('click', () => search(true));
+
+/* ---------- settings dialog ---------- */
+const dlg = $('dlg');
+/* ปุ่มตั้งค่าถูกซ่อน: ผู้ดูแลเปิดได้ด้วย Ctrl+Shift+K */
+document.addEventListener('keydown', e => {
+  if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'k') {
+    e.preventDefault();
+    $('cfgUrl').value = cfg.url; $('cfgKey').value = cfg.key;
+    $('cfgTable').value = cfg.table; $('cfgCol').value = cfg.col;
+    dlg.showModal();
+  }
+});
+$('cfgCancel').addEventListener('click', () => dlg.close());
+$('cfgForm').addEventListener('submit', () => {
+  cfg = { url: $('cfgUrl').value.trim(), key: $('cfgKey').value.trim(),
+          table: $('cfgTable').value.trim() || DEFAULTS.table, col: $('cfgCol').value.trim() || DEFAULTS.col };
+  try { localStorage.setItem('it008_cfg', JSON.stringify(cfg)); } catch (e) {}
+  setStatus('บันทึกการตั้งค่าแล้ว', 'ok');
+});
+
+$('printBtn').addEventListener('click', () => window.print());
+$('clearBtn').addEventListener('click', clearForm);
+
+buildTable();
+if (!cfg.key) setStatus('ยังไม่ได้ตั้งค่าการเชื่อมต่อฐานข้อมูล กรุณาติดต่อผู้ดูแลระบบ', 'err');
+</script>
+</body>
+</html>
