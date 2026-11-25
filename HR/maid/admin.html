@@ -45,6 +45,7 @@
             <select id="filter"><option value="pending">รออนุมัติ</option><option value="">ทั้งหมด</option>
               <option value="approved">อนุมัติแล้ว</option><option value="rejected">ไม่อนุมัติ</option></select></div>
           <button class="ghost" id="reload">รีเฟรช</button>
+          <button class="ghost" id="tgTest" title="ส่งข้อความทดสอบเข้า Telegram">🔔 ทดสอบ Telegram</button>
         </div>
       </div>
       <div class="card tbl" id="reqList"></div>
@@ -68,7 +69,7 @@
 </div>
 
 <footer>
-  <span>ระบบเบิกของใช้แม่บ้าน</span><span>ใช้ภายในบริษัทเท่านั้น</span><span>พัฒนาโดย Sarawut.C</span>
+  <span>ระบบเบิกของใช้แม่บ้าน</span><span>ใช้ภายในบริษัทเท่านั้น</span><span>พัฒนาโดย Sarawut.C</span><span><a href="guide.html">📖 คู่มือการใช้งาน</a></span>
 </footer>
 
 <script src="config.js"></script>
@@ -104,6 +105,15 @@ async function loadReq() {
     : '<p class="mut">ไม่มีรายการ</p>';
 }
 $('#filter').onchange = loadReq; $('#reload').onclick = loadReq;
+$('#tgTest').onclick = async () => {
+  const b = $('#tgTest'); b.disabled = true;
+  const r = await notifyTelegram('test');
+  b.disabled = false;
+  if (r.ok) return toast('ส่งข้อความทดสอบแล้ว ตรวจสอบใน Telegram');
+  const why = { not_configured: 'ยังไม่ได้ตั้งค่า Telegram ใน Vercel (ดูไฟล์ TELEGRAM.md)', telegram_failed: 'Telegram ปฏิเสธ: ' + (r.detail || 'ตรวจสอบ token/chat id'),
+    forbidden: 'บัญชีนี้ไม่ใช่ผู้ดูแล', unauthorized: 'เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่', network: 'เรียก /api/notify ไม่ได้ (ต้องใช้งานผ่านเว็บบน Vercel)' }[r.error];
+  toast(why || 'ส่งไม่สำเร็จ (' + (r.error || 'ไม่ทราบสาเหตุ') + ')', true);
+};
 
 $('#reqList').addEventListener('click', async e => {
   const b = e.target.closest('button[data-a]'); if (!b) return;
@@ -118,6 +128,7 @@ $('#reqList').addEventListener('click', async e => {
   else ({ error } = await sb.from('requests').update({ status: 'rejected', decided_at: new Date().toISOString() }).eq('id', b.dataset.id));
   if (error) { toast(error.message, true); b.disabled = false; return; }
   toast('บันทึกแล้ว'); loadReq(); loadStock();
+  notifyTelegram('decision', b.dataset.id);
 });
 
 async function loadStock() {
