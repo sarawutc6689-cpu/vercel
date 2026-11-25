@@ -1,1299 +1,437 @@
 <!doctype html>
 <html lang="th">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>FOM-008-IT ระบบดึงข้อมูล Assets และพิมพ์แบบฟอร์มบำรุงรักษา</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --brand-dark: #333333;
-      --brand-mid: #D9D9D9;
-      --brand-light: #F2F2F2;
-      --surface: #FFFFFF;
-      --ink: #1A1A1A;
-      --muted: #595959;
-      --border: #BFBFBF;
-      --focus: #333333;
-      --radius: 8px;
-      --space-1: 4px;
-      --space-2: 8px;
-      --space-3: 12px;
-      --space-4: 16px;
-      --space-6: 24px;
-      --font: 'Sarabun', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      font-family: var(--font);
-      color: var(--ink);
-      background-color: var(--brand-light);
-      line-height: 1.5;
-      font-size: 14px;
-    }
-
-    /* App Top Navigation / Shell */
-    .app-header {
-      background-color: var(--brand-dark);
-      color: var(--surface);
-      padding: var(--space-3) var(--space-6);
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-      gap: var(--space-3);
-      border-bottom: 3px solid var(--brand-mid);
-    }
-
-    .app-title-group {
-      display: flex;
-      align-items: center;
-      gap: var(--space-3);
-    }
-
-    .doc-badge {
-      background-color: var(--brand-mid);
-      color: var(--brand-dark);
-      font-weight: 700;
-      font-size: 12px;
-      padding: 3px 8px;
-      border-radius: 4px;
-      letter-spacing: 0.3px;
-    }
-
-    .app-header h1 {
-      margin: 0;
-      font-size: 18px;
-      font-weight: 600;
-    }
-
-    .nav-tabs {
-      display: flex;
-      gap: var(--space-2);
-    }
-
-    .tab-btn {
-      font-family: var(--font);
-      font-size: 13px;
-      font-weight: 600;
-      padding: 7px 14px;
-      border-radius: 6px;
-      border: 1px solid rgba(255, 255, 255, 0.25);
-      background: transparent;
-      color: var(--brand-light);
-      cursor: pointer;
-      transition: background 0.15s, color 0.15s;
-    }
-
-    .tab-btn:hover {
-      background: rgba(255, 255, 255, 0.1);
-    }
-
-    .tab-btn.active {
-      background: var(--surface);
-      color: var(--brand-dark);
-      border-color: var(--surface);
-    }
-
-    /* Main Workspace Layout */
-    .workspace {
-      max-width: 1380px;
-      margin: 0 auto;
-      padding: var(--space-6);
-      display: grid;
-      grid-template-columns: 360px 1fr;
-      gap: var(--space-6);
-      align-items: start;
-    }
-
-    @media (max-width: 1080px) {
-      .workspace {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    /* Control Sidebar */
-    .control-panel {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      overflow: hidden;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
-    }
-
-    .panel-section {
-      padding: var(--space-4);
-      border-bottom: 1px solid var(--brand-mid);
-    }
-
-    .panel-section:last-child {
-      border-bottom: none;
-    }
-
-    .panel-heading {
-      margin: 0 0 var(--space-3) 0;
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--brand-dark);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .form-group {
-      margin-bottom: var(--space-3);
-    }
-
-    .form-group:last-child {
-      margin-bottom: 0;
-    }
-
-    .form-group label {
-      display: block;
-      font-size: 12.5px;
-      font-weight: 600;
-      color: var(--brand-dark);
-      margin-bottom: 4px;
-    }
-
-    .input-text, .select-box {
-      width: 100%;
-      font-family: var(--font);
-      font-size: 13.5px;
-      padding: 8px 10px;
-      border: 1px solid var(--border);
-      border-radius: 5px;
-      background: var(--surface);
-      color: var(--ink);
-    }
-
-    .input-text:focus, .select-box:focus {
-      outline: 2px solid var(--brand-dark);
-      outline-offset: 1px;
-    }
-
-    .search-row {
-      display: flex;
-      gap: var(--space-2);
-    }
-
-    .btn {
-      font-family: var(--font);
-      font-size: 13.5px;
-      font-weight: 600;
-      padding: 8px 14px;
-      border-radius: 5px;
-      border: 1px solid transparent;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      transition: background 0.15s, border-color 0.15s, opacity 0.15s;
-      white-space: nowrap;
-    }
-
-    .btn-primary {
-      background-color: var(--brand-dark);
-      color: var(--surface);
-    }
-
-    .btn-primary:hover {
-      background-color: #1f1f1f;
-    }
-
-    .btn-secondary {
-      background-color: var(--brand-light);
-      color: var(--brand-dark);
-      border-color: var(--border);
-    }
-
-    .btn-secondary:hover {
-      background-color: var(--brand-mid);
-    }
-
-    .btn-full {
-      width: 100%;
-    }
-
-    .status-box {
-      font-size: 12.5px;
-      padding: 8px 10px;
-      border-radius: 5px;
-      background-color: var(--brand-light);
-      border-left: 3px solid var(--brand-dark);
-      color: var(--ink);
-      margin-top: var(--space-2);
-    }
-
-    .status-box.error {
-      border-left-color: #991b1b;
-      background-color: #fef2f2;
-      color: #7f1d1d;
-    }
-
-    .grid-2col {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: var(--space-2);
-    }
-
-    .helper-caption {
-      font-size: 12px;
-      color: var(--muted);
-      margin: 4px 0 0 0;
-    }
-
-    /* A4 Form Sheet Container */
-    .preview-wrapper {
-      overflow-x: auto;
-      background: #E5E5E5;
-      padding: var(--space-6);
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      display: flex;
-      justify-content: center;
-    }
-
-    .a4-landscape {
-      width: 277mm;
-      min-width: 960px;
-      background: var(--surface);
-      padding: 12mm 14mm;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-      color: #000000;
-      position: relative;
-    }
-
-    /* Exact Form IT008 Styling matching uploaded PDF */
-    .it008-title {
-      text-align: center;
-      font-size: 19px;
-      font-weight: 700;
-      margin: 0 0 10px 0;
-      letter-spacing: 0.2px;
-    }
-
-    .it008-bar-dark {
-      background-color: #000000;
-      color: #FFFFFF;
-      font-weight: 700;
-      font-size: 13.5px;
-      padding: 4px 10px;
-      border: 1px solid #000000;
-    }
-
-    .it008-top-meta {
-      background-color: var(--brand-mid);
-      padding: 6px 10px;
-      display: grid;
-      grid-template-columns: 1.2fr 1.2fr 1fr 1.3fr;
-      gap: 10px;
-      align-items: baseline;
-      font-size: 13px;
-      font-weight: 600;
-    }
-
-    .dotted-field {
-      display: flex;
-      align-items: baseline;
-      gap: 4px;
-      white-space: nowrap;
-    }
-
-    .dotted-input {
-      flex: 1;
-      min-width: 60px;
-      border: none;
-      border-bottom: 1px dotted #000000;
-      background: transparent;
-      font-family: var(--font);
-      font-size: 13px;
-      font-weight: 600;
-      color: #000000;
-      padding: 0 4px;
-    }
-
-    .dotted-input:focus {
-      outline: none;
-      background-color: rgba(255, 255, 255, 0.65);
-    }
-
-    /* Hardware 2-Column Spec Lines */
-    .it008-specs-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      column-gap: 44px;
-      row-gap: 5px;
-      padding: 10px 4px 14px 4px;
-    }
-
-    .spec-line {
-      display: flex;
-      align-items: baseline;
-      gap: 8px;
-      font-size: 12.5px;
-    }
-
-    .spec-label {
-      font-weight: 600;
-      white-space: nowrap;
-      letter-spacing: 0.2px;
-    }
-
-    .spec-input {
-      flex: 1;
-      border: none;
-      border-bottom: 1px solid #333333;
-      background: transparent;
-      font-family: var(--font);
-      font-size: 13px;
-      color: #000000;
-      padding: 1px 4px;
-    }
-
-    .spec-input:focus {
-      outline: none;
-      background-color: var(--brand-light);
-    }
-
-    /* Maintenance History Table */
-    .it008-table {
-      width: 100%;
-      border-collapse: collapse;
-      border: 1px solid #000000;
-      font-size: 12.5px;
-    }
-
-    .it008-table th,
-    .it008-table td {
-      border: 1px solid #000000;
-      padding: 4px 6px;
-      vertical-align: middle;
-    }
-
-    .it008-table thead th {
-      background-color: var(--brand-mid);
-      font-weight: 700;
-      text-align: center;
-      height: 40px;
-    }
-
-    .col-topic {
-      width: 28%;
-      text-align: left;
-    }
-
-    .col-month {
-      width: 3.9%;
-      text-align: center;
-      padding: 2px !important;
-    }
-
-    .month-vertical {
-      writing-mode: vertical-rl;
-      transform: rotate(180deg);
-      display: inline-block;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-    }
-
-    .col-remark {
-      width: 25%;
-      text-align: center;
-    }
-
-    .topic-cell {
-      font-weight: 500;
-      padding-left: 8px !important;
-    }
-
-    /* Interactive Status Circle inside Month Cells */
-    .month-cell {
-      text-align: center;
-      cursor: pointer;
-      user-select: none;
-      position: relative;
-      height: 28px;
-    }
-
-    .month-cell:hover {
-      background-color: var(--brand-light);
-    }
-
-    .status-symbol {
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto;
-      font-size: 13px;
-      line-height: 1;
-    }
-
-    /* State 0: Empty cell */
-    .status-symbol[data-state="0"] {
-      border: 1px dashed transparent;
-    }
-    .month-cell:hover .status-symbol[data-state="0"] {
-      border-color: #999999;
-    }
-
-    /* State 1: ○ แผนดำเนินการ (Plan circle) */
-    .status-symbol[data-state="1"] {
-      border: 1.5px solid #000000;
-      background: transparent;
-    }
-
-    /* State 2: ⊗ ดำเนินการได้ตามแผนไม่พบสิ่งผิดปกติ (Circle with cross) */
-    .status-symbol[data-state="2"] {
-      border: 1.5px solid #000000;
-      background: transparent;
-      position: relative;
-    }
-    .status-symbol[data-state="2"]::before,
-    .status-symbol[data-state="2"]::after {
-      content: "";
-      position: absolute;
-      width: 13px;
-      height: 1.5px;
-      background-color: #000000;
-    }
-    .status-symbol[data-state="2"]::before {
-      transform: rotate(45deg);
-    }
-    .status-symbol[data-state="2"]::after {
-      transform: rotate(-45deg);
-    }
-
-    /* State 3: ● ดำเนินการได้ตามแผน พบสิ่งผิดปกติและแก้ไขแล้ว (Solid black circle) */
-    .status-symbol[data-state="3"] {
-      border: 1.5px solid #000000;
-      background-color: #000000;
-    }
-
-    .remark-input {
-      width: 100%;
-      border: none;
-      background: transparent;
-      font-family: var(--font);
-      font-size: 12px;
-      color: #000000;
-      padding: 2px 4px;
-    }
-
-    .remark-input:focus {
-      outline: none;
-      background-color: var(--brand-light);
-    }
-
-    /* Signature Rows */
-    .sig-row td {
-      background-color: var(--brand-light);
-      height: 34px;
-      font-weight: 600;
-    }
-
-    .sig-cell-input {
-      width: 100%;
-      border: none;
-      background: transparent;
-      font-family: var(--font);
-      font-size: 11px;
-      text-align: center;
-      color: #000000;
-      padding: 2px 0;
-    }
-
-    .sig-cell-input:focus {
-      outline: none;
-      background-color: #ffffff;
-    }
-
-    .sig-note-cell {
-      text-align: center;
-      font-weight: 700;
-      font-size: 12.5px;
-      background-color: var(--brand-light);
-    }
-
-    /* Form Footer Legend & Code */
-    .it008-footer {
-      margin-top: 8px;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      font-size: 12.5px;
-    }
-
-    .legend-row {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 28px;
-      font-weight: 600;
-    }
-
-    .legend-item {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .legend-icon {
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      display: inline-block;
-      position: relative;
-    }
-
-    .legend-icon.plan {
-      border: 1.5px solid #000000;
-    }
-
-    .legend-icon.normal {
-      border: 1.5px solid #000000;
-    }
-    .legend-icon.normal::before,
-    .legend-icon.normal::after {
-      content: "";
-      position: absolute;
-      top: 4.5px;
-      left: 1px;
-      width: 8px;
-      height: 1.4px;
-      background: #000000;
-    }
-    .legend-icon.normal::before {
-      transform: rotate(45deg);
-    }
-    .legend-icon.normal::after {
-      transform: rotate(-45deg);
-    }
-
-    .legend-icon.fixed {
-      border: 1.5px solid #000000;
-      background: #000000;
-    }
-
-    .doc-code-right {
-      text-align: right;
-      font-weight: 700;
-      font-size: 12px;
-    }
-
-    /* Guide View (Supabase + GitHub + Vercel instructions) */
-    .guide-container {
-      max-width: 980px;
-      margin: var(--space-6) auto;
-      padding: 0 var(--space-6);
-      display: none;
-    }
-
-    .guide-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: var(--space-6);
-      margin-bottom: var(--space-6);
-    }
-
-    .guide-card h2 {
-      margin-top: 0;
-      font-size: 18px;
-      color: var(--brand-dark);
-      border-bottom: 2px solid var(--brand-mid);
-      padding-bottom: 8px;
-    }
-
-    .code-block {
-      background: var(--brand-dark);
-      color: var(--brand-light);
-      padding: var(--space-4);
-      border-radius: 6px;
-      font-family: monospace;
-      font-size: 12.5px;
-      overflow-x: auto;
-      line-height: 1.5;
-      margin: var(--space-3) 0;
-    }
-
-    .step-list {
-      margin: 0;
-      padding-left: 20px;
-    }
-
-    .step-list li {
-      margin-bottom: 8px;
-    }
-
-    /* Print Media Query: Print ONLY the A4 Form Template cleanly */
-    @media print {
-      @page {
-        size: A4 landscape;
-        margin: 8mm;
-      }
-
-      body {
-        background: #FFFFFF !important;
-      }
-
-      .app-header,
-      .control-panel,
-      .guide-container {
-        display: none !important;
-      }
-
-      .workspace {
-        display: block !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        max-width: none !important;
-      }
-
-      .preview-wrapper {
-        padding: 0 !important;
-        border: none !important;
-        background: transparent !important;
-        overflow: visible !important;
-      }
-
-      .a4-landscape {
-        width: 100% !important;
-        min-width: 0 !important;
-        padding: 0 !important;
-        box-shadow: none !important;
-      }
-
-      .it008-bar-dark,
-      .it008-top-meta,
-      .it008-table thead th,
-      .sig-row td,
-      .sig-note-cell,
-      .status-symbol[data-state="3"],
-      .legend-icon.fixed {
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-      }
-    }
-  </style>
-<style data-link-removed-style>a[data-link-removed],a[href*="zPythonSafez"]:not([onclick]){pointer-events:none!important;cursor:default!important;opacity:.6}</style></head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FOM-008-IT แบบฟอร์มบำรุงรักษาคอมพิวเตอร์</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bench:#EAF3FC; --panel:#FFFFFF; --ink:#0F2A43; --muted:#58718A; --line:#C3D7EB;
+  --accent:#1B6FD1; --accent-d:#1557A8; --brand:#0F4C99; --warn:#9B2C2C; --ok:#2F6B4F;
+  --font:'Sarabun',system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:flex;flex-direction:column;font-family:var(--font);font-size:14px;line-height:1.5;color:var(--ink);background:var(--bench)}
+button,input,select{font-family:inherit;font-size:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* ---------- top bar ---------- */
+.topbar{background:var(--brand);color:#fff;border-bottom:3px solid #6FB1F2;display:flex;align-items:center;gap:16px;padding:10px 24px}
+.topbar h1{margin:0;font-size:17px;font-weight:600;flex:1}
+.topbar small{color:#B7D6F7;font-weight:400;margin-left:8px}
+
+/* ---------- layout ---------- */
+.shell{flex:1;width:100%;max-width:none;margin:0;padding:20px 24px;display:grid;grid-template-columns:340px 1fr;gap:20px;align-items:start}
+@media(max-width:1060px){.shell{grid-template-columns:1fr}}
+.side{display:flex;flex-direction:column;gap:16px;position:sticky;top:16px}
+@media(max-width:1060px){.side{position:static}}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px}
+.box h2{margin:0 0 10px;font-size:15px;font-weight:700}
+label{display:block;font-weight:600;font-size:13px;margin-bottom:4px}
+.field{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink)}
+.row{display:flex;gap:8px}
+.btn{border:1px solid transparent;border-radius:6px;padding:9px 14px;font-weight:600;cursor:pointer;white-space:nowrap}
+.btn-main{background:var(--accent);color:#fff}
+.btn-main:hover{background:var(--accent-d)}
+.btn-ghost{background:#fff;border-color:var(--line);color:var(--ink)}
+.btn-ghost:hover{background:var(--bench)}
+.btn-wide{width:100%}
+.hint{color:var(--muted);font-size:12.5px;margin:6px 0 0}
+
+/* search results */
+.results{list-style:none;margin:8px 0 0;padding:0;border:1px solid var(--line);border-radius:6px;background:#fff;max-height:240px;overflow:auto}
+.results:empty{display:none}
+.results li button{display:block;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--bench);padding:8px 10px;cursor:pointer}
+.results li:last-child button{border-bottom:0}
+.results li button:hover,.results li button:focus-visible{background:#E3EEFB}
+.results b{display:block;font-weight:600}
+.results span{color:var(--muted);font-size:12.5px}
+
+/* status */
+.status{margin-top:10px;padding:8px 10px;border-radius:6px;border-left:4px solid var(--muted);background:#fff;font-size:13px}
+.status.ok{border-color:var(--ok)} .status.err{border-color:var(--warn);background:#FBEFEF;color:#6B1F1F}
+.status.busy{border-color:var(--accent)}
+
+/* ---------- paper ---------- */
+.bench{overflow-x:auto;padding:0 0 8px;min-width:0}
+.paper{width:100%;min-width:980px;margin:0;background:#fff;color:#000;padding:11mm 13mm;box-shadow:0 1px 2px rgba(0,0,0,.15),0 8px 24px rgba(0,0,0,.08)}
+.f-title{text-align:center;font-size:19px;font-weight:700;margin:0 0 10px}
+.f-bar{background:#000;color:#fff;font-weight:700;font-size:13.5px;padding:4px 10px}
+.f-meta{background:#D9D9D9;padding:6px 10px;display:grid;grid-template-columns:1.2fr 1.2fr 1fr 1.3fr;gap:10px;font-size:13px;font-weight:600}
+.dot{display:flex;align-items:baseline;gap:4px}
+.dot input{flex:1;min-width:50px;border:0;border-bottom:1px dotted #000;background:transparent;font-weight:600;font-size:13px;padding:0 4px;color:#000}
+.specs{display:grid;grid-template-columns:1fr 1fr;column-gap:44px;row-gap:5px;padding:10px 4px 14px}
+.spec{display:flex;align-items:baseline;gap:8px;font-size:12.5px}
+.spec span{font-weight:600;white-space:nowrap}
+.spec input{flex:1;min-width:0;border:0;border-bottom:1px solid #333;background:transparent;font-size:13px;padding:1px 4px;color:#000}
+.paper input:focus{outline:none;background:#E3EEFB}
+
+table.f-table{width:100%;border-collapse:collapse;border:1px solid #000;font-size:12.5px}
+.f-table th,.f-table td{border:1px solid #000;padding:4px 6px;vertical-align:middle}
+.f-table thead th{background:#D9D9D9;text-align:center;height:42px}
+.th-topic{width:28%;text-align:left!important}
+.th-m{width:3.9%;padding:2px!important}
+.th-m span{writing-mode:vertical-rl;transform:rotate(180deg);display:inline-block;font-size:11px;font-weight:700}
+.th-rem{width:25%}
+.topic{padding-left:8px!important;font-weight:500}
+.mc{text-align:center;cursor:pointer;user-select:none;height:28px}
+.mc:hover{background:#E3EEFB}
+.sym{width:20px;height:20px;border-radius:50%;margin:0 auto;position:relative;border:1.5px solid transparent}
+.mc:hover .sym[data-s="0"]{border:1px dashed #999}
+.sym[data-s="1"]{border-color:#000}
+.sym[data-s="2"]{border-color:#000}
+.sym[data-s="2"]::before,.sym[data-s="2"]::after,.lg.normal::before,.lg.normal::after{content:"";position:absolute;left:50%;top:50%;width:13px;height:1.5px;background:#000}
+.sym[data-s="2"]::before,.lg.normal::before{transform:translate(-50%,-50%) rotate(45deg)}
+.sym[data-s="2"]::after,.lg.normal::after{transform:translate(-50%,-50%) rotate(-45deg)}
+.sym[data-s="3"]{border-color:#000;background:#000}
+.rem{width:100%;border:0;background:transparent;font-size:12px;padding:2px 4px}
+.sig td{background:#F2F2F2;height:34px;font-weight:600}
+.sig input{width:100%;border:0;background:transparent;font-size:11px;text-align:center}
+.sig-note{text-align:center;font-weight:700;font-size:12.5px}
+.f-foot{margin-top:8px;font-size:12.5px}
+.legend{display:flex;flex-wrap:wrap;align-items:center;gap:24px;font-weight:600}
+.legend>span{display:inline-flex;align-items:center;gap:6px}
+.lg{width:12px;height:12px;border-radius:50%;border:1.5px solid #000;position:relative;display:inline-block}
+.lg.normal::before,.lg.normal::after{width:8px;height:1.4px}
+.lg.fixed{background:#000}
+.code{text-align:right;font-weight:700;font-size:12px}
+
+.site-foot{background:var(--brand);color:#DCEBFA;text-align:center;font-size:13px;padding:10px 16px}
+.site-foot span{margin:0 8px;opacity:.6}
+
+/* ---------- settings dialog ---------- */
+dialog{border:1px solid var(--line);border-radius:10px;padding:0;width:min(480px,92vw);color:var(--ink)}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+dialog form{padding:20px;display:flex;flex-direction:column;gap:12px}
+dialog h2{margin:0;font-size:17px}
+.dlg-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:4px}
+
+/* ---------- print (บังคับให้พอดี 1 หน้า A4 แนวนอน) ---------- */
+@page{size:A4 landscape;margin:6mm}
+@media print{
+  html,body{height:auto;min-height:0;background:#fff;display:block;overflow:visible}
+  .topbar,.side,dialog,.site-foot{display:none!important}
+  .shell{display:block;padding:0;margin:0;max-width:none;min-height:0}
+  .bench{padding:0;margin:0;overflow:visible}
+  .paper{width:100%;min-width:0;margin:0;padding:0;box-shadow:none;break-inside:avoid;page-break-inside:avoid;page-break-after:avoid}
+  .f-title{font-size:16px;margin:0 0 5px}
+  .f-bar{font-size:12px;padding:2px 8px}
+  .f-meta{padding:3px 8px;font-size:12px}
+  .dot input,.spec input{font-size:12px;padding:0 4px}
+  .specs{row-gap:4px;padding:6px 4px 9px}
+  .spec{font-size:11.5px}
+  .f-table{font-size:11.5px}
+  .f-table th,.f-table td{padding:1px 5px}
+  .f-table thead th{height:34px}
+  .th-m span{font-size:10px}
+  .mc{height:26px}
+  .sym{width:17px;height:17px}
+  .sym[data-s="2"]::before,.sym[data-s="2"]::after{width:11px}
+  .sig td{height:40px}
+  .rem{font-size:11px;padding:0 4px}
+  .f-foot{margin-top:4px;font-size:11px}
+  .code{font-size:11px}
+  .f-bar,.f-meta,.f-table thead th,.sig td,.sym[data-s="3"],.lg.fixed{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .mc:hover{background:none}
+}
+</style>
+</head>
 <body>
 
-  <!-- Header Bar -->
-  <header class="app-header">
-    <div class="app-title-group">
-      <span class="doc-badge">FOM-008-IT</span>
-      <h1>ระบบดึงข้อมูล Assets จาก Supabase และพิมพ์ใบตรวจสอบบำรุงรักษา</h1>
-    </div>
-    <div class="nav-tabs">
-      <button type="button" class="tab-btn active" id="tabFormBtn" onclick="switchTab('form')">หน้ากรอกและพิมพ์แบบฟอร์ม (IT008)</button>
-      <button type="button" class="tab-btn" id="tabGuideBtn" onclick="switchTab('guide')">วิธีเชื่อม Supabase + GitHub + Vercel</button>
-    </div>
-  </header>
+<header class="topbar">
+  <h1>แบบฟอร์มตรวจสอบบำรุงรักษาคอมพิวเตอร์<small>FOM-008-IT</small></h1>
+</header>
 
-  <!-- View 1: Interactive Search & IT008 PDF Template -->
-  <main class="workspace" id="formWorkspace">
-    <!-- Left Sidebar Controls -->
-    <aside class="control-panel">
-      <!-- Section 1: Search by Machine Name -->
-      <div class="panel-section">
-        <h2 class="panel-heading">1. ค้นหาและดึงข้อมูลเครื่อง (Assets)</h2>
-        <div class="form-group">
-          <label for="searchComputerInput">กรอกชื่อเครื่อง (Computer Name / Asset Code)</label>
-          <div class="search-row">
-            <input type="text" id="searchComputerInput" class="input-text" placeholder="เช่น PC-IT-001, NB-ACC-012" onkeydown="if(event.key==='Enter') fetchAssetByName()">
-            <button type="button" class="btn btn-primary" onclick="fetchAssetByName()">ดึงข้อมูล</button>
-          </div>
-          <p class="helper-caption">ค้นหาจากตาราง <code>public.assets</code> (พร้อมดึงสถานที่ตั้งและผู้รับผิดชอบ)</p>
-        </div>
-        <div id="searchStatus" class="status-box">พร้อมค้นหาข้อมูล — กรอกชื่อเครื่องแล้วกด "ดึงข้อมูล"</div>
+<main class="shell">
+  <aside class="side">
+    <section class="box">
+      <h2>ค้นหาเครื่อง</h2>
+      <label for="q">ชื่อเครื่อง</label>
+      <div class="row">
+        <input id="q" class="field" type="search" placeholder="พิมพ์ชื่อเครื่อง เช่น PC-IT-001" autocomplete="off">
+        <button type="button" class="btn btn-main" id="goBtn">ดึงข้อมูล</button>
       </div>
-
-      <!-- Section 2: Print & Form Utilities -->
-      <div class="panel-section">
-        <h2 class="panel-heading">2. คำสั่งจัดการแบบฟอร์มและพิมพ์</h2>
-        <div class="form-group">
-          <button type="button" class="btn btn-primary btn-full" onclick="window.print()">
-            พิมพ์แบบฟอร์ม / บันทึกเป็น PDF (A4 แนวนอน)
-          </button>
-          <p class="helper-caption">คำแนะนำ: คลิกช่องเดือน (JAN–DEC) ในตารางเพื่อสลับสัญลักษณ์ ○ → ⊗ → ●</p>
-        </div>
-        <div class="grid-2col">
-          <button type="button" class="btn btn-secondary" onclick="setPlanMonthForAll()">ตั้งค่า ○ ตามเดือน</button>
-          <button type="button" class="btn btn-secondary" onclick="clearFormFields()">ล้างข้อมูลฟอร์ม</button>
-        </div>
-        <div class="form-group" style="margin-top: 8px;">
-          <label for="planMonthSelect">เลือกเดือนแผนดำเนินการ (○ ทุกหัวข้อ)</label>
-          <select id="planMonthSelect" class="select-box" onchange="setPlanMonthForAll()">
-            <option value="">-- ไม่ระบุเดือนล่วงหน้า --</option>
-            <option value="0">JAN (มกราคม)</option>
-            <option value="1">FEB (กุมภาพันธ์)</option>
-            <option value="2">MAR (มีนาคม)</option>
-            <option value="3">APR (เมษายน)</option>
-            <option value="4">MAY (พฤษภาคม)</option>
-            <option value="5">JUN (มิถุนายน)</option>
-            <option value="6">JUL (กรกฎาคม)</option>
-            <option value="7">AUG (สิงหาคม)</option>
-            <option value="8">SEP (กันยายน)</option>
-            <option value="9">OCT (ตุลาคม)</option>
-            <option value="10">NOV (พฤศจิกายน)</option>
-            <option value="11" selected>DEC (ธันวาคม - ตามเทมเพลต)</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- Section 3: Supabase Configuration & Field Mapping -->
-      <div class="panel-section">
-        <h2 class="panel-heading">3. ตั้งค่าการเชื่อมต่อ Supabase</h2>
-        <div class="form-group">
-          <label for="supabaseUrl">Supabase Project URL</label>
-          <input type="text" id="supabaseUrl" class="input-text" placeholder="https://fuarmmweqxxhczavkvqp.supabase.co">
-        </div>
-        <div class="form-group">
-          <label for="supabaseKey">Supabase Anon Public Key</label>
-          <input type="password" id="supabaseKey" class="input-text" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ1YXJtbXdlcXh4aGN6YXZrdnFwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgyMjgzMTcsImV4cCI6MjEwMzgwNDMxN30.n7s4gKOkCvaOSpFSf9FGmWsqi7eAzFe28c_oJWy8NSE">
-        </div>
-        <div class="grid-2col" style="margin-bottom: 10px;">
-          <div class="form-group">
-            <label for="tableNameInput">ชื่อตาราง</label>
-            <input type="text" id="tableNameInput" class="input-text" value="assets">
-          </div>
-          <div class="form-group">
-            <label for="searchColInput">คอลัมน์ชื่อเครื่อง</label>
-            <input type="text" id="searchColInput" class="input-text" value="computer_name" title="ระบบจะค้นหาทั้งคอลัมน์นี้ หรือ name / asset_name / hostname โดยอัตโนมัติ">
-          </div>
-        </div>
-        <button type="button" class="btn btn-secondary btn-full" onclick="saveSupabaseConfig()">บันทึกค่าการเชื่อมต่อ</button>
-      </div>
-    </aside>
-
-    <!-- Right Preview Area: Exact IT008 PDF Template -->
-    <section class="preview-wrapper" aria-label="ตัวอย่างแบบฟอร์ม FOM-008-IT">
-      <div class="a4-landscape" id="printableSheet">
-        <h2 class="it008-title">แบบฟอร์มตรวจสอบบำรุงรักษาคอมพิวเตอร์และอุปกรณ์สารสนเทศ</h2>
-
-        <!-- Section 1: ข้อมูลเฉพาะของคอมพิวเตอร์/อุปกรณ์ -->
-        <div class="it008-bar-dark">ข้อมูลเฉพาะของคอมพิวเตอร์/อุปกรณ์</div>
-
-        <div class="it008-top-meta">
-          <div class="dotted-field">
-            <span>ชื่อเครื่อง</span>
-            <input type="text" id="f_computer_name" class="dotted-input" aria-label="ชื่อเครื่อง">
-          </div>
-          <div class="dotted-field">
-            <span>สถานที่ตั้ง</span>
-            <input type="text" id="f_location" class="dotted-input" aria-label="สถานที่ตั้ง">
-          </div>
-          <div class="dotted-field">
-            <span>หมายเลขไอพี</span>
-            <input type="text" id="f_ip_address" class="dotted-input" aria-label="หมายเลขไอพี">
-          </div>
-          <div class="dotted-field">
-            <span>ผู้รับผิดชอบ</span>
-            <input type="text" id="f_responsible" class="dotted-input" aria-label="ผู้รับผิดชอบ">
-          </div>
-        </div>
-
-        <div class="it008-specs-grid">
-          <div class="spec-line">
-            <span class="spec-label">CPU</span>
-            <input type="text" id="f_cpu" class="spec-input" aria-label="CPU">
-          </div>
-          <div class="spec-line">
-            <span class="spec-label">MONITOR</span>
-            <input type="text" id="f_monitor" class="spec-input" aria-label="MONITOR">
-          </div>
-          <div class="spec-line">
-            <span class="spec-label">RAM</span>
-            <input type="text" id="f_ram" class="spec-input" aria-label="RAM">
-          </div>
-          <div class="spec-line">
-            <span class="spec-label">KEYBOARD</span>
-            <input type="text" id="f_keyboard" class="spec-input" aria-label="KEYBOARD">
-          </div>
-          <div class="spec-line">
-            <span class="spec-label">HDD</span>
-            <input type="text" id="f_hdd" class="spec-input" aria-label="HDD">
-          </div>
-          <div class="spec-line">
-            <span class="spec-label">MOUSE</span>
-            <input type="text" id="f_mouse" class="spec-input" aria-label="MOUSE">
-          </div>
-          <div class="spec-line">
-            <span class="spec-label">VGA</span>
-            <input type="text" id="f_vga" class="spec-input" aria-label="VGA">
-          </div>
-          <div class="spec-line">
-            <span class="spec-label">WIRELESS ADAPTER</span>
-            <input type="text" id="f_wireless" class="spec-input" aria-label="WIRELESS ADAPTER">
-          </div>
-          <div class="spec-line">
-            <span class="spec-label">MAINBOARD</span>
-            <input type="text" id="f_mainboard" class="spec-input" aria-label="MAINBOARD">
-          </div>
-          <div class="spec-line">
-            <span class="spec-label">OTHERS</span>
-            <input type="text" id="f_others" class="spec-input" aria-label="OTHERS">
-          </div>
-        </div>
-
-        <!-- Section 2: ประวัติการบำรุงรักษา -->
-        <div class="it008-bar-dark">ประวัติการบำรุงรักษา</div>
-
-        <table class="it008-table">
-          <thead>
-            <tr>
-              <th class="col-topic">หัวข้อการตรวจสอบ/บำรุงรักษา</th>
-              <th class="col-month"><span class="month-vertical">JAN</span></th>
-              <th class="col-month"><span class="month-vertical">FEB</span></th>
-              <th class="col-month"><span class="month-vertical">MAR</span></th>
-              <th class="col-month"><span class="month-vertical">APR</span></th>
-              <th class="col-month"><span class="month-vertical">MAY</span></th>
-              <th class="col-month"><span class="month-vertical">JUN</span></th>
-              <th class="col-month"><span class="month-vertical">JUL</span></th>
-              <th class="col-month"><span class="month-vertical">AUG</span></th>
-              <th class="col-month"><span class="month-vertical">SEP</span></th>
-              <th class="col-month"><span class="month-vertical">OCT</span></th>
-              <th class="col-month"><span class="month-vertical">NOV</span></th>
-              <th class="col-month"><span class="month-vertical">DEC</span></th>
-              <th class="col-remark">หมายเหตุ</th>
-            </tr>
-          </thead>
-          <tbody id="checklistBody">
-            <!-- Populated by JavaScript for the 9 inspection topics + 2 signature rows -->
-          </tbody>
-        </table>
-
-        <!-- Footer Legend & Form Code -->
-        <div class="it008-footer">
-          <div class="legend-row">
-            <span>หมายเหตุ</span>
-            <span class="legend-item">
-              <span class="legend-icon plan"></span>
-              <span>หมายถึง แผนดำเนินการ</span>
-            </span>
-            <span class="legend-item">
-              <span class="legend-icon normal"></span>
-              <span>หมายถึง ดำเนินการได้ตามแผนไม่พบสิ่งผิดปกติ</span>
-            </span>
-            <span class="legend-item">
-              <span class="legend-icon fixed"></span>
-              <span>หมายถึง ดำเนินการได้ตามแผน พบสิ่งผิดปกติและแก้ไขแล้ว</span>
-            </span>
-          </div>
-          <div class="doc-code-right">FOM-008-IT Rev.01 (26/04/2022)</div>
-        </div>
-      </div>
+      <ul class="results" id="results" aria-label="ผลการค้นหา"></ul>
+      <div class="status" id="status" role="status">พิมพ์ชื่อเครื่อง แล้วเลือกจากรายการที่ขึ้นมา</div>
     </section>
-  </main>
 
-  <!-- View 2: Deployment & Integration Guide (Supabase + GitHub + Vercel) -->
-  <section class="guide-container" id="guideWorkspace">
-    <div class="guide-card">
-      <h2>โครงสร้างการทำงาน: Supabase + GitHub + Vercel</h2>
-      <p>ไฟล์ HTML นี้ถูกออกแบบให้สามารถนำไปวางใน GitHub Repository และเชื่อมต่อกับ Vercel เพื่อเปิดใช้งานเป็นเว็บแอปพลิเคชันได้ทันที โดยดึงข้อมูลจากตารางใน <code>schema public</code> ของคุณ (เช่น <code>assets</code>, <code>employees</code>, <code>asset_departments</code>, <code>buildings</code>, <code>floors</code>, <code>pm_record_pm</code>)</p>
-      <ol class="step-list">
-        <li><strong>ขั้นตอนที่ 1 (Supabase):</strong> ไปที่เมนู <em>Project Settings → API</em> ใน Supabase เพื่อคัดลอก <code>Project URL</code> และ <code>anon public key</code> จากนั้นตรวจสอบให้แน่ใจว่าตาราง <code>assets</code> เปิดสิทธิ์การอ่านข้อมูล (SELECT Policy) เรียบร้อยแล้ว</li>
-        <li><strong>ขั้นตอนที่ 2 (GitHub):</strong> สร้าง Repository ใหม่บน GitHub และอัปโหลดไฟล์ <code>index.html</code> นี้ขึ้นไปไว้ที่ Root ของโปรเจกต์</li>
-        <li><strong>ขั้นตอนที่ 3 (Vercel):</strong> ล็อกอินเข้า Vercel กด <em>Add New... → Project</em> เลือก GitHub Repository ที่เพิ่งสร้าง แล้วกด <em>Deploy</em> (เนื่องจากเป็น Static HTML จึงไม่ต้องตั้งค่า Build Command ใดๆ)</li>
-      </ol>
-    </div>
+    <section class="box">
+      <h2>แผนบำรุงรักษา</h2>
+      <label for="planMonth">เดือนที่วางแผน (ใส่ ○ ให้ทุกหัวข้อ)</label>
+      <select id="planMonth" class="field">
+        <option value="">ไม่ระบุ</option>
+        <option value="0">มกราคม</option><option value="1">กุมภาพันธ์</option><option value="2">มีนาคม</option>
+        <option value="3">เมษายน</option><option value="4">พฤษภาคม</option><option value="5">มิถุนายน</option>
+        <option value="6">กรกฎาคม</option><option value="7">สิงหาคม</option><option value="8">กันยายน</option>
+        <option value="9">ตุลาคม</option><option value="10">พฤศจิกายน</option><option value="11" selected>ธันวาคม</option>
+      </select>
+      <p class="hint">คลิกช่องเดือนในตารางเพื่อสลับ ว่าง → ○ → ⊗ → ●</p>
+    </section>
 
-    <div class="guide-card">
-      <h2>การจับคู่คอลัมน์จากตาราง <code>public.assets</code> อัตโนมัติ</h2>
-      <p>ระบบรองรับชื่อคอลัมน์มาตรฐานหลากหลายรูปแบบในตาราง <code>assets</code> ของคุณโดยอัตโนมัติ หรือคุณสามารถสร้าง SQL View เพื่อรวมตารางเข้าด้วยกันได้ดังนี้:</p>
-      <pre class="code-block">-- ตัวอย่างการสร้าง View ใน Supabase SQL Editor เพื่อเชื่อมข้อมูลสถานที่ตั้งและชื่อผู้รับผิดชอบ
-CREATE OR REPLACE VIEW public.v_it008_assets AS
-SELECT
-  a.id,
-  a.computer_name,
-  a.ip_address,
-  a.cpu,
-  a.ram,
-  a.hdd,
-  a.vga,
-  a.mainboard,
-  a.monitor,
-  a.keyboard,
-  a.mouse,
-  a.wireless_adapter,
-  a.others,
-  CONCAT_WS(' / ', b.name, f.name, d.name) AS location,
-  e.full_name AS responsible_person
-FROM public.assets a
-LEFT JOIN public.buildings b ON a.building_id = b.id
-LEFT JOIN public.floors f ON a.floor_id = f.id
-LEFT JOIN public.asset_departments d ON a.department_id = d.id
-LEFT JOIN public.employees e ON a.employee_id = e.id;</pre>
+    <section class="box">
+      <div class="row">
+        <button type="button" class="btn btn-main btn-wide" id="printBtn">พิมพ์ / บันทึกเป็น PDF</button>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <button type="button" class="btn btn-ghost btn-wide" id="clearBtn">ล้างแบบฟอร์ม</button>
+      </div>
+      <p class="hint">พิมพ์บนกระดาษ A4 แนวนอน</p>
+    </section>
+  </aside>
+
+  <section class="bench" aria-label="ตัวอย่างแบบฟอร์ม">
+    <div class="paper">
+      <h2 class="f-title">แบบฟอร์มตรวจสอบบำรุงรักษาคอมพิวเตอร์และอุปกรณ์สารสนเทศ</h2>
+      <div class="f-bar">ข้อมูลเฉพาะของคอมพิวเตอร์/อุปกรณ์</div>
+      <div class="f-meta">
+        <label class="dot"><span>ชื่อเครื่อง</span><input id="f_name"></label>
+        <label class="dot"><span>สถานที่ตั้ง</span><input id="f_location"></label>
+        <label class="dot"><span>หมายเลขไอพี</span><input id="f_ip"></label>
+        <label class="dot"><span>ผู้รับผิดชอบ</span><input id="f_resp"></label>
+      </div>
+      <div class="specs">
+        <label class="spec"><span>CPU</span><input id="f_cpu"></label>
+        <label class="spec"><span>MONITOR</span><input id="f_monitor"></label>
+        <label class="spec"><span>RAM</span><input id="f_ram"></label>
+        <label class="spec"><span>KEYBOARD</span><input id="f_keyboard"></label>
+        <label class="spec"><span>HDD</span><input id="f_hdd"></label>
+        <label class="spec"><span>MOUSE</span><input id="f_mouse"></label>
+        <label class="spec"><span>VGA</span><input id="f_vga"></label>
+        <label class="spec"><span>WIRELESS ADAPTER</span><input id="f_wireless"></label>
+        <label class="spec"><span>MAINBOARD</span><input id="f_mainboard"></label>
+        <label class="spec"><span>OTHERS</span><input id="f_others"></label>
+      </div>
+
+      <div class="f-bar">ประวัติการบำรุงรักษา</div>
+      <table class="f-table">
+        <thead><tr id="headRow"></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+
+      <div class="f-foot">
+        <div class="legend">
+          <span>หมายเหตุ</span>
+          <span><i class="lg"></i>แผนดำเนินการ</span>
+          <span><i class="lg normal"></i>ดำเนินการได้ตามแผน ไม่พบสิ่งผิดปกติ</span>
+          <span><i class="lg fixed"></i>ดำเนินการได้ตามแผน พบสิ่งผิดปกติและแก้ไขแล้ว</span>
+        </div>
+        <div class="code">FOM-008-IT Rev.01 (26/04/2022)</div>
+      </div>
     </div>
   </section>
+</main>
 
-  <!-- Load Official Supabase JS Client with graceful fallback to REST Fetch -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script>
-    // 9 Checklist items from IT008.pdf
-    const CHECKLIST_TOPICS = [
-      "1. ความสะอาดภายนอกตัวเครื่อง",
-      "2. ความสะอาดภายในตัวเครื่อง",
-      "3. ตรวจสอบการเชื่อมต่อเครือข่าย",
-      "4. อัพเดท ANTIVIRUS",
-      "5. ค้นหาและลบ VIRUS",
-      "6. ตรวจสอบ BAD SECTOR",
-      "7. จัดเรียงข้อมูล DISK DEFRAGMENT",
-      "8. ตรวจสอบการทำงาน SOFTWARE",
-      "9. ตรวจสอบสายไฟฟ้า, สายสัญญาณ"
-    ];
+<footer class="site-foot">เอกสาร PM<span>|</span>ใช้สำหรับภายในบริษัทเท่านั้น<span>|</span>พัฒนาโดย Sarawut.C</footer>
 
-    // Build the 9 maintenance rows + 2 signature rows matching IT008.pdf
-    function renderChecklistTable() {
-      const tbody = document.getElementById('checklistBody');
-      tbody.innerHTML = '';
+<dialog id="dlg">
+  <form method="dialog" id="cfgForm">
+    <h2>ตั้งค่าการเชื่อมต่อ Supabase</h2>
+    <div><label for="cfgUrl">Project URL</label><input id="cfgUrl" class="field" placeholder="https://xxxx.supabase.co"></div>
+    <div><label for="cfgKey">Anon public key</label><input id="cfgKey" class="field" type="password" placeholder="วาง anon key ที่นี่"></div>
+    <div class="row">
+      <div style="flex:1"><label for="cfgTable">ตาราง / view</label><input id="cfgTable" class="field"></div>
+      <div style="flex:1"><label for="cfgCol">คอลัมน์ชื่อเครื่อง</label><input id="cfgCol" class="field"></div>
+    </div>
+    <p class="hint" style="margin:0">ค่าเหล่านี้เก็บไว้ในเบราว์เซอร์ของคุณเท่านั้น ไม่ถูกอัปโหลดไปกับไฟล์</p>
+    <div class="dlg-actions">
+      <button type="button" class="btn btn-ghost" id="cfgCancel">ยกเลิก</button>
+      <button type="submit" class="btn btn-main" id="cfgSave" value="save">บันทึก</button>
+    </div>
+  </form>
+</dialog>
 
-      CHECKLIST_TOPICS.forEach((topic, rowIdx) => {
-        const tr = document.createElement('tr');
+<script>
+/* ค่าเริ่มต้น: ใส่ URL ได้เลย ส่วน key แนะนำให้ใส่ผ่านปุ่ม "ตั้งค่าการเชื่อมต่อ" */
+const DEFAULTS = {
+  url: 'https://fuarmmweqxxhczavkvqp.supabase.co',
+  key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ1YXJtbXdlcXh4aGN6YXZrdnFwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgyMjgzMTcsImV4cCI6MjEwMzgwNDMxN30.n7s4gKOkCvaOSpFSf9FGmWsqi7eAzFe28c_oJWy8NSE',
+  table: 'v_it008_assets',
+  col: 'computer_name'
+};
 
-        // Topic column
-        const tdTopic = document.createElement('td');
-        tdTopic.className = 'topic-cell';
-        tdTopic.textContent = topic;
-        tr.appendChild(tdTopic);
+const TOPICS = [
+  '1. ความสะอาดภายนอกตัวเครื่อง','2. ความสะอาดภายในตัวเครื่อง','3. ตรวจสอบการเชื่อมต่อเครือข่าย',
+  '4. อัพเดท ANTIVIRUS','5. ค้นหาและลบ VIRUS','6. ตรวจสอบ BAD SECTOR',
+  '7. จัดเรียงข้อมูล DISK DEFRAGMENT','8. ตรวจสอบการทำงาน SOFTWARE','9. ตรวจสอบสายไฟฟ้า, สายสัญญาณ'
+];
+const MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+const $ = id => document.getElementById(id);
 
-        // 12 Month columns (JAN = 0 .. DEC = 11)
-        for (let m = 0; m < 12; m++) {
-          const tdMonth = document.createElement('td');
-          tdMonth.className = 'month-cell';
-          tdMonth.title = 'คลิกเพื่อเปลี่ยนสถานะ: ว่าง → แผนดำเนินการ (○) → ปกติ (⊗) → แก้ไขแล้ว (●)';
+/* ---------- config ---------- */
+let cfg = {...DEFAULTS};
+try {
+  const saved = JSON.parse(localStorage.getItem('it008_cfg') || '{}');
+  cfg = {...DEFAULTS, ...saved};
+} catch (e) {}
 
-          const symbol = document.createElement('div');
-          symbol.className = 'status-symbol';
-          symbol.id = `cell_${rowIdx}_${m}`;
-          // Default template IT008.pdf has plan circles in DEC (month index 11)
-          symbol.setAttribute('data-state', m === 11 ? '1' : '0');
+/* ---------- build table ---------- */
+function buildTable() {
+  $('headRow').innerHTML =
+    '<th class="th-topic">หัวข้อการตรวจสอบ/บำรุงรักษา</th>' +
+    MONTHS.map(m => `<th class="th-m"><span>${m}</span></th>`).join('') +
+    '<th class="th-rem">หมายเหตุ</th>';
 
-          tdMonth.onclick = function () {
-            const current = parseInt(symbol.getAttribute('data-state') || '0', 10);
-            const next = (current + 1) % 4;
-            symbol.setAttribute('data-state', String(next));
-          };
+  const tb = $('tbody');
+  tb.innerHTML = '';
+  TOPICS.forEach((t, r) => {
+    const tr = document.createElement('tr');
+    let h = `<td class="topic">${t}</td>`;
+    for (let m = 0; m < 12; m++) h += `<td class="mc"><div class="sym" id="c_${r}_${m}" data-s="${m === 11 ? 1 : 0}"></div></td>`;
+    h += `<td><input class="rem" id="rem_${r}" aria-label="หมายเหตุข้อ ${r + 1}"></td>`;
+    tr.innerHTML = h;
+    tb.appendChild(tr);
+  });
 
-          tdMonth.appendChild(symbol);
-          tr.appendChild(tdMonth);
-        }
+  const sigRow = (label, first) => {
+    const tr = document.createElement('tr');
+    tr.className = 'sig';
+    let h = `<td class="topic">${label}</td>`;
+    for (let m = 0; m < 12; m++) h += `<td><input aria-label="${label} ${MONTHS[m]}"></td>`;
+    if (first) h += '<td class="sig-note" rowspan="2">(กรุณาเซ็นชื่อ และลงวันที่ทุกครั้ง)</td>';
+    tr.innerHTML = h;
+    tb.appendChild(tr);
+  };
+  sigRow('ลายมือชื่อเจ้าหน้าที่สารสนเทศผู้ปฏิบัติงาน', true);
+  sigRow('ลายมือชื่อผู้ตรวจรับงาน', false);
+}
 
-        // Remark column
-        const tdRemark = document.createElement('td');
-        const inputRemark = document.createElement('input');
-        inputRemark.type = 'text';
-        inputRemark.className = 'remark-input';
-        inputRemark.id = `remark_${rowIdx}`;
-        inputRemark.setAttribute('aria-label', `หมายเหตุข้อที่ ${rowIdx + 1}`);
-        tdRemark.appendChild(inputRemark);
-        tr.appendChild(tdRemark);
+$('tbody').addEventListener('click', e => {
+  const td = e.target.closest('.mc');
+  if (!td) return;
+  const s = td.firstElementChild;
+  s.dataset.s = (parseInt(s.dataset.s, 10) + 1) % 4;
+});
 
-        tbody.appendChild(tr);
-      });
+function applyPlan() {
+  const v = $('planMonth').value;
+  document.querySelectorAll('.sym').forEach(el => {
+    const m = parseInt(el.id.split('_')[2], 10);
+    el.dataset.s = (v !== '' && m === parseInt(v, 10)) ? 1 : 0;
+  });
+}
+$('planMonth').addEventListener('change', applyPlan);
 
-      // Row 10: ลายมือชื่อเจ้าหน้าที่สารสนเทศผู้ปฏิบัติงาน
-      const trStaff = document.createElement('tr');
-      trStaff.className = 'sig-row';
-      const tdStaffLabel = document.createElement('td');
-      tdStaffLabel.className = 'topic-cell';
-      tdStaffLabel.textContent = 'ลายมือชื่อเจ้าหน้าที่สารสนเทศผู้ปฏิบัติงาน';
-      trStaff.appendChild(tdStaffLabel);
+function clearForm() {
+  document.querySelectorAll('.paper input').forEach(i => i.value = '');
+  applyPlan();
+  setStatus('ล้างแบบฟอร์มแล้ว', 'ok');
+}
 
-      for (let m = 0; m < 12; m++) {
-        const td = document.createElement('td');
-        const inp = document.createElement('input');
-        inp.type = 'text';
-        inp.className = 'sig-cell-input';
-        inp.setAttribute('aria-label', `ผู้ปฏิบัติงานเดือนที่ ${m + 1}`);
-        td.appendChild(inp);
-        trStaff.appendChild(td);
-      }
+/* ---------- status ---------- */
+function setStatus(msg, kind) {
+  const s = $('status');
+  s.textContent = msg;
+  s.className = 'status' + (kind ? ' ' + kind : '');
+}
 
-      const tdSignNotice = document.createElement('td');
-      tdSignNotice.rowSpan = 2;
-      tdSignNotice.className = 'sig-note-cell';
-      tdSignNotice.textContent = '(กรุณาเซ็นชื่อ และลงวันที่ทุกครั้ง)';
-      trStaff.appendChild(tdSignNotice);
-      tbody.appendChild(trStaff);
+/* ---------- Supabase (REST) ---------- */
+async function queryAssets(term, limit) {
+  if (!cfg.url || !cfg.key) throw new Error('ยังไม่ได้ตั้งค่าการเชื่อมต่อฐานข้อมูล กรุณาติดต่อผู้ดูแลระบบ');
+  const url = `${cfg.url.replace(/\/+$/, '')}/rest/v1/${encodeURIComponent(cfg.table)}` +
+    `?select=*&${encodeURIComponent(cfg.col)}=ilike.${encodeURIComponent('*' + term + '*')}` +
+    `&order=${encodeURIComponent(cfg.col)}.asc&limit=${limit}`;
+  const res = await fetch(url, { headers: { apikey: cfg.key, Authorization: 'Bearer ' + cfg.key } });
+  if (!res.ok) {
+    let detail = '';
+    try { detail = (await res.json()).message || ''; } catch (e) {}
+    throw new Error(`${res.status} ${detail || res.statusText}`);
+  }
+  return res.json();
+}
 
-      // Row 11: ลายมือชื่อผู้ตรวจรับงาน
-      const trReviewer = document.createElement('tr');
-      trReviewer.className = 'sig-row';
-      const tdReviewerLabel = document.createElement('td');
-      tdReviewerLabel.className = 'topic-cell';
-      tdReviewerLabel.textContent = 'ลายมือชื่อผู้ตรวจรับงาน';
-      trReviewer.appendChild(tdReviewerLabel);
+const pick = (row, keys) => {
+  for (const k of keys) {
+    const v = row[k];
+    if (v !== undefined && v !== null && String(v).trim() !== '') return String(v).trim();
+  }
+  return '';
+};
 
-      for (let m = 0; m < 12; m++) {
-        const td = document.createElement('td');
-        const inp = document.createElement('input');
-        inp.type = 'text';
-        inp.className = 'sig-cell-input';
-        inp.setAttribute('aria-label', `ผู้ตรวจรับงานเดือนที่ ${m + 1}`);
-        td.appendChild(inp);
-        trReviewer.appendChild(td);
-      }
+function fillForm(r) {
+  $('f_name').value = pick(r, [cfg.col, 'computer_name']);
+  $('f_location').value = pick(r, ['location', 'department']);
+  $('f_ip').value = pick(r, ['ip_address', 'ip']);
+  $('f_resp').value = pick(r, ['responsible_person', 'login_name']);
+  $('f_cpu').value = pick(r, ['cpu']);
+  $('f_ram').value = pick(r, ['ram']);
+  $('f_hdd').value = pick(r, ['hdd', 'storage']);
+  $('f_vga').value = pick(r, ['vga']);
+  $('f_mainboard').value = pick(r, ['mainboard']);
+  $('f_monitor').value = [pick(r, ['monitor']), pick(r, ['model_monitor'])].filter(Boolean).join(' ');
+  $('f_keyboard').value = pick(r, ['keyboard']);
+  $('f_mouse').value = pick(r, ['mouse']);
+  $('f_wireless').value = pick(r, ['wireless_adapter']);
+  $('f_others').value = pick(r, ['others', 'etc']);
+}
 
-      tbody.appendChild(trReviewer);
-    }
+function showResults(rows) {
+  const ul = $('results');
+  ul.innerHTML = '';
+  rows.forEach(r => {
+    const li = document.createElement('li');
+    const b = document.createElement('button');
+    b.type = 'button';
+    const name = document.createElement('b');
+    name.textContent = pick(r, [cfg.col, 'computer_name']) || '(ไม่มีชื่อ)';
+    const sub = document.createElement('span');
+    sub.textContent = [pick(r, ['department']), pick(r, ['login_name']), pick(r, ['ip', 'ip_address'])].filter(Boolean).join(' · ');
+    b.append(name, sub);
+    b.addEventListener('click', () => { fillForm(r); ul.innerHTML = ''; setStatus(`ดึงข้อมูล ${name.textContent} แล้ว ตรวจสอบและสั่งพิมพ์ได้เลย`, 'ok'); });
+    li.appendChild(b);
+    ul.appendChild(li);
+  });
+}
 
-    // Set plan circle (state 1) on a selected month across all 9 items
-    function setPlanMonthForAll() {
-      const targetMonth = document.getElementById('planMonthSelect').value;
-      for (let r = 0; r < CHECKLIST_TOPICS.length; r++) {
-        for (let m = 0; m < 12; m++) {
-          const el = document.getElementById(`cell_${r}_${m}`);
-          if (!el) continue;
-          if (targetMonth !== '' && m === parseInt(targetMonth, 10)) {
-            el.setAttribute('data-state', '1');
-          } else {
-            el.setAttribute('data-state', '0');
-          }
-        }
-      }
-    }
+let timer, seq = 0;
+async function search(autoFillSingle) {
+  const term = $('q').value.trim();
+  if (!term) { $('results').innerHTML = ''; setStatus('พิมพ์ชื่อเครื่อง แล้วเลือกจากรายการที่ขึ้นมา'); return; }
+  const my = ++seq;
+  setStatus('กำลังค้นหา...', 'busy');
+  try {
+    const rows = await queryAssets(term, 8);
+    if (my !== seq) return;
+    if (!rows.length) { $('results').innerHTML = ''; setStatus(`ไม่พบเครื่องที่ชื่อมีคำว่า "${term}" ลองพิมพ์ส่วนหนึ่งของชื่อ`, 'err'); return; }
+    if (rows.length === 1 && autoFillSingle) { showResults([]); fillForm(rows[0]); setStatus('ดึงข้อมูลแล้ว ตรวจสอบและสั่งพิมพ์ได้เลย', 'ok'); return; }
+    showResults(rows);
+    setStatus(`พบ ${rows.length} เครื่อง เลือกเครื่องที่ต้องการ`, 'ok');
+  } catch (err) {
+    if (my !== seq) return;
+    $('results').innerHTML = '';
+    setStatus('เชื่อมต่อไม่สำเร็จ: ' + err.message, 'err');
+  }
+}
+$('q').addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(() => search(false), 350); });
+$('q').addEventListener('keydown', e => { if (e.key === 'Enter') { clearTimeout(timer); search(true); } });
+$('goBtn').addEventListener('click', () => search(true));
 
-    // Clear all form fields
-    function clearFormFields() {
-      const fieldIds = [
-        'f_computer_name', 'f_location', 'f_ip_address', 'f_responsible',
-        'f_cpu', 'f_monitor', 'f_ram', 'f_keyboard', 'f_hdd',
-        'f_mouse', 'f_vga', 'f_wireless', 'f_mainboard', 'f_others'
-      ];
-      fieldIds.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.value = '';
-      });
-      for (let r = 0; r < CHECKLIST_TOPICS.length; r++) {
-        const rem = document.getElementById(`remark_${r}`);
-        if (rem) rem.value = '';
-      }
-      document.querySelectorAll('.sig-cell-input').forEach(inp => { inp.value = ''; });
-      updateStatus('ล้างข้อมูลในแบบฟอร์มเรียบร้อยแล้ว', false);
-    }
+/* ---------- settings dialog ---------- */
+const dlg = $('dlg');
+/* ปุ่มตั้งค่าถูกซ่อน: ผู้ดูแลเปิดได้ด้วย Ctrl+Shift+K */
+document.addEventListener('keydown', e => {
+  if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'k') {
+    e.preventDefault();
+    $('cfgUrl').value = cfg.url; $('cfgKey').value = cfg.key;
+    $('cfgTable').value = cfg.table; $('cfgCol').value = cfg.col;
+    dlg.showModal();
+  }
+});
+$('cfgCancel').addEventListener('click', () => dlg.close());
+$('cfgForm').addEventListener('submit', () => {
+  cfg = { url: $('cfgUrl').value.trim(), key: $('cfgKey').value.trim(),
+          table: $('cfgTable').value.trim() || DEFAULTS.table, col: $('cfgCol').value.trim() || DEFAULTS.col };
+  try { localStorage.setItem('it008_cfg', JSON.stringify(cfg)); } catch (e) {}
+  setStatus('บันทึกการตั้งค่าแล้ว', 'ok');
+});
 
-    function updateStatus(message, isError) {
-      const box = document.getElementById('searchStatus');
-      box.textContent = message;
-      if (isError) {
-        box.classList.add('error');
-      } else {
-        box.classList.remove('error');
-      }
-    }
+$('printBtn').addEventListener('click', () => window.print());
+$('clearBtn').addEventListener('click', clearForm);
 
-    // Helper: pick first matching non-empty property from a database row
-    function pickValue(row, keys) {
-      if (!row || typeof row !== 'object') return '';
-      for (const k of keys) {
-        if (row[k] !== undefined && row[k] !== null && String(row[k]).trim() !== '') {
-          if (typeof row[k] === 'object') {
-            return row[k].name || row[k].full_name || row[k].title || JSON.stringify(row[k]);
-          }
-          return String(row[k]).trim();
-        }
-      }
-      return '';
-    }
-
-    // Populate IT008 form fields from a retrieved asset record
-    function populateFormFromAsset(record) {
-      document.getElementById('f_computer_name').value = pickValue(record, [
-        'computer_name', 'asset_name', 'hostname', 'machine_name', 'device_name', 'name', 'asset_code', 'code'
-      ]);
-
-      // Compose location if building/floor/department fields exist
-      let loc = pickValue(record, ['location', 'location_name', 'place', 'room', 'site']);
-      if (!loc) {
-        const parts = [
-          pickValue(record, ['building', 'building_name', 'buildings']),
-          pickValue(record, ['floor', 'floor_name', 'floors']),
-          pickValue(record, ['department', 'department_name', 'dept_name', 'asset_departments'])
-        ].filter(Boolean);
-        loc = parts.join(' / ');
-      }
-      document.getElementById('f_location').value = loc;
-
-      document.getElementById('f_ip_address').value = pickValue(record, [
-        'ip_address', 'ip', 'ipv4', 'network_ip'
-      ]);
-
-      document.getElementById('f_responsible').value = pickValue(record, [
-        'responsible', 'responsible_person', 'owner', 'owner_name', 'employee_name', 'user_name', 'assigned_to', 'employees', 'profiles'
-      ]);
-
-      document.getElementById('f_cpu').value = pickValue(record, ['cpu', 'processor', 'cpu_model', 'spec_cpu']);
-      document.getElementById('f_ram').value = pickValue(record, ['ram', 'memory', 'ram_size', 'spec_ram']);
-      document.getElementById('f_hdd').value = pickValue(record, ['hdd', 'storage', 'ssd', 'disk', 'hdd_ssd', 'spec_hdd']);
-      document.getElementById('f_vga').value = pickValue(record, ['vga', 'gpu', 'graphics', 'display_adapter', 'spec_vga']);
-      document.getElementById('f_mainboard').value = pickValue(record, ['mainboard', 'motherboard', 'board', 'mb', 'spec_mainboard']);
-      document.getElementById('f_monitor').value = pickValue(record, ['monitor', 'display', 'screen', 'monitor_model']);
-      document.getElementById('f_keyboard').value = pickValue(record, ['keyboard', 'kb', 'keyboard_model']);
-      document.getElementById('f_mouse').value = pickValue(record, ['mouse', 'mouse_model']);
-      document.getElementById('f_wireless').value = pickValue(record, ['wireless_adapter', 'wireless', 'wifi', 'wifi_adapter', 'wlan']);
-      document.getElementById('f_others').value = pickValue(record, ['others', 'other', 'accessories', 'remark', 'notes', 'ups']);
-    }
-
-    // Query Supabase by machine name
-    async function fetchAssetByName() {
-      const query = document.getElementById('searchComputerInput').value.trim();
-      if (!query) {
-        updateStatus('กรุณากรอกชื่อเครื่องที่ต้องการค้นหาก่อนกดดึงข้อมูล', true);
-        return;
-      }
-
-      const supabaseUrl = document.getElementById('supabaseUrl').value.trim().replace(/\/+$/, '');
-      const supabaseKey = document.getElementById('supabaseKey').value.trim();
-      const tableName = document.getElementById('tableNameInput').value.trim() || 'assets';
-      const preferredCol = document.getElementById('searchColInput').value.trim() || 'computer_name';
-
-      if (!supabaseUrl || !supabaseKey) {
-        updateStatus('กรุณากรอก Supabase Project URL และ Anon Key ในส่วนที่ 3 ก่อนดึงข้อมูลจากฐานข้อมูล', true);
-        return;
-      }
-
-      updateStatus(`กำลังค้นหาเครื่อง "${query}" จากตาราง public.${tableName}...`, false);
-
-      try {
-        let matchedRow = null;
-
-        // Use @supabase/supabase-js if loaded, otherwise direct PostgREST fetch
-        if (window.supabase && typeof window.supabase.createClient === 'function') {
-          const client = window.supabase.createClient(supabaseUrl, supabaseKey);
-
-          // First attempt: search using the configured column name (ilike)
-          const { data, error } = await client
-            .from(tableName)
-            .select('*')
-            .ilike(preferredCol, `%${query}%`)
-            .limit(1);
-
-          if (!error && Array.isArray(data) && data.length > 0) {
-            matchedRow = data[0];
-          } else {
-            // Fallback: fetch rows and match across common machine name columns client-side
-            const { data: allRows, error: fallbackErr } = await client
-              .from(tableName)
-              .select('*')
-              .limit(200);
-
-            if (fallbackErr) {
-              throw new Error(fallbackErr.message);
-            }
-
-            if (Array.isArray(allRows)) {
-              const qLower = query.toLowerCase();
-              matchedRow = allRows.find(r => {
-                const candidate = pickValue(r, [
-                  preferredCol, 'computer_name', 'asset_name', 'hostname', 'machine_name', 'name', 'asset_code', 'code'
-                ]).toLowerCase();
-                return candidate.includes(qLower);
-              });
-            }
-          }
-        } else {
-          // Direct REST fallback
-          const endpoint = `${supabaseUrl}/rest/v1/${encodeURIComponent(tableName)}?select=*&limit=200`;
-          const res = await fetch(endpoint, {
-            headers: {
-              'apikey': supabaseKey,
-              'Authorization': `Bearer ${supabaseKey}`
-            }
-          });
-          if (!res.ok) {
-            throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-          }
-          const rows = await res.json();
-          const qLower = query.toLowerCase();
-          matchedRow = rows.find(r => {
-            const candidate = pickValue(r, [
-              preferredCol, 'computer_name', 'asset_name', 'hostname', 'machine_name', 'name', 'asset_code', 'code'
-            ]).toLowerCase();
-            return candidate.includes(qLower);
-          });
-        }
-
-        if (!matchedRow) {
-          updateStatus(`ไม่พบข้อมูลเครื่อง "${query}" ในตาราง public.${tableName}`, true);
-          return;
-        }
-
-        populateFormFromAsset(matchedRow);
-        updateStatus(`ดึงข้อมูลเครื่อง "${query}" สำเร็จ พร้อมตรวจสอบและสั่งพิมพ์`, false);
-      } catch (err) {
-        updateStatus(`เกิดข้อผิดพลาดในการเชื่อมต่อ Supabase: ${err.message || err}`, true);
-      }
-    }
-
-    // Save Supabase credentials in localStorage (best-effort)
-    function saveSupabaseConfig() {
-      const url = document.getElementById('supabaseUrl').value.trim();
-      const key = document.getElementById('supabaseKey').value.trim();
-      const table = document.getElementById('tableNameInput').value.trim();
-      const col = document.getElementById('searchColInput').value.trim();
-
-      try {
-        localStorage.setItem('it008_supabase_url', url);
-        localStorage.setItem('it008_supabase_key', key);
-        localStorage.setItem('it008_supabase_table', table);
-        localStorage.setItem('it008_supabase_col', col);
-        updateStatus('บันทึกการตั้งค่าการเชื่อมต่อ Supabase เรียบร้อยแล้ว', false);
-      } catch (e) {
-        updateStatus('ตั้งค่าการเชื่อมต่อสำหรับเซสชันนี้เรียบร้อยแล้ว', false);
-      }
-    }
-
-    function loadSupabaseConfig() {
-      try {
-        const url = localStorage.getItem('it008_supabase_url');
-        const key = localStorage.getItem('it008_supabase_key');
-        const table = localStorage.getItem('it008_supabase_table');
-        const col = localStorage.getItem('it008_supabase_col');
-        if (url) document.getElementById('supabaseUrl').value = url;
-        if (key) document.getElementById('supabaseKey').value = key;
-        if (table) document.getElementById('tableNameInput').value = table;
-        if (col) document.getElementById('searchColInput').value = col;
-      } catch (e) {
-        // Ignore storage errors inside sandboxed environments
-      }
-    }
-
-    function switchTab(tab) {
-      const formWorkspace = document.getElementById('formWorkspace');
-      const guideWorkspace = document.getElementById('guideWorkspace');
-      const tabFormBtn = document.getElementById('tabFormBtn');
-      const tabGuideBtn = document.getElementById('tabGuideBtn');
-
-      if (tab === 'guide') {
-        formWorkspace.style.display = 'none';
-        guideWorkspace.style.display = 'block';
-        tabFormBtn.classList.remove('active');
-        tabGuideBtn.classList.add('active');
-      } else {
-        formWorkspace.style.display = 'grid';
-        guideWorkspace.style.display = 'none';
-        tabFormBtn.classList.add('active');
-        tabGuideBtn.classList.remove('active');
-      }
-    }
-
-    // Initialize on load
-    renderChecklistTable();
-    loadSupabaseConfig();
-  </script>
+buildTable();
+if (!cfg.key) setStatus('ยังไม่ได้ตั้งค่าการเชื่อมต่อฐานข้อมูล กรุณาติดต่อผู้ดูแลระบบ', 'err');
+</script>
 </body>
 </html>
