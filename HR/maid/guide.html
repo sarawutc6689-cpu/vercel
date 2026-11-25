@@ -1,1 +1,237 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>คู่มือการใช้งาน - ระบบเบิกของใช้แม่บ้าน</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .flow { display:flex; gap:8px; align-items:stretch; flex-wrap:wrap }
+  .flow .n { flex:1 1 150px; background:#f9fafb; border:1px solid var(--bd); border-radius:12px; padding:12px; text-align:center; font-size:14px; line-height:1.5 }
+  .flow .n b { display:block; font-size:22px; margin-bottom:2px }
+  .flow .ar { align-self:center; color:var(--mut); font-size:20px }
+  @media (max-width:700px) { .flow .ar { display:none } .flow .n { flex-basis:calc(50% - 8px) } }
 
+  ol.steps { list-style:none; margin:0; padding:0; counter-reset:s }
+  ol.steps > li { counter-increment:s; position:relative; padding:0 0 18px 48px; min-height:38px }
+  ol.steps > li::before { content:counter(s); position:absolute; left:0; top:0; width:34px; height:34px; border-radius:50%; background:var(--pri); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700 }
+  ol.steps > li::after { content:""; position:absolute; left:16px; top:38px; bottom:4px; width:2px; background:var(--bd) }
+  ol.steps > li:last-child { padding-bottom:4px }
+  ol.steps > li:last-child::after { display:none }
+  ol.steps h3 { margin:6px 0 4px; font-size:16px }
+  ol.steps p { margin:0; color:var(--mut); line-height:1.8; font-size:14px }
+
+  .chip { display:inline-block; padding:1px 9px; border-radius:6px; border:1px solid var(--bd); background:#f9fafb; color:var(--txt); font-size:13px; white-space:nowrap; line-height:1.6 }
+  .chip.pri { background:var(--pri); color:#fff; border-color:var(--pri) }
+  .chip.ok { background:var(--ok); color:#fff; border-color:var(--ok) }
+  .chip.bad { background:var(--bad); color:#fff; border-color:var(--bad) }
+  .tip { background:#eff6ff; border:1px solid #bfdbfe; border-radius:10px; padding:10px 14px; font-size:14px; line-height:1.7; margin-top:10px; color:var(--txt) }
+  .tip.warn { background:#fffbeb; border-color:#fde68a }
+  .card h2 { display:flex; align-items:center; gap:8px }
+  .card ul { margin:8px 0 0; padding-left:20px; line-height:1.9; font-size:14px }
+  .card > p { margin:0 0 12px; color:var(--mut); font-size:14px; line-height:1.7 }
+  details.faq { border-bottom:1px solid var(--bd); padding:2px 0 }
+  details.faq:last-child { border-bottom:0 }
+  details.faq summary { cursor:pointer; padding:12px 0; font-weight:600; font-size:15px }
+  details.faq p { margin:0 0 14px; color:var(--mut); line-height:1.8; font-size:14px }
+  .toc { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px }
+  .toc a { font-size:13px; padding:5px 12px; border:1px solid var(--bd); border-radius:99px; background:#fff; color:var(--txt); text-decoration:none }
+  .toc a:hover { border-color:var(--pri); color:var(--pri) }
+  .panel[hidden] { display:none !important }
+  @media (max-width:520px) { #printBtn { display:none } }
+  @media print { .panel[hidden] { display:block !important } .toc { display:none } details.faq:not([open]) p { display:block } }
+</style>
+</head>
+<body>
+<header>
+  <h1>📖 คู่มือการใช้งาน</h1>
+  <a href="index.html" class="hlink">← กลับหน้าเบิกของ</a>
+  <button class="sm noprint" id="printBtn">🖨 พิมพ์คู่มือ</button>
+</header>
+
+<main>
+  <div class="card">
+    <h2>ระบบเบิกของใช้แม่บ้าน ทำงานอย่างไร</h2>
+    <p>แม่บ้านเลือกพัสดุที่ต้องการผ่านมือถือหรือคอมพิวเตอร์ ผู้ดูแล (HR) ตรวจแล้วอนุมัติ ระบบตัดสต็อกให้อัตโนมัติและเก็บประวัติไว้ดูย้อนหลัง</p>
+    <div class="flow">
+      <div class="n"><b>🧹</b>แม่บ้านเลือกของ</div><span class="ar">→</span>
+      <div class="n"><b>📨</b>ส่งคำขอเบิก</div><span class="ar">→</span>
+      <div class="n"><b>✅</b>HR อนุมัติ</div><span class="ar">→</span>
+      <div class="n"><b>📦</b>ตัดสต็อกอัตโนมัติ</div>
+    </div>
+  </div>
+
+  <div class="tabs" id="tabs" role="tablist">
+    <button data-t="hk" class="on">🧹 สำหรับแม่บ้าน</button>
+    <button data-t="hr">🛠 สำหรับผู้ดูแล (HR)</button>
+    <button data-t="faq">❓ คำถามที่พบบ่อย</button>
+  </div>
+
+  <!-- ===================== แม่บ้าน ===================== -->
+  <section id="p-hk" class="panel">
+    <div class="card">
+      <h2>🧹 วิธีเบิกของใช้</h2>
+      <p>ใช้เวลาไม่ถึงนาที ทำตามนี้ได้เลย</p>
+      <ol class="steps">
+        <li><h3>เข้าสู่ระบบด้วยรหัสพนักงาน</h3>
+          <p>เปิดหน้าเบิกของ กรอก <b>รหัสพนักงาน 6 หลัก</b> ที่ช่องบนแถบสีน้ำเงินด้านบน แล้วกด <span class="chip">เข้าสู่ระบบ</span> ไม่ต้องใช้รหัสผ่านอื่น
+          <br>ถ้าเข้าไม่ได้ ให้แจ้ง HR ตรวจว่ารหัสถูกต้องและยังเปิดใช้งานอยู่</p></li>
+        <li><h3>เลือกประเภทของใช้</h3>
+          <p>ในขั้นที่ 1 กดเลือก <b>ประเภท</b> จากรายการ (เช่น น้ำยา, ผ้า, ถุง, อุปกรณ์) ตารางพัสดุของประเภทนั้นจะแสดงขึ้นมา</p></li>
+        <li><h3>ติ๊กรายการและใส่จำนวน</h3>
+          <p>ติ๊กช่อง ☑ หน้ารายการที่ต้องการ แล้วใส่ <b>จำนวนที่ต้องการเบิก</b> (ใส่ได้ไม่เกินจำนวนคงเหลือ) ของที่หมดแล้วจะติ๊กไม่ได้</p></li>
+        <li><h3>กดบันทึกก่อนเปลี่ยนประเภท</h3>
+          <p>กด <span class="chip ok">💾 บันทึก</span> เพื่อเก็บรายการของประเภทนี้ แล้วเลือกประเภทอื่นต่อได้ ประเภทที่เลือกไว้แล้วจะมีข้อความ “(เลือกแล้ว n)” ต่อท้ายชื่อ</p>
+          <div class="tip warn">⚠️ ถ้าติ๊กแล้วเปลี่ยนประเภทโดยไม่กดบันทึก รายการที่ติ๊กไว้จะไม่ถูกเก็บ</div></li>
+        <li><h3>ตรวจสอบรายการ แก้ไข หรือลบ</h3>
+          <p>ขั้นที่ 2 จะสรุปของที่เลือกจากทุกประเภท พร้อมยอดรวม<br>
+          กด <span class="chip">✏️ แก้ไข</span> เพื่อกลับไปแก้จำนวน (แก้แล้วกด 💾 บันทึกอีกครั้ง) กด <span class="chip">🗑 ลบ</span> เพื่อเอารายการนั้นออก หรือ <span class="chip">ล้างทั้งหมด</span> เพื่อเริ่มใหม่ จะใส่ <b>หมายเหตุ</b> เช่น “ใช้ที่ชั้น 3” ก็ได้</p></li>
+        <li><h3>ส่งคำขอเบิก</h3>
+          <p>กด <span class="chip pri">📨 ส่งคำขอเบิก</span> จะมีหน้าต่างให้ตรวจรายการอีกครั้ง กด <b>ส่งคำขอ</b> เพื่อยืนยัน เมื่อเห็นข้อความ “ส่งคำขอเรียบร้อย” ถือว่าเสร็จ</p></li>
+        <li><h3>ติดตามผลที่ประวัติการเบิก</h3>
+          <p>เลื่อนลงไปที่ “ประวัติการเบิกของฉัน” ดูสถานะของแต่ละคำขอ:
+          <span class="badge pending">รออนุมัติ</span> <span class="badge approved">อนุมัติแล้ว</span> <span class="badge rejected">ไม่อนุมัติ</span><br>
+          เมื่อ <b>อนุมัติแล้ว</b> ให้ติดต่อผู้ดูแลเพื่อรับของ</p></li>
+      </ol>
+      <div class="tip">💡 เสร็จแล้วกด <b>ออกจากระบบ</b> ที่มุมขวาบน โดยเฉพาะเมื่อใช้เครื่องที่ใช้ร่วมกัน</div>
+    </div>
+  </section>
+
+  <!-- ===================== HR ===================== -->
+  <section id="p-hr" class="panel" hidden>
+    <div class="toc">
+      <a href="#hr-login">เข้าสู่ระบบและเมนู</a><a href="#hr-approve">อนุมัติคำขอ</a><a href="#hr-stock">จัดการสต็อก</a>
+      <a href="#hr-staff">จัดการแม่บ้าน</a><a href="#hr-report">ภาพรวมและรายงาน</a><a href="#hr-tg">แจ้งเตือน Telegram</a>
+    </div>
+
+    <div class="card" id="hr-login">
+      <h2>🔐 เข้าสู่ระบบและเมนู</h2>
+      <p>เข้าหน้า <b>admin.html</b> (หรือหน้าใดก็ได้ในเมนูผู้ดูแล) กรอกอีเมล <b>hr@local.com</b> และรหัสผ่านที่แถบด้านบน แล้วกด <span class="chip">เข้าสู่ระบบ</span> เมนูด้านบนใช้สลับระหว่าง 4 หน้า:</p>
+      <div class="tbl"><table>
+        <tr><th>เมนู</th><th>ใช้ทำอะไร</th></tr>
+        <tr><td>📊 ภาพรวม</td><td>ดูสถิติ กราฟคำขอรายวัน พัสดุที่เบิกมาก และพัสดุใกล้หมด</td></tr>
+        <tr><td>✅ อนุมัติ/สต็อก</td><td>อนุมัติหรือปฏิเสธคำขอเบิก และจัดการสต็อกของใช้</td></tr>
+        <tr><td>📄 รายงาน</td><td>ค้นหา กรอง สรุปการเบิก ส่งออก CSV และพิมพ์</td></tr>
+        <tr><td>👥 แม่บ้าน</td><td>เพิ่ม แก้ไข เปิด/ปิดใช้งานบัญชีแม่บ้าน</td></tr>
+      </table></div>
+    </div>
+
+    <div class="card" id="hr-approve">
+      <h2>✅ อนุมัติคำขอเบิก</h2>
+      <ol class="steps">
+        <li><h3>เปิดแท็บ “คำขอเบิก”</h3><p>หน้า ✅ อนุมัติ/สต็อก จะแสดงคำขอที่ <b>รออนุมัติ</b> ก่อน เปลี่ยนตัวกรองสถานะเพื่อดูรายการที่อนุมัติหรือปฏิเสธแล้วได้</p></li>
+        <li><h3>ตรวจรายการ</h3><p>ในแต่ละแถวเห็นชื่อแม่บ้าน รายการที่ขอ หมายเหตุ และจำนวนคงเหลือในคลังเทียบกับที่ขอ</p></li>
+        <li><h3>กดอนุมัติหรือไม่อนุมัติ</h3>
+          <p>กด <span class="chip ok">อนุมัติ</span> หรือ <span class="chip bad">ไม่อนุมัติ</span> แล้วยืนยันในหน้าต่างที่ขึ้นมา เมื่ออนุมัติ ระบบ <b>ตัดสต็อกให้อัตโนมัติ</b></p>
+          <div class="tip warn">⚠️ ถ้าสต็อกไม่พอ ระบบจะไม่ให้อนุมัติและบอกว่าพัสดุใดไม่พอ ให้เพิ่มสต็อกก่อนแล้วอนุมัติอีกครั้ง คำขอที่ตัดสินใจแล้วแก้ย้อนกลับไม่ได้</div></li>
+      </ol>
+    </div>
+
+    <div class="card" id="hr-stock">
+      <h2>📦 จัดการสต็อกของใช้</h2>
+      <ol class="steps">
+        <li><h3>เปิดแท็บ “สต็อกของใช้”</h3><p>ตารางแสดงทุกรายการพร้อมประเภท หน่วย จำนวนคงเหลือ และสถานะ</p></li>
+        <li><h3>เพิ่มของใช้ใหม่</h3><p>กรอก <b>ชื่อ ประเภท หน่วย และจำนวนเริ่มต้น</b> แล้วกด <span class="chip pri">เพิ่ม</span> ประเภทพิมพ์เองหรือเลือกจากคำแนะนำได้ ประเภทใหม่จะไปปรากฏในรายการให้แม่บ้านเลือกทันที</p></li>
+        <li><h3>เติมสต็อกหรือแก้ประเภท</h3><p>แก้ตัวเลขในช่อง “คงเหลือ” หรือช่องประเภท แล้วกด <span class="chip">บันทึก</span> ที่แถวนั้น</p></li>
+        <li><h3>เปิด/ปิดให้เบิก</h3><p>กด <span class="chip">ปิด</span> เพื่อซ่อนพัสดุจากหน้าเบิกของ (ไม่ลบข้อมูลและประวัติเดิม) กด <span class="chip">เปิด</span> เพื่อให้กลับมาเบิกได้</p></li>
+      </ol>
+    </div>
+
+    <div class="card" id="hr-staff">
+      <h2>👥 จัดการแม่บ้าน</h2>
+      <ol class="steps">
+        <li><h3>เพิ่มแม่บ้านใหม่</h3>
+          <p>เปิดหน้า 👥 แม่บ้าน กรอก <b>รหัสพนักงาน (ตัวเลข 6 หลัก)</b> ชื่อ-นามสกุล และพื้นที่รับผิดชอบ แล้วกด <span class="chip pri">เพิ่ม</span><br>
+          รหัสนี้คือสิ่งที่แม่บ้านใช้เข้าสู่ระบบ ระบบตั้งรหัสผ่านให้เท่ากับรหัสพนักงานอัตโนมัติ</p>
+          <div class="tip warn">⚠️ หลีกเลี่ยงรหัสที่เดาง่าย เช่น 123456 หรือ 000000 เพราะใครรู้รหัสก็เข้าระบบได้</div></li>
+        <li><h3>แก้ชื่อหรือพื้นที่</h3><p>แก้ข้อความในตาราง แล้วกด <span class="chip">บันทึก</span></p></li>
+        <li><h3>ปิดใช้งานเมื่อพนักงานลาออกหรือย้าย</h3><p>กด <span class="chip">ปิดใช้งาน</span> แล้วยืนยัน แม่บ้านคนนั้นจะเข้าสู่ระบบเบิกของไม่ได้ แต่ประวัติเดิมยังอยู่ครบ กด <span class="chip">เปิดใช้งาน</span> เพื่อให้กลับมาใช้ได้</p></li>
+      </ol>
+      <div class="tip">ℹ️ ระบบไม่มีปุ่มลบแม่บ้าน ใช้การปิดใช้งานแทนเพื่อรักษารายงานย้อนหลัง</div>
+    </div>
+
+    <div class="card" id="hr-report">
+      <h2>📊 ภาพรวมและรายงาน</h2>
+      <p><b>ภาพรวม</b></p>
+      <ul>
+        <li>เลือกช่วงเวลา 7 / 30 / 90 วัน หรือเดือนนี้ ตัวเลขเปรียบเทียบกับช่วงก่อนหน้าที่ยาวเท่ากัน</li>
+        <li>กราฟคำขอรายวันแยกสี: เขียว = อนุมัติแล้ว, เหลือง = รออนุมัติ, แดง = ไม่อนุมัติ เอาเมาส์ชี้ (หรือแตะ) ที่แท่งเพื่อดูตัวเลข</li>
+        <li>“พัสดุใกล้หมด” ปรับเกณฑ์ได้ที่ช่อง “เหลือไม่เกิน” (ค่าเริ่มต้น 5 หน่วย)</li>
+        <li>ทุกกราฟมีปุ่ม “ดูเป็นตาราง” สำหรับอ่านตัวเลขจริง</li>
+      </ul>
+      <p style="margin-top:14px"><b>รายงาน</b></p>
+      <ul>
+        <li>เลือกช่วงวันที่ (มีปุ่มช่วงเร็ว เช่น วันนี้ เดือนนี้ เดือนก่อน) แล้วกรองตามสถานะ ประเภท แม่บ้าน หรือค้นหาคำ</li>
+        <li>สลับ 3 มุมมอง: รายละเอียดรายการเบิก, สรุปตามพัสดุ, สรุปตามแม่บ้าน</li>
+        <li><span class="chip">⬇ ส่งออก CSV</span> ได้ไฟล์ที่เปิดใน Excel ภาษาไทยได้ทันที <span class="chip">🖨 พิมพ์</span> พิมพ์เฉพาะตารางพร้อมเงื่อนไขที่กรอง</li>
+        <li>ยอด “อนุมัติแล้ว” นับเป็นของที่เบิกจริง ส่วนรออนุมัติและไม่อนุมัติแสดงแยกคอลัมน์</li>
+      </ul>
+    </div>
+
+    <div class="card" id="hr-tg">
+      <h2>🔔 แจ้งเตือน Telegram</h2>
+      <p>เมื่อตั้งค่าแล้ว ทุกครั้งที่มีคำขอใหม่ หรือ HR อนุมัติ/ไม่อนุมัติ จะมีข้อความเข้ากลุ่ม Telegram (ถ้าอนุมัติแล้วพัสดุเหลือน้อยจะมีคำเตือนต่อท้าย)</p>
+      <ul>
+        <li>ตั้งค่าครั้งเดียวตามไฟล์ <b>TELEGRAM.md</b> ในโปรเจกต์ (สร้างบอท ใส่ค่าใน Vercel แล้ว Redeploy)</li>
+        <li>กด <span class="chip">🔔 ทดสอบ Telegram</span> ที่หน้า ✅ อนุมัติ/สต็อก เพื่อเช็กว่าข้อความเข้าจริง</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ===================== FAQ ===================== -->
+  <section id="p-faq" class="panel" hidden>
+    <div class="card">
+      <h2>❓ คำถามที่พบบ่อย</h2>
+      <details class="faq"><summary>เข้าสู่ระบบไม่ได้ ต้องทำอย่างไร</summary>
+        <p><b>แม่บ้าน:</b> ตรวจว่ากรอกรหัสครบ 6 หลักและเป็นตัวเลขทั้งหมด ถ้ายังไม่ได้ ให้แจ้ง HR ตรวจว่ารหัสถูกต้องและบัญชียังเปิดใช้งานอยู่<br>
+        <b>HR:</b> ตรวจอีเมลและรหัสผ่านว่าไม่ได้สลับแป้นพิมพ์ไทย/อังกฤษ ถ้าลืมรหัสผ่าน ให้รีเซ็ตที่ Supabase → Authentication → Users</p></details>
+      <details class="faq"><summary>ทำไมเบิกได้ไม่เกินจำนวนคงเหลือ</summary>
+        <p>ระบบจำกัดไม่ให้ขอเกินสต็อกที่มี ถ้าต้องการมากกว่านี้ ให้แจ้ง HR เติมสต็อกก่อน</p></details>
+      <details class="faq"><summary>ส่งคำขอไปแล้ว แก้ไขหรือยกเลิกได้ไหม</summary>
+        <p>ตอนนี้ระบบยังไม่มีปุ่มแก้ไขหรือยกเลิกคำขอที่ส่งแล้ว ถ้าเลือกผิด ให้แจ้ง HR กด “ไม่อนุมัติ” แล้วส่งคำขอใหม่ ดังนั้นควรตรวจรายการในขั้นที่ 2 และในหน้าต่างยืนยันก่อนส่งทุกครั้ง</p></details>
+      <details class="faq"><summary>ทำไมไม่เห็นพัสดุบางรายการ</summary>
+        <p>พัสดุนั้นอาจถูกปิดไม่ให้เบิกโดย HR หรือยังไม่ได้เพิ่มในระบบ ลองเลือกประเภทอื่น หรือแจ้ง HR</p></details>
+      <details class="faq"><summary>ทำไมติ๊กรายการไม่ได้</summary>
+        <p>พัสดุนั้นหมดสต็อก (คงเหลือ 0) แจ้ง HR เพื่อเติมของ</p></details>
+      <details class="faq"><summary>เปลี่ยนรหัสผ่านเองได้ไหม</summary>
+        <p>ยังเปลี่ยนเองไม่ได้ รหัสผ่านของแม่บ้านเท่ากับรหัสพนักงาน หากต้องการเปลี่ยนรหัสพนักงาน ให้ HR เพิ่มบัญชีใหม่ด้วยรหัสใหม่และปิดใช้งานบัญชีเก่า</p></details>
+      <details class="faq"><summary>ใช้บนมือถือได้ไหม</summary>
+        <p>ได้ ทุกหน้าออกแบบให้ใช้ได้ทั้งมือถือ แท็บเล็ต และคอมพิวเตอร์</p></details>
+      <details class="faq"><summary>ใครเห็นข้อมูลอะไรบ้าง</summary>
+        <p>แม่บ้านเห็นเฉพาะคำขอและประวัติของตัวเอง ผู้ดูแล (HR) เห็นข้อมูลทั้งหมดของทุกคน ระบบเป็นการใช้งานภายในบริษัทเท่านั้น</p></details>
+      <details class="faq"><summary>HR เพิ่มแม่บ้านไม่ได้ ขึ้นว่า “Signups not allowed”</summary>
+        <p>ต้องเปิดการสมัครผู้ใช้ใหม่ใน Supabase: Authentication → Sign In / Providers → เปิด <b>Allow new users to sign up</b> และปิด <b>Confirm email</b> แล้วลองใหม่</p></details>
+      <details class="faq"><summary>แม่บ้านเข้าได้ แต่ขึ้น “Email not confirmed”</summary>
+        <p>บัญชีนั้นยังไม่ถูกยืนยัน ให้ปิด Confirm email ใน Supabase แล้วรันคำสั่งยืนยันบัญชีที่ค้างอยู่ (ดูขั้นตอนที่ผู้พัฒนาให้ไว้) หรือแจ้งผู้พัฒนาระบบ</p></details>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <span>ระบบเบิกของใช้แม่บ้าน</span><span>ใช้ภายในบริษัทเท่านั้น</span><span>พัฒนาโดย Sarawut.C</span>
+</footer>
+
+<script>
+(function () {
+  var btns = Array.prototype.slice.call(document.querySelectorAll('#tabs button'));
+  var ids = ['hk', 'hr', 'faq'];
+  function show(t, noHash) {
+    btns.forEach(function (b) { b.classList.toggle('on', b.dataset.t === t); });
+    ids.forEach(function (i) { document.getElementById('p-' + i).hidden = i !== t; });
+    if (!noHash) { try { history.replaceState(null, '', '#' + t); } catch (e) {} }
+  }
+  btns.forEach(function (b) { b.addEventListener('click', function () { show(b.dataset.t); }); });
+  // เปิดตรงแท็บจากลิงก์ เช่น guide.html#hr, #faq หรือ #hr-stock (ทำงานทั้งตอนโหลดหน้าและตอน # เปลี่ยน)
+  function applyHash() {
+    var h = location.hash.slice(1);
+    if (ids.indexOf(h) >= 0) show(h, true);
+    else if (/^hr-/.test(h) && document.getElementById(h)) { show('hr', true); document.getElementById(h).scrollIntoView(); }
+    else if (!document.querySelector('#tabs button.on')) show('hk', true);
+  }
+  window.addEventListener('hashchange', applyHash);
+  applyHash();
+  document.getElementById('printBtn').addEventListener('click', function () { window.print(); });
+})();
+</script>
+</body>
+</html>
