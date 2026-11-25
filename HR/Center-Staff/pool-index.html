@@ -283,7 +283,7 @@
   <div id="app">
     <header class="no-print">
       <div class="brand"><div class="brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg></div><h1>หน้ารวม</h1></div>
-      <div style="display:flex; align-items:center; gap:14px;"><span class="hdr-links no-print"><a href="pool-index.html" class="cur">หน้ารวม</a> <a href="assign.html">เลือกพนักงาน</a> <a href="central-pool.html" data-hr>โอนเข้าส่วนกลาง</a> <a href="pool-dashboard.html">แดชบอร์ด</a> <a href="pool-report.html">รายงาน</a> <a href="pool-guide.html">คู่มือ</a></span><span class="who" id="who-label"></span>
+      <div style="display:flex; align-items:center; gap:14px;"><span class="hdr-links no-print"><a href="pool-index.html" class="cur">หน้ารวม</a> <a href="assign.html">เลือกพนักงาน</a> <a href="central-pool.html" data-hr>โอนเข้าส่วนกลาง</a> <a href="assign-clerks.html" data-hr>บัญชีธุรการ</a> <a href="pool-dashboard.html">แดชบอร์ด</a> <a href="pool-report.html">รายงาน</a> <a href="pool-guide.html">คู่มือ</a></span><span class="who" id="who-label"></span>
         <button class="btn-ghost" id="logout-btn">ออกจากระบบ</button></div>
     </header>
     <main>
@@ -443,6 +443,7 @@
   };
   const TILES = [
     { href: 'central-pool.html',  icon: IC.pool, title: 'โอนเข้าส่วนกลาง', hr: true, desc: 'ฝ่ายบุคคลเลือกพนักงานที่จะโอนย้ายเข้าส่วนกลาง ดูสถานะว่าง/ถูกใช้งาน และนำออกจากส่วนกลาง' },
+    { href: 'assign-clerks.html', icon: IC.pool, title: 'บัญชีธุรการ (ส่วนกลาง)', hr: true, desc: 'ฝ่ายบุคคลสร้างและจัดการบัญชีล็อกอินของธุรการที่ใช้ได้เฉพาะระบบโอนพนักงานส่วนกลาง ไม่มีสิทธิ์ในระบบตารางกะ' },
     { href: 'assign.html',        icon: IC.pick, title: 'เลือกพนักงานจากส่วนกลาง', desc: 'ธุรการเลือกพนักงานจากส่วนกลางไปแผนกของตนเองตามช่วงเวลา พร้อมแจ้งเตือนเมื่อมีรายการในระบบยืมพนักงาน' },
     { href: 'pool-dashboard.html', icon: IC.dash, title: 'แดชบอร์ด', desc: 'ภาพรวมจำนวนพนักงานในส่วนกลาง คนว่าง คนที่ถูกใช้งาน และรายการที่ใกล้สิ้นสุด' },
     { href: 'pool-guide.html',   icon: IC.guide, title: 'คู่มือการใช้งาน', desc: 'ขั้นตอนการใช้งานแยกตามบทบาท ฝ่ายบุคคล ธุรการ และผู้จัดการแผนก พร้อมคำถามที่พบบ่อย' },
