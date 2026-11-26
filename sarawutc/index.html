@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>สมัครสมาชิก / เข้าสู่ระบบ</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; background: #f3f4f6; margin: 0; display: grid; place-items: center; min-height: 100vh; }
+    .card { background: #fff; padding: 28px; border-radius: 12px; width: min(380px, 92vw); box-shadow: 0 4px 20px rgba(0,0,0,.08); }
+    h1 { font-size: 20px; margin: 0 0 16px; }
+    .tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+    .tabs button { flex: 1; padding: 8px; border: 1px solid #d1d5db; background: #fff; border-radius: 8px; cursor: pointer; }
+    .tabs button.active { background: #2563eb; color: #fff; border-color: #2563eb; }
+    label { display: block; font-size: 14px; margin: 12px 0 4px; }
+    input { width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 15px; }
+    .submit { width: 100%; margin-top: 18px; padding: 11px; border: 0; border-radius: 8px; background: #2563eb; color: #fff; font-size: 15px; cursor: pointer; }
+    .submit:disabled { opacity: .6; }
+    #msg { margin-top: 14px; font-size: 14px; min-height: 20px; }
+    .err { color: #b91c1c; } .ok { color: #15803d; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <!-- ฟอร์ม -->
+    <div id="authView">
+      <h1>ระบบสมาชิก</h1>
+      <div class="tabs">
+        <button id="tabLogin" class="active" type="button">เข้าสู่ระบบ</button>
+        <button id="tabSignup" type="button">สมัครสมาชิก</button>
+      </div>
+      <form id="form">
+        <div id="usernameWrap" class="hidden">
+          <label for="username">Username</label>
+          <input id="username" minlength="3" maxlength="30" pattern="[A-Za-z0-9_]+" title="ใช้ตัวอักษรอังกฤษ ตัวเลข และ _ เท่านั้น" autocomplete="username">
+        </div>
+        <label for="email">อีเมล</label>
+        <input id="email" type="email" required autocomplete="email">
+        <label for="password">Password (อย่างน้อย 8 ตัว)</label>
+        <input id="password" type="password" minlength="8" required autocomplete="current-password">
+        <button class="submit" id="submitBtn" type="submit">เข้าสู่ระบบ</button>
+      </form>
+    </div>
+
+    <!-- หลังล็อกอิน -->
+    <div id="userView" class="hidden">
+      <h1>สวัสดี, <span id="whoami"></span></h1>
+      <p id="whoEmail"></p>
+      <button class="submit" id="logoutBtn" type="button">ออกจากระบบ</button>
+    </div>
+
+    <div id="msg"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    // ใส่ anon (public) key จาก Supabase > Project Settings > API
+    // ห้ามใช้ service_role key ในหน้าเว็บเด็ดขาด
+    const SUPABASE_URL = "https://mytnyvcdpuhbhsfpgwea.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15dG55dmNkcHVoYmhzZnBnd2VhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTU2NTc1NDIsImV4cCI6MjExMTIzMzU0Mn0.yv1mR_ofvmzyaPmYhuXg5Xq4tx9_eG0NlIn_7ci6PBg";
+
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const $ = (id) => document.getElementById(id);
+    let mode = "login";
+
+    function setMode(m) {
+      mode = m;
+      $("tabLogin").classList.toggle("active", m === "login");
+      $("tabSignup").classList.toggle("active", m === "signup");
+      $("usernameWrap").classList.toggle("hidden", m === "login");
+      $("username").required = m === "signup";
+      $("password").autocomplete = m === "login" ? "current-password" : "new-password";
+      $("submitBtn").textContent = m === "login" ? "เข้าสู่ระบบ" : "สมัครสมาชิก";
+      msg("");
+    }
+    function msg(text, type) {
+      $("msg").textContent = text;
+      $("msg").className = type || "";
+    }
+
+    $("tabLogin").onclick = () => setMode("login");
+    $("tabSignup").onclick = () => setMode("signup");
+
+    $("form").onsubmit = async (e) => {
+      e.preventDefault();
+      $("submitBtn").disabled = true;
+      msg("กำลังดำเนินการ...");
+      const email = $("email").value.trim();
+      const password = $("password").value;
+
+      if (mode === "signup") {
+        const username = $("username").value.trim();
+        const { error } = await sb.auth.signUp({ email, password, options: { data: { username } } });
+        if (error) msg(error.message, "err");
+        else msg("สมัครสำเร็จ! ตรวจสอบอีเมลเพื่อยืนยัน (ถ้าเปิดใช้การยืนยันอีเมล)", "ok");
+      } else {
+        const { error } = await sb.auth.signInWithPassword({ email, password });
+        if (error) msg(error.message, "err"); else msg("");
+      }
+      $("submitBtn").disabled = false;
+    };
+
+    $("logoutBtn").onclick = () => sb.auth.signOut();
+
+    async function render(session) {
+      const loggedIn = !!session;
+      $("authView").classList.toggle("hidden", loggedIn);
+      $("userView").classList.toggle("hidden", !loggedIn);
+      if (!loggedIn) return;
+      $("whoEmail").textContent = session.user.email;
+      const { data } = await sb.from("profiles").select("username").eq("id", session.user.id).maybeSingle();
+      $("whoami").textContent = data?.username || session.user.email;
+    }
+
+    sb.auth.onAuthStateChange((_event, session) => render(session));
+    sb.auth.getSession().then(({ data }) => render(data.session));
+  </script>
+</body>
+</html>
