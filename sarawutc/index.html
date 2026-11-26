@@ -3,7 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>สมัครสมาชิก / เข้าสู่ระบบ</title>
+  <title>เข้าสู่ระบบ</title>
+  <link rel="icon" href="data:,">
   <style>
     * { box-sizing: border-box; }
     body { 
@@ -24,20 +25,6 @@
       border: 1px solid #e2e8f0;
     }
     h1 { font-size: 22px; margin: 0 0 18px; color: #0f172a; text-align: center; font-weight: 700; }
-    .tabs { display: flex; gap: 8px; margin-bottom: 20px; background: #f8fafc; padding: 4px; border-radius: 10px; border: 1px solid #e2e8f0; }
-    .tabs button { 
-      flex: 1; 
-      padding: 9px; 
-      border: 0; 
-      background: transparent; 
-      border-radius: 7px; 
-      cursor: pointer; 
-      font-weight: 600; 
-      font-size: 14px; 
-      color: #64748b; 
-      transition: all 0.2s ease;
-    }
-    .tabs button.active { background: #ffffff; color: #2563eb; box-shadow: 0 2px 4px rgba(0,0,0,0.06); }
     label { display: block; font-size: 13px; font-weight: 600; color: #475569; margin: 12px 0 5px; }
     input { 
       width: 100%; 
@@ -203,21 +190,13 @@
 </head>
 <body>
   <div class="card">
-    <!-- ฟอร์มเข้าสู่ระบบ / สมัครสมาชิก -->
+    <!-- ฟอร์มเข้าสู่ระบบ -->
     <div id="authView">
-      <h1>ระบบสมาชิก</h1>
-      <div class="tabs">
-        <button id="tabLogin" class="active" type="button">เข้าสู่ระบบ</button>
-        <button id="tabSignup" type="button">สมัครสมาชิก</button>
-      </div>
+      <h1>เข้าสู่ระบบ</h1>
       <form id="form">
-        <div id="usernameWrap" class="hidden">
-          <label for="username">Username</label>
-          <input id="username" disabled minlength="3" maxlength="30" pattern="[A-Za-z0-9_]+" title="ใช้ตัวอักษรอังกฤษ ตัวเลข และ _ เท่านั้น" autocomplete="username" placeholder="ตั้งชื่อผู้ใช้">
-        </div>
         <label for="email">อีเมล</label>
         <input id="email" type="email" required autocomplete="email" placeholder="example@mail.com">
-        <label for="password">Password (อย่างน้อย 8 ตัว)</label>
+        <label for="password">Password</label>
         <input id="password" type="password" required autocomplete="current-password" placeholder="••••••••">
         <button class="submit" id="submitBtn" type="submit">เข้าสู่ระบบ</button>
       </form>
@@ -272,29 +251,11 @@
 
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     const $ = (id) => document.getElementById(id);
-    let mode = "login";
-
-    function setMode(m) {
-      mode = m;
-      $("tabLogin").classList.toggle("active", m === "login");
-      $("tabSignup").classList.toggle("active", m === "signup");
-      $("usernameWrap").classList.toggle("hidden", m === "login");
-      $("username").disabled = m === "login";
-      $("username").required = m === "signup";
-      if (m === "login") $("password").removeAttribute("minlength");
-      else $("password").setAttribute("minlength", "8");
-      $("password").autocomplete = m === "login" ? "current-password" : "new-password";
-      $("submitBtn").textContent = m === "login" ? "เข้าสู่ระบบ" : "สมัครสมาชิก";
-      msg("");
-    }
 
     function msg(text, type) {
       $("msg").textContent = text;
       $("msg").className = type || "";
     }
-
-    $("tabLogin").onclick = () => setMode("login");
-    $("tabSignup").onclick = () => setMode("signup");
 
     $("form").onsubmit = async (e) => {
       e.preventDefault();
@@ -303,20 +264,10 @@
       const email = $("email").value.trim();
       const password = $("password").value;
 
-      if (mode === "signup") {
-        const username = $("username").value.trim();
-        const { error } = await sb.auth.signUp({ 
-          email, 
-          password, 
-          options: { data: { username } } 
-        });
-        if (error) msg(error.message, "err");
-        else msg("สมัครสำเร็จ! ตรวจสอบอีเมลเพื่อยืนยัน (หากเปิดใช้งาน Confirm Email)", "ok");
-      } else {
-        const { error } = await sb.auth.signInWithPassword({ email, password });
-        if (error) msg(error.message, "err"); 
-        else msg("");
-      }
+      const { error } = await sb.auth.signInWithPassword({ email, password });
+      if (error) msg(error.message, "err");
+      else msg("");
+
       $("submitBtn").disabled = false;
     };
 
