@@ -33,12 +33,12 @@
       <form id="form">
         <div id="usernameWrap" class="hidden">
           <label for="username">Username</label>
-          <input id="username" minlength="3" maxlength="30" pattern="[A-Za-z0-9_]+" title="ใช้ตัวอักษรอังกฤษ ตัวเลข และ _ เท่านั้น" autocomplete="username">
+          <input id="username" disabled minlength="3" maxlength="30" pattern="[A-Za-z0-9_]+" title="ใช้ตัวอักษรอังกฤษ ตัวเลข และ _ เท่านั้น" autocomplete="username">
         </div>
         <label for="email">อีเมล</label>
         <input id="email" type="email" required autocomplete="email">
         <label for="password">Password (อย่างน้อย 8 ตัว)</label>
-        <input id="password" type="password" minlength="8" required autocomplete="current-password">
+        <input id="password" type="password" required autocomplete="current-password">
         <button class="submit" id="submitBtn" type="submit">เข้าสู่ระบบ</button>
       </form>
     </div>
@@ -69,7 +69,11 @@
       $("tabLogin").classList.toggle("active", m === "login");
       $("tabSignup").classList.toggle("active", m === "signup");
       $("usernameWrap").classList.toggle("hidden", m === "login");
+      // ช่องที่ disabled จะไม่ถูกตรวจสอบฟอร์ม จึงไม่เกิดข้อผิดพลาด "not focusable"
+      $("username").disabled = m === "login";
       $("username").required = m === "signup";
+      if (m === "login") $("password").removeAttribute("minlength");
+      else $("password").setAttribute("minlength", "8");
       $("password").autocomplete = m === "login" ? "current-password" : "new-password";
       $("submitBtn").textContent = m === "login" ? "เข้าสู่ระบบ" : "สมัครสมาชิก";
       msg("");
