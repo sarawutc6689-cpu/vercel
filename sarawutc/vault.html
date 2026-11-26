@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>คลังรหัสผ่าน</title>
+  <link rel="icon" href="data:,">
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; background: #f3f4f6; margin: 0; padding: 24px 12px; }
+    .wrap { max-width: 860px; margin: 0 auto; }
+    .card { background: #fff; padding: 22px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,.08); margin-bottom: 16px; }
+    h1 { font-size: 20px; margin: 0 0 4px; } h2 { font-size: 16px; margin: 0 0 12px; }
+    .top { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+    a { color: #2563eb; }
+    label { display: block; font-size: 14px; margin: 10px 0 4px; }
+    input { width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 15px; }
+    button { padding: 8px 12px; border: 1px solid #d1d5db; background: #fff; border-radius: 8px; cursor: pointer; font-size: 14px; }
+    button.primary { background: #2563eb; color: #fff; border-color: #2563eb; margin-top: 14px; }
+    button.danger { color: #b91c1c; }
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    @media (max-width: 640px) { .grid { grid-template-columns: 1fr; } }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { text-align: left; padding: 10px 6px; border-bottom: 1px solid #e5e7eb; vertical-align: middle; word-break: break-all; }
+    td.actions { white-space: nowrap; word-break: normal; }
+    .muted { color: #6b7280; font-size: 13px; }
+    #msg { min-height: 20px; font-size: 14px; margin-top: 10px; }
+    .err { color: #b91c1c; } .ok { color: #15803d; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card top">
+    <div>
+      <h1>คลังรหัสผ่าน</h1>
+      <div class="muted" id="who"></div>
+    </div>
+    <div>
+      <button id="lockBtn" class="hidden" type="button">ล็อกคลัง</button>
+      <button id="logoutBtn" type="button">ออกจากระบบ</button>
+    </div>
+  </div>
+
+  <!-- ปลดล็อก -->
+  <div class="card" id="unlockView">
+    <h2 id="unlockTitle">ปลดล็อกคลัง</h2>
+    <p class="muted" id="unlockHint"></p>
+    <form id="unlockForm">
+      <label for="pass">Passphrase ของคลัง</label>
+      <input id="pass" type="password" required autocomplete="off">
+      <div id="confirmWrap" class="hidden">
+        <label for="pass2">ยืนยัน Passphrase</label>
+        <input id="pass2" type="password" autocomplete="off">
+      </div>
+      <button class="primary" type="submit" id="unlockBtn">ปลดล็อก</button>
+    </form>
+  </div>
+
+  <!-- คลัง -->
+  <div id="vaultView" class="hidden">
+    <div class="card">
+      <h2>เพิ่มรายการ</h2>
+      <form id="addForm">
+        <div class="grid">
+          <div><label for="url">URL</label><input id="url" type="text" placeholder="https://example.com" required autocomplete="off"></div>
+          <div><label for="u">Username</label><input id="u" type="text" required autocomplete="off"></div>
+          <div><label for="p">Password</label><input id="p" type="text" required autocomplete="off"></div>
+        </div>
+        <button class="primary" type="submit">บันทึก</button>
+      </form>
+    </div>
+    <div class="card">
+      <h2>รายการทั้งหมด (<span id="count">0</span>)</h2>
+      <table>
+        <thead><tr><th>URL</th><th>Username</th><th>Password</th><th></th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+      <p class="muted" id="empty">ยังไม่มีรายการ</p>
+    </div>
+  </div>
+
+  <div id="msg"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = "https://mytnyvcdpuhbhsfpgwea.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15dG55dmNkcHVoYmhzZnBnd2VhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTU2NTc1NDIsImV4cCI6MjExMTIzMzU0Mn0.yv1mR_ofvmzyaPmYhuXg5Xq4tx9_eG0NlIn_7ci6PBg"; // ใช้ anon key ตัวเดียวกับ index.html
+
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const $ = (id) => document.getElementById(id);
+  const enc = new TextEncoder(), dec = new TextDecoder();
+  let user = null, key = null, firstTime = false, idleTimer = null;
+
+  function msg(t, type) { $("msg").textContent = t || ""; $("msg").className = type || ""; }
+
+  // ---------- เข้ารหัส / ถอดรหัส (AES-GCM, คีย์จาก PBKDF2) ----------
+  const toB64 = (u8) => btoa(String.fromCharCode(...u8));
+  const fromB64 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
+
+  async function deriveKey(pass, userId) {
+    const base = await crypto.subtle.importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveKey"]);
+    return crypto.subtle.deriveKey(
+      { name: "PBKDF2", salt: enc.encode("vault:" + userId), iterations: 310000, hash: "SHA-256" },
+      base, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
+  }
+  async function encrypt(obj) {
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const ct = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, enc.encode(JSON.stringify(obj)));
+    return toB64(iv) + "." + toB64(new Uint8Array(ct));
+  }
+  async function decrypt(str) {
+    const [iv, ct] = str.split(".");
+    const pt = await crypto.subtle.decrypt({ name: "AES-GCM", iv: fromB64(iv) }, key, fromB64(ct));
+    return JSON.parse(dec.decode(pt));
+  }
+
+  // ---------- เริ่มต้น ----------
+  async function init() {
+    const { data } = await sb.auth.getSession();
+    if (!data.session) { location.href = "index.html"; return; }
+    user = data.session.user;
+    $("who").textContent = user.email;
+
+    const { data: chk, error } = await sb.from("vault_check").select("payload").maybeSingle();
+    if (error) { msg("ยังไม่ได้สร้างตาราง? รัน vault.sql ใน Supabase ก่อน: " + error.message, "err"); return; }
+    firstTime = !chk;
+    if (firstTime) {
+      $("unlockTitle").textContent = "ตั้ง Passphrase ของคลัง (ครั้งแรก)";
+      $("unlockHint").textContent = "ใช้เข้ารหัสข้อมูลทั้งหมด และต้องไม่ซ้ำกับรหัสผ่านล็อกอิน ถ้าลืม จะกู้ข้อมูลไม่ได้เลย";
+      $("confirmWrap").classList.remove("hidden");
+      $("pass2").required = true;
+      $("unlockBtn").textContent = "สร้างคลัง";
+    } else {
+      $("unlockHint").textContent = "ใส่ Passphrase เพื่อดูรายการของคุณ";
+    }
+    $("unlockForm").dataset.check = chk ? chk.payload : "";
+  }
+
+  $("unlockForm").onsubmit = async (e) => {
+    e.preventDefault();
+    msg("กำลังปลดล็อก...");
+    const pass = $("pass").value;
+    if (firstTime) {
+      if (pass.length < 8) return msg("Passphrase ต้องยาวอย่างน้อย 8 ตัว", "err");
+      if (pass !== $("pass2").value) return msg("Passphrase ทั้งสองช่องไม่ตรงกัน", "err");
+    }
+    key = await deriveKey(pass, user.id);
+    try {
+      if (firstTime) {
+        const { error } = await sb.from("vault_check").insert({ payload: await encrypt({ ok: true }) });
+        if (error) throw error;
+      } else {
+        await decrypt($("unlockForm").dataset.check);
+      }
+    } catch (err) {
+      key = null;
+      return msg(firstTime ? "สร้างคลังไม่สำเร็จ: " + err.message : "Passphrase ไม่ถูกต้อง", "err");
+    }
+    $("pass").value = ""; $("pass2").value = "";
+    $("unlockView").classList.add("hidden");
+    $("vaultView").classList.remove("hidden");
+    $("lockBtn").classList.remove("hidden");
+    msg("");
+    await loadItems();
+    resetIdle();
+  };
+
+  // ---------- รายการ ----------
+  function safeLink(url) {
+    try {
+      const u = new URL(/^[a-z]+:\/\//i.test(url) ? url : "https://" + url);
+      if (u.protocol === "http:" || u.protocol === "https:") return u.href;
+    } catch (_) {}
+    return null;
+  }
+
+  async function loadItems() {
+    const { data, error } = await sb.from("vault_items").select("id,payload").order("created_at", { ascending: false });
+    if (error) return msg(error.message, "err");
+    const tbody = $("rows"); tbody.replaceChildren();
+    let n = 0;
+    for (const row of data) {
+      let item;
+      try { item = await decrypt(row.payload); } catch (_) { continue; }
+      n++;
+      const tr = document.createElement("tr");
+
+      const tdUrl = document.createElement("td");
+      const href = safeLink(item.url);
+      if (href) { const a = document.createElement("a"); a.href = href; a.target = "_blank"; a.rel = "noopener noreferrer"; a.textContent = item.url; tdUrl.append(a); }
+      else tdUrl.textContent = item.url;
+
+      const tdUser = document.createElement("td"); tdUser.textContent = item.username;
+      const tdPass = document.createElement("td"); tdPass.textContent = "••••••••";
+
+      const tdAct = document.createElement("td"); tdAct.className = "actions";
+      const show = btn("แสดง", () => { const hidden = tdPass.textContent === "••••••••"; tdPass.textContent = hidden ? item.password : "••••••••"; show.textContent = hidden ? "ซ่อน" : "แสดง"; });
+      const copyU = btn("คัดลอก user", () => copy(item.username));
+      const copyP = btn("คัดลอก pass", () => copy(item.password));
+      const del = btn("ลบ", async () => {
+        if (!confirm("ลบรายการนี้?")) return;
+        const { error } = await sb.from("vault_items").delete().eq("id", row.id);
+        if (error) msg(error.message, "err"); else loadItems();
+      });
+      del.classList.add("danger");
+      tdAct.append(show, " ", copyU, " ", copyP, " ", del);
+
+      tr.append(tdUrl, tdUser, tdPass, tdAct);
+      tbody.append(tr);
+    }
+    $("count").textContent = n;
+    $("empty").classList.toggle("hidden", n > 0);
+  }
+
+  function btn(text, fn) { const b = document.createElement("button"); b.type = "button"; b.textContent = text; b.onclick = fn; return b; }
+  async function copy(text) { try { await navigator.clipboard.writeText(text); msg("คัดลอกแล้ว", "ok"); setTimeout(() => msg(""), 1500); } catch (_) { msg("คัดลอกไม่สำเร็จ", "err"); } }
+
+  $("addForm").onsubmit = async (e) => {
+    e.preventDefault();
+    const item = { url: $("url").value.trim(), username: $("u").value, password: $("p").value };
+    const { error } = await sb.from("vault_items").insert({ payload: await encrypt(item) });
+    if (error) return msg(error.message, "err");
+    $("addForm").reset(); msg("บันทึกแล้ว", "ok"); setTimeout(() => msg(""), 1500);
+    loadItems();
+  };
+
+  // ---------- ล็อกคลัง / ออกจากระบบ / ล็อกอัตโนมัติ ----------
+  function lock() { location.reload(); }  // รีโหลดเพื่อล้างคีย์และข้อมูลออกจากหน่วยความจำ
+  function resetIdle() { clearTimeout(idleTimer); idleTimer = setTimeout(lock, 5 * 60 * 1000); }
+  ["click", "keydown", "mousemove", "touchstart"].forEach((ev) => document.addEventListener(ev, () => key && resetIdle()));
+  $("lockBtn").onclick = lock;
+  $("logoutBtn").onclick = async () => { await sb.auth.signOut(); location.href = "index.html"; };
+
+  init();
+</script>
+</body>
+</html>
