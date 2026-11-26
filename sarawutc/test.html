@@ -1,0 +1,730 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>คลังเก็บกุญแจและรหัสผ่าน (Key & Vault Manager)</title>
+  <link rel="icon" href="data:,">
+  <style>
+    * { box-sizing: border-box; }
+    body { 
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+      background: #f8fafc; 
+      color: #0f172a; 
+      margin: 0; 
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    /* Full-width Responsive Container */
+    .app-container {
+      width: 100%;
+      max-width: 100%;
+      padding: 20px 28px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      box-sizing: border-box;
+    }
+    
+    /* Top Navigation Bar - Full Width */
+    .top-bar { 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      background: #ffffff; 
+      padding: 16px 24px; 
+      border-radius: 12px; 
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05); 
+      border: 1px solid #e2e8f0;
+      margin-bottom: 20px; 
+      flex-wrap: wrap; 
+      gap: 12px;
+    }
+    .top-left h1 { 
+      font-size: 20px; 
+      margin: 0; 
+      display: flex; 
+      align-items: center; 
+      gap: 10px; 
+      font-weight: 700;
+    }
+    .top-left .user-email { 
+      font-size: 13px; 
+      color: #64748b; 
+      margin-top: 2px; 
+      display: flex; 
+      align-items: center; 
+      gap: 6px; 
+    }
+    .top-actions { display: flex; gap: 8px; align-items: center; }
+
+    /* Button Styles */
+    button, .btn { 
+      display: inline-flex; 
+      align-items: center; 
+      justify-content: center;
+      gap: 6px; 
+      padding: 8px 14px; 
+      border-radius: 8px; 
+      font-size: 13px; 
+      font-weight: 600; 
+      cursor: pointer; 
+      transition: all 0.15s ease; 
+      border: 1px solid #cbd5e1; 
+      background: #ffffff; 
+      color: #334155; 
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    button:hover, .btn:hover { background: #f1f5f9; border-color: #94a3b8; }
+    button.primary, .btn.primary { background: #2563eb; color: #fff; border-color: #2563eb; }
+    button.primary:hover, .btn.primary:hover { background: #1d4ed8; }
+    button.danger { color: #dc2626; border-color: #fecaca; }
+    button.danger:hover { background: #fef2f2; border-color: #f87171; }
+
+    /* Cards */
+    .card { 
+      background: #ffffff; 
+      padding: 22px 24px; 
+      border-radius: 12px; 
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05); 
+      border: 1px solid #e2e8f0; 
+      margin-bottom: 20px; 
+    }
+    .card-title { 
+      font-size: 16px; 
+      font-weight: 700; 
+      margin: 0 0 16px; 
+      display: flex; 
+      align-items: center; 
+      gap: 8px; 
+    }
+    
+    /* Unlock View (Centered modal when locked) */
+    .unlock-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex: 1;
+      padding: 40px 16px;
+    }
+    .unlock-card { 
+      width: 100%;
+      max-width: 420px; 
+      text-align: center; 
+    }
+    .unlock-icon { 
+      width: 54px; height: 54px; background: #eff6ff; color: #2563eb; 
+      border-radius: 50%; display: grid; place-items: center; margin: 0 auto 16px; 
+    }
+    .unlock-card h2 { font-size: 20px; margin: 0 0 8px; font-weight: 700; }
+    .unlock-card p { font-size: 13px; color: #64748b; margin: 0 0 20px; line-height: 1.5; }
+
+    /* Form Layout */
+    label { display: block; font-size: 13px; font-weight: 600; color: #475569; margin: 0 0 6px; }
+    input, select { 
+      width: 100%; 
+      padding: 10px 12px; 
+      border: 1px solid #cbd5e1; 
+      border-radius: 8px; 
+      font-size: 13.5px; 
+      outline: none; 
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    input:focus, select:focus { 
+      border-color: #2563eb; 
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12); 
+    }
+    .form-grid { 
+      display: grid; 
+      grid-template-columns: 210px 1.2fr 1.2fr 1fr 1.5fr auto; 
+      gap: 12px; 
+      align-items: flex-end; 
+    }
+    .form-grid.no-email {
+      grid-template-columns: 220px 1.3fr 1.3fr 1.6fr auto;
+    }
+    @media (max-width: 1200px) {
+      .form-grid, .form-grid.no-email { grid-template-columns: 1fr 1fr; }
+      .form-grid button, .form-grid.no-email button { grid-column: span 2; }
+    }
+    @media (max-width: 680px) {
+      .form-grid, .form-grid.no-email { grid-template-columns: 1fr; }
+      .form-grid button, .form-grid.no-email button { grid-column: span 1; }
+    }
+
+    /* Category Filter Tabs */
+    .filter-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .category-tabs { 
+      display: flex; 
+      gap: 6px; 
+      flex-wrap: wrap; 
+      background: #f1f5f9; 
+      padding: 4px; 
+      border-radius: 10px; 
+    }
+    .cat-btn { 
+      padding: 6px 12px; 
+      border: 0; 
+      background: transparent; 
+      border-radius: 7px; 
+      font-size: 13px; 
+      font-weight: 600; 
+      color: #64748b; 
+      cursor: pointer; 
+      transition: all 0.15s;
+    }
+    .cat-btn.active { background: #ffffff; color: #2563eb; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+    .cat-badge { font-size: 11px; padding: 2px 6px; border-radius: 10px; background: #e2e8f0; margin-left: 4px; }
+    .cat-btn.active .cat-badge { background: #eff6ff; color: #2563eb; }
+
+    /* Type Badges */
+    .type-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .type-anon { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
+    .type-auth { background: #ede9fe; color: #6d28d9; border: 1px solid #ddd6fe; }
+    .type-api { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+    .type-other { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
+
+    /* Full-Screen Table Styles */
+    .table-container { 
+      overflow-x: auto; 
+      width: 100%;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+    }
+    table { 
+      width: 100%; 
+      border-collapse: collapse; 
+      font-size: 13px; 
+      text-align: left;
+    }
+    th { 
+      background: #f8fafc; 
+      color: #475569; 
+      font-weight: 600; 
+      padding: 12px 14px; 
+      border-bottom: 1px solid #e2e8f0; 
+      white-space: nowrap; 
+    }
+    td { 
+      padding: 12px 14px; 
+      border-bottom: 1px solid #f1f5f9; 
+      vertical-align: middle; 
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #f8fafc; }
+    .cell-title { font-weight: 600; color: #0f172a; }
+    .cell-sub { font-size: 12px; color: #64748b; font-family: ui-monospace, monospace; word-break: break-all; }
+    .cell-email { font-size: 12px; color: #2563eb; font-weight: 500; }
+    .secret-box { 
+      font-family: ui-monospace, monospace; 
+      background: #f1f5f9; 
+      padding: 5px 9px; 
+      border-radius: 6px; 
+      font-size: 12px; 
+      max-width: 380px; 
+      overflow: hidden; 
+      text-overflow: ellipsis; 
+      white-space: nowrap; 
+      display: inline-block;
+      vertical-align: middle;
+      border: 1px solid #e2e8f0;
+    }
+    .actions-cell { white-space: nowrap; text-align: right; }
+    .actions-cell button { padding: 5px 9px; font-size: 12px; margin-left: 4px; }
+
+    /* Message Toast */
+    #msg { 
+      position: fixed; 
+      bottom: 24px; 
+      right: 24px; 
+      padding: 12px 20px; 
+      border-radius: 10px; 
+      font-size: 14px; 
+      font-weight: 600; 
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
+      display: none; 
+      z-index: 99;
+      animation: slideUp 0.2s ease-out;
+    }
+    @keyframes slideUp { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .msg-err { background: #dc2626; color: #fff; display: block !important; }
+    .msg-ok { background: #16a34a; color: #fff; display: block !important; }
+    .hidden { display: none !important; }
+    .empty-state { text-align: center; padding: 48px 20px; color: #64748b; }
+  </style>
+</head>
+<body>
+
+<div class="app-container">
+  
+  <!-- Header Bar เต็มพื้นที่ -->
+  <div class="top-bar">
+    <div class="top-left">
+      <h1>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
+        คลังกุญแจและรหัสผ่าน (Vault Management)
+      </h1>
+      <div class="user-email" id="who">กำลังโหลดข้อมูล...</div>
+    </div>
+    <div class="top-actions">
+      <a href="index.html" class="btn">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+        หน้าหลัก
+      </a>
+      <button id="lockBtn" class="hidden" type="button">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
+        ล็อกคลัง
+      </button>
+      <button id="logoutBtn" class="danger" type="button">ออกจากระบบ</button>
+    </div>
+  </div>
+
+  <!-- หน้าจอใส่ Passphrase เพื่อปลดล็อก (Centered Card) -->
+  <div class="unlock-container" id="unlockViewWrap">
+    <div class="card unlock-card" id="unlockView">
+      <div class="unlock-icon">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
+      </div>
+      <h2 id="unlockTitle">ปลดล็อกคลัง</h2>
+      <p id="unlockHint">ระบุ Passphrase ประจำตัวเพื่อถอดรหัสกุญแจและรหัสผ่าน</p>
+      <form id="unlockForm">
+        <div style="text-align: left;">
+          <label for="pass">Passphrase ของคลัง</label>
+          <input id="pass" type="password" required autocomplete="off" placeholder="••••••••••••">
+        </div>
+        <div id="confirmWrap" class="hidden" style="margin-top: 10px; text-align: left;">
+          <label for="pass2">ยืนยัน Passphrase อีกครั้ง</label>
+          <input id="pass2" type="password" autocomplete="off" placeholder="ยืนยัน Passphrase อีกครั้ง">
+        </div>
+        <button class="primary" style="width: 100%; margin-top: 20px; padding: 11px;" type="submit" id="unlockBtn">
+          ปลดล็อกคลัง
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- หน้าจอจัดการคลังเมื่อปลดล็อกแล้ว (Full-width View) -->
+  <div id="vaultView" class="hidden" style="flex: 1; display: flex; flex-direction: column;">
+    
+    <!-- ฟอร์มเพิ่มรายการใหม่ (มีช่องอีเมลแสดงเฉพาะตอนเลือก anon key) -->
+    <div class="card">
+      <div class="card-title">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="16"></line>
+          <line x1="8" y1="12" x2="16" y2="12"></line>
+        </svg>
+        เพิ่มกุญแจ / รหัสผ่านใหม่
+      </div>
+      
+      <form id="addForm">
+        <div class="form-grid" id="formGrid">
+          <div>
+            <label for="category">ประเภทข้อมูล</label>
+            <select id="category" required onchange="handleCategoryChange()">
+              <option value="anon_key" selected>🔑 Supabase anon key</option>
+              <option value="service_key">🛡️ Supabase service key</option>
+              <option value="account_vault">👤 บัญชี (User & Pass)</option>
+              <option value="api_token">⚡ API Token / Secret</option>
+            </select>
+          </div>
+          <div>
+            <label for="title" id="labelTitle">ชื่อโปรเจกต์</label>
+            <input id="title" type="text" placeholder="เช่น Supabase App หลัก" required autocomplete="off">
+          </div>
+          <div>
+            <label for="identifier" id="labelIdentifier">Supabase Project URL</label>
+            <input id="identifier" type="text" placeholder="https://xxx.supabase.co" required autocomplete="off">
+          </div>
+          <!-- ช่องอีเมล: แสดงเฉพาะตอนเลือกหมวด anon key -->
+          <div id="emailWrap">
+            <label for="emailVal">อีเมลเจ้าของโปรเจกต์ (Email)</label>
+            <input id="emailVal" type="email" placeholder="admin@example.com" autocomplete="off">
+          </div>
+          <div>
+            <label for="secret" id="labelSecret">anon public key</label>
+            <input id="secret" type="password" placeholder="eyJhbGciOiJIUzI1NiIsIn..." required autocomplete="off">
+          </div>
+          <div>
+            <button class="primary" type="submit" style="padding: 10px 18px; width: 100%;">
+              บันทึกกุญแจ
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- รายการข้อมูลที่เข้ารหัสไว้ แสดงผลตารางกว้างเต็มหน้าจอ -->
+    <div class="card" style="flex: 1; margin-bottom: 0;">
+      <div class="filter-bar">
+        <div class="card-title" style="margin: 0;">
+          รายการกุญแจในคลัง (<span id="count">0</span>)
+        </div>
+
+        <!-- แท็บกรองประเภท -->
+        <div class="category-tabs">
+          <button class="cat-btn active" onclick="filterCategory('all', this)">ทั้งหมด <span class="cat-badge" id="b-all">0</span></button>
+          <button class="cat-btn" onclick="filterCategory('anon_key', this)">🔑 Anon Key <span class="cat-badge" id="b-anon">0</span></button>
+          <button class="cat-btn" onclick="filterCategory('service_key', this)">🛡️ Service Key <span class="cat-badge" id="b-serv">0</span></button>
+          <button class="cat-btn" onclick="filterCategory('account_vault', this)">👤 บัญชี/รหัสผ่าน <span class="cat-badge" id="b-acc">0</span></button>
+          <button class="cat-btn" onclick="filterCategory('api_token', this)">⚡ Token อื่นๆ <span class="cat-badge" id="b-api">0</span></button>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 130px;">ประเภท</th>
+              <th style="width: 190px;">ชื่อโปรเจกต์ / บริการ</th>
+              <th>URL / Identifier</th>
+              <th style="width: 180px;">อีเมล (ถ้ามี)</th>
+              <th style="min-width: 220px;">Key / รหัสผ่านที่เข้ารหัส</th>
+              <th class="actions-cell" style="width: 190px;">การจัดการ</th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+        <div class="empty-state hidden" id="empty">
+          <p>ยังไม่มีรายการในหมวดหมู่นี้</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div id="msg"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = "https://mytnyvcdpuhbhsfpgwea.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15dG55dmNkcHVoYmhzZnBnd2VhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTU2NTc1NDIsImV4cCI6MjExMTIzMzU0Mn0.yv1mR_ofvmzyaPmYhuXg5Xq4tx9_eG0NlIn_7ci6PBg";
+
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const $ = (id) => document.getElementById(id);
+  const enc = new TextEncoder(), dec = new TextDecoder();
+  let user = null, key = null, firstTime = false, idleTimer = null;
+  let allDecryptedItems = [];
+  let currentFilter = 'all';
+
+  function msg(t, type = "ok") {
+    const el = $("msg");
+    if (!t) { el.className = ""; el.textContent = ""; return; }
+    el.textContent = t;
+    el.className = type === "err" ? "msg-err" : "msg-ok";
+    setTimeout(() => { el.className = ""; el.textContent = ""; }, 3000);
+  }
+
+  function handleCategoryChange() {
+    const cat = $("category").value;
+    const lTitle = $("labelTitle");
+    const lId = $("labelIdentifier");
+    const lSec = $("labelSecret");
+    const emailWrap = $("emailWrap");
+    const formGrid = $("formGrid");
+
+    if (cat === "anon_key") {
+      lTitle.textContent = "ชื่อโปรเจกต์";
+      lId.textContent = "Supabase Project URL";
+      lSec.textContent = "anon public key";
+      $("identifier").placeholder = "https://xxx.supabase.co";
+      $("secret").placeholder = "eyJhbGciOiJIUzI1NiIsInR5cCI6...";
+      // แสดงช่องอีเมลสำหรับ anon_key
+      emailWrap.classList.remove("hidden");
+      formGrid.classList.remove("no-email");
+    } else {
+      // ซ่อนช่องอีเมลในประเภทอื่นๆ คงรูปแบบเดิมไว้ทุกประการ
+      emailWrap.classList.add("hidden");
+      formGrid.classList.add("no-email");
+      $("emailVal").value = "";
+
+      if (cat === "service_key") {
+        lTitle.textContent = "ชื่อโปรเจกต์";
+        lId.textContent = "Supabase Project URL";
+        lSec.textContent = "service_role key";
+        $("identifier").placeholder = "https://xxx.supabase.co";
+      } else if (cat === "account_vault") {
+        lTitle.textContent = "ชื่อเว็บไซต์ / บริการ";
+        lId.textContent = "Username / อีเมล";
+        lSec.textContent = "รหัสผ่าน (Password)";
+        $("identifier").placeholder = "user@domain.com";
+        $("secret").placeholder = "••••••••";
+      } else {
+        lTitle.textContent = "ชื่อบริการ / API";
+        lId.textContent = "Host / Endpoint (ถ้ามี)";
+        lSec.textContent = "API Key / Access Token";
+        $("identifier").placeholder = "api.example.com";
+        $("secret").placeholder = "Bearer token...";
+      }
+    }
+  }
+
+  // ---------- เข้ารหัส / ถอดรหัส (AES-GCM, PBKDF2) ----------
+  const toB64 = (u8) => btoa(String.fromCharCode(...u8));
+  const fromB64 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
+
+  async function deriveKey(pass, userId) {
+    const base = await crypto.subtle.importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveKey"]);
+    return crypto.subtle.deriveKey(
+      { name: "PBKDF2", salt: enc.encode("vault:" + userId), iterations: 310000, hash: "SHA-256" },
+      base, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]
+    );
+  }
+
+  async function encrypt(obj) {
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const ct = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, enc.encode(JSON.stringify(obj)));
+    return toB64(iv) + "." + toB64(new Uint8Array(ct));
+  }
+
+  async function decrypt(str) {
+    const [iv, ct] = str.split(".");
+    const pt = await crypto.subtle.decrypt({ name: "AES-GCM", iv: fromB64(iv) }, key, fromB64(ct));
+    return JSON.parse(dec.decode(pt));
+  }
+
+  // ---------- เริ่มต้นระบบ ----------
+  async function init() {
+    const { data } = await sb.auth.getSession();
+    if (!data.session) { location.href = "index.html"; return; }
+    user = data.session.user;
+    $("who").textContent = user.email;
+
+    const { data: chk, error } = await sb.from("vault_check").select("payload").maybeSingle();
+    if (error) { 
+      msg("ยังไม่ได้สร้างตาราง? กรุณารัน SQL บน Supabase ก่อน: " + error.message, "err"); 
+      return; 
+    }
+    firstTime = !chk;
+    if (firstTime) {
+      $("unlockTitle").textContent = "ตั้ง Passphrase ของคลัง (ครั้งแรก)";
+      $("unlockHint").textContent = "Passphrase ใช้สำหรับเข้ารหัสกุญแจทั้งหมด ต้องจำให้ได้ หากลืมจะไม่สามารถกู้คืนข้อมูลได้";
+      $("confirmWrap").classList.remove("hidden");
+      $("pass2").required = true;
+      $("unlockBtn").textContent = "สร้างคลังกุญแจ";
+    } else {
+      $("unlockHint").textContent = "ใส่ Passphrase เพื่อถอดรหัสกุญแจและรหัสผ่านของคุณ";
+    }
+    $("unlockForm").dataset.check = chk ? chk.payload : "";
+    handleCategoryChange();
+  }
+
+  $("unlockForm").onsubmit = async (e) => {
+    e.preventDefault();
+    const pass = $("pass").value;
+    if (firstTime) {
+      if (pass.length < 8) return msg("Passphrase ต้องยาวอย่างน้อย 8 ตัวอักษร", "err");
+      if (pass !== $("pass2").value) return msg("Passphrase ทั้งสองช่องไม่ตรงกัน", "err");
+    }
+    key = await deriveKey(pass, user.id);
+    try {
+      if (firstTime) {
+        const { error } = await sb.from("vault_check").insert({ payload: await encrypt({ ok: true }) });
+        if (error) throw error;
+      } else {
+        await decrypt($("unlockForm").dataset.check);
+      }
+    } catch (err) {
+      key = null;
+      return msg(firstTime ? "สร้างคลังไม่สำเร็จ: " + err.message : "Passphrase ไม่ถูกต้อง", "err");
+    }
+
+    $("pass").value = ""; 
+    $("pass2").value = "";
+    $("unlockViewWrap").classList.add("hidden");
+    $("vaultView").classList.remove("hidden");
+    $("lockBtn").classList.remove("hidden");
+    await loadItems();
+    resetIdle();
+  };
+
+  // ---------- กรองและแสดงผลตาราง ----------
+  function filterCategory(cat, btnEl) {
+    currentFilter = cat;
+    document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+    if (btnEl) btnEl.classList.add('active');
+    renderTable();
+  }
+
+  function renderTable() {
+    const tbody = $("rows");
+    tbody.replaceChildren();
+
+    const filtered = currentFilter === 'all' 
+      ? allDecryptedItems 
+      : allDecryptedItems.filter(item => (item.category || 'anon_key') === currentFilter);
+
+    $("count").textContent = filtered.length;
+    $("empty").classList.toggle("hidden", filtered.length > 0);
+
+    const counts = { all: allDecryptedItems.length, anon_key: 0, service_key: 0, account_vault: 0, api_token: 0 };
+    allDecryptedItems.forEach(i => {
+      const c = i.category || 'anon_key';
+      if (counts[c] !== undefined) counts[c]++;
+    });
+    $("b-all").textContent = counts.all;
+    $("b-anon").textContent = counts.anon_key;
+    $("b-serv").textContent = counts.service_key;
+    $("b-acc").textContent = counts.account_vault;
+    $("b-api").textContent = counts.api_token;
+
+    filtered.forEach(row => {
+      const tr = document.createElement("tr");
+
+      // 1. Badge ประเภท
+      const tdType = document.createElement("td");
+      const cat = row.category || 'anon_key';
+      let bClass = "type-anon", bText = "🔑 ANON KEY";
+      if (cat === "service_key") { bClass = "type-auth"; bText = "🛡️ SERVICE KEY"; }
+      else if (cat === "account_vault") { bClass = "type-other"; bText = "👤 ACCOUNT"; }
+      else if (cat === "api_token") { bClass = "type-api"; bText = "⚡ API TOKEN"; }
+      tdType.innerHTML = `<span class="type-badge ${bClass}">${bText}</span>`;
+
+      // 2. ชื่อโปรเจกต์
+      const tdTitle = document.createElement("td");
+      tdTitle.innerHTML = `<span class="cell-title">${escapeHtml(row.title || row.url || '-')}</span>`;
+
+      // 3. Project URL / Identifier
+      const tdId = document.createElement("td");
+      tdId.innerHTML = `<span class="cell-sub">${escapeHtml(row.identifier || row.username || '-')}</span>`;
+
+      // 4. อีเมล (ถ้ามี)
+      const tdEmail = document.createElement("td");
+      if (row.email) {
+        tdEmail.innerHTML = `<span class="cell-email">${escapeHtml(row.email)}</span>`;
+      } else {
+        tdEmail.innerHTML = `<span style="color: #94a3b8;">-</span>`;
+      }
+
+      // 5. Secret / Key
+      const tdSec = document.createElement("td");
+      const secretVal = row.secret || row.password || '';
+      const masked = "••••••••••••••••••••••••";
+      const secSpan = document.createElement("span");
+      secSpan.className = "secret-box";
+      secSpan.textContent = masked;
+      tdSec.appendChild(secSpan);
+
+      // 6. การจัดการ (Action buttons)
+      const tdAct = document.createElement("td");
+      tdAct.className = "actions-cell";
+
+      const showBtn = document.createElement("button");
+      showBtn.textContent = "แสดง";
+      showBtn.onclick = () => {
+        const isHidden = secSpan.textContent === masked;
+        secSpan.textContent = isHidden ? secretVal : masked;
+        showBtn.textContent = isHidden ? "ซ่อน" : "แสดง";
+      };
+
+      const copyBtn = document.createElement("button");
+      copyBtn.textContent = "คัดลอก Key";
+      copyBtn.className = "primary";
+      copyBtn.onclick = () => copy(secretVal, "คัดลอก Key เรียบร้อย");
+
+      const delBtn = document.createElement("button");
+      delBtn.textContent = "ลบ";
+      delBtn.className = "danger";
+      delBtn.onclick = async () => {
+        if (!confirm(`ยืนยันการลบ ${row.title || 'รายการนี้'}?`)) return;
+        const { error } = await sb.from("vault_items").delete().eq("id", row.id);
+        if (error) msg(error.message, "err");
+        else { msg("ลบรายการแล้ว"); loadItems(); }
+      };
+
+      tdAct.append(showBtn, copyBtn, delBtn);
+      tr.append(tdType, tdTitle, tdId, tdEmail, tdSec, tdAct);
+      tbody.appendChild(tr);
+    });
+  }
+
+  async function loadItems() {
+    const { data, error } = await sb.from("vault_items").select("id,payload,created_at").order("created_at", { ascending: false });
+    if (error) return msg(error.message, "err");
+
+    allDecryptedItems = [];
+    for (const row of data) {
+      try {
+        const item = await decrypt(row.payload);
+        allDecryptedItems.push({ id: row.id, ...item });
+      } catch (_) {}
+    }
+    renderTable();
+  }
+
+  function escapeHtml(str) {
+    return (str || '').replace(/[&<>'"]/g, 
+      tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+    );
+  }
+
+  async function copy(text, successMsg = "คัดลอกแล้ว") {
+    try {
+      await navigator.clipboard.writeText(text);
+      msg(successMsg, "ok");
+    } catch (_) {
+      msg("คัดลอกไม่สำเร็จ", "err");
+    }
+  }
+
+  $("addForm").onsubmit = async (e) => {
+    e.preventDefault();
+    const item = {
+      category: $("category").value,
+      title: $("title").value.trim(),
+      identifier: $("identifier").value.trim(),
+      email: $("category").value === "anon_key" ? $("emailVal").value.trim() : "",
+      secret: $("secret").value.trim()
+    };
+    const { error } = await sb.from("vault_items").insert({ payload: await encrypt(item) });
+    if (error) return msg(error.message, "err");
+    
+    $("addForm").reset();
+    handleCategoryChange();
+    msg("บันทึกกุญแจเข้าคลังเรียบร้อยแล้ว", "ok");
+    loadItems();
+  };
+
+  function lock() { location.reload(); }
+  function resetIdle() { clearTimeout(idleTimer); idleTimer = setTimeout(lock, 5 * 60 * 1000); }
+  ["click", "keydown", "mousemove", "touchstart"].forEach((ev) => document.addEventListener(ev, () => key && resetIdle()));
+  
+  $("lockBtn").onclick = lock;
+  $("logoutBtn").onclick = async () => { await sb.auth.signOut(); location.href = "index.html"; };
+
+  init();
+</script>
+</body>
+</html>
