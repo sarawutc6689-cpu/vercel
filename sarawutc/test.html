@@ -459,8 +459,8 @@
       lTitle.textContent = "ชื่อโปรเจกต์";
       lId.textContent = "Supabase Project URL";
       lSec.textContent = "anon public key";
-      $("identifier").placeholder = "https://xxx.supabase.co";
-      $("secret").placeholder = "eyJhbGciOiJIUzI1NiIsInR5cCI6...";
+      $("identifier").placeholder = "";
+      $("secret").placeholder = "";
       // แสดงช่องอีเมลสำหรับ anon_key
       emailWrap.classList.remove("hidden");
       formGrid.classList.remove("no-email");
@@ -474,7 +474,7 @@
         lTitle.textContent = "ชื่อโปรเจกต์";
         lId.textContent = "Supabase Project URL";
         lSec.textContent = "service_role key";
-        $("identifier").placeholder = "https://xxx.supabase.co";
+        $("identifier").placeholder = "";
       } else if (cat === "account_vault") {
         lTitle.textContent = "ชื่อเว็บไซต์ / บริการ";
         lId.textContent = "Username / อีเมล";
