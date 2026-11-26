@@ -143,7 +143,7 @@
     }
     .form-grid { 
       display: grid; 
-      grid-template-columns: 210px 1.2fr 1.2fr 1fr 1.5fr auto; 
+      grid-template-columns: 210px 1.2fr 1.2fr 1fr 1fr 1.5fr auto; 
       gap: 12px; 
       align-items: flex-end; 
     }
@@ -377,6 +377,11 @@
             <label for="emailVal">อีเมล</label>
             <input id="emailVal" type="email" placeholder="" autocomplete="off">
           </div>
+          <!-- ช่องรหัสผ่านอีเมล: แสดงเฉพาะตอนเลือกหมวด anon key -->
+          <div id="emailPassWrap">
+            <label for="emailPass">รหัสผ่านอีเมล</label>
+            <input id="emailPass" type="password" placeholder="" autocomplete="new-password">
+          </div>
           <div>
             <label for="secret" id="labelSecret">anon key</label>
             <input id="secret" type="password" placeholder="" required autocomplete="off">
@@ -418,6 +423,7 @@
               <th style="width: 190px;">ชื่อโปรเจกต์ / บริการ</th>
               <th>URL / Identifier</th>
               <th style="width: 180px;">อีเมล (ถ้ามี)</th>
+              <th style="width: 190px;">รหัสผ่านอีเมล</th>
               <th style="min-width: 220px;">Key / รหัสผ่านที่เข้ารหัส</th>
               <th class="actions-cell" style="width: 270px;">การจัดการ</th>
             </tr>
@@ -472,12 +478,15 @@
       $("secret").placeholder = "";
       // แสดงช่องอีเมลสำหรับ anon_key
       emailWrap.classList.remove("hidden");
+      $("emailPassWrap").classList.remove("hidden");
       formGrid.classList.remove("no-email");
     } else {
       // ซ่อนช่องอีเมลในประเภทอื่นๆ คงรูปแบบเดิมไว้ทุกประการ
       emailWrap.classList.add("hidden");
+      $("emailPassWrap").classList.add("hidden");
       formGrid.classList.add("no-email");
       $("emailVal").value = "";
+      $("emailPass").value = "";
 
       if (cat === "service_key") {
         lTitle.textContent = "ชื่อโปรเจกต์";
@@ -600,6 +609,7 @@
     $("title").value = row.title || row.url || "";
     $("identifier").value = row.identifier || row.username || "";
     $("emailVal").value = row.email || "";
+    $("emailPass").value = row.emailPassword || "";
     $("secret").value = row.secret || row.password || "";
 
     $("formTitle").textContent = "แก้ไขรายการ: " + (row.title || row.url || "");
@@ -683,6 +693,25 @@
         tdEmail.innerHTML = `<span style="color: #94a3b8;">-</span>`;
       }
 
+      // 4.1 รหัสผ่านอีเมล
+      const tdEmailPass = document.createElement("td");
+      if (row.emailPassword) {
+        const epMasked = "••••••••";
+        const epBox = document.createElement("span");
+        epBox.className = "secret-box";
+        epBox.style.cursor = "pointer";
+        epBox.title = "คลิกเพื่อแสดง/ซ่อน";
+        epBox.textContent = epMasked;
+        epBox.onclick = () => { epBox.textContent = epBox.textContent === epMasked ? row.emailPassword : epMasked; };
+        const epCopy = document.createElement("button");
+        epCopy.textContent = "คัดลอก";
+        epCopy.style.cssText = "padding:4px 8px;font-size:12px;margin-left:6px;";
+        epCopy.onclick = () => copy(row.emailPassword, "คัดลอกรหัสอีเมลเรียบร้อย");
+        tdEmailPass.append(epBox, epCopy);
+      } else {
+        tdEmailPass.innerHTML = `<span style="color: #94a3b8;">-</span>`;
+      }
+
       // 5. Secret / Key
       const tdSec = document.createElement("td");
       const secretVal = row.secret || row.password || '';
@@ -729,7 +758,7 @@
       };
 
       tdAct.append(showBtn, copyBtn, editBtn, delBtn);
-      tr.append(tdType, tdTitle, tdId, tdEmail, tdSec, tdAct);
+      tr.append(tdType, tdTitle, tdId, tdEmail, tdEmailPass, tdSec, tdAct);
       tbody.appendChild(tr);
     });
   }
@@ -770,6 +799,7 @@
       title: $("title").value.trim(),
       identifier: $("identifier").value.trim(),
       email: $("category").value === "anon_key" ? $("emailVal").value.trim() : "",
+      emailPassword: $("category").value === "anon_key" ? $("emailPass").value : "",
       secret: $("secret").value.trim()
     };
     const payload = await encrypt(item);
