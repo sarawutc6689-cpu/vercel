@@ -84,8 +84,6 @@
     button.primary:hover, .btn.primary:hover { background: #1d4ed8; }
     button.danger { color: #dc2626; border-color: #fecaca; }
     button.danger:hover { background: #fef2f2; border-color: #f87171; }
-    button.edit { color: #b45309; border-color: #fde68a; }
-    button.edit:hover { background: #fffbeb; border-color: #f59e0b; }
 
     /* Cards */
     .card { 
@@ -96,7 +94,6 @@
       border: 1px solid #e2e8f0; 
       margin-bottom: 20px; 
     }
-    .card.editing { border-color: #f59e0b; box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.18); }
     .card-title { 
       font-size: 16px; 
       font-weight: 700; 
@@ -143,21 +140,17 @@
     }
     .form-grid { 
       display: grid; 
-      grid-template-columns: 210px 1.2fr 1.2fr 1fr 1.5fr auto; 
+      grid-template-columns: 240px 1fr 1fr 1fr auto; 
       gap: 12px; 
       align-items: flex-end; 
     }
-    .form-grid.no-email {
-      grid-template-columns: 220px 1.3fr 1.3fr 1.6fr auto;
-    }
-    .form-buttons { display: flex; gap: 8px; }
-    @media (max-width: 1200px) {
-      .form-grid, .form-grid.no-email { grid-template-columns: 1fr 1fr; }
-      .form-grid .form-buttons, .form-grid.no-email .form-buttons { grid-column: span 2; }
+    @media (max-width: 1100px) {
+      .form-grid { grid-template-columns: 1fr 1fr; }
+      .form-grid button { grid-column: span 2; }
     }
     @media (max-width: 680px) {
-      .form-grid, .form-grid.no-email { grid-template-columns: 1fr; }
-      .form-grid .form-buttons, .form-grid.no-email .form-buttons { grid-column: span 1; }
+      .form-grid { grid-template-columns: 1fr; }
+      .form-grid button { grid-column: span 1; }
     }
 
     /* Category Filter Tabs */
@@ -235,10 +228,8 @@
     }
     tr:last-child td { border-bottom: none; }
     tr:hover td { background: #f8fafc; }
-    tr.row-editing td { background: #fffbeb; }
     .cell-title { font-weight: 600; color: #0f172a; }
     .cell-sub { font-size: 12px; color: #64748b; font-family: ui-monospace, monospace; word-break: break-all; }
-    .cell-email { font-size: 12px; color: #2563eb; font-weight: 500; }
     .secret-box { 
       font-family: ui-monospace, monospace; 
       background: #f1f5f9; 
@@ -342,19 +333,19 @@
   <!-- หน้าจอจัดการคลังเมื่อปลดล็อกแล้ว (Full-width View) -->
   <div id="vaultView" class="hidden" style="flex: 1; display: flex; flex-direction: column;">
     
-    <!-- ฟอร์มเพิ่ม/แก้ไขรายการ (มีช่องอีเมลแสดงเฉพาะตอนเลือก anon key) -->
-    <div class="card" id="addCard">
+    <!-- ฟอร์มเพิ่มรายการใหม่ (จัดวางแนวนอนเต็มพื้นที่ แถวเดียวเรียบง่าย) -->
+    <div class="card">
       <div class="card-title">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="10"></circle>
           <line x1="12" y1="8" x2="12" y2="16"></line>
           <line x1="8" y1="12" x2="16" y2="12"></line>
         </svg>
-        <span id="formTitle">เพิ่มกุญแจ / รหัสผ่านใหม่</span>
+        เพิ่มกุญแจ / รหัสผ่านใหม่
       </div>
       
       <form id="addForm">
-        <div class="form-grid" id="formGrid">
+        <div class="form-grid">
           <div>
             <label for="category">ประเภทข้อมูล</label>
             <select id="category" required onchange="handleCategoryChange()">
@@ -366,27 +357,19 @@
           </div>
           <div>
             <label for="title" id="labelTitle">ชื่อโปรเจกต์</label>
-            <input id="title" type="text" placeholder="" required autocomplete="off">
+            <input id="title" type="text" placeholder="เช่น Supabase App หลัก" required autocomplete="off">
           </div>
           <div>
-            <label for="identifier" id="labelIdentifier">Project URL</label>
-            <input id="identifier" type="text" placeholder="" required autocomplete="off">
-          </div>
-          <!-- ช่องอีเมล: แสดงเฉพาะตอนเลือกหมวด anon key -->
-          <div id="emailWrap">
-            <label for="emailVal">อีเมล</label>
-            <input id="emailVal" type="email" placeholder="" autocomplete="off">
+            <label for="identifier" id="labelIdentifier">Project URL / Username</label>
+            <input id="identifier" type="text" placeholder="https://xxx.supabase.co" required autocomplete="off">
           </div>
           <div>
-            <label for="secret" id="labelSecret">anon key</label>
-            <input id="secret" type="password" placeholder="" required autocomplete="off">
+            <label for="secret" id="labelSecret">anon key / password</label>
+            <input id="secret" type="password" placeholder="eyJhbGciOiJIUzI1NiIsIn..." required autocomplete="off">
           </div>
-          <div class="form-buttons">
-            <button class="primary" id="submitBtn" type="submit" style="padding: 10px 18px; width: 100%;">
-              บันทึก
-            </button>
-            <button id="cancelEditBtn" class="hidden" type="button" style="padding: 10px 14px;">
-              ยกเลิก
+          <div>
+            <button class="primary" type="submit" style="padding: 10px 18px; width: 100%;">
+              บันทึกกุญแจ
             </button>
           </div>
         </div>
@@ -414,12 +397,11 @@
         <table>
           <thead>
             <tr>
-              <th style="width: 130px;">ประเภท</th>
-              <th style="width: 190px;">ชื่อโปรเจกต์ / บริการ</th>
-              <th>URL / Identifier</th>
-              <th style="width: 180px;">อีเมล (ถ้ามี)</th>
-              <th style="min-width: 220px;">Key / รหัสผ่านที่เข้ารหัส</th>
-              <th class="actions-cell" style="width: 270px;">การจัดการ</th>
+              <th style="width: 140px;">ประเภท</th>
+              <th style="width: 220px;">ชื่อโปรเจกต์ / บริการ</th>
+              <th>URL โครงการ / Identifier</th>
+              <th style="min-width: 240px;">Key / รหัสผ่านที่เข้ารหัส</th>
+              <th class="actions-cell" style="width: 200px;">การจัดการ</th>
             </tr>
           </thead>
           <tbody id="rows"></tbody>
@@ -446,7 +428,6 @@
   let user = null, key = null, firstTime = false, idleTimer = null;
   let allDecryptedItems = [];
   let currentFilter = 'all';
-  let editingId = null;
 
   function msg(t, type = "ok") {
     const el = $("msg");
@@ -461,42 +442,30 @@
     const lTitle = $("labelTitle");
     const lId = $("labelIdentifier");
     const lSec = $("labelSecret");
-    const emailWrap = $("emailWrap");
-    const formGrid = $("formGrid");
 
     if (cat === "anon_key") {
       lTitle.textContent = "ชื่อโปรเจกต์";
-      lId.textContent = "Project URL";
-      lSec.textContent = "anon key";
-      $("identifier").placeholder = "";
-      $("secret").placeholder = "";
-      // แสดงช่องอีเมลสำหรับ anon_key
-      emailWrap.classList.remove("hidden");
-      formGrid.classList.remove("no-email");
+      lId.textContent = "Supabase Project URL";
+      lSec.textContent = "anon public key";
+      $("identifier").placeholder = "https://xxx.supabase.co";
+      $("secret").placeholder = "eyJhbGciOiJIUzI1NiIsInR5cCI6...";
+    } else if (cat === "service_key") {
+      lTitle.textContent = "ชื่อโปรเจกต์";
+      lId.textContent = "Supabase Project URL";
+      lSec.textContent = "service_role key";
+      $("identifier").placeholder = "https://xxx.supabase.co";
+    } else if (cat === "account_vault") {
+      lTitle.textContent = "ชื่อเว็บไซต์ / บริการ";
+      lId.textContent = "Username / อีเมล";
+      lSec.textContent = "รหัสผ่าน (Password)";
+      $("identifier").placeholder = "user@domain.com";
+      $("secret").placeholder = "••••••••";
     } else {
-      // ซ่อนช่องอีเมลในประเภทอื่นๆ คงรูปแบบเดิมไว้ทุกประการ
-      emailWrap.classList.add("hidden");
-      formGrid.classList.add("no-email");
-      $("emailVal").value = "";
-
-      if (cat === "service_key") {
-        lTitle.textContent = "ชื่อโปรเจกต์";
-        lId.textContent = "Project URL";
-        lSec.textContent = "service_role key";
-        $("identifier").placeholder = "";
-      } else if (cat === "account_vault") {
-        lTitle.textContent = "ชื่อเว็บไซต์ / บริการ";
-        lId.textContent = "Username / อีเมล";
-        lSec.textContent = "รหัสผ่าน (Password)";
-        $("identifier").placeholder = "user@domain.com";
-        $("secret").placeholder = "••••••••";
-      } else {
-        lTitle.textContent = "ชื่อบริการ / API";
-        lId.textContent = "Host / Endpoint (ถ้ามี)";
-        lSec.textContent = "API Key / Access Token";
-        $("identifier").placeholder = "api.example.com";
-        $("secret").placeholder = "Bearer token...";
-      }
+      lTitle.textContent = "ชื่อบริการ / API";
+      lId.textContent = "Host / Endpoint (ถ้ามี)";
+      lSec.textContent = "API Key / Access Token";
+      $("identifier").placeholder = "api.example.com";
+      $("secret").placeholder = "Bearer token...";
     }
   }
 
@@ -547,7 +516,6 @@
       $("unlockHint").textContent = "ใส่ Passphrase เพื่อถอดรหัสกุญแจและรหัสผ่านของคุณ";
     }
     $("unlockForm").dataset.check = chk ? chk.payload : "";
-    handleCategoryChange();
   }
 
   $("unlockForm").onsubmit = async (e) => {
@@ -578,38 +546,6 @@
     await loadItems();
     resetIdle();
   };
-
-  // ---------- แก้ไขรายการ ----------
-  function startEdit(row) {
-    editingId = row.id;
-    $("category").value = row.category || "anon_key";
-    handleCategoryChange();
-    $("title").value = row.title || row.url || "";
-    $("identifier").value = row.identifier || row.username || "";
-    $("emailVal").value = row.email || "";
-    $("secret").value = row.secret || row.password || "";
-
-    $("formTitle").textContent = "แก้ไขรายการ: " + (row.title || row.url || "");
-    $("submitBtn").textContent = "บันทึกการแก้ไข";
-    $("cancelEditBtn").classList.remove("hidden");
-    $("addCard").classList.add("editing");
-    renderTable();
-    window.scrollTo({ top: 0, behavior: "smooth" });
-    $("title").focus();
-  }
-
-  function cancelEdit() {
-    editingId = null;
-    $("addForm").reset();
-    handleCategoryChange();
-    $("formTitle").textContent = "เพิ่มกุญแจ / รหัสผ่านใหม่";
-    $("submitBtn").textContent = "บันทึก";
-    $("cancelEditBtn").classList.add("hidden");
-    $("addCard").classList.remove("editing");
-    renderTable();
-  }
-
-  $("cancelEditBtn").onclick = cancelEdit;
 
   // ---------- กรองและแสดงผลตาราง ----------
   function filterCategory(cat, btnEl) {
@@ -643,9 +579,7 @@
 
     filtered.forEach(row => {
       const tr = document.createElement("tr");
-      if (row.id === editingId) tr.className = "row-editing";
 
-      // 1. Badge ประเภท
       const tdType = document.createElement("td");
       const cat = row.category || 'anon_key';
       let bClass = "type-anon", bText = "🔑 ANON KEY";
@@ -654,23 +588,12 @@
       else if (cat === "api_token") { bClass = "type-api"; bText = "⚡ API TOKEN"; }
       tdType.innerHTML = `<span class="type-badge ${bClass}">${bText}</span>`;
 
-      // 2. ชื่อโปรเจกต์
       const tdTitle = document.createElement("td");
       tdTitle.innerHTML = `<span class="cell-title">${escapeHtml(row.title || row.url || '-')}</span>`;
 
-      // 3. Project URL / Identifier
       const tdId = document.createElement("td");
       tdId.innerHTML = `<span class="cell-sub">${escapeHtml(row.identifier || row.username || '-')}</span>`;
 
-      // 4. อีเมล (ถ้ามี)
-      const tdEmail = document.createElement("td");
-      if (row.email) {
-        tdEmail.innerHTML = `<span class="cell-email">${escapeHtml(row.email)}</span>`;
-      } else {
-        tdEmail.innerHTML = `<span style="color: #94a3b8;">-</span>`;
-      }
-
-      // 5. Secret / Key
       const tdSec = document.createElement("td");
       const secretVal = row.secret || row.password || '';
       const masked = "••••••••••••••••••••••••";
@@ -679,7 +602,6 @@
       secSpan.textContent = masked;
       tdSec.appendChild(secSpan);
 
-      // 6. การจัดการ (Action buttons)
       const tdAct = document.createElement("td");
       tdAct.className = "actions-cell";
 
@@ -696,11 +618,6 @@
       copyBtn.className = "primary";
       copyBtn.onclick = () => copy(secretVal, "คัดลอก Key เรียบร้อย");
 
-      const editBtn = document.createElement("button");
-      editBtn.textContent = "แก้ไข";
-      editBtn.className = "edit";
-      editBtn.onclick = () => startEdit(row);
-
       const delBtn = document.createElement("button");
       delBtn.textContent = "ลบ";
       delBtn.className = "danger";
@@ -708,15 +625,11 @@
         if (!confirm(`ยืนยันการลบ ${row.title || 'รายการนี้'}?`)) return;
         const { error } = await sb.from("vault_items").delete().eq("id", row.id);
         if (error) msg(error.message, "err");
-        else {
-          msg("ลบรายการแล้ว");
-          if (editingId === row.id) cancelEdit();
-          loadItems();
-        }
+        else { msg("ลบรายการแล้ว"); loadItems(); }
       };
 
-      tdAct.append(showBtn, copyBtn, editBtn, delBtn);
-      tr.append(tdType, tdTitle, tdId, tdEmail, tdSec, tdAct);
+      tdAct.append(showBtn, copyBtn, delBtn);
+      tr.append(tdType, tdTitle, tdId, tdSec, tdAct);
       tbody.appendChild(tr);
     });
   }
@@ -756,28 +669,14 @@
       category: $("category").value,
       title: $("title").value.trim(),
       identifier: $("identifier").value.trim(),
-      email: $("category").value === "anon_key" ? $("emailVal").value.trim() : "",
       secret: $("secret").value.trim()
     };
-    const payload = await encrypt(item);
-
-    if (editingId) {
-      const { error } = await sb.from("vault_items").update({ payload }).eq("id", editingId);
-      if (error) return msg(error.message, "err");
-      msg("แก้ไขรายการเรียบร้อยแล้ว", "ok");
-    } else {
-      const { error } = await sb.from("vault_items").insert({ payload });
-      if (error) return msg(error.message, "err");
-      msg("บันทึกกุญแจเข้าคลังเรียบร้อยแล้ว", "ok");
-    }
-
-    editingId = null;
+    const { error } = await sb.from("vault_items").insert({ payload: await encrypt(item) });
+    if (error) return msg(error.message, "err");
+    
     $("addForm").reset();
     handleCategoryChange();
-    $("formTitle").textContent = "เพิ่มกุญแจ / รหัสผ่านใหม่";
-    $("submitBtn").textContent = "บันทึก";
-    $("cancelEditBtn").classList.add("hidden");
-    $("addCard").classList.remove("editing");
+    msg("บันทึกกุญแจเข้าคลังเรียบร้อยแล้ว", "ok");
     loadItems();
   };
 
