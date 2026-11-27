@@ -107,6 +107,8 @@ table.f-table{width:100%;border-collapse:collapse;border:1px solid #000;font-siz
 .prog-line{display:flex;justify-content:space-between;font-size:13px}
 .steps{margin:0;padding-left:20px;font-size:13px;color:var(--ink)}
 .steps li{margin-bottom:4px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+#batch{display:none}
 .site-foot{background:var(--brand);color:#DCEBFA;text-align:center;font-size:13px;padding:10px 16px}
 .site-foot span{margin:0 8px;opacity:.6}
 
@@ -144,6 +146,10 @@ dialog h2{margin:0;font-size:17px}
   .code{font-size:11px}
   .f-bar,.f-meta,.f-table thead th,.sig td,.sym[data-s="3"],.lg.fixed{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .mc:hover{background:none}
+  body.batch .shell{display:none!important}
+  body.batch #batch{display:block}
+  #batch .paper{break-after:page;page-break-after:always}
+  #batch .paper:last-child{break-after:auto;page-break-after:auto}
 }
 </style>
 </head>
@@ -187,6 +193,14 @@ dialog h2{margin:0;font-size:17px}
         <button type="button" class="btn btn-ghost btn-wide" id="clearBtn">ล้างแบบฟอร์ม</button>
       </div>
       <p class="hint">พิมพ์บนกระดาษ A4 แนวนอน</p>
+    </section>
+
+    <section class="box">
+      <h2>พิมพ์ทั้งแผนก</h2>
+      <label for="deptSel">แผนก</label>
+      <select id="deptSel" class="field"><option value="">กำลังโหลดรายชื่อแผนก...</option></select>
+      <button type="button" class="btn btn-main btn-wide" id="deptPrintBtn" style="margin-top:8px" disabled>พิมพ์ทั้งแผนก</button>
+      <p class="hint" id="deptHint">1 เครื่อง = 1 หน้า A4 ใช้เดือนแผนตามที่เลือกด้านบน</p>
     </section>
 
     <section class="box" id="progBox">
@@ -252,6 +266,7 @@ dialog h2{margin:0;font-size:17px}
     </div>
   </section>
 </main>
+<div id="batch" aria-hidden="true"></div>
 
 <footer class="site-foot">เอกสาร PM<span>|</span>ใช้สำหรับภายในบริษัทเท่านั้น<span>|</span>พัฒนาโดย Sarawut.C</footer>
 
@@ -431,21 +446,26 @@ const pick = (row, keys) => {
   return '';
 };
 
+function assetValues(r) {
+  return {
+    f_name: pick(r, [cfg.col, 'computer_name']),
+    f_location: pick(r, ['location', 'department']),
+    f_ip: pick(r, ['ip_address', 'ip']),
+    f_resp: pick(r, ['responsible_person', 'login_name']),
+    f_cpu: pick(r, ['cpu']),
+    f_ram: pick(r, ['ram']),
+    f_hdd: pick(r, ['hdd', 'storage']),
+    f_vga: pick(r, ['vga']),
+    f_mainboard: pick(r, ['mainboard']),
+    f_monitor: [pick(r, ['monitor']), pick(r, ['model_monitor'])].filter(Boolean).join(' '),
+    f_keyboard: pick(r, ['keyboard']),
+    f_mouse: pick(r, ['mouse']),
+    f_wireless: pick(r, ['wireless_adapter']),
+    f_others: pick(r, ['others', 'etc'])
+  };
+}
 function fillForm(r) {
-  $('f_name').value = pick(r, [cfg.col, 'computer_name']);
-  $('f_location').value = pick(r, ['location', 'department']);
-  $('f_ip').value = pick(r, ['ip_address', 'ip']);
-  $('f_resp').value = pick(r, ['responsible_person', 'login_name']);
-  $('f_cpu').value = pick(r, ['cpu']);
-  $('f_ram').value = pick(r, ['ram']);
-  $('f_hdd').value = pick(r, ['hdd', 'storage']);
-  $('f_vga').value = pick(r, ['vga']);
-  $('f_mainboard').value = pick(r, ['mainboard']);
-  $('f_monitor').value = [pick(r, ['monitor']), pick(r, ['model_monitor'])].filter(Boolean).join(' ');
-  $('f_keyboard').value = pick(r, ['keyboard']);
-  $('f_mouse').value = pick(r, ['mouse']);
-  $('f_wireless').value = pick(r, ['wireless_adapter']);
-  $('f_others').value = pick(r, ['others', 'etc']);
+  Object.entries(assetValues(r)).forEach(([id, v]) => { $(id).value = v; });
   rememberRecent($('f_name').value);
 }
 
@@ -490,6 +510,64 @@ $('q').addEventListener('input', () => { clearTimeout(timer); timer = setTimeout
 $('q').addEventListener('keydown', e => { if (e.key === 'Enter') { clearTimeout(timer); search(true); } });
 $('goBtn').addEventListener('click', () => search(true));
 
+/* ---------- พิมพ์ทั้งแผนก ---------- */
+let deptRows = [];
+async function restGet(query) {
+  if (!cfg.url || !cfg.key) throw new Error('ยังไม่ได้ตั้งค่าการเชื่อมต่อฐานข้อมูล');
+  const res = await fetch(`${cfg.url.replace(/\/+$/, '')}/rest/v1/${encodeURIComponent(cfg.table)}?${query}`,
+    { headers: { apikey: cfg.key, Authorization: 'Bearer ' + cfg.key } });
+  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+  return res.json();
+}
+async function loadDepartments() {
+  const sel = $('deptSel');
+  try {
+    const rows = await restGet('select=department&department=not.is.null&order=department.asc&limit=5000');
+    const names = [...new Set(rows.map(r => String(r.department).trim()).filter(Boolean))];
+    sel.innerHTML = '<option value="">-- เลือกแผนก --</option>';
+    names.forEach(n => { const o = document.createElement('option'); o.value = n; o.textContent = n; sel.appendChild(o); });
+  } catch (e) {
+    sel.innerHTML = '<option value="">โหลดรายชื่อแผนกไม่สำเร็จ</option>';
+    $('deptHint').textContent = e.message;
+  }
+}
+$('deptSel').addEventListener('change', async () => {
+  const dep = $('deptSel').value, btn = $('deptPrintBtn');
+  deptRows = []; btn.disabled = true; btn.textContent = 'พิมพ์ทั้งแผนก';
+  if (!dep) { $('deptHint').textContent = '1 เครื่อง = 1 หน้า A4 ใช้เดือนแผนตามที่เลือกด้านบน'; return; }
+  $('deptHint').textContent = 'กำลังดึงรายการเครื่อง...';
+  try {
+    const rows = await restGet(`select=*&department=eq.${encodeURIComponent(dep)}&order=${encodeURIComponent(cfg.col)}.asc&limit=500`);
+    if ($('deptSel').value !== dep) return;
+    deptRows = rows;
+    $('deptHint').textContent = rows.length ? `พบ ${rows.length} เครื่อง จะพิมพ์ ${rows.length} หน้า` : 'ไม่พบเครื่องในแผนกนี้';
+    if (rows.length) { btn.disabled = false; btn.textContent = `พิมพ์ทั้งแผนก (${rows.length} เครื่อง)`; }
+  } catch (e) { $('deptHint').textContent = 'ดึงข้อมูลไม่สำเร็จ: ' + e.message; }
+});
+function buildBatch(rows) {
+  const tpl = document.querySelector('.paper'), wrap = $('batch'), pm = $('planMonth').value;
+  wrap.innerHTML = '';
+  rows.forEach(r => {
+    const c = tpl.cloneNode(true);
+    c.querySelectorAll('.sym').forEach(el => {
+      const m = parseInt(el.id.split('_')[2], 10);
+      el.dataset.s = (pm !== '' && m === parseInt(pm, 10)) ? 1 : 0;
+    });
+    c.querySelectorAll('[id]').forEach(el => { if (el.id.startsWith('f_')) el.dataset.f = el.id; el.removeAttribute('id'); });
+    c.querySelectorAll('input').forEach(i => { i.value = ''; });
+    Object.entries(assetValues(r)).forEach(([id, v]) => { const el = c.querySelector(`[data-f="${id}"]`); if (el) el.value = v; });
+    wrap.appendChild(c);
+  });
+}
+$('deptPrintBtn').addEventListener('click', () => {
+  if (!deptRows.length) return;
+  buildBatch(deptRows);
+  document.body.classList.add('batch');
+  const done = () => { document.body.classList.remove('batch'); $('batch').innerHTML = ''; window.removeEventListener('afterprint', done); };
+  window.addEventListener('afterprint', done);
+  window.print();
+});
+
 /* ---------- settings dialog ---------- */
 const dlg = $('dlg');
 /* ปุ่มตั้งค่าถูกซ่อน: ผู้ดูแลเปิดได้ด้วย Ctrl+Shift+K */
@@ -515,6 +593,7 @@ $('clearBtn').addEventListener('click', clearForm);
 buildTable();
 updateProgress();
 renderRecent();
+loadDepartments();
 if (!cfg.key) setStatus('ยังไม่ได้ตั้งค่าการเชื่อมต่อฐานข้อมูล กรุณาติดต่อผู้ดูแลระบบ', 'err');
 </script>
 </body>
