@@ -114,37 +114,13 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const HOURS_PER_DAY = 8;
 const $ = id => document.getElementById(id);
 
-/* ---------- กติกาการลา (ให้ตรงกับ summary.html / add-leave.html / approval_flow.sql) ---------- */
-const LEAVE_TYPES = [
-  { key:"vacation",        name:"ลาพักร้อน",           hourly:false },
-  { key:"personal_paid",   name:"ลากิจ (รับค่าจ้าง)",    hourly:true  },
-  { key:"personal_unpaid", name:"ลากิจ (ไม่รับค่าจ้าง)", hourly:true  },
-  { key:"sick",            name:"ลาป่วย",              hourly:false },
-  { key:"maternity",       name:"ลาคลอด",              hourly:false },
-  { key:"military",        name:"ลาราชการทหาร",        hourly:false },
-];
-const TYPE = Object.fromEntries(LEAVE_TYPES.map(t=>[t.key,t]));
+/* ---------- ประเภทการลาและสิทธิ์ของแต่ละคน มาจากฐานข้อมูล (จัดการที่ leave-types.html) ผ่านฟังก์ชัน employee_leave_summary ---------- */
 const STATUS_TH = {
   pending_manager:"รอผู้จัดการฝ่ายอนุมัติ", pending_hr:"รอฝ่ายบุคคลอนุมัติ", pending:"รออนุมัติ",
   approved:"อนุมัติแล้ว", rejected:"ไม่อนุมัติ", cancelled:"ยกเลิก"
 };
 const PENDING = ["pending","pending_manager","pending_hr"];
 
-function vacationQuota(m){ if(m<4) return 0; if(m<24) return 6; if(m<36) return 7; return 8; }
-const isFemale = p => ["นางสาว","น.ส.","นส.","นาง"].includes((p||"").trim());
-const isMale   = p => (p||"").trim() === "นาย";
-const PFX = /^(นางสาว|น\.ส\.|นส\.|นาย|นาง)\s*/;
-
-function quotaFor(gender, key, months){
-  switch(key){
-    case "vacation":        return vacationQuota(months);
-    case "personal_paid":   return 6;
-    case "personal_unpaid": return 6;
-    case "sick":            return 30;
-    case "maternity":       return gender==="F" ? 90 : null;
-    case "military":        return gender==="M" ? 3  : null;
-  }
-}
 function monthsBetween(from,to){
   const a=new Date(from), b=new Date(to);
   let m=(b.getFullYear()-a.getFullYear())*12+(b.getMonth()-a.getMonth());
@@ -204,11 +180,7 @@ async function doLogin(){
 
 /* ---------- แสดงผล ---------- */
 function render(d){
-  let name = d.full || "";
-  let prefix = null;
-  const m = String(name).match(PFX); if (m) prefix = m[1];
-  const gender = prefix ? (isMale(prefix)?"M":isFemale(prefix)?"F":null) : null;
-
+  const name = d.full || "";
   const now = new Date();
   const asOf = d.year >= now.getFullYear() ? now : new Date(d.year,11,31);
   const months = monthsBetween(d.hire, asOf);
@@ -224,25 +196,26 @@ function render(d){
   }
   ys.value = d.year;
 
+  const types = d.types || [];
   const used = {};
   for (const l of d.leaves){
     if (l.status!=="approved" && !PENDING.includes(l.status)) continue;
     const u = (used[l.leave_type] ??= {approved:0,pending:0});
     u[l.status==="approved"?"approved":"pending"] += Number(l.days);
   }
-  CTX = { year:d.year, gender, months, used, holidays:new Set((d.holidays||[]).map(x=>String(x).slice(0,10))) };
+  CTX = { year:d.year, months, types, used, holidays:new Set((d.holidays||[]).map(x=>String(x).slice(0,10))) };
 
-  $("cards").innerHTML = LEAVE_TYPES.map(t=>{
-    const quota = quotaFor(gender,t.key,months);
-    if (quota==null) return `<div class="card lt na"><h3>${t.name}</h3><div class="sub">ไม่มีสิทธิ์</div></div>`;
-    const u = used[t.key] || {approved:0,pending:0};
+  $("cards").innerHTML = types.map(t=>{
+    if (t.quota==null) return `<div class="card lt na"><h3>${esc(t.name)}</h3><div class="sub">ไม่มีสิทธิ์</div></div>`;
+    const quota = Number(t.quota);
+    const u = used[t.code] || {approved:0,pending:0};
     const remain = quota - u.approved;
     const pct = quota ? Math.min(100,u.approved/quota*100) : 0;
     const color = pct>=100?"var(--bad)":pct>=75?"var(--warn)":"var(--ok)";
     return `<div class="card lt">
-      <h3>${t.name}</h3>
+      <h3>${esc(t.name)}${t.active?"":' <span class="muted" style="font-weight:400;font-size:12px">(ปิดใช้งานแล้ว)</span>'}</h3>
       <div class="sub">${t.hourly?'<span class="tag">ลารายชั่วโมงได้</span>':''}</div>
-      <div class="num">${fmt(remain)} <small>/ ${quota} วัน คงเหลือ</small></div>
+      <div class="num">${fmt(remain)} <small>/ ${fmt(quota)} วัน คงเหลือ</small></div>
       <div class="bar"><i style="width:${pct}%;background:${color}"></i></div>
       <div class="sub" style="margin-top:6px">ใช้แล้ว ${daysHours(u.approved)}${u.pending?` · รออนุมัติ ${daysHours(u.pending)}`:""}</div>
     </div>`;
@@ -272,7 +245,7 @@ function renderHist(rows){
           const canCancel = l.requested_by==="employee" && (l.status==="pending_manager"||l.status==="pending_hr");
           return `<tr>
           <td>${thaiDate(l.start_date)}${l.end_date!==l.start_date?` – ${thaiDate(l.end_date)}`:""}</td>
-          <td>${esc(TYPE[l.leave_type]?.name||l.leave_type)}</td>
+          <td>${esc(l.type_name||l.leave_type)}</td>
           <td>${l.hours?`${fmt(Number(l.hours))} ชม.`:daysHours(Number(l.days))}</td>
           <td>${statusCell(l)}</td>
           <td class="muted">${esc(l.reason||"")}</td>
@@ -294,17 +267,18 @@ async function reload(){
 
 /* ---------- ฟอร์มยื่นใบลา ---------- */
 function remainOf(key){
-  const q = quotaFor(CTX.gender,key,CTX.months);
-  if (q==null) return null;
+  const t = CTX.types.find(x=>x.code===key);
+  if (!t || t.quota==null) return null;
+  const q = Number(t.quota);
   const u = CTX.used[key]||{approved:0,pending:0};
   return { quota:q, remain:q-u.approved-u.pending };
 }
 
 function renderForm(){
   const keep = $("ftype").value;
-  $("ftype").innerHTML = LEAVE_TYPES.map(t=>{
-    const r = remainOf(t.key);
-    return r ? `<option value="${t.key}">${t.name} (เหลือ ${fmt(r.remain)} วัน)</option>` : "";
+  $("ftype").innerHTML = CTX.types.filter(t=>t.active).map(t=>{
+    const r = remainOf(t.code);
+    return r ? `<option value="${esc(t.code)}">${esc(t.name)} (เหลือ ${fmt(r.remain)} วัน)</option>` : "";
   }).join("");
   if (keep && [...$("ftype").options].some(o=>o.value===keep)) $("ftype").value = keep;
   onFormChange();
@@ -327,7 +301,7 @@ let FCALC = null;
 function onFormChange(){
   FCALC = null;
   if (!CTX) return;
-  const key = $("ftype").value, t = TYPE[key];
+  const key = $("ftype").value, t = CTX.types.find(x=>x.code===key);
   $("fmodeBox").classList.toggle("hide", !t?.hourly);
   if (!t?.hourly) $("fmode").value = "day";
   const hourly = $("fmode").value==="hour";
@@ -372,7 +346,7 @@ async function submitLeave(){
   if (FCALC.over) return fmsg("จำนวนวันลาเกินสิทธิ์ที่เหลือ","er");
   const reason = $("freason").value.trim();
   if (!reason) return fmsg("กรุณาระบุเหตุผลการลา","er");
-  if (!confirm(`ยืนยันส่งใบลา ${TYPE[$("ftype").value].name}\n${thaiDate(FCALC.start)}${FCALC.end!==FCALC.start?" – "+thaiDate(FCALC.end):""}`)) return;
+  if (!confirm(`ยืนยันส่งใบลา ${CTX.types.find(x=>x.code===$("ftype").value).name}\n${thaiDate(FCALC.start)}${FCALC.end!==FCALC.start?" – "+thaiDate(FCALC.end):""}`)) return;
 
   $("fsubmit").disabled = true;
   const hourly = FCALC.hours!=null;
