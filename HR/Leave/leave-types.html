@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>จัดการประเภทการลา</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="ui.js"></script>
 <style>
   :root{--bg:#eaf3fd;--card:#fff;--text:#1e3a5f;--muted:#5b7391;--line:#d6e4f5;--primary:#1d6fd8;--ok:#16a34a;--warn:#f59e0b;--bad:#dc2626}
   *{box-sizing:border-box}
@@ -46,8 +47,8 @@
 <body>
 
 <script>
-const SUPABASE_URL      = "https://ppzdyvomrfiitahxwrwz.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBwemR5dm9tcmZpaXRhaHh3cnd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwMjQ0MjIsImV4cCI6MjEwNDYwMDQyMn0.iArUz6swMfwhFT_1qEvCwK1B3aiCxdWt46_FBjT6_Y0";
+const SUPABASE_URL      = "https://YOUR-PROJECT.supabase.co";
+const SUPABASE_ANON_KEY = "YOUR-ANON-KEY";
 </script>
 
 <div id="login" class="card hide">
@@ -254,7 +255,7 @@ async function save(){
 async function toggle(code){
   const t = TYPES.find(x=>x.code===code); if(!t) return;
   const next = !t.active;
-  if (!next && !confirm(`ปิดใช้งาน "${t.name}"?\nพนักงานจะยื่นลาประเภทนี้ไม่ได้ ส่วนใบลาที่มีอยู่แล้วยังเหมือนเดิม`)) return;
+  if (!next && !await uiConfirm({ title:"ปิดใช้งานประเภทการลา", message:`ปิดใช้งาน "${t.name}" ใช่หรือไม่?\nพนักงานจะยื่นลาประเภทนี้ไม่ได้ ส่วนใบลาที่มีอยู่แล้วยังเหมือนเดิม`, okText:"ปิดใช้งาน", cancelText:"ยกเลิก", tone:"warn" })) return;
   const { error } = await sb.from("leave_types").update({ active:next }).eq("code", code);
   if (error) return msg("listMsg","ไม่สำเร็จ: "+error.message,"er");
   load();

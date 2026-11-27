@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>การลาของฉัน</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="ui.js"></script>
 <style>
   :root{--bg:#eaf3fd;--card:#fff;--text:#1e3a5f;--muted:#5b7391;--line:#d6e4f5;--primary:#1d6fd8;--ok:#16a34a;--warn:#f59e0b;--bad:#dc2626}
   *{box-sizing:border-box}
@@ -53,8 +54,8 @@
 <body>
 
 <script>
-const SUPABASE_URL      = "https://ppzdyvomrfiitahxwrwz.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBwemR5dm9tcmZpaXRhaHh3cnd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwMjQ0MjIsImV4cCI6MjEwNDYwMDQyMn0.iArUz6swMfwhFT_1qEvCwK1B3aiCxdWt46_FBjT6_Y0";
+const SUPABASE_URL      = "https://YOUR-PROJECT.supabase.co";
+const SUPABASE_ANON_KEY = "YOUR-ANON-KEY";
 const COUNT_SAT = false;   // true = นับวันเสาร์เป็นวันทำงานตอนคำนวณจำนวนวันลา (ถ้าบริษัททำงานวันเสาร์)
 </script>
 
@@ -252,16 +253,16 @@ function renderHist(rows){
           <td>${canCancel?`<button class="ghost small" data-cancel="${esc(l.id)}">ยกเลิก</button>`:""}</td></tr>`; }).join("")}</tbody>`
     : `<tbody><tr><td class="muted">ยังไม่มีรายการลาในปีนี้</td></tr></tbody>`;
   document.querySelectorAll("[data-cancel]").forEach(b=>b.onclick=async()=>{
-    if (!confirm("ยืนยันยกเลิกใบลานี้?")) return;
+    if (!await uiConfirm({ title:"ยกเลิกใบลา", message:"ยืนยันยกเลิกใบลานี้ใช่หรือไม่?", okText:"ยกเลิกใบลา", cancelText:"ไม่ยกเลิก", tone:"danger" })) return;
     const r = await rpc("employee_cancel_leave", { p_id: b.dataset.cancel });
-    if (r.error){ alert(errText(r)); return; }
+    if (r.error){ await uiAlert({ title:"ยกเลิกไม่สำเร็จ", message:errText(r), tone:"error" }); return; }
     reload();
   });
 }
 
 async function reload(){
   const d = await fetchSummary(CTX ? CTX.year : null);
-  if (d.error){ alert(errText(d)); return; }
+  if (d.error){ await uiAlert({ title:"โหลดข้อมูลไม่สำเร็จ", message:errText(d), tone:"error" }); return; }
   render(d);
 }
 
@@ -346,7 +347,16 @@ async function submitLeave(){
   if (FCALC.over) return fmsg("จำนวนวันลาเกินสิทธิ์ที่เหลือ","er");
   const reason = $("freason").value.trim();
   if (!reason) return fmsg("กรุณาระบุเหตุผลการลา","er");
-  if (!confirm(`ยืนยันส่งใบลา ${CTX.types.find(x=>x.code===$("ftype").value).name}\n${thaiDate(FCALC.start)}${FCALC.end!==FCALC.start?" – "+thaiDate(FCALC.end):""}`)) return;
+  const ok = await uiConfirm({
+    title:"ยืนยันส่งใบลา", message:"ตรวจสอบรายละเอียดก่อนส่ง ใบลาจะเข้าสู่ขั้นตอนอนุมัติทันที",
+    rows:[
+      ["ประเภท", CTX.types.find(x=>x.code===$("ftype").value).name],
+      ["วันที่ลา", thaiDate(FCALC.start) + (FCALC.end!==FCALC.start ? " – "+thaiDate(FCALC.end) : "")],
+      ["จำนวน", FCALC.hours!=null ? `${fmt(FCALC.hours)} ชม.` : daysHours(FCALC.days)],
+      ["เหตุผล", reason]
+    ],
+    okText:"ส่งใบลา", cancelText:"กลับไปแก้ไข", tone:"primary" });
+  if (!ok) return;
 
   $("fsubmit").disabled = true;
   const hourly = FCALC.hours!=null;
@@ -369,7 +379,7 @@ $("pass").addEventListener("keydown", e=>{ if(e.key==="Enter") doLogin(); });
 $("code").addEventListener("keydown", e=>{ if(e.key==="Enter") doLogin(); });
 $("year").onchange = async e=>{
   const d = await fetchSummary(Number(e.target.value));
-  if (d.error){ alert(errText(d)); return; }
+  if (d.error){ await uiAlert({ title:"โหลดข้อมูลไม่สำเร็จ", message:errText(d), tone:"error" }); return; }
   render(d);
 };
 $("logout").onclick = ()=>{

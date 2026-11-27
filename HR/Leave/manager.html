@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>อนุมัติใบลา (ผู้จัดการฝ่าย)</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="ui.js"></script>
 <style>
   :root{--bg:#eaf3fd;--card:#fff;--text:#1e3a5f;--muted:#5b7391;--line:#d6e4f5;--primary:#1d6fd8;--ok:#16a34a;--warn:#f59e0b;--bad:#dc2626}
   *{box-sizing:border-box}
@@ -44,8 +45,8 @@
 <body>
 
 <script>
-const SUPABASE_URL      = "https://ppzdyvomrfiitahxwrwz.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBwemR5dm9tcmZpaXRhaHh3cnd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwMjQ0MjIsImV4cCI6MjEwNDYwMDQyMn0.iArUz6swMfwhFT_1qEvCwK1B3aiCxdWt46_FBjT6_Y0";
+const SUPABASE_URL      = "https://YOUR-PROJECT.supabase.co";
+const SUPABASE_ANON_KEY = "YOUR-ANON-KEY";
 </script>
 
 <div id="login" class="card">
@@ -113,6 +114,7 @@ async function load(){
 }
 
 function render(rows){
+  ROWS = rows;
   if (!rows.length){ $("list").innerHTML = `<div class="card muted">${VIEW==="pending"?"ไม่มีใบลารออนุมัติ":"ยังไม่มีประวัติ"}</div>`; return; }
   $("list").innerHTML = rows.map(r=>{
     const qty = r.hours ? `${fmt(Number(r.hours))} ชม. (${fmt(Number(r.days))} วัน)` : daysHours(Number(r.days));
@@ -147,13 +149,32 @@ function render(rows){
   document.querySelectorAll("[data-id]").forEach(b=>b.onclick=()=>decide(b.dataset.id, b.dataset.a==="1"));
 }
 
+let ROWS = [];
+function leaveRows(r){
+  return [
+    ["พนักงาน", r.full_name || r.employee_code],
+    ["ประเภท", TYPE_NAME[r.leave_type] || r.leave_type],
+    ["วันที่ลา", thaiDate(r.start_date) + (r.end_date!==r.start_date ? " – "+thaiDate(r.end_date) : "")],
+    ["จำนวน", r.hours ? `${fmt(Number(r.hours))} ชม.` : daysHours(Number(r.days))]
+  ];
+}
+
 async function decide(id, approve){
   const note = ($("n-"+id)?.value || "").trim();
-  if (!approve && !note){ alert("กรุณาระบุเหตุผลที่ไม่อนุมัติ"); $("n-"+id)?.focus(); return; }
-  if (!confirm(approve ? "ยืนยันอนุมัติใบลานี้ (ส่งต่อฝ่ายบุคคล)?" : "ยืนยันไม่อนุมัติใบลานี้?")) return;
+  const r = ROWS.find(x=>x.id===id) || {};
+  if (!approve && !note){
+    await uiAlert({ title:"ต้องระบุเหตุผล", message:"กรุณาระบุเหตุผลที่ไม่อนุมัติ เพื่อให้พนักงานทราบ", tone:"warn" });
+    $("n-"+id)?.focus(); return;
+  }
+  const rows = leaveRows(r);
+  if (!approve) rows.push(["เหตุผล", note]);
+  const ok = await uiConfirm(approve
+    ? { title:"อนุมัติใบลา", message:"ใบลาจะถูกส่งต่อให้ฝ่ายบุคคลพิจารณา", rows, okText:"อนุมัติ", cancelText:"กลับ", tone:"success" }
+    : { title:"ไม่อนุมัติใบลา", message:"พนักงานจะเห็นเหตุผลที่ระบุ", rows, okText:"ไม่อนุมัติ", cancelText:"กลับ", tone:"danger" });
+  if (!ok) return;
   document.querySelectorAll("[data-id]").forEach(b=>b.disabled=true);
   const { data, error } = await sb.rpc("manager_decide_leave", { p_id:id, p_approve:approve, p_note:note||null });
-  if (error || data?.error){ alert(error ? error.message : (ERR[data.error]||data.error)); }
+  if (error || data?.error){ await uiAlert({ title:"ดำเนินการไม่สำเร็จ", message: error ? error.message : (ERR[data.error]||data.error), tone:"error" }); }
   load();
 }
 
@@ -182,4 +203,4 @@ start();
 </script>
 <footer style="text-align:center;padding:16px;margin-top:24px;font-size:12px;color:#5b7391;border-top:1px solid #d6e4f5">ตรวจสอบวันลา | ใช้ภายในบริษัทเท่านั้น | พัฒนาโดย Sarawut.C</footer>
 </body>
-</html>อ
+</html>

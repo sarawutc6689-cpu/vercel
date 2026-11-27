@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>บันทึกการลา</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="ui.js"></script>
 <style>
   :root{--bg:#eaf3fd;--card:#fff;--text:#1e3a5f;--muted:#5b7391;--line:#d6e4f5;--primary:#1d6fd8;--ok:#16a34a;--warn:#f59e0b;--bad:#dc2626}
   *{box-sizing:border-box}
@@ -44,8 +45,8 @@
 <body>
 
 <script>
-const SUPABASE_URL      = "https://ppzdyvomrfiitahxwrwz.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBwemR5dm9tcmZpaXRhaHh3cnd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwMjQ0MjIsImV4cCI6MjEwNDYwMDQyMn0.iArUz6swMfwhFT_1qEvCwK1B3aiCxdWt46_FBjT6_Y0";
+const SUPABASE_URL      = "https://YOUR-PROJECT.supabase.co";
+const SUPABASE_ANON_KEY = "YOUR-ANON-KEY";
 const T = { employees:"employees", leaves:"leave_requests", holidays:"holidays" };
 const HOURS_PER_DAY = 8;
 </script>
@@ -282,7 +283,7 @@ function renderHist(rows){
       </tr>`).join("")}</tbody>`
     : `<tbody><tr><td class="muted">ยังไม่มีรายการลาในปีนี้</td></tr></tbody>`;
   document.querySelectorAll("[data-cancel]").forEach(b=>b.onclick=async()=>{
-    if(!confirm("ยืนยันยกเลิกรายการลานี้?")) return;
+    if (!await uiConfirm({ title:"ยกเลิกรายการลา", message:"ยืนยันยกเลิกรายการลานี้ใช่หรือไม่?\nยอดวันลาที่ใช้ไปจะถูกคืนให้พนักงาน", okText:"ยกเลิกรายการ", cancelText:"ไม่ยกเลิก", tone:"danger" })) return;
     const { error } = await sb.from(T.leaves).update({status:"cancelled"}).eq("id", b.dataset.cancel);
     if (error) return setMsg("ยกเลิกไม่สำเร็จ: "+error.message,"err");
     setMsg("ยกเลิกรายการแล้ว","ok"); refreshEmp();
@@ -349,7 +350,7 @@ async function save(){
   if (!$("start").value) return setMsg("เลือกวันที่เริ่มลา","err");
   calcDays();
   if (!CALC) return setMsg("ตรวจสอบวันที่/จำนวนชั่วโมงอีกครั้ง","err");
-  if (CALC.over && !confirm("จำนวนวันลาเกินสิทธิ์คงเหลือ ต้องการบันทึกต่อหรือไม่?")) return;
+  if (CALC.over && !await uiConfirm({ title:"ลาเกินสิทธิ์คงเหลือ", message:"จำนวนวันลาเกินสิทธิ์ที่เหลืออยู่ ต้องการบันทึกต่อหรือไม่?", rows:[["พนักงาน", CUR.name], ["จำนวนที่ลา", CALC.hours!=null ? `${fmt(CALC.hours)} ชม.` : daysHours(CALC.days)]], okText:"บันทึกต่อ", cancelText:"กลับไปแก้ไข", tone:"warn" })) return;
   if (CALC.start.slice(0,4) !== CALC.end.slice(0,4))
     return setMsg("ช่วงลาข้ามปี กรุณาแยกบันทึกเป็นสองรายการ","err");
 
