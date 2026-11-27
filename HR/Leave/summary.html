@@ -67,6 +67,7 @@ const HOURS_PER_DAY = 8;
 <div id="app" style="display:none">
   <header>
     <h1>สรุปการลาของพนักงาน</h1>
+    <a href="leave-types.html" style="color:#fff;text-decoration:none;font-size:14px">ประเภทการลา</a>
     <a href="index.html" style="color:#fff;text-decoration:none;font-size:14px">หน้าหลัก</a>
     <a href="add-leave.html" style="color:#fff;text-decoration:none;font-size:14px">บันทึกการลา</a>
     <label>ปี <select id="year"></select></label>
@@ -88,38 +89,36 @@ const HOURS_PER_DAY = 8;
 <script>
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-/* ---------- กติกาการลา ---------- */
-const LEAVE_TYPES = [
-  { key:"vacation",       name:"ลาพักร้อน",            hourly:false },
-  { key:"personal_paid",  name:"ลากิจ (รับค่าจ้าง)",     hourly:true  },
-  { key:"personal_unpaid",name:"ลากิจ (ไม่รับค่าจ้าง)",  hourly:true  },
-  { key:"sick",           name:"ลาป่วย",               hourly:false },
-  { key:"maternity",      name:"ลาคลอด",               hourly:false },
-  { key:"military",       name:"ลาราชการทหาร",         hourly:false },
+/* ---------- ประเภทการลา: โหลดจากตาราง leave_types (จัดการที่ leave-types.html) ---------- */
+const DEFAULT_TYPES = [
+  { code:"vacation", name:"ลาพักร้อน", quota_mode:"tenure", quota_days:0, tenure_tiers:[{min_months:0,days:0},{min_months:4,days:6},{min_months:24,days:7},{min_months:36,days:8}], hourly_allowed:false, gender:"all", active:true },
+  { code:"personal_paid", name:"ลากิจ (รับค่าจ้าง)", quota_mode:"fixed", quota_days:6, hourly_allowed:true, gender:"all", active:true },
+  { code:"personal_unpaid", name:"ลากิจ (ไม่รับค่าจ้าง)", quota_mode:"fixed", quota_days:6, hourly_allowed:true, gender:"all", active:true },
+  { code:"sick", name:"ลาป่วย", quota_mode:"fixed", quota_days:30, hourly_allowed:false, gender:"all", active:true },
+  { code:"maternity", name:"ลาคลอด", quota_mode:"fixed", quota_days:90, hourly_allowed:false, gender:"F", active:true },
+  { code:"military", name:"ลาราชการทหาร", quota_mode:"fixed", quota_days:3, hourly_allowed:false, gender:"M", active:true },
 ];
-
-// สิทธิ์ลาพักร้อนตามอายุงาน (นับเป็นเดือน) — แก้ตัวเลขตรงนี้ได้
-// ต่ำกว่า 4 เดือน = 0 | 4 เดือน–ต่ำกว่า 2 ปี = 6 | 2 ปี = 7 | 3 ปีขึ้นไป = 8
-function vacationQuota(months){
-  if (months < 4)  return 0;
-  if (months < 24) return 6;
-  if (months < 36) return 7;
-  return 8;
+let LEAVE_TYPES = [];
+async function loadTypes(){
+  const { data, error } = await sb.from("leave_types").select("*").order("sort_order").order("created_at");
+  const rows = (!error && data && data.length) ? data : DEFAULT_TYPES;
+  LEAVE_TYPES = rows.map(t => ({ ...t, key:t.code, hourly:t.hourly_allowed }));
+}
+// สิทธิ์ต่อปีของคนหนึ่งสำหรับประเภทหนึ่ง (null = ไม่มีสิทธิ์) — ต้องตรงกับ _leave_quota ใน leave_types.sql
+function typeQuota(t, gender, months){
+  if (!t) return null;
+  if (t.gender !== "all" && t.gender !== gender) return null;
+  if (t.quota_mode === "tenure"){
+    let q = 0;
+    for (const x of [...(t.tenure_tiers||[])].sort((a,b)=>a.min_months-b.min_months)) if (months >= x.min_months) q = Number(x.days);
+    return q;
+  }
+  return Number(t.quota_days||0);
 }
 
 const isFemale = p => ["นางสาว","น.ส.","นส.","นาง"].includes((p||"").trim());
 const isMale   = p => (p||"").trim() === "นาย";
-
-function quotaFor(emp, key, months){
-  switch(key){
-    case "vacation":        return vacationQuota(months);
-    case "personal_paid":   return 6;
-    case "personal_unpaid": return 6;
-    case "sick":            return 30;
-    case "maternity":       return emp.gender === "F" ? 90 : null; // null = ไม่มีสิทธิ์
-    case "military":        return emp.gender === "M" ? 3  : null;
-  }
-}
+const shown = () => LEAVE_TYPES.filter(t => t.active);   // คอลัมน์ในตาราง = เฉพาะประเภทที่เปิดใช้งาน
 
 function monthsBetween(from, to){
   const a = new Date(from), b = new Date(to);
@@ -139,6 +138,7 @@ function daysHours(d){ // 1.5 วัน -> "1 วัน 4 ชม."
 let EMPS = [], USED = {}, YEAR = new Date().getFullYear();
 
 async function load(){
+  await loadTypes();
   const { data: emps, error: e1 } = await sb.from(T.employees).select("*");
   if (e1) return alert("โหลดพนักงานไม่สำเร็จ: "+e1.message);
   if (!emps.length) return alert("ไม่พบข้อมูลในตาราง "+T.employees+" (ตรวจ RLS policy ว่าอนุญาตให้อ่านได้)");
@@ -193,8 +193,8 @@ function asOf(){ // นับอายุงาน ณ วันนี้ (ป�
 
 function calc(emp){
   const months = emp.hire ? monthsBetween(emp.hire, asOf()) : 0;
-  const rows = LEAVE_TYPES.map(t=>{
-    const quota = quotaFor(emp, t.key, months);
+  const rows = shown().map(t=>{
+    const quota = typeQuota(t, emp.gender, months);
     const u = USED[emp.id]?.[t.key] || {approved:0,pending:0};
     return { ...t, quota, used:u.approved, pending:u.pending,
              remain: quota==null ? null : quota - u.approved };
@@ -209,7 +209,7 @@ function render(){
   document.getElementById("count").textContent = `${list.length} คน`;
 
   const head = `<thead><tr><th>รหัส</th><th>ชื่อ-สกุล</th><th>อายุงาน</th>${
-    LEAVE_TYPES.map(t=>`<th>${t.name}</th>`).join("")}</tr></thead>`;
+    shown().map(t=>`<th>${t.name}</th>`).join("")}</tr></thead>`;
   const body = list.map(e=>{
     const { months, rows } = calc(e);
     return `<tr data-id="${esc(e.id)}"><td>${esc(e.code)}</td><td>${esc(e.name)}</td><td>${tenureText(months)}</td>${
