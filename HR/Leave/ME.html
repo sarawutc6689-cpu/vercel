@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>การลาของฉัน</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{--bg:#f5f6f8;--card:#fff;--text:#1f2430;--muted:#6b7280;--line:#e5e7eb;--primary:#2563eb;--ok:#16a34a;--warn:#f59e0b;--bad:#dc2626}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Sarabun","Noto Sans Thai",system-ui,sans-serif;background:var(--bg);color:var(--text)}
+  main{max-width:900px;margin:0 auto;padding:16px}
+  select,input,button{font:inherit;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:#fff}
+  button{background:var(--primary);color:#fff;border:0;cursor:pointer}
+  button.ghost{background:#fff;color:var(--text);border:1px solid var(--line)}
+  button:disabled{opacity:.6}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:16px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+  .lt{margin:0}
+  .lt h3{margin:0 0 2px;font-size:15px}
+  .lt .sub{color:var(--muted);font-size:12px;min-height:16px}
+  .lt .num{font-size:26px;font-weight:700;margin:8px 0 4px}
+  .lt .num small{font-size:13px;font-weight:400;color:var(--muted)}
+  .bar{height:8px;background:var(--line);border-radius:99px;overflow:hidden}
+  .bar>i{display:block;height:100%}
+  .lt.na{opacity:.45}
+  .muted{color:var(--muted)}
+  .tag{display:inline-block;padding:2px 8px;border-radius:99px;font-size:12px;background:#eef2ff;color:#3730a3}
+  .st-approved{background:#dcfce7;color:#166534}.st-pending{background:#fef3c7;color:#92400e}
+  .st-rejected,.st-cancelled{background:#fee2e2;color:#991b1b}
+  #login{max-width:380px;margin:60px auto}
+  #login input{width:100%;margin-bottom:10px}
+  .err{color:var(--bad);font-size:13px;min-height:18px;margin-bottom:6px}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left}
+  .wrap{overflow-x:auto}
+  .top{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:flex-start;margin-bottom:12px}
+</style>
+</head>
+<body>
+
+<script>
+const SUPABASE_URL      = "https://YOUR-PROJECT.supabase.co";
+const SUPABASE_ANON_KEY = "YOUR-ANON-KEY";
+</script>
+
+<main>
+  <div id="login" class="card">
+    <h2 style="margin-top:0">การลาของฉัน</h2>
+    <input id="code" placeholder="รหัสพนักงาน" autocomplete="username" inputmode="text">
+    <input id="pass" type="password" placeholder="รหัสผ่าน (วันเริ่มงาน เช่น 01112569)" autocomplete="current-password" inputmode="numeric">
+    <div class="err" id="err"></div>
+    <button id="loginBtn" style="width:100%">เข้าสู่ระบบ</button>
+    <p class="muted" style="font-size:12px;margin-bottom:0">รหัสผ่าน = วัน/เดือน/ปี พ.ศ. ที่เริ่มงาน ต่อกันไม่มีเครื่องหมาย</p>
+  </div>
+
+  <div id="app" style="display:none">
+    <div class="card">
+      <div class="top">
+        <div><b style="font-size:18px" id="name"></b><br><span class="muted" id="info"></span></div>
+        <div style="display:flex;gap:8px">
+          <select id="year"></select>
+          <button class="ghost" id="logout">ออกจากระบบ</button>
+        </div>
+      </div>
+      <div class="grid" id="cards"></div>
+    </div>
+    <div class="card">
+      <b>ประวัติการลา</b>
+      <div class="wrap"><table id="hist" style="margin-top:8px"></table></div>
+    </div>
+  </div>
+</main>
+
+<script>
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const HOURS_PER_DAY = 8;
+
+/* ---------- กติกาการลา (ให้ตรงกับ index.html) ---------- */
+const LEAVE_TYPES = [
+  { key:"vacation",        name:"ลาพักร้อน",           hourly:false },
+  { key:"personal_paid",   name:"ลากิจ (รับค่าจ้าง)",    hourly:true  },
+  { key:"personal_unpaid", name:"ลากิจ (ไม่รับค่าจ้าง)", hourly:true  },
+  { key:"sick",            name:"ลาป่วย",              hourly:false },
+  { key:"maternity",       name:"ลาคลอด",              hourly:false },
+  { key:"military",        name:"ลาราชการทหาร",        hourly:false },
+];
+const TYPE_NAME = Object.fromEntries(LEAVE_TYPES.map(t=>[t.key,t.name]));
+const STATUS_TH = { pending:"รออนุมัติ", approved:"อนุมัติแล้ว", rejected:"ไม่อนุมัติ", cancelled:"ยกเลิก" };
+
+function vacationQuota(m){ if(m<4) return 0; if(m<24) return 6; if(m<36) return 7; return 8; }
+const isFemale = p => ["นางสาว","น.ส.","นส.","นาง"].includes((p||"").trim());
+const isMale   = p => (p||"").trim() === "นาย";
+const PFX = /^(นางสาว|น\.ส\.|นส\.|นาย|นาง)\s*/;
+
+function quotaFor(gender, key, months){
+  switch(key){
+    case "vacation":        return vacationQuota(months);
+    case "personal_paid":   return 6;
+    case "personal_unpaid": return 6;
+    case "sick":            return 30;
+    case "maternity":       return gender==="F" ? 90 : null;
+    case "military":        return gender==="M" ? 3  : null;
+  }
+}
+function monthsBetween(from,to){
+  const a=new Date(from), b=new Date(to);
+  let m=(b.getFullYear()-a.getFullYear())*12+(b.getMonth()-a.getMonth());
+  if(b.getDate()<a.getDate()) m--;
+  return Math.max(m,0);
+}
+const tenureText = m => (m>=12?`${Math.floor(m/12)} ปี `:"")+`${m%12} เดือน`;
+const fmt = n => Number.isInteger(n) ? n : n.toFixed(2).replace(/\.?0+$/,"");
+const esc = s => String(s ?? "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function daysHours(d){ const w=Math.floor(d+1e-9), h=Math.round((d-w)*HOURS_PER_DAY); return h?`${w} วัน ${h} ชม.`:`${w} วัน`; }
+function thaiDate(iso){ if(!iso) return "-"; const [y,m,d]=iso.slice(0,10).split("-"); return `${d}/${m}/${Number(y)+543}`; }
+
+/* ---------- เรียกข้อมูล ---------- */
+let CRED = null;   // เก็บในหน่วยความจำเท่านั้น (ไม่เขียนลง storage)
+const ERR = {
+  invalid_credentials: "รหัสพนักงานหรือรหัสผ่านไม่ถูกต้อง",
+  too_many_attempts:   "ใส่ผิดหลายครั้ง กรุณารอ 15 นาทีแล้วลองใหม่ หรือติดต่อ HR",
+};
+
+async function fetchSummary(year){
+  const { data, error } = await sb.rpc("employee_leave_summary",
+    { p_code: CRED.code, p_pass: CRED.pass, p_year: year });
+  if (error) return { error: error.message };
+  return data;
+}
+
+async function doLogin(){
+  const code = document.getElementById("code").value.trim();
+  const pass = document.getElementById("pass").value.trim();
+  const err = document.getElementById("err"), btn = document.getElementById("loginBtn");
+  err.textContent = "";
+  if (!code || !pass){ err.textContent = "กรอกรหัสพนักงานและรหัสผ่าน"; return; }
+  btn.disabled = true;
+  CRED = { code, pass };
+  const d = await fetchSummary(Number(document.getElementById("year").value) || null);
+  btn.disabled = false;
+  if (d.error){ CRED = null; err.textContent = ERR[d.error] || ("เกิดข้อผิดพลาด: "+d.error); return; }
+  document.getElementById("pass").value = "";
+  document.getElementById("login").style.display = "none";
+  document.getElementById("app").style.display = "block";
+  render(d);
+}
+
+function render(d){
+  // ชื่อ / คำนำหน้า / เพศ
+  let name = (d.first||d.last) ? `${d.first||""} ${d.last||""}`.trim() : (d.full||"");
+  let prefix = d.prefix;
+  if (!prefix){ const m=String(name).match(PFX); if(m) prefix=m[1]; }
+  else if (!PFX.test(name)) name = prefix + name;
+  let gender = prefix ? (isMale(prefix)?"M":isFemale(prefix)?"F":null) : null;
+  if (!gender){
+    const g=String(d.gender||"").trim().toLowerCase();
+    if(["ชาย","male","m"].includes(g)) gender="M"; else if(["หญิง","female","f"].includes(g)) gender="F";
+  }
+
+  const now = new Date();
+  const asOf = d.year >= now.getFullYear() ? now : new Date(d.year,11,31);
+  const months = monthsBetween(d.hire, asOf);
+
+  document.getElementById("name").textContent = name || d.code;
+  document.getElementById("info").textContent =
+    `รหัส ${d.code} · เริ่มงาน ${thaiDate(d.hire)} · อายุงาน ${tenureText(months)} · ปี ${d.year+543}`;
+
+  // ปีที่เลือกได้
+  const ys = document.getElementById("year");
+  if (!ys.options.length){
+    for (let y=now.getFullYear(); y>=now.getFullYear()-3; y--)
+      ys.insertAdjacentHTML("beforeend", `<option value="${y}">${y+543}</option>`);
+  }
+  ys.value = d.year;
+
+  // ใช้ไปแล้ว
+  const used = {};
+  for (const l of d.leaves){
+    const u = (used[l.leave_type] ??= {approved:0,pending:0});
+    if (l.status==="approved"||l.status==="pending") u[l.status]+=Number(l.days);
+  }
+
+  document.getElementById("cards").innerHTML = LEAVE_TYPES.map(t=>{
+    const quota = quotaFor(gender,t.key,months);
+    if (quota==null) return `<div class="card lt na"><h3>${t.name}</h3><div class="sub">ไม่มีสิทธิ์</div></div>`;
+    const u = used[t.key] || {approved:0,pending:0};
+    const remain = quota - u.approved;
+    const pct = quota ? Math.min(100,u.approved/quota*100) : 0;
+    const color = pct>=100?"var(--bad)":pct>=75?"var(--warn)":"var(--ok)";
+    return `<div class="card lt">
+      <h3>${t.name}</h3>
+      <div class="sub">${t.hourly?'<span class="tag">ลารายชั่วโมงได้</span>':''}</div>
+      <div class="num">${fmt(remain)} <small>/ ${quota} วัน คงเหลือ</small></div>
+      <div class="bar"><i style="width:${pct}%;background:${color}"></i></div>
+      <div class="sub" style="margin-top:6px">ใช้แล้ว ${daysHours(u.approved)}${u.pending?` · รออนุมัติ ${daysHours(u.pending)}`:""}</div>
+    </div>`;
+  }).join("");
+
+  document.getElementById("hist").innerHTML = d.leaves.length
+    ? `<thead><tr><th>วันที่ลา</th><th>ประเภท</th><th>จำนวน</th><th>สถานะ</th><th>เหตุผล</th></tr></thead><tbody>${
+        d.leaves.map(l=>`<tr>
+          <td>${thaiDate(l.start_date)}${l.end_date!==l.start_date?` – ${thaiDate(l.end_date)}`:""}</td>
+          <td>${esc(TYPE_NAME[l.leave_type]||l.leave_type)}</td>
+          <td>${l.hours?`${fmt(Number(l.hours))} ชม.`:daysHours(Number(l.days))}</td>
+          <td><span class="tag st-${esc(l.status)}">${esc(STATUS_TH[l.status]||l.status)}</span></td>
+          <td class="muted">${esc(l.reason||"")}</td></tr>`).join("")}</tbody>`
+    : `<tbody><tr><td class="muted">ยังไม่มีรายการลาในปีนี้</td></tr></tbody>`;
+}
+
+document.getElementById("loginBtn").onclick = doLogin;
+document.getElementById("pass").addEventListener("keydown", e=>{ if(e.key==="Enter") doLogin(); });
+document.getElementById("code").addEventListener("keydown", e=>{ if(e.key==="Enter") doLogin(); });
+document.getElementById("year").onchange = async e=>{
+  const d = await fetchSummary(Number(e.target.value));
+  if (d.error){ alert(ERR[d.error]||d.error); return; }
+  render(d);
+};
+document.getElementById("logout").onclick = ()=>{
+  CRED = null;
+  document.getElementById("app").style.display = "none";
+  document.getElementById("login").style.display = "block";
+  document.getElementById("code").value = "";
+};
+</script>
+</body>
+</html>
