@@ -131,32 +131,39 @@ const HOURS_PER_DAY = 8;
 <script>
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-/* ---------- กติกาการลา (ให้ตรงกับ index.html) ---------- */
-const LEAVE_TYPES = [
-  { key:"vacation",        name:"ลาพักร้อน",           hourly:false },
-  { key:"personal_paid",   name:"ลากิจ (รับค่าจ้าง)",    hourly:true  },
-  { key:"personal_unpaid", name:"ลากิจ (ไม่รับค่าจ้าง)", hourly:true  },
-  { key:"sick",            name:"ลาป่วย",              hourly:false },
-  { key:"maternity",       name:"ลาคลอด",              hourly:false },
-  { key:"military",        name:"ลาราชการทหาร",        hourly:false },
+/* ---------- ประเภทการลา: โหลดจากตาราง leave_types (จัดการที่ leave-types.html) ---------- */
+const DEFAULT_TYPES = [
+  { code:"vacation", name:"ลาพักร้อน", quota_mode:"tenure", quota_days:0, tenure_tiers:[{min_months:0,days:0},{min_months:4,days:6},{min_months:24,days:7},{min_months:36,days:8}], hourly_allowed:false, gender:"all", active:true },
+  { code:"personal_paid", name:"ลากิจ (รับค่าจ้าง)", quota_mode:"fixed", quota_days:6, hourly_allowed:true, gender:"all", active:true },
+  { code:"personal_unpaid", name:"ลากิจ (ไม่รับค่าจ้าง)", quota_mode:"fixed", quota_days:6, hourly_allowed:true, gender:"all", active:true },
+  { code:"sick", name:"ลาป่วย", quota_mode:"fixed", quota_days:30, hourly_allowed:false, gender:"all", active:true },
+  { code:"maternity", name:"ลาคลอด", quota_mode:"fixed", quota_days:90, hourly_allowed:false, gender:"F", active:true },
+  { code:"military", name:"ลาราชการทหาร", quota_mode:"fixed", quota_days:3, hourly_allowed:false, gender:"M", active:true },
 ];
-const TYPE = Object.fromEntries(LEAVE_TYPES.map(t=>[t.key,t]));
+let LEAVE_TYPES = [];
+async function loadTypes(){
+  const { data, error } = await sb.from("leave_types").select("*").order("sort_order").order("created_at");
+  const rows = (!error && data && data.length) ? data : DEFAULT_TYPES;
+  LEAVE_TYPES = rows.map(t => ({ ...t, key:t.code, hourly:t.hourly_allowed }));
+}
+// สิทธิ์ต่อปีของคนหนึ่งสำหรับประเภทหนึ่ง (null = ไม่มีสิทธิ์) — ต้องตรงกับ _leave_quota ใน leave_types.sql
+function typeQuota(t, gender, months){
+  if (!t) return null;
+  if (t.gender !== "all" && t.gender !== gender) return null;
+  if (t.quota_mode === "tenure"){
+    let q = 0;
+    for (const x of [...(t.tenure_tiers||[])].sort((a,b)=>a.min_months-b.min_months)) if (months >= x.min_months) q = Number(x.days);
+    return q;
+  }
+  return Number(t.quota_days||0);
+}
+
+let TYPE = {};
 const STATUS_TH = { pending:"รออนุมัติ", pending_manager:"รอผู้จัดการฝ่าย", pending_hr:"รอฝ่ายบุคคล", approved:"อนุมัติแล้ว", rejected:"ไม่อนุมัติ", cancelled:"ยกเลิก" };
 const ACTIVE = ["approved","pending","pending_manager","pending_hr"];
-function vacationQuota(m){ if(m<4) return 0; if(m<24) return 6; if(m<36) return 7; return 8; }
 const isFemale = p => ["นางสาว","น.ส.","นส.","นาง"].includes((p||"").trim());
 const isMale   = p => (p||"").trim() === "นาย";
 const PFX = /^(นางสาว|น\.ส\.|นส\.|นาย|นาง)\s*/;
-function quotaFor(gender,key,months){
-  switch(key){
-    case "vacation":        return vacationQuota(months);
-    case "personal_paid":   return 6;
-    case "personal_unpaid": return 6;
-    case "sick":            return 30;
-    case "maternity":       return gender==="F" ? 90 : null;
-    case "military":        return gender==="M" ? 3  : null;
-  }
-}
 function monthsBetween(from,to){
   const a=new Date(from), b=new Date(to);
   let m=(b.getFullYear()-a.getFullYear())*12+(b.getMonth()-a.getMonth());
@@ -239,7 +246,7 @@ async function refreshEmp(){
 
 function monthsNow(){ return CUR && CUR.hire ? monthsBetween(CUR.hire, asOfDate()) : 0; }
 function remainOf(key){
-  const q = quotaFor(CUR.gender,key,monthsNow());
+  const q = typeQuota(TYPE[key], CUR.gender, monthsNow());
   if (q==null) return null;
   const u = USED[key]||{approved:0,pending:0};
   return { quota:q, used:u.approved+u.pending, remain:q-u.approved-u.pending };
@@ -247,10 +254,10 @@ function remainOf(key){
 
 function renderTypes(){
   const keep = $("type").value;
-  $("type").innerHTML = LEAVE_TYPES.map(t=>{
+  $("type").innerHTML = LEAVE_TYPES.filter(t=>t.active).map(t=>{
     const r = remainOf(t.key);
-    return r ? `<option value="${t.key}">${t.name} (คงเหลือ ${fmt(r.remain)} วัน)</option>`
-             : `<option value="${t.key}" disabled>${t.name} (ไม่มีสิทธิ์)</option>`;
+    return r ? `<option value="${esc(t.key)}">${esc(t.name)} (คงเหลือ ${fmt(r.remain)} วัน)</option>`
+             : `<option value="${esc(t.key)}" disabled>${esc(t.name)} (ไม่มีสิทธิ์)</option>`;
   }).join("");
   if (keep && !$("type").selectedOptions[0]?.disabled) $("type").value = keep;
   if ($("type").selectedOptions[0]?.disabled){
@@ -367,6 +374,8 @@ async function start(){
   $("app").classList.toggle("hide", !session);
   if (session){
     $("start").value = ymd(new Date());
+    await loadTypes();
+    TYPE = Object.fromEntries(LEAVE_TYPES.map(t=>[t.key,t]));
     await Promise.all([loadEmployees(), loadHolidays()]);
   }
 }
