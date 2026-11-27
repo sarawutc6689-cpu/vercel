@@ -1,1 +1,986 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>IT Link Hub</title>
 
+<meta name="theme-color" content="#0b6e8a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="IT Link Hub">
+
+  
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eaf2f1;--surface:#fff;--ink:#14212e;--muted:#5d6b7a;--line:#d6dee7;--accent:#0b6e8a;--accent-ink:#fff;--tile:#e3f1f5;--danger:#b3261e;--warn:#f59e0b;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10181f;--surface:#18232d;--ink:#e8eef4;--muted:#94a3b1;--line:#2a3846;--accent:#4cc2de;--accent-ink:#06222b;--tile:#1f3440;--danger:#ff8a80}}
+:root[data-theme="dark"]{--bg:#10181f;--surface:#18232d;--ink:#e8eef4;--muted:#94a3b1;--line:#2a3846;--accent:#4cc2de;--accent-ink:#06222b;--tile:#1f3440;--danger:#ff8a80}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:linear-gradient(160deg,color-mix(in srgb,var(--accent) 16%,var(--bg)) 0%,var(--bg) 42%,color-mix(in srgb,#8fb89c 18%,var(--bg)) 100%) fixed,var(--bg);color:var(--ink);font-family:"IBM Plex Sans Thai",system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.5}
+.wrap{max-width:960px;margin:0 auto;padding:28px 18px 130px}
+header{display:flex;flex-wrap:wrap;gap:14px;align-items:end;justify-content:space-between;margin-bottom:22px}
+h1{font-size:1.9rem;font-weight:600;margin:0;letter-spacing:-.01em}
+.sub{color:var(--muted);margin:2px 0 0;font-size:.95rem}
+.tools{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+input,button,select{font:inherit;color:inherit}
+.search{padding:10px 14px;border:1px solid var(--line);border-radius:10px;background:var(--surface);min-width:190px}
+.btn{padding:10px 15px;border-radius:10px;border:1px solid var(--line);background:var(--surface);cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-weight:500}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.tg{background:#0088cc;color:#fff;border-color:#0088cc}
+.badge{background:var(--warn);color:#14212e;font-size:.75rem;font-weight:600;padding:1px 7px;border-radius:999px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+.card{position:relative;display:flex;gap:14px;align-items:center;padding:16px;background:var(--surface);border:1px solid var(--line);border-radius:14px;text-decoration:none;color:inherit;transition:border-color .15s,transform .15s}
+.card:hover{border-color:var(--accent);transform:translateY(-2px)}
+.ico{flex:none;width:52px;height:52px;border-radius:12px;background:var(--tile);display:grid;place-items:center;font-size:1.6rem;overflow:hidden}
+.ico svg{width:48px;height:48px}
+.txt{min-width:0}
+.name{font-weight:600;overflow-wrap:anywhere}
+.host{color:var(--muted);font-size:.82rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.del{position:absolute;top:6px;right:6px;border:0;background:transparent;color:var(--muted);width:28px;height:28px;border-radius:8px;cursor:pointer;opacity:0;font-size:1rem}
+.card:hover .del,.del:focus-visible{opacity:1}
+.del:hover{color:var(--danger);background:var(--tile)}
+@media (hover:none){.del{opacity:.7}}
+.empty{grid-column:1/-1;text-align:center;color:var(--muted);padding:40px 0}
+dialog{border:1px solid var(--line);border-radius:16px;background:var(--surface);color:var(--ink);padding:22px;width:min(480px,94vw);max-height:90vh;overflow-y:auto}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+dialog h2{margin:0 0 12px;font-size:1.2rem;display:flex;align-items:center;justify-content:space-between}
+label{display:block;font-size:.85rem;color:var(--muted);margin:10px 0 4px}
+dialog input[type=text],dialog input[type=email],dialog input[type=password],dialog input[type=url],dialog input[type=time],dialog input[type=date],dialog select{width:100%;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+.icons{display:grid;grid-template-columns:repeat(8,1fr);gap:6px}
+.icons button{aspect-ratio:1;border:1px solid var(--line);background:var(--bg);border-radius:10px;font-size:1.25rem;cursor:pointer}
+.icons button[aria-pressed=true]{border-color:var(--accent);background:var(--tile);box-shadow:0 0 0 2px var(--accent)}
+.actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px;flex-wrap:wrap}
+.err{color:var(--danger);font-size:.85rem;min-height:1.2em;margin-top:8px}
+
+/* ---- ระบบตารางงาน & Telegram (Schedule Dialog) ---- */
+.sched-top{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 12px;background:var(--tile);border-radius:12px;margin-bottom:10px;font-size:.84rem}
+.tg-box{padding:12px;border:1.5px solid #0088cc;border-radius:12px;background:color-mix(in srgb,#0088cc 8%,var(--surface));margin-bottom:14px}
+.tg-head{display:flex;align-items:center;justify-content:space-between;gap:8px;font-weight:600;font-size:.9rem;color:#0088cc;margin-bottom:8px}
+.tg-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.tg-row input{flex:1;min-width:140px;padding:7px 10px;font-size:.86rem}
+.tg-row button{padding:7px 10px;font-size:.8rem}
+.tg-msg{font-size:.8rem;margin-top:6px;min-height:1.1em;color:var(--muted)}
+.sched-list{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;max-height:190px;overflow-y:auto}
+.sched-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--bg)}
+.sched-item.off{opacity:.55}
+.sched-left{display:flex;align-items:center;gap:10px;min-width:0}
+.sched-time{font-weight:600;font-size:1rem;color:var(--accent);background:var(--tile);padding:4px 9px;border-radius:8px;flex:none}
+.sched-title{font-weight:500;font-size:.92rem;overflow-wrap:anywhere}
+.sched-meta{font-size:.76rem;color:var(--muted)}
+.sched-btns{display:flex;align-items:center;gap:6px;flex:none}
+.sched-btns button{border:0;background:transparent;cursor:pointer;padding:4px 7px;border-radius:6px;color:var(--muted)}
+.sched-btns button:hover{background:var(--tile);color:var(--danger)}
+.row-2{display:grid;grid-template-columns:1fr 1.3fr;gap:10px}
+
+/* ---- ตัวการ์ตูนลิงน้อย น้องมูลด์ (มุมขวาล่าง) ---- */
+.mascot-btn{position:fixed;right:14px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:20;display:flex;align-items:center;gap:6px;background:transparent;border:0;padding:0;cursor:pointer;user-select:none}
+.mascot-btn[hidden],.chat[hidden]{display:none}
+.speech-tag{background:var(--surface);color:var(--ink);border:2px solid #f59e0b;padding:8px 14px;border-radius:18px 18px 4px 18px;font-size:.9rem;font-weight:600;box-shadow:0 6px 18px rgba(0,0,0,.15);transition:transform .2s,background .2s;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.speech-tag.alert{background:#fef3c7;color:#92400e;border-color:#dc2626;animation:pulseAlert 1s ease-in-out infinite}
+.mascot-wrap{position:relative;width:96px;height:96px;display:grid;place-items:center;filter:drop-shadow(0 8px 14px rgba(0,0,0,.22));animation:monkeyBounce 2.6s ease-in-out infinite;transition:transform .2s}
+.mascot-wrap svg{width:96px;height:96px;overflow:visible}
+.mascot-btn:hover .mascot-wrap{transform:scale(1.08)}
+.mascot-btn:hover .speech-tag{transform:translateY(-4px)}
+
+@keyframes pulseAlert{
+  0%,100%{transform:scale(1)}
+  50%{transform:scale(1.06)}
+}
+@keyframes monkeyBounce{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-5px)}
+}
+@keyframes waveHand{
+  0%,100%{transform:rotate(0deg)}
+  25%{transform:rotate(-18deg)}
+  75%{transform:rotate(14deg)}
+}
+@keyframes wagTail{
+  0%,100%{transform:rotate(0deg)}
+  50%{transform:rotate(10deg)}
+}
+@keyframes tiltHead{
+  0%,100%{transform:rotate(0deg)}
+  50%{transform:rotate(-3.5deg)}
+}
+@keyframes blinkEye{
+  0%,92%,100%{transform:scaleY(1)}
+  96%{transform:scaleY(0.08)}
+}
+.mk-wave{transform-origin:62px 66px;animation:waveHand 1.1s ease-in-out infinite}
+.mk-tail{transform-origin:42px 75px;animation:wagTail 2.2s ease-in-out infinite}
+.mk-head{transform-origin:50px 52px;animation:tiltHead 3s ease-in-out infinite}
+.mk-eyes{transform-origin:50px 41px;animation:blinkEye 4s infinite}
+
+/* ---- กล่องแชต ---- */
+.chat{position:fixed;right:18px;bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:21;width:min(390px,calc(100vw - 36px));height:min(560px,calc(100% - 36px));display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:0 14px 44px rgba(0,0,0,.28);overflow:hidden}
+.chat-head{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--tile);border-bottom:1px solid var(--line)}
+.ttl{display:flex;align-items:center;gap:10px}
+.head-ava{position:relative;width:44px;height:44px;border-radius:50%;background:#fff8eb;border:2px solid #f59e0b;display:grid;place-items:center;flex:none;overflow:hidden}
+.head-ava svg{width:42px;height:42px}
+.head-info{line-height:1.25}
+.head-name{font-weight:600;font-size:.98rem}
+.head-sub{font-size:.76rem;color:var(--muted);display:flex;align-items:center;gap:5px}
+.head-sub::before{content:"";width:7px;height:7px;border-radius:50%;background:#22c55e;display:inline-block}
+.chat-head button{border:0;background:transparent;font-size:1.15rem;cursor:pointer;color:var(--muted);width:32px;height:32px;border-radius:8px}
+.chat-head button:hover{background:rgba(0,0,0,.06)}
+.msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:12px}
+.msg-row{display:flex;gap:8px;align-items:flex-end}
+.msg-row.me{justify-content:flex-end}
+.bot-ava{width:34px;height:34px;border-radius:50%;background:#fff8eb;border:1.5px solid #f59e0b;display:grid;place-items:center;flex:none;overflow:hidden}
+.bot-ava svg{width:32px;height:32px}
+.m{max-width:80%;padding:9px 13px;border-radius:14px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:.94rem}
+.m.bot{background:var(--tile);border-bottom-left-radius:4px}
+.m.bot.remind{background:#fef3c7;color:#78350f;border:1.5px solid #f59e0b}
+.m.bot.sys-ok{background:#dcfce7;color:#14532d;border:1.5px solid #22c55e;font-size:.86rem}
+.m.me{background:var(--accent);color:var(--accent-ink);border-bottom-right-radius:4px}
+.m a{color:var(--accent);font-weight:600;text-decoration:underline}
+.m.me a{color:var(--accent-ink)}
+.chat-in{display:flex;gap:8px;padding:10px;border-top:1px solid var(--line);background:var(--surface)}
+.chat-in input{flex:1;min-width:0;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>IT Link Hub</h1>
+      <p class="sub">รวมลิงค์และตารางงานประจำฝ่าย IT</p>
+    </div>
+    <div class="tools">
+      <input class="search" id="q" type="search" placeholder="ค้นหาลิงค์…" aria-label="ค้นหาลิงค์">
+      <button class="btn" id="schedBtn" type="button">🗓️ ตารางงาน <span class="badge" id="schedCount">0</span></button>
+      <button class="btn primary" id="add" type="button">+ เพิ่มลิงค์</button>
+    </div>
+  </header>
+  <main class="grid" id="grid"></main>
+</div>
+
+<!-- ปุ่มตัวการ์ตูนลิงน้อย น้องมูลด์ ยืนโบกมือมุมขวาล่าง -->
+<button class="mascot-btn" id="fab" type="button" aria-label="ถามน้องมูลด์">
+  <span class="speech-tag" id="speech-tag">ถามน้องมูลด์ได้นะ 🍌</span>
+  <span class="mascot-wrap" id="fab-ava"></span>
+</button>
+
+<!-- กล่องแชตน้องมูลด์ -->
+<section class="chat" id="chat" hidden aria-label="แชตน้องมูลด์">
+  <div class="chat-head">
+    <div class="ttl">
+      <div class="head-ava" id="head-ava"></div>
+      <div class="head-info">
+        <div class="head-name">น้องมูลด์ (เลขา IT)</div>
+        <div class="head-sub">สั่งงานหรือส่งเข้า Telegram ได้เลย 🐵</div>
+      </div>
+    </div>
+    <button type="button" id="cx" aria-label="ปิดแชต">✕</button>
+  </div>
+  <div class="msgs" id="msgs" aria-live="polite"></div>
+  <form class="chat-in" id="cf">
+    <input type="text" id="ci" placeholder="" autocomplete="off" aria-label="พิมพ์คำถาม">
+    <button class="btn primary" type="submit" id="cs">ส่ง</button>
+  </form>
+</section>
+
+<!-- หน้าต่างเพิ่มลิงค์ -->
+<dialog id="dlg">
+  <form method="dialog" id="f" novalidate>
+    <h2>เพิ่มลิงค์ใหม่</h2>
+    <label for="n">ชื่อ</label>
+    <input type="text" id="n" maxlength="40" placeholder="เช่น Helpdesk Dashboard">
+    <label for="u">URL</label>
+    <input type="url" id="u" placeholder="https://…">
+    <label>ไอคอน</label>
+    <div class="icons" id="icons"></div>
+    <div class="err" id="err" role="alert"></div>
+    <div class="actions">
+      <button type="button" class="btn" id="cancel">ยกเลิก</button>
+      <button type="submit" class="btn primary">บันทึก</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- หน้าต่างจัดการตารางงาน & Telegram -->
+<dialog id="schedDlg">
+  <h2>
+    <span>🗓️ ตารางงาน & แจ้งเตือน</span>
+    <button type="button" class="btn" id="closeSched" style="padding:4px 10px;font-size:.85rem">ปิด</button>
+  </h2>
+
+  <div class="sched-top">
+    <span id="notifStatus">🔔 แจ้งเตือนผ่านหน้าเว็บและเสียงเตือน</span>
+    <button type="button" class="btn" id="reqNotif" style="padding:5px 10px;font-size:.8rem">เปิดแจ้งเตือน Windows</button>
+  </div>
+
+  <!-- กล่องตั้งค่าการแจ้งเตือนผ่าน Telegram -->
+  <div class="tg-box">
+    <div class="tg-head">
+      <span>✈️ แจ้งเตือนเข้ามือถือผ่าน Telegram</span>
+      <label style="margin:0;display:flex;align-items:center;gap:5px;color:var(--ink);font-weight:500;cursor:pointer">
+        <input type="checkbox" id="tgEnable" checked> เปิดใช้งาน
+      </label>
+    </div>
+    <div class="tg-row">
+      <input type="text" id="tgChatId" placeholder="ใส่เลข Chat ID (หรือกดดึงอัตโนมัติ)">
+      <button type="button" class="btn" id="tgFindBtn" title="ทักบอทใน Telegram 1 ครั้งแล้วกดปุ่มนี้">🔍 ดึง Chat ID</button>
+      <button type="button" class="btn tg" id="tgTestBtn">ส่งทดสอบ</button>
+    </div>
+    <div class="tg-msg" id="tgStatusMsg">💡 ทักแชตบอทในแอป Telegram ก่อน 1 ครั้ง แล้วกดปุ่ม "🔍 ดึง Chat ID" ได้เลย</div>
+  </div>
+
+  <div class="sched-list" id="schedList"></div>
+
+  <form id="schedForm" novalidate style="border-top:1px solid var(--line);padding-top:12px">
+    <div style="font-weight:600;font-size:.95rem;margin-bottom:6px">+ ตั้งเวลาแจ้งเตือนใหม่ (หรือพิมพ์สั่งในแชตน้องมูลด์ก็ได้นะ)</div>
+    <label for="st">ชื่องาน / สิ่งที่ต้องทำ</label>
+    <input type="text" id="st" maxlength="60" placeholder="เช่น ตรวจเช็กสถานะกล้อง CCTV ประจำวัน">
+    <div class="row-2">
+      <div>
+        <label for="stm">เวลาแจ้งเตือน</label>
+        <input type="time" id="stm" value="09:00">
+      </div>
+      <div>
+        <label for="srp">ความถี่</label>
+        <select id="srp">
+          <option value="daily">ทุกวัน (Daily)</option>
+          <option value="weekdays">จันทร์ - ศุกร์</option>
+          <option value="once">ระบุวันที่ (ครั้งเดียว)</option>
+        </select>
+      </div>
+    </div>
+    <div id="dateWrap" hidden>
+      <label for="sdt">วันที่แจ้งเตือน</label>
+      <input type="date" id="sdt">
+    </div>
+    <div class="err" id="schedErr"></div>
+    <div class="actions" style="margin-top:12px">
+      <button type="button" class="btn" id="testAlert">🔊 ทดสอบน้องมูลด์เตือน</button>
+      <button type="submit" class="btn primary">บันทึกตารางงาน</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="loginDlg">
+  <form id="loginForm">
+    <h2>เข้าสู่ระบบ IT Link Hub</h2>
+    <label for="le">อีเมล</label><input type="email" id="le" autocomplete="username">
+    <label for="lp">รหัสผ่าน</label><input type="password" id="lp" autocomplete="current-password">
+    <div class="err" id="lerr"></div>
+    <div class="actions"><button class="btn primary" type="submit">เข้าสู่ระบบ</button></div>
+  </form>
+</dialog>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+// ฟังก์ชันสร้าง SVG ลิงน้อยเสื้อเหลือง "น้องมูลด์"
+function getMonkeySVG(faceOnly = false) {
+  const vb = faceOnly ? "12 4 76 62" : "0 0 100 105";
+  return `<svg viewBox="${vb}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    ${faceOnly ? "" : `<ellipse cx="52" cy="97" rx="18" ry="4" fill="rgba(0,0,0,0.12)"/>`}
+    ${faceOnly ? "" : `<g class="mk-tail">
+      <path d="M43 76 C22 76 24 34 15 34 C9 34 9 48 14 51" fill="none" stroke="#4a2e1b" stroke-width="5" stroke-linecap="round"/>
+    </g>`}
+    ${faceOnly ? "" : `<g>
+      <path d="M45 77 L42 93" stroke="#4a2e1b" stroke-width="6.5" stroke-linecap="round"/>
+      <path d="M57 77 L60 93" stroke="#4a2e1b" stroke-width="6.5" stroke-linecap="round"/>
+      <ellipse cx="39" cy="95" rx="6.5" ry="3.2" fill="#f7c894" stroke="#4a2e1b" stroke-width="1.8"/>
+      <ellipse cx="64" cy="95" rx="6.5" ry="3.2" fill="#f7c894" stroke="#4a2e1b" stroke-width="1.8"/>
+    </g>`}
+    ${faceOnly ? "" : `<path d="M40 62 L34 70 L42 75" fill="none" stroke="#4a2e1b" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>`}
+    ${faceOnly ? "" : `<g class="mk-wave">
+      <path d="M60 62 L73 65 L80 57" fill="none" stroke="#4a2e1b" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="82" cy="55" r="4.5" fill="#f7c894" stroke="#4a2e1b" stroke-width="1.6"/>
+      <path d="M80 52 L79 48 M83 51 L84 47 M85 53 L88 50 M85 56 L89 55" stroke="#f7c894" stroke-width="2.2" stroke-linecap="round"/>
+    </g>`}
+    ${faceOnly ? "" : `<path d="M36 60 L42 56 L60 56 L67 61 L63 66 L60 64 L61 78 L41 78 L42 64 L39 66 Z" fill="#ffd600" stroke="#4a2e1b" stroke-width="2" stroke-linejoin="round"/>`}
+    <g class="mk-head">
+      <circle cx="22" cy="36" r="11" fill="#f7c894" stroke="#4a2e1b" stroke-width="2.4"/>
+      <path d="M19 32 Q23 36 19 40" fill="none" stroke="#d59b66" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="78" cy="36" r="11" fill="#f7c894" stroke="#4a2e1b" stroke-width="2.4"/>
+      <path d="M81 32 Q77 36 81 40" fill="none" stroke="#d59b66" stroke-width="2" stroke-linecap="round"/>
+      <path d="M48 16 C45 10 39 11 42 15 C45 12 49 8 54 15" fill="#4a2e1b" stroke="#4a2e1b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <ellipse cx="50" cy="34" rx="22" ry="19" fill="#4a2e1b"/>
+      <ellipse cx="50" cy="45" rx="23" ry="14" fill="#4a2e1b"/>
+      <path d="M33 34 C33 23 45 23 50 28 C55 23 67 23 67 34 C72 38 72 56 50 56 C28 56 28 38 33 34 Z" fill="#f7c894" stroke="#4a2e1b" stroke-width="1.8"/>
+      <g class="mk-eyes">
+        <ellipse cx="43.5" cy="38.5" rx="2.8" ry="4" fill="#3b2212"/>
+        <circle cx="42.8" cy="37" r="1.1" fill="#ffffff"/>
+        <ellipse cx="56.5" cy="38.5" rx="2.8" ry="4" fill="#3b2212"/>
+        <circle cx="55.8" cy="37" r="1.1" fill="#ffffff"/>
+      </g>
+      <ellipse cx="50" cy="43" rx="3.2" ry="1.6" fill="#4a2e1b"/>
+      <line x1="50" y1="44.5" x2="50" y2="46.5" stroke="#4a2e1b" stroke-width="1.5"/>
+      <path d="M37 47 Q50 50 63 47 C61 55 39 55 37 47 Z" fill="#ffffff" stroke="#4a2e1b" stroke-width="1.6" stroke-linejoin="round"/>
+    </g>
+  </svg>`;
+}
+
+const KEY="it-link-hub:v1";
+const SCHED_KEY="it-link-hub:sched:v1";
+const TG_KEY="it-link-hub:tg:v1";
+const ICONS=["🛠️","📊","📹","💻","🖥️","🖨️","🌐","📡","🔒","📁","📧","📝","🗓️","🧰","☁️","🔗"];
+const AI={name:"ถามน้องมูลด์",url:"#chat",icon:"🐵"};
+const DEFAULTS=[
+  AI,
+  {name:"Helpdesk Dashboard",url:"https://mouldmate.vercel.app/IT/Helpdesk/dashboard.html",icon:"🛠️"},
+  {name:"Checklist CCTV",url:"https://mouldmate.vercel.app/IT/CCTV/ChecklistCCTV.html",icon:"📹"},
+  {name:"Asset Register",url:"https://mouldmate.vercel.app/IT/Asset/asset-register.html",icon:"💻"}
+];
+const DEFAULT_SCHEDS=[
+  {id:"s1",title:"ตรวจเช็กสถานะกล้อง CCTV ประจำวัน",time:"09:00",repeat:"weekdays",date:"",enabled:true,lastFired:""},
+  {id:"s2",title:"ตรวจสอบรายการแจ้งซ่อมค้างใน Helpdesk",time:"13:30",repeat:"weekdays",date:"",enabled:true,lastFired:""}
+];
+
+const SUPABASE_URL="https://llslskmvrwkavicwuvwt.supabase.co";
+const SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxsc2xza212cndrYXZpY3d1dnd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTU2NzIyMDUsImV4cCI6MjExMTI0ODIwNX0.kLAuI-ZeL6ZpDl9jqiO7r51gchxhnS_As3aik0Fn-TQ";
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+let links=[], schedules=[], tgConf={chatId:"",enabled:true}, icon=ICONS[0];
+const $=id=>document.getElementById(id);
+
+$("fab-ava").innerHTML = getMonkeySVG(false);
+$("head-ava").innerHTML = getMonkeySVG(true);
+
+function getTodayStr(){
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}-${String(now.getDate()).padStart(2,"0")}`;
+}
+
+const toRow=s=>({id:s.id,title:s.title,time:s.time,repeat:s.repeat,date:s.date||"",enabled:!!s.enabled});
+const fromRow=r=>({id:r.id,title:r.title,time:r.time,repeat:r.repeat,date:r.date||"",enabled:r.enabled,lastFired:r.last_fired||""});
+
+async function loadAll(){
+  const [l,sc,t]=await Promise.all([
+    sb.from("links").select("*").order("created_at"),
+    sb.from("schedules").select("*").order("time"),
+    sb.from("settings").select("value").eq("key","telegram").maybeSingle()
+  ]);
+  if(l.error||sc.error){console.error(l.error||sc.error);return}
+  links=l.data;
+  schedules=sc.data.map(fromRow);
+  if(t.data&&t.data.value) tgConf=t.data.value;
+  render();updateSchedBadge();
+  if($("schedDlg").open) renderScheds();
+}
+async function saveScheds(){
+  updateSchedBadge();
+  const {error}=await sb.from("schedules").upsert(schedules.map(toRow));
+  if(error) console.error(error);
+}
+async function dbDelSched(ids){
+  if(ids.length) await sb.from("schedules").delete().in("id",ids);
+}
+function updateSchedBadge(){
+  $("schedCount").textContent = schedules.filter(s=>s.enabled).length;
+}
+function saveTg(){
+  tgConf={chatId:$("tgChatId").value.trim(),enabled:$("tgEnable").checked};
+  sb.from("settings").upsert({key:"telegram",value:tgConf}).then(()=>{});
+}
+
+$("loginForm").onsubmit=async e=>{
+  e.preventDefault();
+  const {error}=await sb.auth.signInWithPassword({email:$("le").value.trim(),password:$("lp").value});
+  if(error){$("lerr").textContent="อีเมลหรือรหัสผ่านไม่ถูกต้อง";return}
+  $("lerr").textContent="";$("loginDlg").close();loadAll();
+};
+sb.auth.getSession().then(({data:{session}})=>{
+  if(session) loadAll(); else $("loginDlg").showModal();
+});
+
+function host(u){
+  if(u==="#chat"||u.includes("claude.ai")) return "ผู้ช่วย AI ประจำฝ่าย IT";
+  try{return new URL(u).hostname}catch(e){return u}
+}
+
+function openChat(){
+  $("chat").hidden=false;
+  $("fab").hidden=true;
+  $("speech-tag").classList.remove("alert");
+  $("speech-tag").textContent="ถามน้องมูลด์ได้นะ 🍌";
+  if(!$("msgs").children.length){
+    addMsg("bot","สวัสดีจ้า น้องมูลด์เองนะ 🐵🍌 จะให้ช่วยหาลิงค์ ตั้งเวลาแจ้งเตือน หรือสั่งส่งข้อความเข้า Telegram ก็บอกได้เลยจ้า");
+  }
+  $("ci").focus();
+}
+
+function render(){
+  const q=$("q").value.trim().toLowerCase(), g=$("grid");
+  g.textContent="";
+  const shown=[AI,...links].map(l=>({l})).filter(({l})=>!q||(l.name+" "+l.url).toLowerCase().includes(q));
+  if(!shown.length){
+    const d=document.createElement("div");d.className="empty";
+    d.textContent=links.length?"ไม่พบลิงค์ที่ตรงกับคำค้นหา":"ยังไม่มีลิงค์ กด “เพิ่มลิงค์” เพื่อเริ่มต้น";
+    g.appendChild(d);return;
+  }
+  shown.forEach(({l,i})=>{
+    const a=document.createElement("a");
+    a.className="card";a.href=l.url;
+    const isMould = l.url==="#chat"||l.name==="ถามน้องมูลด์";
+    if(isMould){
+      a.onclick=e=>{e.preventDefault();openChat()};
+    }else{
+      a.target="_blank";a.rel="noopener noreferrer";
+    }
+    const ic=document.createElement("div");ic.className="ico";
+    if(isMould){
+      ic.innerHTML = getMonkeySVG(true);
+    }else{
+      ic.textContent=l.icon;
+    }
+    const t=document.createElement("div");t.className="txt";
+    const n=document.createElement("div");n.className="name";n.textContent=l.name;
+    const h=document.createElement("div");h.className="host";h.textContent=host(l.url);
+    t.append(n,h);
+    const x=document.createElement("button");
+    x.className="del";x.type="button";x.textContent="✕";x.setAttribute("aria-label","ลบ "+l.name);
+    x.onclick=async e=>{e.preventDefault();e.stopPropagation();
+      if(confirm("ลบ “"+l.name+"” ออกจากรายการ?")){await sb.from("links").delete().eq("id",l.id);loadAll()}};
+    if(isMould)a.append(ic,t);else a.append(ic,t,x);g.appendChild(a);
+  });
+}
+
+function drawIcons(){
+  const box=$("icons");box.textContent="";
+  ICONS.forEach(e=>{
+    const b=document.createElement("button");b.type="button";b.textContent=e;
+    b.setAttribute("aria-pressed",e===icon);b.setAttribute("aria-label","ไอคอน "+e);
+    b.onclick=()=>{icon=e;drawIcons()};box.appendChild(b);
+  });
+}
+
+$("add").onclick=()=>{$("n").value="";$("u").value="";$("err").textContent="";icon=ICONS[0];drawIcons();$("dlg").showModal();$("n").focus()};
+$("cancel").onclick=()=>$("dlg").close();
+$("q").oninput=render;
+$("f").onsubmit=async e=>{
+  e.preventDefault();
+  let name=$("n").value.trim(), url=$("u").value.trim();
+  if(url&&!/^https?:\/\//i.test(url))url="https://"+url;
+  try{new URL(url)}catch(x){$("err").textContent="กรุณากรอก URL ให้ถูกต้อง";return}
+  if(!name)name=host(url);
+  const {error}=await sb.from("links").insert({name,url,icon});
+  if(error){$("err").textContent=error.message;return}
+  loadAll();$("dlg").close();
+};
+render();
+updateSchedBadge();
+
+/* ---- ระบบจัดการตารางงาน & Telegram ---- */
+function repeatLabel(s){
+  if(s.repeat==="daily") return "ทุกวัน";
+  if(s.repeat==="weekdays") return "จันทร์ - ศุกร์";
+  return s.date ? "วันที่ "+s.date : "วันนี้/ครั้งเดียว";
+}
+
+function renderScheds(){
+  const box=$("schedList");
+  box.textContent="";
+  if(!schedules.length){
+    const d=document.createElement("div");
+    d.style.cssText="text-align:center;color:var(--muted);padding:18px 0;font-size:.9rem";
+    d.textContent="ยังไม่มีตารางงานที่ตั้งเตือนไว้";
+    box.appendChild(d);
+    return;
+  }
+  const sorted=schedules.slice().sort((a,b)=>a.time.localeCompare(b.time));
+  sorted.forEach(item=>{
+    const row=document.createElement("div");
+    row.className="sched-item"+(item.enabled?"":" off");
+
+    const left=document.createElement("div");
+    left.className="sched-left";
+
+    const chk=document.createElement("input");
+    chk.type="checkbox";
+    chk.checked=!!item.enabled;
+    chk.title="เปิด/ปิดการแจ้งเตือนนี้";
+    chk.onchange=()=>{item.enabled=chk.checked;saveScheds();renderScheds()};
+
+    const tm=document.createElement("span");
+    tm.className="sched-time";
+    tm.textContent=item.time;
+
+    const info=document.createElement("div");
+    const tt=document.createElement("div");
+    tt.className="sched-title";
+    tt.textContent=item.title;
+    const mt=document.createElement("div");
+    mt.className="sched-meta";
+    mt.textContent=repeatLabel(item);
+    info.append(tt,mt);
+
+    left.append(chk,tm,info);
+
+    const btns=document.createElement("div");
+    btns.className="sched-btns";
+    const del=document.createElement("button");
+    del.type="button";
+    del.textContent="🗑️";
+    del.title="ลบตารางงาน";
+    del.onclick=()=>{
+      dbDelSched([item.id]);
+      schedules=schedules.filter(x=>x.id!==item.id);
+      saveScheds();
+      renderScheds();
+    };
+    btns.appendChild(del);
+
+    row.append(left,btns);
+    box.appendChild(row);
+  });
+}
+
+function checkNotifStatus(){
+  if(!("Notification" in window)){
+    $("notifStatus").textContent="🔔 แจ้งเตือนผ่านแชตน้องมูลด์และเสียงเตือน";
+    $("reqNotif").hidden=true;
+    return;
+  }
+  if(Notification.permission==="granted"){
+    $("notifStatus").textContent="✅ เปิดการแจ้งเตือนป๊อปอัป Windows แล้ว";
+    $("reqNotif").hidden=true;
+  }else if(Notification.permission==="denied"){
+    $("notifStatus").textContent="⚠️ เบราว์เซอร์บล็อกป๊อปอัป (แจ้งเตือนผ่านหน้าเว็บแทน)";
+    $("reqNotif").hidden=true;
+  }else{
+    $("notifStatus").textContent="🔔 กดปุ่มขวาเพื่อรับป๊อปอัปแจ้งเตือนมุมจอ";
+    $("reqNotif").hidden=false;
+  }
+}
+
+$("schedBtn").onclick=()=>{
+  $("schedErr").textContent="";
+  $("sdt").value = getTodayStr();
+  $("tgChatId").value = tgConf.chatId || "";
+  $("tgEnable").checked = tgConf.enabled !== false;
+  checkNotifStatus();
+  renderScheds();
+  $("schedDlg").showModal();
+};
+$("closeSched").onclick=()=>{ saveTg(); $("schedDlg").close(); };
+$("tgChatId").oninput=saveTg;
+$("tgEnable").onchange=saveTg;
+
+$("srp").onchange=()=>{
+  $("dateWrap").hidden = $("srp").value !== "once";
+};
+$("reqNotif").onclick=async()=>{
+  if("Notification" in window){
+    await Notification.requestPermission();
+    checkNotifStatus();
+  }
+};
+
+// ฟังก์ชันเรียกใช้งาน Telegram ผ่าน /api/chat
+async function sendTelegramMessage(text, showStatusEl){
+  saveTg();
+  try{
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        action: "telegram_send",
+        chatId: tgConf.chatId,
+        text: text
+      })
+    });
+    const data = await res.json().catch(()=>({}));
+    if(!res.ok){
+      if(showStatusEl){
+        showStatusEl.style.color = "var(--danger)";
+        showStatusEl.textContent = "❌ ส่งไม่สำเร็จ: " + (data.error || res.status);
+      }
+      return { ok: false, error: data.error || "ส่งไม่สำเร็จ" };
+    }
+    if(showStatusEl){
+      showStatusEl.style.color = "#15803d";
+      showStatusEl.textContent = "✅ ส่งข้อความเข้า Telegram เรียบร้อยแล้ว!";
+    }
+    return { ok: true };
+  }catch(e){
+    if(showStatusEl){
+      showStatusEl.style.color = "var(--danger)";
+      showStatusEl.textContent = "❌ เชื่อมต่อเซิร์ฟเวอร์ไม่ได้";
+    }
+    return { ok: false, error: "เชื่อมต่อไม่ได้" };
+  }
+}
+
+$("tgFindBtn").onclick=async()=>{
+  const msgEl = $("tgStatusMsg");
+  msgEl.style.color = "var(--muted)";
+  msgEl.textContent = "กำลังค้นหา Chat ID ล่าสุดจากบอท...";
+  try{
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({ action: "telegram_get_chat" })
+    });
+    const data = await res.json().catch(()=>({}));
+    if(!res.ok){
+      msgEl.style.color = "var(--danger)";
+      msgEl.textContent = "❌ " + (data.error || "ดึงข้อมูลไม่สำเร็จ");
+      return;
+    }
+    $("tgChatId").value = data.chatId;
+    saveTg();
+    msgEl.style.color = "#15803d";
+    msgEl.textContent = `✅ พบห้องแชตของ "${data.title || "คุณ"}" (Chat ID: ${data.chatId}) บันทึกเรียบร้อย!`;
+  }catch(e){
+    msgEl.style.color = "var(--danger)";
+    msgEl.textContent = "❌ เชื่อมต่อเซิร์ฟเวอร์ไม่ได้";
+  }
+};
+
+$("tgTestBtn").onclick=async()=>{
+  const msgEl = $("tgStatusMsg");
+  msgEl.style.color = "var(--muted)";
+  msgEl.textContent = "กำลังส่งข้อความทดสอบเข้า Telegram...";
+  await sendTelegramMessage("🐵🍌 สวัสดีจ้า! น้องมูลด์ทดสอบส่งการแจ้งเตือนเข้า Telegram สำเร็จแล้วนะ!", msgEl);
+};
+
+function addScheduleItem(title, time, repeat = "once", date = ""){
+  const cleanTime = /^\d{1,2}:\d{2}$/.test(time)
+    ? time.split(":").map(n=>String(n).padStart(2,"0")).join(":")
+    : "09:00";
+  const cleanRepeat = ["daily","weekdays","once"].includes(repeat) ? repeat : "once";
+  const cleanDate = cleanRepeat === "once" ? (date || getTodayStr()) : "";
+
+  const newItem = {
+    id: crypto.randomUUID(),
+    title: String(title).trim(),
+    time: cleanTime,
+    repeat: cleanRepeat,
+    date: cleanDate,
+    enabled: true,
+    lastFired: ""
+  };
+  schedules.push(newItem);
+  saveScheds();
+  if($("schedDlg").open) renderScheds();
+  return newItem;
+}
+
+$("schedForm").onsubmit=e=>{
+  e.preventDefault();
+  const title=$("st").value.trim();
+  const time=$("stm").value;
+  const repeat=$("srp").value;
+  const date=$("sdt").value;
+  if(!title){$("schedErr").textContent="กรุณากรอกชื่องานที่ต้องการให้เตือน";return}
+  if(!time){$("schedErr").textContent="กรุณาเลือกเวลาแจ้งเตือน";return}
+  if(repeat==="once"&&!date){$("schedErr").textContent="กรุณาเลือกวันที่";return}
+
+  addScheduleItem(title, time, repeat, date);
+  $("st").value="";
+  $("schedErr").textContent="";
+};
+
+function playChime(){
+  try{
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if(!Ctx) return;
+    const ctx = new Ctx();
+    [587.33, 880].forEach((freq, idx)=>{
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.18, ctx.currentTime + idx*0.16);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + idx*0.16 + 0.35);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime + idx*0.16);
+      osc.stop(ctx.currentTime + idx*0.16 + 0.36);
+    });
+  }catch(e){}
+}
+
+function triggerReminder(item, skipTg){
+  playChime();
+  const msg = `⏰ ถึงเวลาแล้วจ้า (${item.time} น.): ${item.title} 🍌`;
+
+  // 1. แจ้งในห้องแชตหน้าเว็บ
+  addMsg("bot remind", msg);
+
+  // 2. ป้ายคำพูดตรงตัวน้องลิง
+  if($("chat").hidden){
+    const tag = $("speech-tag");
+    tag.textContent = `⏰ ${item.title}`;
+    tag.classList.add("alert");
+  }
+
+  // 3. ป๊อปอัป Windows/Browser
+  if("Notification" in window && Notification.permission==="granted"){
+    try{
+      const n = new Notification("น้องมูลด์เตือนตารางงาน 🐵⏰", {
+        body: `${item.time} น. - ${item.title}`
+      });
+      n.onclick = ()=>{ window.focus(); openChat(); };
+    }catch(e){}
+  }
+
+  // 4. ส่งเข้ามือถือผ่าน Telegram (ถ้าเปิดใช้งานไว้)
+  if(tgConf.enabled && !skipTg){
+    sendTelegramMessage(`🐵⏰ น้องมูลด์แจ้งเตือนตารางงาน!\n🕒 เวลา: ${item.time} น.\n📌 งาน: ${item.title}`);
+  }
+}
+
+$("testAlert").onclick=()=>{
+  saveTg();
+  triggerReminder({title:"ทดสอบแจ้งเตือนจากน้องมูลด์!", time: new Date().toTimeString().slice(0,5)});
+  $("schedDlg").close();
+};
+
+// เตือนในหน้าเว็บเมื่อ server (Edge Function) ยิงงานแล้ว — Telegram ส่งจาก server จึงข้ามฝั่งนี้
+const firedSeen=new Set();
+function localStamp(){
+  const n=new Date();
+  return `${getTodayStr()} ${String(n.getHours()).padStart(2,"0")}:${String(n.getMinutes()).padStart(2,"0")}`;
+}
+sb.channel("hub")
+  .on("postgres_changes",{event:"*",schema:"public",table:"links"},()=>loadAll())
+  .on("postgres_changes",{event:"*",schema:"public",table:"schedules"},p=>{
+    const r=p.new;
+    if(r&&r.last_fired&&r.last_fired===localStamp()){
+      const key=r.id+"|"+r.last_fired;
+      if(!firedSeen.has(key)){firedSeen.add(key);triggerReminder(fromRow(r),true)}
+    }
+    loadAll();
+  })
+  .subscribe();
+
+/* ---- เลขา IT (AI - เชื่อมต่อ /api/chat พร้อมสั่งเพิ่มตารางงานและส่ง Telegram ผ่านแชต) ---- */
+let hist=[], busy=false;
+
+function setTextWithLinks(el, text){
+  el.textContent="";
+  const urlRegex=/(https?:\/\/[^\s]+)/g;
+  const parts=String(text).split(urlRegex);
+  parts.forEach(part=>{
+    if(/^https?:\/\/[^\s]+$/.test(part)){
+      const a=document.createElement("a");
+      a.href=part;
+      a.target="_blank";
+      a.rel="noopener noreferrer";
+      a.textContent=part;
+      el.appendChild(a);
+    }else{
+      el.appendChild(document.createTextNode(part));
+    }
+  });
+}
+
+function addMsg(cls,text){
+  const row=document.createElement("div");
+  row.className="msg-row "+(cls.includes("me")?"me":"bot");
+
+  if(cls.includes("bot")){
+    const ava=document.createElement("div");
+    ava.className="bot-ava";
+    ava.innerHTML=getMonkeySVG(true);
+    row.appendChild(ava);
+  }
+
+  const d=document.createElement("div");
+  d.className="m "+cls;
+  setTextWithLinks(d, text);
+  row.appendChild(d);
+
+  $("msgs").appendChild(row);
+  $("msgs").scrollTop=1e9;
+  return d;
+}
+
+function processBotActions(rawText){
+  let cleanText = String(rawText || "");
+
+  // 1. คำสั่งเพิ่มตารางงาน: [[ADD_SCHED:ชื่องาน|HH:MM|repeat|YYYY-MM-DD]]
+  const addRegex = /\[\[ADD_SCHED:([^|\]]+)\|([0-2]?\d:[0-5]\d)(?:\|([a-zA-Z]+))?(?:\|([0-9-]+))?\]\]/g;
+  let match;
+  const addedItems = [];
+  while((match = addRegex.exec(cleanText)) !== null){
+    const title = match[1].trim();
+    const time = match[2].trim();
+    const repeat = (match[3] || "once").trim().toLowerCase();
+    const date = (match[4] || "").trim();
+    if(title && time){
+      const item = addScheduleItem(title, time, repeat, date);
+      addedItems.push(item);
+    }
+  }
+  cleanText = cleanText.replace(addRegex, "").trim();
+
+  // 2. คำสั่งลบตารางงาน: [[DEL_SCHED:คำค้นชื่องาน]]
+  const delRegex = /\[\[DEL_SCHED:([^\]]+)\]\]/g;
+  const removedTitles = [];
+  while((match = delRegex.exec(cleanText)) !== null){
+    const keyword = match[1].trim().toLowerCase();
+    if(keyword){
+      schedules.forEach(s=>{
+        if(s.title.toLowerCase().includes(keyword) || s.time === keyword){
+          removedTitles.push(s.title);
+        }
+      });
+      dbDelSched(schedules.filter(s=>s.title.toLowerCase().includes(keyword)||s.time===keyword).map(s=>s.id));
+      schedules = schedules.filter(s => !(s.title.toLowerCase().includes(keyword) || s.time === keyword));
+      saveScheds();
+      if($("schedDlg").open) renderScheds();
+    }
+  }
+  cleanText = cleanText.replace(delRegex, "").trim();
+
+  // 3. คำสั่งส่งข้อความเข้า Telegram ทันที: [[SEND_TG:ข้อความที่ต้องการส่ง]]
+  const tgRegex = /\[\[SEND_TG:([\s\S]*?)\]\]/g;
+  const tgMessages = [];
+  while((match = tgRegex.exec(cleanText)) !== null){
+    const msgToSend = match[1].trim();
+    if(msgToSend) tgMessages.push(msgToSend);
+  }
+  cleanText = cleanText.replace(tgRegex, "").trim();
+
+  return { cleanText, addedItems, removedTitles, tgMessages };
+}
+
+async function ask(text){
+  hist.push({role:"user",content:text});
+  const bubble=addMsg("bot","กำลังคิดคำตอบแป๊บนึงนะ… 🍌");
+  busy=true;
+  $("cs").disabled=true;
+
+  try{
+    const cleanLinks=links
+      .filter(l=>l.url&&l.url!=="#chat"&&!l.url.includes("claude.ai"))
+      .map(l=>({name:l.name,url:l.url}));
+
+    const activeScheds=schedules
+      .filter(s=>s.enabled)
+      .map(s=>({title:s.title,time:s.time,repeat:repeatLabel(s)}));
+
+    const now = new Date();
+    const clientNow = `${getTodayStr()} ${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")}`;
+
+    const res=await fetch("/api/chat",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        messages:hist.slice(-10),
+        links:cleanLinks,
+        schedules:activeScheds,
+        clientNow:clientNow
+      })
+    });
+
+    const data=await res.json().catch(()=>({}));
+
+    if(!res.ok){
+      hist.pop();
+      if(res.status===429){
+        bubble.textContent="ถามรัวเกินไปแล้วจ้า พักสักครู่แล้วลองถามใหม่นะ 😅";
+      }else if(data.error==="missing_api_key"){
+        bubble.textContent="ยังไม่ได้ตั้งค่า GROQ_API_KEY ในระบบ Vercel เลยจ้า";
+      }else{
+        bubble.textContent="ขออภัย ระบบขัดข้อง (" + res.status + "): " + (data.error || "ไม่ทราบสาเหตุ");
+      }
+    }else{
+      const { cleanText, addedItems, removedTitles, tgMessages } = processBotActions(data.text);
+      const displayReply = cleanText || "จัดการให้เรียบร้อยแล้วจ้า 🐵✨";
+      setTextWithLinks(bubble, displayReply);
+      hist.push({role:"assistant",content:displayReply});
+
+      addedItems.forEach(item=>{
+        addMsg("bot sys-ok", `✅ บันทึกตารางงานแล้ว: "${item.title}" เวลา ${item.time} น. (${repeatLabel(item)})`);
+      });
+      if(removedTitles.length){
+        addMsg("bot sys-ok", `🗑️ ลบตารางงานแล้ว: ${removedTitles.join(", ")}`);
+      }
+      for(const tgMsg of tgMessages){
+        const r = await sendTelegramMessage(`🐵 ข้อความจากน้องมูลด์:\n${tgMsg}`);
+        if(r.ok){
+          addMsg("bot sys-ok", `✈️ ส่งข้อความเข้า Telegram เรียบร้อยแล้วจ้า`);
+        }else{
+          addMsg("bot remind", `⚠️ ส่งเข้า Telegram ไม่สำเร็จ: ${r.error}`);
+        }
+      }
+    }
+  }catch(e){
+    hist.pop();
+    bubble.textContent="เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ลองเช็กอินเทอร์เน็ตหรือลองใหม่อีกครั้งนะ";
+  }
+
+  busy=false;
+  $("cs").disabled=false;
+  $("ci").focus();
+  $("msgs").scrollTop=1e9;
+}
+
+$("fab").onclick=openChat;
+$("cx").onclick=()=>{$("chat").hidden=true;$("fab").hidden=false};
+$("cf").onsubmit=e=>{
+  e.preventDefault();
+  const t=$("ci").value.trim();
+  if(!t||busy)return;
+  $("ci").value="";
+  addMsg("me",t);
+  ask(t);
+};
+
+  /* ---- ระบบ PWA (ทำให้ติดตั้งลงหน้าจอมือถือเหมือนแอปจริง พร้อมไอคอนน้องมูลด์) ---- */
+(function initPWA(){
+  try{
+    const svgStr = getMonkeySVG(true);
+    const svgBlob = new Blob([svgStr], {type:"image/svg+xml;charset=utf-8"});
+    const url = URL.createObjectURL(svgBlob);
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement("canvas");
+      c.width = 192; c.height = 192;
+      const ctx = c.getContext("2d");
+      // วาดพื้นหลังสีครีมอ่อนและกรอบวงกลม
+      ctx.fillStyle = "#fff8eb";
+      ctx.fillRect(0, 0, 192, 192);
+      ctx.drawImage(img, 12, 12, 168, 168);
+      URL.revokeObjectURL(url);
+
+      const iconPng = c.toDataURL("image/png");
+
+      // 1. ตั้งเป็น Favicon และ Apple Touch Icon (สำหรับ iPhone/iPad)
+      const appleIcon = document.createElement("link");
+      appleIcon.rel = "apple-touch-icon";
+      appleIcon.href = iconPng;
+      document.head.appendChild(appleIcon);
+
+      const favIcon = document.createElement("link");
+      favIcon.rel = "icon";
+      favIcon.href = iconPng;
+      document.head.appendChild(favIcon);
+
+      // 2. สร้าง Web App Manifest (สำหรับ Android / Chrome / Edge)
+      const manifest = {
+        name: "IT Link Hub & น้องมูลด์",
+        short_name: "IT Hub",
+        start_url: location.origin + location.pathname,
+        display: "standalone",
+        background_color: "#eaf2f1",
+        theme_color: "#0b6e8a",
+        icons: [
+          { src: iconPng, sizes: "192x192", type: "image/png" },
+          { src: iconPng, sizes: "512x512", type: "image/png" }
+        ]
+      };
+      const mBlob = new Blob([JSON.stringify(manifest)], {type:"application/manifest+json"});
+      const mLink = document.createElement("link");
+      mLink.rel = "manifest";
+      mLink.href = URL.createObjectURL(mBlob);
+      document.head.appendChild(mLink);
+    };
+    img.src = url;
+  }catch(e){}
+})();
+
+</script>
+</body>
+</html>
