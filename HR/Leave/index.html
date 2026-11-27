@@ -114,8 +114,8 @@ function quotaFor(emp, key, months){
     case "personal_paid":   return 6;
     case "personal_unpaid": return 6;
     case "sick":            return 30;
-    case "maternity":       return isFemale(emp.prefix) ? 90 : null; // null = ไม่มีสิทธิ์
-    case "military":        return isMale(emp.prefix)   ? 3  : null;
+    case "maternity":       return emp.gender === "F" ? 90 : null; // null = ไม่มีสิทธิ์
+    case "military":        return emp.gender === "M" ? 3  : null;
   }
 }
 
@@ -137,16 +137,36 @@ function daysHours(d){ // 1.5 วัน -> "1 วัน 4 ชม."
 let EMPS = [], USED = {}, YEAR = new Date().getFullYear();
 
 async function load(){
-  const c = T.cols;
-  const { data: emps, error: e1 } = await sb.from(T.employees)
-    .select(`${c.id},${c.code},${c.prefix},${c.first},${c.last},${c.hire}`);
+  const { data: emps, error: e1 } = await sb.from(T.employees).select("*");
   if (e1) return alert("โหลดพนักงานไม่สำเร็จ: "+e1.message);
+  if (!emps.length) return alert("ไม่พบข้อมูลในตาราง "+T.employees+" (ตรวจ RLS policy ว่าอนุญาตให้อ่านได้)");
+  console.log("คอลัมน์ของ employees:", Object.keys(emps[0]));
 
-  EMPS = emps.map(r => ({
-    id:r[c.id], code:r[c.code], prefix:r[c.prefix],
-    name:`${r[c.prefix]||""}${r[c.first]||""} ${r[c.last]||""}`.trim(),
-    hire:r[c.hire]
-  })).sort((a,b)=>String(a.code).localeCompare(String(b.code)));
+  const pick = (r, names) => { for (const n of names) if (r[n] != null && r[n] !== "") return r[n]; return null; };
+  const has  = (r, names) => names.some(n => n in r);
+  const PFX = /^(นางสาว|น\.ส\.|นส\.|นาย|นาง)\s*/;
+
+  EMPS = emps.map(r => {
+    const code  = pick(r, ["employee_code","emp_code","employee_id","emp_id","code","id"]);
+    let prefix  = pick(r, ["prefix","title","name_prefix","prefix_th","title_th"]);
+    let first   = pick(r, ["first_name","firstname","first_name_th","fname","name_th","name"]);
+    let last    = pick(r, ["last_name","lastname","last_name_th","lname","surname"]);
+    const full  = pick(r, ["full_name","fullname","name_th","name"]);
+    let name    = (first || last) ? `${first||""} ${last||""}`.trim() : (full || "");
+    // ถ้าไม่มีคอลัมน์คำนำหน้า ลองแยกจากต้นชื่อ
+    if (!prefix) { const m = String(name).match(PFX); if (m) prefix = m[1]; }
+    else if (!PFX.test(name)) name = prefix + name;
+    // เพศ: คำนำหน้า > คอลัมน์ gender/sex
+    let gender = null;
+    if (prefix) gender = isMale(prefix) ? "M" : isFemale(prefix) ? "F" : null;
+    if (!gender) {
+      const g = String(pick(r, ["gender","sex"]) || "").trim().toLowerCase();
+      if (["ชาย","male","m"].includes(g)) gender = "M";
+      else if (["หญิง","female","f"].includes(g)) gender = "F";
+    }
+    return { id:String(code), code, prefix, gender, name,
+             hire: pick(r, ["hire_date","start_date","join_date","date_hired"]) };
+  }).sort((a,b)=>String(a.code).localeCompare(String(b.code)));
 
   const { data: ls, error: e2 } = await sb.from(T.leaves)
     .select("employee_id,leave_type,days,status")
