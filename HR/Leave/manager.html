@@ -79,6 +79,10 @@ const $ = id => document.getElementById(id);
 const HOURS_PER_DAY = 8;
 const TYPE_NAME = { vacation:"ลาพักร้อน", personal_paid:"ลากิจ (รับค่าจ้าง)", personal_unpaid:"ลากิจ (ไม่รับค่าจ้าง)",
                     sick:"ลาป่วย", maternity:"ลาคลอด", military:"ลาราชการทหาร" };
+async function loadNames(){
+  const { data } = await sb.from("leave_types").select("code,name");
+  (data||[]).forEach(t => { TYPE_NAME[t.code] = t.name; });
+}
 const STATUS_TH = { pending_manager:"รอผู้จัดการฝ่าย", pending_hr:"ผ่านผู้จัดการ รอฝ่ายบุคคล", pending:"รออนุมัติ",
                     approved:"อนุมัติแล้ว", rejected:"ไม่อนุมัติ", cancelled:"พนักงานยกเลิก" };
 const ERR = {
@@ -98,6 +102,7 @@ function thaiDT(iso){ if(!iso) return "-"; const d=new Date(iso); return d.toLoc
 let VIEW = "pending";
 
 async function load(){
+  await loadNames();
   $("list").innerHTML = `<div class="muted">กำลังโหลด…</div>`;
   const { data, error } = await sb.rpc("manager_leave_requests", { p_view: VIEW });
   if (error) { $("list").innerHTML = `<div class="card err">โหลดไม่สำเร็จ: ${esc(error.message)}<br>(ตรวจว่ารัน approval_flow.sql แล้ว)</div>`; return; }
@@ -177,4 +182,4 @@ start();
 </script>
 <footer style="text-align:center;padding:16px;margin-top:24px;font-size:12px;color:#5b7391;border-top:1px solid #d6e4f5">ตรวจสอบวันลา | ใช้ภายในบริษัทเท่านั้น | พัฒนาโดย Sarawut.C</footer>
 </body>
-</html>
+</html>อ
