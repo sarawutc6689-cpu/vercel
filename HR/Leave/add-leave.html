@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>บันทึกการลา</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{--bg:#f5f6f8;--card:#fff;--text:#1f2430;--muted:#6b7280;--line:#e5e7eb;--primary:#2563eb;--ok:#16a34a;--warn:#f59e0b;--bad:#dc2626}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Sarabun","Noto Sans Thai",system-ui,sans-serif;background:var(--bg);color:var(--text)}
+  header{background:#fff;border-bottom:1px solid var(--line);padding:14px 20px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  header h1{font-size:18px;margin:0;flex:1}
+  header a{color:var(--primary);text-decoration:none;font-size:14px}
+  main{max-width:860px;margin:0 auto;padding:16px}
+  select,input,textarea,button{font:inherit;padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:#fff;width:100%}
+  button{background:var(--primary);color:#fff;border:0;cursor:pointer;width:auto}
+  button.ghost{background:#fff;color:var(--text);border:1px solid var(--line)}
+  button.small{padding:4px 10px;font-size:13px}
+  button:disabled{opacity:.6}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:16px}
+  .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:12px}
+  label{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
+  .chk{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--text);margin:0}
+  .chk input{width:auto}
+  .info{background:#f0f5ff;border:1px solid #dbe6ff;border-radius:8px;padding:10px 12px;font-size:14px;margin-bottom:12px}
+  .info b{font-size:16px}
+  .warn{background:#fffbeb;border-color:#fde68a}
+  .bad{background:#fef2f2;border-color:#fecaca;color:#991b1b}
+  .muted{color:var(--muted)}
+  .msg{font-size:14px;min-height:20px;margin:8px 0}
+  .msg.ok{color:var(--ok)} .msg.err{color:var(--bad)}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left}
+  .wrap{overflow-x:auto}
+  .tag{display:inline-block;padding:2px 8px;border-radius:99px;font-size:12px}
+  .st-approved{background:#dcfce7;color:#166534}.st-pending{background:#fef3c7;color:#92400e}
+  .st-rejected,.st-cancelled{background:#fee2e2;color:#991b1b}
+  #login{max-width:340px;margin:80px auto}
+  #login input{margin-bottom:10px}
+  .hide{display:none}
+</style>
+</head>
+<body>
+
+<script>
+const SUPABASE_URL      = "https://YOUR-PROJECT.supabase.co";
+const SUPABASE_ANON_KEY = "YOUR-ANON-KEY";
+const T = { employees:"employees", leaves:"leave_requests", holidays:"holidays" };
+const HOURS_PER_DAY = 8;
+</script>
+
+<div id="login" class="card hide">
+  <h2 style="margin-top:0">เข้าสู่ระบบ HR</h2>
+  <input id="email" type="email" placeholder="อีเมล">
+  <input id="password" type="password" placeholder="รหัสผ่าน">
+  <div class="msg err" id="loginErr"></div>
+  <button id="loginBtn" style="width:100%">เข้าสู่ระบบ</button>
+</div>
+
+<div id="app" class="hide">
+  <header>
+    <h1>บันทึกการลาของพนักงาน</h1>
+    <a href="index.html">← หน้าสรุปการลา</a>
+    <button class="ghost small" id="logout">ออกจากระบบ</button>
+  </header>
+  <main>
+    <div class="card">
+      <div class="row">
+        <div>
+          <label>ค้นหาพนักงาน</label>
+          <input id="empSearch" placeholder="พิมพ์ชื่อหรือรหัส">
+        </div>
+        <div>
+          <label>พนักงาน</label>
+          <select id="emp"></select>
+        </div>
+      </div>
+
+      <div id="empInfo" class="info hide"></div>
+
+      <div class="row">
+        <div>
+          <label>ประเภทการลา</label>
+          <select id="type"></select>
+        </div>
+        <div id="modeBox" class="hide">
+          <label>รูปแบบการลา</label>
+          <select id="mode">
+            <option value="day">เต็มวัน / หลายวัน</option>
+            <option value="hour">รายชั่วโมง</option>
+          </select>
+        </div>
+        <div>
+          <label>สถานะ</label>
+          <select id="status">
+            <option value="approved">อนุมัติแล้ว</option>
+            <option value="pending">รออนุมัติ</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div><label>วันที่เริ่มลา</label><input type="date" id="start"></div>
+        <div id="endBox"><label>ถึงวันที่</label><input type="date" id="end"></div>
+        <div id="hoursBox" class="hide"><label>จำนวนชั่วโมง</label><input type="number" id="hours" min="0.5" step="0.5" placeholder="เช่น 2"></div>
+      </div>
+
+      <div class="row" id="optDay">
+        <label class="chk"><input type="checkbox" id="countSat"> นับวันเสาร์เป็นวันทำงาน</label>
+        <label class="chk"><input type="checkbox" id="skipHol" checked> ไม่นับวันหยุดนักขัตฤกษ์ (ตาราง holidays)</label>
+      </div>
+
+      <div class="row">
+        <div style="grid-column:1/-1"><label>เหตุผล (ถ้ามี)</label><textarea id="reason" rows="2"></textarea></div>
+      </div>
+
+      <div id="calc" class="info hide"></div>
+      <div class="msg" id="msg"></div>
+      <button id="save">บันทึกการลา</button>
+    </div>
+
+    <div class="card">
+      <b>ประวัติการลาของพนักงานคนนี้ (ปี <span id="histYear"></span>)</b>
+      <div class="wrap"><table id="hist" style="margin-top:8px"></table></div>
+    </div>
+  </main>
+</div>
+
+<script>
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+/* ---------- กติกาการลา (ให้ตรงกับ index.html) ---------- */
+const LEAVE_TYPES = [
+  { key:"vacation",        name:"ลาพักร้อน",           hourly:false },
+  { key:"personal_paid",   name:"ลากิจ (รับค่าจ้าง)",    hourly:true  },
+  { key:"personal_unpaid", name:"ลากิจ (ไม่รับค่าจ้าง)", hourly:true  },
+  { key:"sick",            name:"ลาป่วย",              hourly:false },
+  { key:"maternity",       name:"ลาคลอด",              hourly:false },
+  { key:"military",        name:"ลาราชการทหาร",        hourly:false },
+];
+const TYPE = Object.fromEntries(LEAVE_TYPES.map(t=>[t.key,t]));
+const STATUS_TH = { pending:"รออนุมัติ", approved:"อนุมัติแล้ว", rejected:"ไม่อนุมัติ", cancelled:"ยกเลิก" };
+function vacationQuota(m){ if(m<4) return 0; if(m<24) return 6; if(m<36) return 7; return 8; }
+const isFemale = p => ["นางสาว","น.ส.","นส.","นาง"].includes((p||"").trim());
+const isMale   = p => (p||"").trim() === "นาย";
+const PFX = /^(นางสาว|น\.ส\.|นส\.|นาย|นาง)\s*/;
+function quotaFor(gender,key,months){
+  switch(key){
+    case "vacation":        return vacationQuota(months);
+    case "personal_paid":   return 6;
+    case "personal_unpaid": return 6;
+    case "sick":            return 30;
+    case "maternity":       return gender==="F" ? 90 : null;
+    case "military":        return gender==="M" ? 3  : null;
+  }
+}
+function monthsBetween(from,to){
+  const a=new Date(from), b=new Date(to);
+  let m=(b.getFullYear()-a.getFullYear())*12+(b.getMonth()-a.getMonth());
+  if(b.getDate()<a.getDate()) m--;
+  return Math.max(m,0);
+}
+const tenureText = m => (m>=12?`${Math.floor(m/12)} ปี `:"")+`${m%12} เดือน`;
+const fmt = n => Number.isInteger(n) ? n : Number(n.toFixed(3)).toString();
+const esc = s => String(s ?? "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function daysHours(d){ const w=Math.floor(d+1e-9), h=Math.round((d-w)*HOURS_PER_DAY); return h?`${w} วัน ${h} ชม.`:`${w} วัน`; }
+function thaiDate(iso){ if(!iso) return "-"; const [y,m,d]=iso.slice(0,10).split("-"); return `${d}/${m}/${Number(y)+543}`; }
+const $ = id => document.getElementById(id);
+
+/* ---------- state ---------- */
+let EMPS = [], HOLIDAYS = new Set(), CUR = null, USED = {}, CALC = null;
+
+async function loadEmployees(){
+  const { data, error } = await sb.from(T.employees).select("*");
+  if (error) return setMsg("โหลดพนักงานไม่สำเร็จ: "+error.message, "err");
+  const pick=(r,n)=>{ for(const k of n) if(r[k]!=null&&r[k]!=="") return r[k]; return null; };
+  EMPS = data.map(r=>{
+    const code = pick(r,["employee_code","emp_code","employee_id","emp_id","code","id"]);
+    let prefix = pick(r,["prefix","title","name_prefix","prefix_th","title_th"]);
+    const first = pick(r,["first_name","firstname","first_name_th","fname"]);
+    const last  = pick(r,["last_name","lastname","last_name_th","lname","surname"]);
+    const full  = pick(r,["full_name","fullname","name_th","name"]);
+    let name = (first||last) ? `${first||""} ${last||""}`.trim() : (full||"");
+    if (!prefix){ const m=String(name).match(PFX); if(m) prefix=m[1]; }
+    else if (!PFX.test(name)) name = prefix+name;
+    let gender = prefix ? (isMale(prefix)?"M":isFemale(prefix)?"F":null) : null;
+    if (!gender){ const g=String(pick(r,["gender","sex"])||"").trim().toLowerCase();
+      if(["ชาย","male","m"].includes(g)) gender="M"; else if(["หญิง","female","f"].includes(g)) gender="F"; }
+    return { id:String(code), code, name, gender, hire: pick(r,["hire_date","start_date","join_date","date_hired"]) };
+  }).sort((a,b)=>String(a.code).localeCompare(String(b.code)));
+  fillEmpSelect();
+}
+
+async function loadHolidays(){
+  HOLIDAYS = new Set();
+  const { data, error } = await sb.from(T.holidays).select("*");
+  if (error || !data) return;   // ไม่มีตาราง/อ่านไม่ได้ = ข้าม
+  for (const r of data){
+    const v = ["holiday_date","date","day","holiday"].map(k=>r[k]).find(x=>x);
+    if (v) HOLIDAYS.add(String(v).slice(0,10));
+  }
+}
+
+function fillEmpSelect(){
+  const q = $("empSearch").value.trim().toLowerCase();
+  const list = EMPS.filter(e=>!q||e.name.toLowerCase().includes(q)||String(e.code||"").toLowerCase().includes(q));
+  $("emp").innerHTML = `<option value="">— เลือกพนักงาน (${list.length} คน) —</option>` +
+    list.map(e=>`<option value="${esc(e.id)}">${esc(e.code)} · ${esc(e.name)}</option>`).join("");
+  if (q && list.length===1){ $("emp").value = list[0].id; onEmpChange(); }
+}
+
+function year(){ return Number((($("start").value)||new Date().toISOString()).slice(0,4)); }
+function asOfDate(){ const y=year(), now=new Date(); return y>=now.getFullYear()?now:new Date(y,11,31); }
+
+async function onEmpChange(){
+  CUR = EMPS.find(e=>e.id===$("emp").value) || null;
+  await refreshEmp();
+}
+
+async function refreshEmp(){
+  USED = {};
+  if (!CUR){ $("empInfo").classList.add("hide"); $("type").innerHTML=""; $("hist").innerHTML=""; calcDays(); return; }
+  const y = year();
+  $("histYear").textContent = y+543;
+  const { data, error } = await sb.from(T.leaves).select("*")
+    .eq("employee_id", CUR.id).gte("start_date",`${y}-01-01`).lte("start_date",`${y}-12-31`)
+    .order("start_date",{ascending:false});
+  if (error) return setMsg("โหลดประวัติไม่สำเร็จ: "+error.message+" (ตรวจว่ารัน leave_requests.sql แล้ว)","err");
+  for (const l of data){
+    if (l.status==="approved"||l.status==="pending"){
+      const u=(USED[l.leave_type]??={approved:0,pending:0}); u[l.status]+=Number(l.days);
+    }
+  }
+  renderTypes(); renderHist(data); calcDays();
+}
+
+function monthsNow(){ return CUR && CUR.hire ? monthsBetween(CUR.hire, asOfDate()) : 0; }
+function remainOf(key){
+  const q = quotaFor(CUR.gender,key,monthsNow());
+  if (q==null) return null;
+  const u = USED[key]||{approved:0,pending:0};
+  return { quota:q, used:u.approved+u.pending, remain:q-u.approved-u.pending };
+}
+
+function renderTypes(){
+  const keep = $("type").value;
+  $("type").innerHTML = LEAVE_TYPES.map(t=>{
+    const r = remainOf(t.key);
+    return r ? `<option value="${t.key}">${t.name} (คงเหลือ ${fmt(r.remain)} วัน)</option>`
+             : `<option value="${t.key}" disabled>${t.name} (ไม่มีสิทธิ์)</option>`;
+  }).join("");
+  if (keep && !$("type").selectedOptions[0]?.disabled) $("type").value = keep;
+  if ($("type").selectedOptions[0]?.disabled){
+    const first = [...$("type").options].find(o=>!o.disabled); if(first) $("type").value = first.value;
+  }
+  const m = monthsNow();
+  $("empInfo").classList.remove("hide");
+  $("empInfo").innerHTML = `<b>${esc(CUR.name)}</b> <span class="muted">(${esc(CUR.code)})</span><br>
+    เริ่มงาน ${thaiDate(CUR.hire)} · อายุงาน ${tenureText(m)}`;
+  onTypeChange();
+}
+
+function renderHist(rows){
+  $("hist").innerHTML = rows.length
+    ? `<thead><tr><th>วันที่ลา</th><th>ประเภท</th><th>จำนวน</th><th>สถานะ</th><th></th></tr></thead><tbody>${
+      rows.map(l=>`<tr>
+        <td>${thaiDate(l.start_date)}${l.end_date!==l.start_date?` – ${thaiDate(l.end_date)}`:""}</td>
+        <td>${esc(TYPE[l.leave_type]?.name||l.leave_type)}</td>
+        <td>${l.hours?`${fmt(Number(l.hours))} ชม.`:daysHours(Number(l.days))}</td>
+        <td><span class="tag st-${esc(l.status)}">${esc(STATUS_TH[l.status]||l.status)}</span></td>
+        <td>${l.status==="cancelled"||l.status==="rejected"?"":`<button class="ghost small" data-cancel="${esc(l.id)}">ยกเลิก</button>`}</td>
+      </tr>`).join("")}</tbody>`
+    : `<tbody><tr><td class="muted">ยังไม่มีรายการลาในปีนี้</td></tr></tbody>`;
+  document.querySelectorAll("[data-cancel]").forEach(b=>b.onclick=async()=>{
+    if(!confirm("ยืนยันยกเลิกรายการลานี้?")) return;
+    const { error } = await sb.from(T.leaves).update({status:"cancelled"}).eq("id", b.dataset.cancel);
+    if (error) return setMsg("ยกเลิกไม่สำเร็จ: "+error.message,"err");
+    setMsg("ยกเลิกรายการแล้ว","ok"); refreshEmp();
+  });
+}
+
+/* ---------- คำนวณจำนวนวัน ---------- */
+const ymd = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+function countDays(s, e){
+  const sat = $("countSat").checked, skip = $("skipHol").checked;
+  let n = 0, d = new Date(+s.slice(0,4), +s.slice(5,7)-1, +s.slice(8,10));
+  const end = new Date(+e.slice(0,4), +e.slice(5,7)-1, +e.slice(8,10));
+  for (; d <= end; d.setDate(d.getDate()+1)){
+    const w = d.getDay();
+    if (w===0) continue;
+    if (w===6 && !sat) continue;
+    if (skip && HOLIDAYS.has(ymd(d))) continue;
+    n++;
+  }
+  return n;
+}
+
+function onTypeChange(){
+  const t = TYPE[$("type").value];
+  const hourlyOk = !!t?.hourly;
+  $("modeBox").classList.toggle("hide", !hourlyOk);
+  if (!hourlyOk) $("mode").value = "day";
+  const hourly = $("mode").value==="hour";
+  $("hoursBox").classList.toggle("hide", !hourly);
+  $("endBox").classList.toggle("hide", hourly);
+  $("optDay").classList.toggle("hide", hourly);
+  calcDays();
+}
+
+function calcDays(){
+  CALC = null;
+  const box = $("calc");
+  if (!CUR || !$("start").value){ box.classList.add("hide"); return; }
+  const key = $("type").value, hourly = $("mode").value==="hour";
+  let days = 0, hours = null, s = $("start").value, e = hourly ? s : ($("end").value || s);
+  if (e < s){ box.className="info bad"; box.textContent="วันที่สิ้นสุดต้องไม่ก่อนวันที่เริ่ม"; return; }
+  if (hourly){
+    hours = Number($("hours").value);
+    if (!hours || hours<=0){ box.classList.add("hide"); return; }
+    days = hours / HOURS_PER_DAY;
+  } else {
+    days = countDays(s, e);
+    if (days===0){ box.className="info warn"; box.textContent="ช่วงวันที่เลือกไม่มีวันทำงาน (เสาร์-อาทิตย์/วันหยุด)"; return; }
+  }
+  const r = key && CUR ? remainOf(key) : null;
+  const after = r ? r.remain - days : null;
+  box.className = "info" + (after!=null && after<0 ? " warn" : "");
+  box.innerHTML = `จำนวนที่ลา: <b>${hourly?`${fmt(hours)} ชม. (${fmt(days)} วัน)`:daysHours(days)}</b>` +
+    (r ? `<br>คงเหลือก่อนลา ${fmt(r.remain)} วัน → หลังลา <b>${fmt(after)}</b> วัน${after<0?" ⚠ เกินสิทธิ์":""}` : "");
+  CALC = { days, hours, start:s, end:e, over: after!=null && after<0 };
+}
+
+/* ---------- บันทึก ---------- */
+function setMsg(t,k){ const m=$("msg"); m.textContent=t||""; m.className="msg "+(k||""); }
+
+async function save(){
+  setMsg("");
+  if (!CUR) return setMsg("เลือกพนักงานก่อน","err");
+  if (!$("start").value) return setMsg("เลือกวันที่เริ่มลา","err");
+  calcDays();
+  if (!CALC) return setMsg("ตรวจสอบวันที่/จำนวนชั่วโมงอีกครั้ง","err");
+  if (CALC.over && !confirm("จำนวนวันลาเกินสิทธิ์คงเหลือ ต้องการบันทึกต่อหรือไม่?")) return;
+  if (CALC.start.slice(0,4) !== CALC.end.slice(0,4))
+    return setMsg("ช่วงลาข้ามปี กรุณาแยกบันทึกเป็นสองรายการ","err");
+
+  $("save").disabled = true;
+  const { error } = await sb.from(T.leaves).insert({
+    employee_id: CUR.id, leave_type: $("type").value,
+    start_date: CALC.start, end_date: CALC.end,
+    hours: CALC.hours, days: CALC.days,
+    status: $("status").value, reason: $("reason").value.trim() || null
+  });
+  $("save").disabled = false;
+  if (error) return setMsg("บันทึกไม่สำเร็จ: "+error.message+" (ตรวจว่ารัน leave_write_policy.sql แล้ว)","err");
+  setMsg("บันทึกการลาเรียบร้อย","ok");
+  $("reason").value=""; $("hours").value=""; 
+  refreshEmp();
+}
+
+/* ---------- Auth + events ---------- */
+async function start(){
+  const { data:{ session } } = await sb.auth.getSession();
+  $("login").classList.toggle("hide", !!session);
+  $("app").classList.toggle("hide", !session);
+  if (session){
+    $("start").value = ymd(new Date());
+    await Promise.all([loadEmployees(), loadHolidays()]);
+  }
+}
+$("loginBtn").onclick = async ()=>{
+  const { error } = await sb.auth.signInWithPassword({ email:$("email").value, password:$("password").value });
+  if (error) $("loginErr").textContent = error.message; else start();
+};
+$("logout").onclick = async ()=>{ await sb.auth.signOut(); start(); };
+$("empSearch").oninput = fillEmpSelect;
+$("emp").onchange = onEmpChange;
+$("type").onchange = ()=>{ onTypeChange(); };
+$("mode").onchange = onTypeChange;
+$("start").onchange = ()=>{ if(!$("end").value || $("end").value<$("start").value) $("end").value=$("start").value; refreshEmp(); };
+["end","hours","countSat","skipHol"].forEach(id=>$(id).addEventListener("input",calcDays));
+$("save").onclick = save;
+start();
+</script>
+</body>
+</html>
