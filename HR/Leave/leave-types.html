@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>จัดการประเภทการลา</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{--bg:#eaf3fd;--card:#fff;--text:#1e3a5f;--muted:#5b7391;--line:#d6e4f5;--primary:#1d6fd8;--ok:#16a34a;--warn:#f59e0b;--bad:#dc2626}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Sarabun","Noto Sans Thai",system-ui,sans-serif;background:var(--bg);color:var(--text)}
+  header{background:linear-gradient(90deg,#1558b8,#2f8cf0);color:#fff;padding:14px 20px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  header h1{font-size:18px;margin:0;flex:1}
+  header a{color:#fff;text-decoration:none;font-size:14px}
+  main{max-width:960px;margin:0 auto;padding:16px}
+  select,input,textarea,button{font:inherit;padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:#fff}
+  button{background:var(--primary);color:#fff;border:0;cursor:pointer}
+  button.ghost{background:#fff;color:var(--text);border:1px solid var(--line)}
+  button.small{padding:4px 10px;font-size:13px}
+  button:disabled{opacity:.6}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:16px}
+  .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:12px}
+  .row input,.row select{width:100%}
+  label{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
+  .chk{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--text);margin:0}
+  .chk input{width:auto}
+  .muted{color:var(--muted)}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  .wrap{overflow-x:auto}
+  .tag{display:inline-block;padding:2px 8px;border-radius:99px;font-size:12px;background:#dbeafe;color:#1e40af}
+  .tag.off{background:#f1f5f9;color:#64748b}
+  .tag.on{background:#dcfce7;color:#166534}
+  .tiers .t{display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap}
+  .tiers input{width:100px}
+  .info{background:#f0f5ff;border:1px solid #dbe6ff;border-radius:8px;padding:10px 12px;font-size:13px;margin-bottom:12px}
+  .info.warn{background:#fffbeb;border-color:#fde68a}
+  .msg{font-size:14px;min-height:20px;margin:8px 0}
+  .msg.ok{color:var(--ok)} .msg.er{color:var(--bad)}
+  #login{max-width:340px;margin:80px auto}
+  #login input{width:100%;margin-bottom:10px}
+  .hide{display:none}
+  code{background:#eef4fb;padding:1px 6px;border-radius:6px;font-size:12px}
+</style>
+</head>
+<body>
+
+<script>
+const SUPABASE_URL      = "https://ppzdyvomrfiitahxwrwz.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBwemR5dm9tcmZpaXRhaHh3cnd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwMjQ0MjIsImV4cCI6MjEwNDYwMDQyMn0.iArUz6swMfwhFT_1qEvCwK1B3aiCxdWt46_FBjT6_Y0";
+</script>
+
+<div id="login" class="card hide">
+  <h2 style="margin-top:0">เข้าสู่ระบบ HR</h2>
+  <input id="email" type="email" placeholder="อีเมล" autocomplete="username">
+  <input id="password" type="password" placeholder="รหัสผ่าน" autocomplete="current-password">
+  <div class="msg er" id="loginErr"></div>
+  <button id="loginBtn" style="width:100%">เข้าสู่ระบบ</button>
+  <p style="font-size:13px;text-align:center;margin:12px 0 0"><a href="index.html" style="color:var(--primary);text-decoration:none">← กลับหน้าหลัก</a></p>
+</div>
+
+<div id="app" class="hide">
+  <header>
+    <h1>จัดการประเภทการลา</h1>
+    <a href="index.html">หน้าหลัก</a>
+    <a href="summary.html">หน้าสรุปการลา</a>
+    <button class="ghost small" id="logout">ออกจากระบบ</button>
+  </header>
+  <main>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+        <b>ประเภทการลาทั้งหมด</b>
+        <button id="newBtn">+ เพิ่มประเภทการลา</button>
+      </div>
+      <div class="msg" id="listMsg"></div>
+      <div class="wrap"><table id="tbl"></table></div>
+      <p class="muted" style="font-size:12px;margin-bottom:0">ไม่มีการลบประเภทการลา — ถ้าไม่ใช้แล้วให้ "ปิดใช้งาน" เพื่อให้ประวัติใบลาเก่ายังแสดงชื่อได้ถูกต้อง</p>
+    </div>
+
+    <div class="card hide" id="formCard">
+      <b id="formTitle">เพิ่มประเภทการลา</b>
+      <div class="info warn hide" id="editWarn" style="margin-top:10px">
+        การแก้ไขสิทธิ์วันลามีผลทันทีกับยอดคงเหลือของพนักงานทุกคน รวมถึงใบลาที่ยื่นไปแล้วของปีนั้น
+      </div>
+      <div class="row" style="margin-top:12px">
+        <div><label>ชื่อประเภทการลา</label><input id="fname" maxlength="80" placeholder="เช่น ลาบวช, ลาไปช่วยงานศพ"></div>
+        <div><label>เพศที่มีสิทธิ์ (ดูจากคำนำหน้าชื่อ)</label>
+          <select id="fgender">
+            <option value="all">ทุกคน</option>
+            <option value="F">หญิงเท่านั้น (นางสาว / น.ส. / นาง)</option>
+            <option value="M">ชายเท่านั้น (นาย)</option>
+          </select>
+        </div>
+        <div><label>ลำดับการแสดง (น้อยไปมาก)</label><input id="fsort" type="number" step="1"></div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label>วิธีกำหนดสิทธิ์</label>
+          <select id="fmode">
+            <option value="fixed">จำนวนวันคงที่ต่อปี</option>
+            <option value="tenure">ตามอายุงาน (นับจาก hire_date)</option>
+          </select>
+        </div>
+        <div id="fixedBox"><label>สิทธิ์ (วันต่อปี)</label><input id="fdays" type="number" min="0" step="0.5" value="0"></div>
+      </div>
+
+      <div id="tenureBox" class="hide">
+        <label>ช่วงอายุงานและสิทธิ์ (ใช้ช่วงที่ตรงกับอายุงานปัจจุบันของพนักงาน)</label>
+        <div class="tiers" id="tiers"></div>
+        <button class="ghost small" id="addTier" type="button">+ เพิ่มช่วง</button>
+        <div class="muted" style="font-size:12px;margin:6px 0 12px">ถ้าอายุงานน้อยกว่าช่วงแรกสุด จะได้ 0 วัน เช่น ตั้ง "4 เดือน = 6 วัน" แปลว่าต่ำกว่า 4 เดือนได้ 0 วัน</div>
+      </div>
+
+      <div class="row">
+        <label class="chk"><input type="checkbox" id="fhourly"> ลารายชั่วโมงได้ (8 ชม. = 1 วัน)</label>
+        <label class="chk"><input type="checkbox" id="factive" checked> เปิดใช้งาน (ให้พนักงานยื่นลาประเภทนี้ได้)</label>
+      </div>
+
+      <div class="msg" id="msg"></div>
+      <div style="display:flex;gap:8px">
+        <button id="save">บันทึก</button>
+        <button class="ghost" id="cancel">ยกเลิก</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const GENDER_TH = { all:"ทุกคน", F:"หญิงเท่านั้น", M:"ชายเท่านั้น" };
+
+let TYPES = [], EDIT = null;   // EDIT = รหัสของประเภทที่กำลังแก้ (null = เพิ่มใหม่)
+
+function msg(id, t, k){ const m=$(id); m.textContent=t||""; m.className="msg "+(k||""); }
+const fmt = n => Number.isInteger(Number(n)) ? String(Number(n)) : String(Number(n));
+
+function quotaText(t){
+  if (t.quota_mode==="tenure"){
+    const tiers=[...(t.tenure_tiers||[])].sort((a,b)=>a.min_months-b.min_months);
+    return "ตามอายุงาน: " + tiers.map(x=>`${x.min_months>=12&&x.min_months%12===0?x.min_months/12+" ปี":x.min_months+" ด."} = ${fmt(x.days)}`).join(" · ") + " วัน";
+  }
+  return `${fmt(t.quota_days)} วัน/ปี`;
+}
+
+async function load(){
+  msg("listMsg","");
+  const { data, error } = await sb.from("leave_types").select("*").order("sort_order").order("created_at");
+  if (error){ msg("listMsg","โหลดไม่สำเร็จ: "+error.message+" (ตรวจว่ารัน leave_types.sql แล้ว และบัญชีนี้อยู่ใน hr_users / hr_admins)","er"); return; }
+  TYPES = data;
+  $("tbl").innerHTML = `<thead><tr><th>ชื่อ</th><th>สิทธิ์</th><th>ผู้มีสิทธิ์</th><th>รายชั่วโมง</th><th>สถานะ</th><th></th></tr></thead><tbody>${
+    TYPES.map(t=>`<tr>
+      <td><b>${esc(t.name)}</b><div class="muted" style="font-size:12px"><code>${esc(t.code)}</code></div></td>
+      <td>${esc(quotaText(t))}</td>
+      <td>${esc(GENDER_TH[t.gender]||t.gender)}</td>
+      <td>${t.hourly_allowed?'<span class="tag">ได้</span>':'<span class="muted">-</span>'}</td>
+      <td><span class="tag ${t.active?'on':'off'}">${t.active?'เปิดใช้งาน':'ปิดใช้งาน'}</span></td>
+      <td style="white-space:nowrap"><button class="ghost small" data-edit="${esc(t.code)}">แก้ไข</button>
+          <button class="ghost small" data-toggle="${esc(t.code)}">${t.active?'ปิดใช้งาน':'เปิดใช้งาน'}</button></td>
+    </tr>`).join("")}</tbody>`;
+  document.querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>openForm(b.dataset.edit));
+  document.querySelectorAll("[data-toggle]").forEach(b=>b.onclick=()=>toggle(b.dataset.toggle));
+}
+
+/* ---------- ช่วงอายุงาน ---------- */
+function addTierRow(min="", days=""){
+  const d=document.createElement("div"); d.className="t";
+  d.innerHTML=`<span>ตั้งแต่อายุงาน</span><input type="number" min="0" step="1" class="tm" value="${esc(min)}" placeholder="เดือน"><span>เดือน ได้</span>
+    <input type="number" min="0" step="0.5" class="td" value="${esc(days)}" placeholder="วัน"><span>วัน</span>
+    <button type="button" class="ghost small">ลบ</button>`;
+  d.querySelector("button").onclick=()=>d.remove();
+  $("tiers").appendChild(d);
+}
+
+function setMode(){
+  const tenure = $("fmode").value==="tenure";
+  $("tenureBox").classList.toggle("hide", !tenure);
+  $("fixedBox").classList.toggle("hide", tenure);
+}
+
+/* ---------- ฟอร์ม ---------- */
+function openForm(code){
+  EDIT = code || null;
+  const t = code ? TYPES.find(x=>x.code===code) : null;
+  $("formCard").classList.remove("hide");
+  $("formTitle").textContent = t ? `แก้ไข: ${t.name}` : "เพิ่มประเภทการลา";
+  $("editWarn").classList.toggle("hide", !t);
+  $("fname").value   = t?.name || "";
+  $("fgender").value = t?.gender || "all";
+  $("fsort").value   = t?.sort_order ?? (Math.max(0, ...TYPES.map(x=>x.sort_order)) + 10);
+  $("fmode").value   = t?.quota_mode || "fixed";
+  $("fdays").value   = t ? Number(t.quota_days) : 0;
+  $("fhourly").checked = !!t?.hourly_allowed;
+  $("factive").checked = t ? t.active : true;
+  $("tiers").innerHTML = "";
+  const tiers = t?.tenure_tiers?.length ? [...t.tenure_tiers].sort((a,b)=>a.min_months-b.min_months) : [{min_months:0,days:0}];
+  tiers.forEach(x=>addTierRow(x.min_months, x.days));
+  setMode(); msg("msg","");
+  $("formCard").scrollIntoView({behavior:"smooth"});
+}
+function closeForm(){ $("formCard").classList.add("hide"); EDIT=null; }
+
+function collect(){
+  const name = $("fname").value.trim();
+  if (!name) return { error:"กรุณากรอกชื่อประเภทการลา" };
+  if (TYPES.some(t=>t.name.trim()===name && t.code!==EDIT)) return { error:"มีประเภทการลาชื่อนี้อยู่แล้ว" };
+
+  const mode = $("fmode").value;
+  const row = { name, gender:$("fgender").value, quota_mode:mode,
+                hourly_allowed:$("fhourly").checked, active:$("factive").checked,
+                sort_order: Number.isFinite(parseInt($("fsort").value)) ? parseInt($("fsort").value) : 100 };
+  if (mode==="fixed"){
+    const d = Number($("fdays").value);
+    if (!Number.isFinite(d) || d<0) return { error:"สิทธิ์ (วัน) ต้องเป็นตัวเลขตั้งแต่ 0 ขึ้นไป" };
+    row.quota_days = d; row.tenure_tiers = null;
+  } else {
+    const tiers=[];
+    for (const el of document.querySelectorAll("#tiers .t")){
+      const m = el.querySelector(".tm").value, d = el.querySelector(".td").value;
+      if (m==="" && d==="") continue;
+      const mm = Number(m), dd = Number(d);
+      if (m===""||d===""||!Number.isInteger(mm)||mm<0||!Number.isFinite(dd)||dd<0) return { error:"ช่วงอายุงาน: เดือนต้องเป็นจำนวนเต็ม และวันต้องเป็นตัวเลข ตั้งแต่ 0 ขึ้นไป" };
+      tiers.push({ min_months:mm, days:dd });
+    }
+    if (!tiers.length) return { error:"เพิ่มช่วงอายุงานอย่างน้อย 1 ช่วง" };
+    if (new Set(tiers.map(x=>x.min_months)).size !== tiers.length) return { error:"มีช่วงอายุงานที่เริ่มเดือนซ้ำกัน" };
+    tiers.sort((a,b)=>a.min_months-b.min_months);
+    row.tenure_tiers = tiers; row.quota_days = 0;
+  }
+  return { row };
+}
+
+async function save(){
+  msg("msg","");
+  const c = collect();
+  if (c.error) return msg("msg", c.error, "er");
+  $("save").disabled = true;
+  let error;
+  if (EDIT){
+    ({ error } = await sb.from("leave_types").update(c.row).eq("code", EDIT));
+  } else {
+    const code = "custom_" + Math.random().toString(36).slice(2,8);   // รหัสภายใน สร้างอัตโนมัติ
+    ({ error } = await sb.from("leave_types").insert({ code, ...c.row }));
+  }
+  $("save").disabled = false;
+  if (error) return msg("msg","บันทึกไม่สำเร็จ: "+error.message+" (ต้องเป็นอีเมลใน hr_users / hr_admins)","er");
+  closeForm();
+  await load();
+  msg("listMsg","บันทึกแล้ว","ok");
+}
+
+async function toggle(code){
+  const t = TYPES.find(x=>x.code===code); if(!t) return;
+  const next = !t.active;
+  if (!next && !confirm(`ปิดใช้งาน "${t.name}"?\nพนักงานจะยื่นลาประเภทนี้ไม่ได้ ส่วนใบลาที่มีอยู่แล้วยังเหมือนเดิม`)) return;
+  const { error } = await sb.from("leave_types").update({ active:next }).eq("code", code);
+  if (error) return msg("listMsg","ไม่สำเร็จ: "+error.message,"er");
+  load();
+}
+
+/* ---------- Auth + events ---------- */
+async function start(){
+  const { data:{ session } } = await sb.auth.getSession();
+  $("login").classList.toggle("hide", !!session);
+  $("app").classList.toggle("hide", !session);
+  if (session) load();
+}
+$("loginBtn").onclick = async ()=>{
+  const { error } = await sb.auth.signInWithPassword({ email:$("email").value.trim(), password:$("password").value });
+  if (error) $("loginErr").textContent = error.message; else start();
+};
+$("password").addEventListener("keydown", e=>{ if(e.key==="Enter") $("loginBtn").click(); });
+$("logout").onclick = async ()=>{ await sb.auth.signOut(); start(); };
+$("newBtn").onclick = ()=>openForm(null);
+$("cancel").onclick = closeForm;
+$("save").onclick = save;
+$("fmode").onchange = setMode;
+$("addTier").onclick = ()=>addTierRow();
+start();
+</script>
+<footer style="text-align:center;padding:16px;margin-top:24px;font-size:12px;color:#5b7391;border-top:1px solid #d6e4f5">ตรวจสอบวันลา | ใช้ภายในบริษัทเท่านั้น | พัฒนาโดย Sarawut.C</footer>
+</body>
+</html>
