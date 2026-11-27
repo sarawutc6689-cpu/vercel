@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>สรุปการลาของพนักงาน</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{--bg:#f5f6f8;--card:#fff;--text:#1f2430;--muted:#6b7280;--line:#e5e7eb;--primary:#2563eb;--ok:#16a34a;--warn:#f59e0b;--bad:#dc2626}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Sarabun","Noto Sans Thai",system-ui,sans-serif;background:var(--bg);color:var(--text)}
+  header{background:#fff;border-bottom:1px solid var(--line);padding:14px 20px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  header h1{font-size:18px;margin:0;flex:1}
+  main{max-width:1200px;margin:0 auto;padding:16px}
+  select,input,button{font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#fff}
+  button{background:var(--primary);color:#fff;border:0;cursor:pointer}
+  button.ghost{background:#fff;color:var(--text);border:1px solid var(--line)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:16px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+  .lt h3{margin:0 0 2px;font-size:15px}
+  .lt .sub{color:var(--muted);font-size:12px;min-height:16px}
+  .lt .num{font-size:26px;font-weight:700;margin:8px 0 4px}
+  .lt .num small{font-size:13px;font-weight:400;color:var(--muted)}
+  .bar{height:8px;background:var(--line);border-radius:99px;overflow:hidden}
+  .bar>i{display:block;height:100%;background:var(--ok)}
+  .lt.na{opacity:.45}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap}
+  th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
+  tbody tr{cursor:pointer}
+  tbody tr:hover{background:#f0f5ff}
+  .wrap{overflow-x:auto}
+  .muted{color:var(--muted)}
+  .low{color:var(--bad);font-weight:600}
+  .tag{display:inline-block;padding:2px 8px;border-radius:99px;font-size:12px;background:#eef2ff;color:#3730a3}
+  #login{max-width:340px;margin:80px auto}
+  #login input{width:100%;margin-bottom:10px}
+  .err{color:var(--bad);font-size:13px;min-height:18px}
+</style>
+</head>
+<body>
+
+<!-- ===== ตั้งค่า: ใส่ค่าของโปรเจกต์ Supabase ===== -->
+<script>
+const SUPABASE_URL      = "https://YOUR-PROJECT.supabase.co";
+const SUPABASE_ANON_KEY = "YOUR-ANON-KEY";
+
+// ชื่อตาราง/คอลัมน์ ปรับให้ตรงกับฐานข้อมูลจริงได้ที่นี่
+const T = {
+  employees: "employees",
+  leaves: "leave_requests",
+  cols: { id:"id", code:"employee_code", prefix:"prefix", first:"first_name", last:"last_name", hire:"hire_date" }
+};
+
+// ชั่วโมงทำงานต่อวัน (ใช้แปลงชั่วโมง <-> วัน)
+const HOURS_PER_DAY = 8;
+</script>
+
+<div id="login" class="card" style="display:none">
+  <h2 style="margin-top:0">เข้าสู่ระบบ HR</h2>
+  <input id="email" type="email" placeholder="อีเมล">
+  <input id="password" type="password" placeholder="รหัสผ่าน">
+  <div class="err" id="loginErr"></div>
+  <button id="loginBtn" style="width:100%">เข้าสู่ระบบ</button>
+</div>
+
+<div id="app" style="display:none">
+  <header>
+    <h1>สรุปการลาของพนักงาน</h1>
+    <label>ปี <select id="year"></select></label>
+    <input id="search" placeholder="ค้นหาชื่อ / รหัส" style="min-width:200px">
+    <button class="ghost" id="logout">ออกจากระบบ</button>
+  </header>
+  <main>
+    <div class="card" id="detail" style="display:none"></div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <b>ภาพรวมวันลาคงเหลือ (วัน)</b>
+        <span class="muted" id="count"></span>
+      </div>
+      <div class="wrap"><table id="tbl"></table></div>
+    </div>
+  </main>
+</div>
+
+<script>
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+/* ---------- กติกาการลา ---------- */
+const LEAVE_TYPES = [
+  { key:"vacation",       name:"ลาพักร้อน",            hourly:false },
+  { key:"personal_paid",  name:"ลากิจ (รับค่าจ้าง)",     hourly:true  },
+  { key:"personal_unpaid",name:"ลากิจ (ไม่รับค่าจ้าง)",  hourly:true  },
+  { key:"sick",           name:"ลาป่วย",               hourly:false },
+  { key:"maternity",      name:"ลาคลอด",               hourly:false },
+  { key:"military",       name:"ลาราชการทหาร",         hourly:false },
+];
+
+// สิทธิ์ลาพักร้อนตามอายุงาน (นับเป็นเดือน) — แก้ตัวเลขตรงนี้ได้
+// ต่ำกว่า 4 เดือน = 0 | 4 เดือน–ต่ำกว่า 2 ปี = 6 | 2 ปี = 7 | 3 ปีขึ้นไป = 8
+function vacationQuota(months){
+  if (months < 4)  return 0;
+  if (months < 24) return 6;
+  if (months < 36) return 7;
+  return 8;
+}
+
+const isFemale = p => ["นางสาว","น.ส.","นส.","นาง"].includes((p||"").trim());
+const isMale   = p => (p||"").trim() === "นาย";
+
+function quotaFor(emp, key, months){
+  switch(key){
+    case "vacation":        return vacationQuota(months);
+    case "personal_paid":   return 6;
+    case "personal_unpaid": return 6;
+    case "sick":            return 30;
+    case "maternity":       return isFemale(emp.prefix) ? 90 : null; // null = ไม่มีสิทธิ์
+    case "military":        return isMale(emp.prefix)   ? 3  : null;
+  }
+}
+
+function monthsBetween(from, to){
+  const a = new Date(from), b = new Date(to);
+  let m = (b.getFullYear()-a.getFullYear())*12 + (b.getMonth()-a.getMonth());
+  if (b.getDate() < a.getDate()) m--;
+  return Math.max(m,0);
+}
+function tenureText(m){ const y=Math.floor(m/12), r=m%12; return (y?`${y} ปี `:"")+`${r} เดือน`; }
+const fmt = n => Number.isInteger(n) ? n : n.toFixed(2).replace(/\.?0+$/,"");
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function daysHours(d){ // 1.5 วัน -> "1 วัน 4 ชม."
+  const whole = Math.floor(d+1e-9), h = Math.round((d-whole)*HOURS_PER_DAY);
+  return h ? `${whole} วัน ${h} ชม.` : `${whole} วัน`;
+}
+
+/* ---------- ข้อมูล ---------- */
+let EMPS = [], USED = {}, YEAR = new Date().getFullYear();
+
+async function load(){
+  const c = T.cols;
+  const { data: emps, error: e1 } = await sb.from(T.employees)
+    .select(`${c.id},${c.code},${c.prefix},${c.first},${c.last},${c.hire}`);
+  if (e1) return alert("โหลดพนักงานไม่สำเร็จ: "+e1.message);
+
+  EMPS = emps.map(r => ({
+    id:r[c.id], code:r[c.code], prefix:r[c.prefix],
+    name:`${r[c.prefix]||""}${r[c.first]||""} ${r[c.last]||""}`.trim(),
+    hire:r[c.hire]
+  })).sort((a,b)=>String(a.code).localeCompare(String(b.code)));
+
+  const { data: ls, error: e2 } = await sb.from(T.leaves)
+    .select("employee_id,leave_type,days,status")
+    .gte("start_date", `${YEAR}-01-01`).lte("start_date", `${YEAR}-12-31`)
+    .in("status", ["approved","pending"]);
+  if (e2) return alert("โหลดการลาไม่สำเร็จ: "+e2.message+"\n(ตรวจว่าสร้างตาราง leave_requests แล้ว)");
+
+  USED = {};
+  for (const l of ls){
+    const u = (USED[l.employee_id] ??= {});
+    const k = l.leave_type;
+    u[k] ??= { approved:0, pending:0 };
+    u[k][l.status] += Number(l.days);
+  }
+  render();
+}
+
+function asOf(){ // นับอายุงาน ณ วันนี้ (ปีปัจจุบัน) หรือสิ้นปีของปีที่เลือก
+  const now = new Date();
+  return YEAR >= now.getFullYear() ? now : new Date(YEAR,11,31);
+}
+
+function calc(emp){
+  const months = emp.hire ? monthsBetween(emp.hire, asOf()) : 0;
+  const rows = LEAVE_TYPES.map(t=>{
+    const quota = quotaFor(emp, t.key, months);
+    const u = USED[emp.id]?.[t.key] || {approved:0,pending:0};
+    return { ...t, quota, used:u.approved, pending:u.pending,
+             remain: quota==null ? null : quota - u.approved };
+  });
+  return { months, rows };
+}
+
+/* ---------- แสดงผล ---------- */
+function render(){
+  const q = document.getElementById("search").value.trim().toLowerCase();
+  const list = EMPS.filter(e => !q || e.name.toLowerCase().includes(q) || String(e.code||"").toLowerCase().includes(q));
+  document.getElementById("count").textContent = `${list.length} คน`;
+
+  const head = `<thead><tr><th>รหัส</th><th>ชื่อ-สกุล</th><th>อายุงาน</th>${
+    LEAVE_TYPES.map(t=>`<th>${t.name}</th>`).join("")}</tr></thead>`;
+  const body = list.map(e=>{
+    const { months, rows } = calc(e);
+    return `<tr data-id="${esc(e.id)}"><td>${esc(e.code)}</td><td>${esc(e.name)}</td><td>${tenureText(months)}</td>${
+      rows.map(r=> r.quota==null ? `<td class="muted">-</td>`
+        : `<td class="${r.remain<=0?'low':''}">${fmt(r.remain)}<span class="muted">/${r.quota}</span></td>`).join("")}</tr>`;
+  }).join("");
+  document.getElementById("tbl").innerHTML = head + `<tbody>${body}</tbody>`;
+  document.querySelectorAll("#tbl tbody tr").forEach(tr=>tr.onclick=()=>showDetail(tr.dataset.id));
+}
+
+function showDetail(id){
+  const e = EMPS.find(x=>String(x.id)===String(id)); if(!e) return;
+  const { months, rows } = calc(e);
+  const el = document.getElementById("detail");
+  el.style.display = "block";
+  el.innerHTML = `
+    <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+      <div><b style="font-size:17px">${esc(e.name)}</b> <span class="muted">(${esc(e.code)})</span><br>
+        <span class="muted">เริ่มงาน ${esc(e.hire||"-")} · อายุงาน ${tenureText(months)} · ปี ${YEAR}</span></div>
+      <button class="ghost" onclick="document.getElementById('detail').style.display='none'">ปิด</button>
+    </div>
+    <div class="grid">${rows.map(r=>{
+      if (r.quota==null) return `<div class="card lt na" style="margin:0"><h3>${r.name}</h3><div class="sub">ไม่มีสิทธิ์</div></div>`;
+      const pct = Math.min(100, r.quota? r.used/r.quota*100 : 0);
+      const color = pct>=100?"var(--bad)":pct>=75?"var(--warn)":"var(--ok)";
+      return `<div class="card lt" style="margin:0">
+        <h3>${r.name}</h3>
+        <div class="sub">${r.hourly?'<span class="tag">ลารายชั่วโมงได้</span>':''}</div>
+        <div class="num">${fmt(r.remain)} <small>/ ${r.quota} วัน คงเหลือ</small></div>
+        <div class="bar"><i style="width:${pct}%;background:${color}"></i></div>
+        <div class="sub" style="margin-top:6px">ใช้แล้ว ${daysHours(r.used)}${r.pending?` · รออนุมัติ ${daysHours(r.pending)}`:""}</div>
+      </div>`;}).join("")}</div>`;
+  el.scrollIntoView({behavior:"smooth"});
+}
+
+/* ---------- Auth + เริ่มต้น ---------- */
+async function start(){
+  const { data:{ session } } = await sb.auth.getSession();
+  document.getElementById("login").style.display = session ? "none":"block";
+  document.getElementById("app").style.display   = session ? "block":"none";
+  if (session) load();
+}
+document.getElementById("loginBtn").onclick = async ()=>{
+  const { error } = await sb.auth.signInWithPassword({
+    email: document.getElementById("email").value,
+    password: document.getElementById("password").value });
+  if (error) document.getElementById("loginErr").textContent = error.message; else start();
+};
+document.getElementById("logout").onclick = async ()=>{ await sb.auth.signOut(); start(); };
+document.getElementById("search").oninput = render;
+
+const ys = document.getElementById("year");
+for (let y=YEAR; y>=YEAR-3; y--) ys.insertAdjacentHTML("beforeend",`<option>${y}</option>`);
+ys.onchange = ()=>{ YEAR=Number(ys.value); load(); };
+
+start();
+</script>
+</body>
+</html>
