@@ -119,32 +119,32 @@ dialog form{padding:20px;display:flex;flex-direction:column;gap:12px}
 dialog h2{margin:0;font-size:17px}
 .dlg-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:4px}
 
-/* ---------- print (บังคับให้พอดี 1 หน้า A4 แนวนอน) ---------- */
+/* ---------- print: ขยายเต็มกระดาษ A4 แนวนอน 1 หน้า ---------- */
 @page{size:A4 landscape;margin:6mm}
 @media print{
   html,body{height:auto;min-height:0;background:#fff;display:block;overflow:visible}
   .topbar,.side,dialog,.site-foot{display:none!important}
   .shell{display:block;padding:0;margin:0;max-width:none;min-height:0}
   .bench{padding:0;margin:0;overflow:visible;display:block}
-  .paper{flex:none;width:100%;min-width:0;margin:0;padding:0;box-shadow:none;break-inside:avoid;page-break-inside:avoid;page-break-after:avoid}
-  .f-title{font-size:16px;margin:0 0 5px}
-  .f-bar{font-size:12px;padding:2px 8px}
-  .f-meta{padding:3px 8px;font-size:12px}
-  .dot input,.spec input{font-size:12px;padding:0 4px}
-  .specs{row-gap:4px;padding:6px 4px 9px}
-  .spec{font-size:11.5px}
-  .f-table{font-size:11.5px}
-  .f-table th,.f-table td{padding:1px 5px}
-  .f-table thead th{height:34px}
-  .th-m span{font-size:10px}
-  .mc{height:26px}
-  .sym{width:17px;height:17px}
-  .sym[data-s="2"]::before,.sym[data-s="2"]::after{width:11px}
-  .sig td{height:40px}
-  .rem{font-size:11px;padding:0 4px}
-  .f-foot{margin-top:4px;font-size:11px}
-  .code{font-size:11px}
-  .f-bar,.f-meta,.f-table thead th,.sig td,.sym[data-s="3"],.lg.fixed{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .paper{display:flex;flex-direction:column;flex:none;width:100%;min-width:0;height:196mm;margin:0;padding:0;box-shadow:none;break-inside:avoid;page-break-inside:avoid;page-break-after:avoid;overflow:hidden}
+  .f-title{font-size:20px;margin:0 0 8px}
+  .f-bar{font-size:13.5px;padding:4px 10px}
+  .f-meta{padding:6px 10px;font-size:13px}
+  .dot input,.spec input{font-size:13px;padding:0 4px}
+  .specs{row-gap:9px;padding:12px 4px 16px}
+  .spec{font-size:12.5px}
+  .tbl-wrap{flex:1;display:flex;min-height:0}
+  .f-table{height:100%;font-size:12.5px;border-width:.35mm}
+  .f-table th,.f-table td{padding:1px 6px;border-width:.35mm}
+  .f-table thead th{height:40px}
+  .th-m span{font-size:11px}
+  .sym{width:19px;height:19px}
+  .sym[data-s="2"]::before,.sym[data-s="2"]::after{width:13px}
+  .rem{font-size:12px;padding:0 4px}
+  .sig input{font-size:12px}
+  .f-foot{margin-top:8px;font-size:12.5px}
+  .code{font-size:12px}
+  .lg,.lg::before,.lg::after,.sym,.sym::before,.sym::after,.f-bar,.f-meta,.f-table thead th,.sig td{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .mc:hover{background:none}
   body.batch .shell{display:none!important}
   body.batch #batch{display:block}
@@ -249,10 +249,10 @@ dialog h2{margin:0;font-size:17px}
       </div>
 
       <div class="f-bar">ประวัติการบำรุงรักษา</div>
-      <table class="f-table">
+      <div class="tbl-wrap"><table class="f-table">
         <thead><tr id="headRow"></tr></thead>
         <tbody id="tbody"></tbody>
-      </table>
+      </table></div>
 
       <div class="f-foot">
         <div class="legend">
@@ -464,6 +464,12 @@ function assetValues(r) {
     f_others: pick(r, ['others', 'etc'])
   };
 }
+const FIELD_LABELS = {f_name:'ชื่อเครื่อง',f_location:'สถานที่ตั้ง',f_ip:'IP',f_resp:'ผู้รับผิดชอบ',f_cpu:'CPU',f_ram:'RAM',f_hdd:'HDD',f_vga:'VGA',f_mainboard:'MAINBOARD',f_monitor:'MONITOR',f_keyboard:'KEYBOARD',f_mouse:'MOUSE',f_wireless:'WIRELESS',f_others:'OTHERS'};
+/* ข้อความสรุปหลังดึงข้อมูล: บอกว่าช่องไหนในฐานข้อมูลไม่มีค่า (แยกจากปัญหาการ map คอลัมน์) */
+function fillMsg(r) {
+  const miss = Object.entries(assetValues(r)).filter(([, v]) => !v).map(([id]) => FIELD_LABELS[id]);
+  return 'ดึงข้อมูลแล้ว' + (miss.length ? ` · ช่องที่ฐานข้อมูลไม่มีค่า: ${miss.join(', ')}` : ' ครบทุกช่อง');
+}
 function fillForm(r) {
   Object.entries(assetValues(r)).forEach(([id, v]) => { $(id).value = v; });
   rememberRecent($('f_name').value);
@@ -481,7 +487,7 @@ function showResults(rows) {
     const sub = document.createElement('span');
     sub.textContent = [pick(r, ['department']), pick(r, ['login_name']), pick(r, ['ip', 'ip_address'])].filter(Boolean).join(' · ');
     b.append(name, sub);
-    b.addEventListener('click', () => { fillForm(r); ul.innerHTML = ''; setStatus(`ดึงข้อมูล ${name.textContent} แล้ว ตรวจสอบและสั่งพิมพ์ได้เลย`, 'ok'); });
+    b.addEventListener('click', () => { fillForm(r); ul.innerHTML = ''; setStatus(`${name.textContent}: ` + fillMsg(r), 'ok'); });
     li.appendChild(b);
     ul.appendChild(li);
   });
@@ -497,7 +503,7 @@ async function search(autoFillSingle) {
     const rows = await queryAssets(term, 8);
     if (my !== seq) return;
     if (!rows.length) { $('results').innerHTML = ''; setStatus(`ไม่พบเครื่องที่ชื่อมีคำว่า "${term}" ลองพิมพ์ส่วนหนึ่งของชื่อ`, 'err'); return; }
-    if (rows.length === 1 && autoFillSingle) { showResults([]); fillForm(rows[0]); setStatus('ดึงข้อมูลแล้ว ตรวจสอบและสั่งพิมพ์ได้เลย', 'ok'); return; }
+    if (rows.length === 1 && autoFillSingle) { showResults([]); fillForm(rows[0]); setStatus(fillMsg(rows[0]), 'ok'); return; }
     showResults(rows);
     setStatus(`พบ ${rows.length} เครื่อง เลือกเครื่องที่ต้องการ`, 'ok');
   } catch (err) {
