@@ -6,12 +6,12 @@
 <title>บันทึกการลา</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-  :root{--bg:#f5f6f8;--card:#fff;--text:#1f2430;--muted:#6b7280;--line:#e5e7eb;--primary:#2563eb;--ok:#16a34a;--warn:#f59e0b;--bad:#dc2626}
+  :root{--bg:#eaf3fd;--card:#fff;--text:#1e3a5f;--muted:#5b7391;--line:#d6e4f5;--primary:#1d6fd8;--ok:#16a34a;--warn:#f59e0b;--bad:#dc2626}
   *{box-sizing:border-box}
   body{margin:0;font-family:"Sarabun","Noto Sans Thai",system-ui,sans-serif;background:var(--bg);color:var(--text)}
-  header{background:#fff;border-bottom:1px solid var(--line);padding:14px 20px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  header{background:linear-gradient(90deg,#1558b8,#2f8cf0);color:#fff;border-bottom:0;padding:14px 20px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
   header h1{font-size:18px;margin:0;flex:1}
-  header a{color:var(--primary);text-decoration:none;font-size:14px}
+  header a{color:#fff;text-decoration:none;font-size:14px}
   main{max-width:860px;margin:0 auto;padding:16px}
   select,input,textarea,button{font:inherit;padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:#fff;width:100%}
   button{background:var(--primary);color:#fff;border:0;cursor:pointer;width:auto}
@@ -382,6 +382,6 @@ $("start").onchange = ()=>{ if(!$("end").value || $("end").value<$("start").valu
 $("save").onclick = save;
 start();
 </script>
-<footer style="text-align:center;padding:16px;margin-top:24px;font-size:12px;color:#6b7280;border-top:1px solid #e5e7eb">ตรวจสอบวันลา | ใช้ภายในบริษัทเท่านั้น | พัฒนาโดย Sarawut.C</footer>
+<footer style="text-align:center;padding:16px;margin-top:24px;font-size:12px;color:#5b7391;border-top:1px solid #d6e4f5">ตรวจสอบวันลา | ใช้ภายในบริษัทเท่านั้น | พัฒนาโดย Sarawut.C</footer>
 </body>
 </html>
