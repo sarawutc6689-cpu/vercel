@@ -1,1 +1,180 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>อนุมัติใบลา (ผู้จัดการฝ่าย)</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{--bg:#eaf3fd;--card:#fff;--text:#1e3a5f;--muted:#5b7391;--line:#d6e4f5;--primary:#1d6fd8;--ok:#16a34a;--warn:#f59e0b;--bad:#dc2626}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Sarabun","Noto Sans Thai",system-ui,sans-serif;background:var(--bg);color:var(--text)}
+  header{background:linear-gradient(90deg,#1558b8,#2f8cf0);color:#fff;padding:14px 20px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  header h1{font-size:18px;margin:0;flex:1}
+  header a{color:#fff;text-decoration:none;font-size:14px}
+  main{max-width:900px;margin:0 auto;padding:16px}
+  input,textarea,button{font:inherit;padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:#fff}
+  button{background:var(--primary);color:#fff;border:0;cursor:pointer}
+  button.ghost{background:#fff;color:var(--text);border:1px solid var(--line)}
+  button.ok{background:var(--ok)} button.no{background:var(--bad)}
+  button.small{padding:5px 12px;font-size:13px}
+  button:disabled{opacity:.6}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px}
+  .tabs{display:flex;gap:8px;margin-bottom:14px}
+  .tabs button{background:#fff;color:var(--text);border:1px solid var(--line)}
+  .tabs button.on{background:var(--primary);color:#fff;border-color:var(--primary)}
+  .head{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+  .muted{color:var(--muted)}
+  .tag{display:inline-block;padding:2px 8px;border-radius:99px;font-size:12px}
+  .st-approved,.st-pending_hr{background:#dcfce7;color:#166534}
+  .st-pending_manager,.st-pending{background:#fef3c7;color:#92400e}
+  .st-rejected,.st-cancelled{background:#fee2e2;color:#991b1b}
+  .kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px 16px;margin:10px 0;font-size:14px}
+  .kv small{display:block;color:var(--muted);font-size:12px}
+  .warnbox{background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:8px 10px;font-size:13px;margin:8px 0}
+  .act{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;margin-top:10px}
+  .act textarea{flex:1;min-width:200px}
+  .note{font-size:13px;margin-top:6px}
+  #login{max-width:340px;margin:80px auto}
+  #login input{width:100%;margin-bottom:10px}
+  .err{color:var(--bad);font-size:13px;min-height:18px;margin-bottom:6px}
+  .hide{display:none}
+</style>
+</head>
+<body>
 
+<script>
+const SUPABASE_URL      = "https://ppzdyvomrfiitahxwrwz.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBwemR5dm9tcmZpaXRhaHh3cnd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwMjQ0MjIsImV4cCI6MjEwNDYwMDQyMn0.iArUz6swMfwhFT_1qEvCwK1B3aiCxdWt46_FBjT6_Y0";
+</script>
+
+<div id="login" class="card">
+  <h2 style="margin-top:0">ผู้จัดการฝ่าย — เข้าสู่ระบบ</h2>
+  <input id="email" type="email" placeholder="อีเมล" autocomplete="username">
+  <input id="password" type="password" placeholder="รหัสผ่าน" autocomplete="current-password">
+  <div class="err" id="loginErr"></div>
+  <button id="loginBtn" style="width:100%">เข้าสู่ระบบ</button>
+  <p style="font-size:13px;text-align:center;margin:12px 0 0"><a href="index.html" style="color:var(--primary);text-decoration:none">← กลับหน้าหลัก</a></p>
+</div>
+
+<div id="app" class="hide">
+  <header>
+    <h1>อนุมัติใบลา — ผู้จัดการฝ่าย</h1>
+    <a href="index.html">หน้าหลัก</a>
+    <button class="ghost small" id="logout">ออกจากระบบ</button>
+  </header>
+  <main>
+    <div class="muted" style="margin-bottom:10px;font-size:14px" id="who"></div>
+    <div class="tabs">
+      <button id="tabPending" class="on">รออนุมัติ <span id="cnt"></span></button>
+      <button id="tabHistory">ประวัติที่ตัดสินแล้ว</button>
+    </div>
+    <div id="list"></div>
+  </main>
+</div>
+
+<script>
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const $ = id => document.getElementById(id);
+const HOURS_PER_DAY = 8;
+const TYPE_NAME = { vacation:"ลาพักร้อน", personal_paid:"ลากิจ (รับค่าจ้าง)", personal_unpaid:"ลากิจ (ไม่รับค่าจ้าง)",
+                    sick:"ลาป่วย", maternity:"ลาคลอด", military:"ลาราชการทหาร" };
+const STATUS_TH = { pending_manager:"รอผู้จัดการฝ่าย", pending_hr:"ผ่านผู้จัดการ รอฝ่ายบุคคล", pending:"รออนุมัติ",
+                    approved:"อนุมัติแล้ว", rejected:"ไม่อนุมัติ", cancelled:"พนักงานยกเลิก" };
+const ERR = {
+  not_manager:"บัญชีนี้ไม่ใช่ผู้จัดการฝ่าย (อีเมลไม่ตรงกับตาราง managers)",
+  forbidden:"ใบลานี้ไม่ใช่ของฝ่ายที่คุณดูแล",
+  self_approval:"ไม่สามารถอนุมัติใบลาของตัวเองได้",
+  note_required:"กรุณาระบุเหตุผลที่ไม่อนุมัติ",
+  not_pending:"ใบลานี้ถูกดำเนินการไปแล้ว (หรือพนักงานยกเลิก) กรุณารีเฟรช",
+  not_found:"ไม่พบใบลา",
+};
+const fmt = n => Number.isInteger(n) ? n : Number(n.toFixed(3)).toString();
+const esc = s => String(s ?? "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function daysHours(d){ const w=Math.floor(d+1e-9), h=Math.round((d-w)*HOURS_PER_DAY); return h?`${w} วัน ${h} ชม.`:`${w} วัน`; }
+function thaiDate(iso){ if(!iso) return "-"; const [y,m,d]=iso.slice(0,10).split("-"); return `${d}/${m}/${Number(y)+543}`; }
+function thaiDT(iso){ if(!iso) return "-"; const d=new Date(iso); return d.toLocaleString("th-TH-u-ca-buddhist",{dateStyle:"short",timeStyle:"short",timeZone:"Asia/Bangkok"}); }
+
+let VIEW = "pending";
+
+async function load(){
+  $("list").innerHTML = `<div class="muted">กำลังโหลด…</div>`;
+  const { data, error } = await sb.rpc("manager_leave_requests", { p_view: VIEW });
+  if (error) { $("list").innerHTML = `<div class="card err">โหลดไม่สำเร็จ: ${esc(error.message)}<br>(ตรวจว่ารัน approval_flow.sql แล้ว)</div>`; return; }
+  if (data.error) { $("list").innerHTML = `<div class="card err">${esc(ERR[data.error]||data.error)}<br>เข้าสู่ระบบในชื่อ ${esc((await sb.auth.getUser()).data.user?.email||"")}</div>`; return; }
+  $("who").textContent = `${data.email} · ฝ่ายที่ดูแล: ${data.divisions||"-"}`;
+  if (VIEW==="pending") $("cnt").textContent = data.rows.length ? `(${data.rows.length})` : "";
+  render(data.rows);
+}
+
+function render(rows){
+  if (!rows.length){ $("list").innerHTML = `<div class="card muted">${VIEW==="pending"?"ไม่มีใบลารออนุมัติ":"ยังไม่มีประวัติ"}</div>`; return; }
+  $("list").innerHTML = rows.map(r=>{
+    const qty = r.hours ? `${fmt(Number(r.hours))} ชม. (${fmt(Number(r.days))} วัน)` : daysHours(Number(r.days));
+    const quota = r.quota==null ? null : Number(r.quota);
+    const after = quota==null ? null : quota - Number(r.used_other) - Number(r.days);
+    const warn = quota==null ? `<div class="warnbox">⚠ พนักงานไม่มีสิทธิ์ลาประเภทนี้</div>`
+               : after<0 ? `<div class="warnbox">⚠ เกินสิทธิ์: สิทธิ์ ${fmt(quota)} วัน ใช้/รออนุมัติรายการอื่นแล้ว ${fmt(Number(r.used_other))} วัน</div>` : "";
+    const actions = VIEW==="pending" ? `
+      <div class="act">
+        <textarea rows="1" placeholder="หมายเหตุ (จำเป็นเมื่อไม่อนุมัติ)" id="n-${esc(r.id)}"></textarea>
+        <button class="ok small" data-a="1" data-id="${esc(r.id)}">อนุมัติ</button>
+        <button class="no small" data-a="0" data-id="${esc(r.id)}">ไม่อนุมัติ</button>
+      </div>` : `
+      <div class="note">ตัดสินเมื่อ ${thaiDT(r.manager_at)}${r.manager_note?` · หมายเหตุ: ${esc(r.manager_note)}`:""}</div>`;
+    return `<div class="card">
+      <div class="head">
+        <div><b>${esc(r.full_name||r.employee_code)}</b> <span class="muted">(${esc(r.employee_code)})${r.department_name?` · ${esc(r.department_name)}`:""}</span></div>
+        <span class="tag st-${esc(r.status)}">${esc(STATUS_TH[r.status]||r.status)}</span>
+      </div>
+      <div class="kv">
+        <div><small>ประเภท</small>${esc(TYPE_NAME[r.leave_type]||r.leave_type)}</div>
+        <div><small>วันที่ลา</small>${thaiDate(r.start_date)}${r.end_date!==r.start_date?` – ${thaiDate(r.end_date)}`:""}</div>
+        <div><small>จำนวน</small>${qty}</div>
+        <div><small>ยื่นเมื่อ</small>${thaiDT(r.submitted_at)}</div>
+        ${quota==null?"":`<div><small>คงเหลือหลังอนุมัติ</small>${fmt(after)} / ${fmt(quota)} วัน</div>`}
+      </div>
+      <div><small class="muted">เหตุผล</small><br>${esc(r.reason||"-")}</div>
+      ${warn}${actions}
+    </div>`;
+  }).join("");
+
+  document.querySelectorAll("[data-id]").forEach(b=>b.onclick=()=>decide(b.dataset.id, b.dataset.a==="1"));
+}
+
+async function decide(id, approve){
+  const note = ($("n-"+id)?.value || "").trim();
+  if (!approve && !note){ alert("กรุณาระบุเหตุผลที่ไม่อนุมัติ"); $("n-"+id)?.focus(); return; }
+  if (!confirm(approve ? "ยืนยันอนุมัติใบลานี้ (ส่งต่อฝ่ายบุคคล)?" : "ยืนยันไม่อนุมัติใบลานี้?")) return;
+  document.querySelectorAll("[data-id]").forEach(b=>b.disabled=true);
+  const { data, error } = await sb.rpc("manager_decide_leave", { p_id:id, p_approve:approve, p_note:note||null });
+  if (error || data?.error){ alert(error ? error.message : (ERR[data.error]||data.error)); }
+  load();
+}
+
+function setTab(v){
+  VIEW = v;
+  $("tabPending").classList.toggle("on", v==="pending");
+  $("tabHistory").classList.toggle("on", v==="history");
+  load();
+}
+
+async function start(){
+  const { data:{ session } } = await sb.auth.getSession();
+  $("login").classList.toggle("hide", !!session);
+  $("app").classList.toggle("hide", !session);
+  if (session) load();
+}
+$("loginBtn").onclick = async ()=>{
+  const { error } = await sb.auth.signInWithPassword({ email:$("email").value.trim(), password:$("password").value });
+  if (error) $("loginErr").textContent = error.message; else start();
+};
+$("password").addEventListener("keydown", e=>{ if(e.key==="Enter") $("loginBtn").click(); });
+$("logout").onclick = async ()=>{ await sb.auth.signOut(); start(); };
+$("tabPending").onclick = ()=>setTab("pending");
+$("tabHistory").onclick = ()=>setTab("history");
+start();
+</script>
+<footer style="text-align:center;padding:16px;margin-top:24px;font-size:12px;color:#5b7391;border-top:1px solid #d6e4f5">ตรวจสอบวันลา | ใช้ภายในบริษัทเท่านั้น | พัฒนาโดย Sarawut.C</footer>
+</body>
+</html>
