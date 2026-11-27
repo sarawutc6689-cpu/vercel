@@ -34,7 +34,7 @@
   th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left}
   .wrap{overflow-x:auto}
   .tag{display:inline-block;padding:2px 8px;border-radius:99px;font-size:12px}
-  .st-approved{background:#dcfce7;color:#166534}.st-pending{background:#fef3c7;color:#92400e}
+  .st-approved{background:#dcfce7;color:#166534}.st-pending,.st-pending_manager,.st-pending_hr{background:#fef3c7;color:#92400e}
   .st-rejected,.st-cancelled{background:#fee2e2;color:#991b1b}
   #login{max-width:340px;margin:80px auto}
   #login input{margin-bottom:10px}
@@ -61,7 +61,8 @@ const HOURS_PER_DAY = 8;
 <div id="app" class="hide">
   <header>
     <h1>บันทึกการลาของพนักงาน</h1>
-    <a href="index.html">← หน้าสรุปการลา</a>
+    <a href="index.html">หน้าหลัก</a>
+    <a href="summary.html">← หน้าสรุปการลา</a>
     <button class="ghost small" id="logout">ออกจากระบบ</button>
   </header>
   <main>
@@ -140,7 +141,8 @@ const LEAVE_TYPES = [
   { key:"military",        name:"ลาราชการทหาร",        hourly:false },
 ];
 const TYPE = Object.fromEntries(LEAVE_TYPES.map(t=>[t.key,t]));
-const STATUS_TH = { pending:"รออนุมัติ", approved:"อนุมัติแล้ว", rejected:"ไม่อนุมัติ", cancelled:"ยกเลิก" };
+const STATUS_TH = { pending:"รออนุมัติ", pending_manager:"รอผู้จัดการฝ่าย", pending_hr:"รอฝ่ายบุคคล", approved:"อนุมัติแล้ว", rejected:"ไม่อนุมัติ", cancelled:"ยกเลิก" };
+const ACTIVE = ["approved","pending","pending_manager","pending_hr"];
 function vacationQuota(m){ if(m<4) return 0; if(m<24) return 6; if(m<36) return 7; return 8; }
 const isFemale = p => ["นางสาว","น.ส.","นส.","นาง"].includes((p||"").trim());
 const isMale   = p => (p||"").trim() === "นาย";
@@ -228,8 +230,8 @@ async function refreshEmp(){
     .order("start_date",{ascending:false});
   if (error) return setMsg("โหลดประวัติไม่สำเร็จ: "+error.message+" (ตรวจว่ารัน leave_requests.sql แล้ว)","err");
   for (const l of data){
-    if (l.status==="approved"||l.status==="pending"){
-      const u=(USED[l.leave_type]??={approved:0,pending:0}); u[l.status]+=Number(l.days);
+    if (ACTIVE.includes(l.status)){
+      const u=(USED[l.leave_type]??={approved:0,pending:0}); u[l.status==="approved"?"approved":"pending"]+=Number(l.days);
     }
   }
   renderTypes(); renderHist(data); calcDays();
