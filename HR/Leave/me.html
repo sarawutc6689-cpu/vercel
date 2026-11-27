@@ -6,8 +6,9 @@
 <title>การลาของฉัน</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-  :root{--bg:#f5f6f8;--card:#fff;--text:#1f2430;--muted:#6b7280;--line:#e5e7eb;--primary:#2563eb;--ok:#16a34a;--warn:#f59e0b;--bad:#dc2626}
+  :root{--bg:#eaf3fd;--card:#fff;--text:#1e3a5f;--muted:#5b7391;--line:#d6e4f5;--primary:#1d6fd8;--ok:#16a34a;--warn:#f59e0b;--bad:#dc2626}
   *{box-sizing:border-box}
+  body::before{content:"";display:block;height:8px;background:linear-gradient(90deg,#1558b8,#2f8cf0)}
   body{margin:0;font-family:"Sarabun","Noto Sans Thai",system-ui,sans-serif;background:var(--bg);color:var(--text)}
   main{max-width:900px;margin:0 auto;padding:16px}
   select,input,button{font:inherit;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:#fff}
@@ -25,7 +26,7 @@
   .bar>i{display:block;height:100%}
   .lt.na{opacity:.45}
   .muted{color:var(--muted)}
-  .tag{display:inline-block;padding:2px 8px;border-radius:99px;font-size:12px;background:#eef2ff;color:#3730a3}
+  .tag{display:inline-block;padding:2px 8px;border-radius:99px;font-size:12px;background:#dbeafe;color:#1e40af}
   .st-approved{background:#dcfce7;color:#166534}.st-pending{background:#fef3c7;color:#92400e}
   .st-rejected,.st-cancelled{background:#fee2e2;color:#991b1b}
   #login{max-width:380px;margin:60px auto}
@@ -223,6 +224,6 @@ document.getElementById("logout").onclick = ()=>{
   document.getElementById("code").value = "";
 };
 </script>
-<footer style="text-align:center;padding:16px;margin-top:24px;font-size:12px;color:#6b7280;border-top:1px solid #e5e7eb">ตรวจสอบวันลา | ใช้ภายในบริษัทเท่านั้น | พัฒนาโดย Sarawut.C</footer>
+<footer style="text-align:center;padding:16px;margin-top:24px;font-size:12px;color:#5b7391;border-top:1px solid #d6e4f5">ตรวจสอบวันลา | ใช้ภายในบริษัทเท่านั้น | พัฒนาโดย Sarawut.C</footer>
 </body>
 </html>
