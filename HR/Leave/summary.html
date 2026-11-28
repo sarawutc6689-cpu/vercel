@@ -6,6 +6,7 @@
 <title>สรุปการลาของพนักงาน</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="ui.js"></script>
+<script src="hr-common.js"></script>
 <style>
   :root{--bg:#eaf3fd;--card:#fff;--text:#1e3a5f;--muted:#5b7391;--line:#d6e4f5;--primary:#1d6fd8;--ok:#16a34a;--warn:#f59e0b;--bad:#dc2626}
   *{box-sizing:border-box}
@@ -43,8 +44,8 @@
 
 <!-- ===== ตั้งค่า: ใส่ค่าของโปรเจกต์ Supabase ===== -->
 <script>
-const SUPABASE_URL      = "https://ppzdyvomrfiitahxwrwz.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBwemR5dm9tcmZpaXRhaHh3cnd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwMjQ0MjIsImV4cCI6MjEwNDYwMDQyMn0.iArUz6swMfwhFT_1qEvCwK1B3aiCxdWt46_FBjT6_Y0";
+const SUPABASE_URL      = "https://YOUR-PROJECT.supabase.co";
+const SUPABASE_ANON_KEY = "YOUR-ANON-KEY";
 
 // ชื่อตาราง/คอลัมน์ ปรับให้ตรงกับฐานข้อมูลจริงได้ที่นี่
 const T = {
@@ -140,7 +141,7 @@ let EMPS = [], USED = {}, YEAR = new Date().getFullYear();
 
 async function load(){
   await loadTypes();
-  const { data: emps, error: e1 } = await sb.from(T.employees).select("*");
+  let emps, e1=null; try{ emps = await HR.fetchAll(()=>sb.from(T.employees).select("*").order("employee_code")); }catch(x){ e1=x; }
   if (e1) return uiAlert({ title:"โหลดพนักงานไม่สำเร็จ", message:e1.message, tone:"error" });
   if (!emps.length) return uiAlert({ title:"ไม่พบข้อมูลพนักงาน", message:"ไม่พบข้อมูลในตาราง "+T.employees+"\n(ตรวจ RLS policy ว่าอนุญาตให้อ่านได้)", tone:"warn" });
   console.log("คอลัมน์ของ employees:", Object.keys(emps[0]));
@@ -171,10 +172,9 @@ async function load(){
              hire: pick(r, ["hire_date","start_date","join_date","date_hired"]) };
   }).sort((a,b)=>String(a.code).localeCompare(String(b.code)));
 
-  const { data: ls, error: e2 } = await sb.from(T.leaves)
-    .select("employee_id,leave_type,days,status")
+  let ls, e2=null; try{ ls = await HR.fetchAll(()=>sb.from(T.leaves).select("id,employee_id,leave_type,days,status")
     .gte("start_date", `${YEAR}-01-01`).lte("start_date", `${YEAR}-12-31`)
-    .in("status", ["approved","pending","pending_manager","pending_hr"]);
+    .in("status", ["approved","pending","pending_manager","pending_hr"]).order("id")); }catch(x){ e2=x; }
   if (e2) return uiAlert({ title:"โหลดการลาไม่สำเร็จ", message:e2.message+"\n(ตรวจว่าสร้างตาราง leave_requests แล้ว)", tone:"error" });
 
   USED = {};
