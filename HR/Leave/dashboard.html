@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>แดชบอร์ดการลา</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="ui.js"></script>
+<script src="hr-common.js"></script>
+<style>
+  :root{
+    --bg:#eaf3fd;--card:#fff;--text:#1e3a5f;--muted:#5b7391;--line:#d6e4f5;--primary:#1d6fd8;--bad:#dc2626;--ok:#16a34a;--warn:#f59e0b;
+    --surface-1:#fff;--text-primary:#191919;--text-secondary:#666;--grid:#e7e7e7;--baseline:#c2c2c2;
+    --s1:#257de0;--s2:#f47230;--s3:#00b894;--s4:#f2a600;--s5:#ee7fac;--s6:#008a17;--s7:#6a4ce2;--s8:#ec4647;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Sarabun","Noto Sans Thai",system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--text)}
+  header{background:linear-gradient(90deg,#1558b8,#2f8cf0);color:#fff;padding:14px 20px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+  header h1{font-size:18px;margin:0;flex:1}
+  header a{color:#fff;text-decoration:none;font-size:14px}
+  header a.cur{font-weight:700;text-decoration:underline}
+  main{max-width:1200px;margin:0 auto;padding:16px}
+  select,input,button{font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--text)}
+  button{background:var(--primary);color:#fff;border:0;cursor:pointer}
+  button.ghost{background:#fff;color:var(--text);border:1px solid var(--line)}
+  .filters{display:flex;gap:12px;align-items:end;flex-wrap:wrap;margin-bottom:16px}
+  .filters label{display:flex;flex-direction:column;font-size:12px;color:var(--muted);gap:4px}
+  .card{background:var(--surface-1);border:1px solid var(--line);border-radius:12px;padding:16px}
+  .card h2{font-size:15px;margin:0 0 2px;color:var(--text-primary)}
+  .card .sub{font-size:12px;color:var(--text-secondary);margin-bottom:12px}
+  .card .head{display:flex;justify-content:space-between;align-items:start;gap:8px}
+  .tv{font-size:12px;padding:4px 10px}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:16px}
+  .kpi .l{font-size:12px;color:var(--text-secondary)}
+  .kpi .v{font-size:32px;font-weight:700;margin-top:4px;color:var(--text-primary)}
+  .kpi .v small{font-size:13px;font-weight:400;color:var(--text-secondary)}
+  .kpi .n{font-size:12px;color:var(--text-secondary);margin-top:2px;min-height:16px}
+  .row2{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px;margin-bottom:16px}
+  .full{margin-bottom:16px}
+  #stage{transition:opacity .15s}
+  #stage.busy{opacity:.5;pointer-events:none}
+  svg text{font-family:inherit;fill:var(--text-secondary);font-size:11px}
+  .col{cursor:default}
+  .col:hover,.col:focus{opacity:.8;outline:none}
+  .rb{display:grid;grid-template-columns:minmax(90px,170px) 1fr;gap:8px;align-items:center;padding:4px 0;font-size:13px}
+  .rb .nm{color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .rb .tr{display:flex;align-items:center;gap:8px;min-width:0}
+  .rb .b{height:18px;background:var(--s1);border-radius:0 4px 4px 0;min-width:2px;outline:none}
+  .rb .b:hover,.rb .b:focus{opacity:.8}
+  .rb .val{color:var(--text-primary);font-size:12px;white-space:nowrap}
+  .seg{display:flex;gap:2px;height:28px}
+  .seg>div{border-radius:4px;color:#fff;font-size:12px;display:flex;align-items:center;padding:0 8px;min-width:0;white-space:nowrap}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:12px;color:var(--text-secondary)}
+  .legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{padding:7px 8px;border-bottom:1px solid var(--grid);text-align:left}
+  th{color:var(--text-secondary);font-weight:600;font-size:12px}
+  td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+  .wrap{overflow-x:auto}
+  .empty{color:var(--text-secondary);font-size:13px;padding:8px 0}
+  .pill{display:inline-block;padding:1px 8px;border-radius:99px;font-size:12px;border:1px solid var(--line)}
+  .pill.warn{background:#fff7e0;color:#8a5a00;border-color:#f5d98b}
+  .pill.bad{background:#fde8e8;color:#9b1c1c;border-color:#f3b4b4}
+  #tip{position:fixed;z-index:50;pointer-events:none;background:#fff;color:var(--text-primary);border:1px solid var(--line);box-shadow:0 4px 16px rgba(30,58,95,.18);border-radius:8px;padding:8px 10px;font-size:12px;display:none;max-width:260px}
+  #tip b{display:block;font-size:15px}
+  #login{max-width:340px;margin:80px auto}
+  #login input{width:100%;margin-bottom:10px}
+  .err{color:var(--bad);font-size:13px;min-height:18px}
+  .note{font-size:12px;color:var(--muted);margin-top:8px}
+  @media (max-width:520px){.rb{grid-template-columns:100px 1fr}.row2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<script>
+const SUPABASE_URL      = "https://YOUR-PROJECT.supabase.co";
+const SUPABASE_ANON_KEY = "YOUR-ANON-KEY";
+</script>
+
+<div id="login" class="card" style="display:none">
+  <h2 style="margin-top:0">เข้าสู่ระบบ HR</h2>
+  <input id="email" type="email" placeholder="อีเมล">
+  <input id="password" type="password" placeholder="รหัสผ่าน">
+  <div class="err" id="loginErr"></div>
+  <button id="loginBtn" style="width:100%">เข้าสู่ระบบ</button>
+</div>
+
+<div id="app" style="display:none">
+  <header>
+    <h1>แดชบอร์ดการลา</h1>
+    <a href="index.html">หน้าหลัก</a>
+    <a href="summary.html">สรุปรายคน</a>
+    <a href="report.html">รายงาน</a>
+    <a href="hr-approve.html">อนุมัติ</a>
+    <button class="ghost" id="logout">ออกจากระบบ</button>
+  </header>
+  <main>
+    <div class="filters">
+      <label>ปี (พ.ศ.)<select id="year"></select></label>
+      <label>ฝ่าย<select id="dept"><option value="">ทุกฝ่าย</option></select></label>
+      <button class="ghost" id="reload">โหลดใหม่</button>
+      <span class="muted" id="stamp" style="font-size:12px;color:var(--muted)"></span>
+    </div>
+
+    <div id="stage">
+      <div class="kpis" id="kpis"></div>
+
+      <div class="full card">
+        <div class="head"><div><h2>วันลาที่อนุมัติแล้วรายเดือน</h2><div class="sub">หน่วย: วัน · นับตามเดือนที่เริ่มลา</div></div><button class="ghost tv" data-tv="month">ดูเป็นตาราง</button></div>
+        <div id="month"></div>
+      </div>
+
+      <div class="row2">
+        <div class="card">
+          <div class="head"><div><h2>วันลาตามประเภท</h2><div class="sub">อนุมัติแล้ว · วัน</div></div><button class="ghost tv" data-tv="type">ดูเป็นตาราง</button></div>
+          <div id="type"></div>
+        </div>
+        <div class="card">
+          <div class="head"><div><h2>วันลาตามฝ่าย</h2><div class="sub">อนุมัติแล้ว · 10 ฝ่ายสูงสุด · วัน</div></div><button class="ghost tv" data-tv="dept">ดูเป็นตาราง</button></div>
+          <div id="deptc"></div>
+        </div>
+      </div>
+
+      <div class="full card">
+        <h2>สถานะใบลาทั้งหมดของปีนี้</h2>
+        <div class="sub" id="statusSub"></div>
+        <div id="status"></div>
+      </div>
+
+      <div class="row2">
+        <div class="card"><h2>ลาอยู่วันนี้และ 14 วันข้างหน้า</h2><div class="sub">เฉพาะที่อนุมัติแล้ว</div><div id="upcoming"></div></div>
+        <div class="card"><h2>ใบลารออนุมัติ</h2><div class="sub">ทุกปี · เรียงตามที่ค้างนานสุด</div><div id="queue"></div></div>
+      </div>
+
+      <div class="row2">
+        <div class="card"><h2>ใช้สิทธิ์ใกล้เต็ม (≥ 80%)</h2><div class="sub">เฉพาะประเภทที่มีสิทธิ์ · นับเฉพาะที่อนุมัติแล้ว</div><div id="near"></div></div>
+        <div class="card"><h2>วันลาพักร้อนคงเหลือมากสุด</h2><div class="sub">พนักงานที่ยังไม่ใช้สิทธิ์ · 10 อันดับ</div><div id="vac"></div></div>
+      </div>
+    </div>
+  </main>
+</div>
+<div id="tip" role="tooltip"></div>
+<footer style="text-align:center;padding:16px;margin-top:24px;font-size:12px;color:#5b7391;border-top:1px solid #d6e4f5">ระบบลาออนไลน์ | ใช้ภายในบริษัทเท่านั้น | พัฒนาโดย Sarawut.C</footer>
+
+<script>
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const $ = id => document.getElementById(id);
+const SVGNS = "http://www.w3.org/2000/svg";
+let TYPES = [], EMP = {list:[],byCode:{}}, DEPT = {map:{},ok:true}, LEAVES = [], PENDING = [];
+let YEAR = new Date().getFullYear();
+const TV = {};               // ตารางที่เปิดอยู่
+const deptName = c => DEPT.map[c] || c || "ไม่ระบุฝ่าย";
+const typeName = k => (TYPES.find(t=>t.key===k)||{}).name || k;
+const empName = c => (EMP.byCode[c]||{}).name || c;
+
+/* ---------- tooltip (ใช้ textContent เสมอ) ---------- */
+const tip = $("tip");
+function showTip(ev, value, label){
+  tip.replaceChildren();
+  const b = document.createElement("b"); b.textContent = value;
+  const s = document.createElement("span"); s.textContent = label;
+  tip.append(b, s); tip.style.display = "block";
+  const r = ev.currentTarget.getBoundingClientRect();
+  const x = ev.clientX ? ev.clientX + 12 : r.left + r.width/2;
+  const y = ev.clientY ? ev.clientY + 12 : r.top - 8;
+  tip.style.left = Math.min(x, innerWidth - tip.offsetWidth - 8) + "px";
+  tip.style.top  = Math.min(y, innerHeight - tip.offsetHeight - 8) + "px";
+}
+const hideTip = () => tip.style.display = "none";
+function attachTip(el, value, label){
+  el.setAttribute("tabindex","0");
+  el.setAttribute("aria-label", label+" "+value);
+  el.addEventListener("pointermove", e=>showTip(e,value,label));
+  el.addEventListener("pointerleave", hideTip);
+  el.addEventListener("focus", e=>showTip(e,value,label));
+  el.addEventListener("blur", hideTip);
+}
+
+/* ---------- การสร้างตารางแทนกราฟ ---------- */
+const numCol=(rows,i)=>rows.length&&rows.every(r=>/^[\d.,]+( \/ [\d.,]+)?%?$|^-$/.test(String(r[i])));
+function tableEl(headers, rows){
+  const wrap = document.createElement("div"); wrap.className = "wrap";
+  const t = document.createElement("table");
+  const hr = t.createTHead().insertRow();
+  headers.forEach((h,i)=>{ const th=document.createElement("th"); th.textContent=h; if(i&&numCol(rows,i)) th.className="num"; hr.appendChild(th); });
+  const tb = t.createTBody();
+  rows.forEach(r=>{ const tr=tb.insertRow(); r.forEach((c,i)=>{ const td=tr.insertCell(); td.textContent=c; if(i&&numCol(rows,i)) td.className="num"; }); });
+  wrap.appendChild(t); return wrap;
+}
+function emptyEl(msg){ const d=document.createElement("div"); d.className="empty"; d.textContent=msg; return d; }
+
+/* ---------- กราฟแท่งรายเดือน (SVG) ---------- */
+function niceMax(v){ if(v<=5) return 5; const p=Math.pow(10,Math.floor(Math.log10(v))); for(const m of [1,2,2.5,5,10]) if(m*p>=v) return m*p; return v; }
+function drawMonth(host, vals){
+  host.replaceChildren();
+  if (TV.month){ host.appendChild(tableEl(["เดือน","วันลา"], vals.map((v,i)=>[HR.MONTHS[i], HR.fmt(v)]))); return; }
+  const W=720,H=250,L=44,R=8,T=14,B=28, pw=W-L-R, ph=H-T-B;
+  const max = Math.max(...vals), top = niceMax(max||1);
+  const svg = document.createElementNS(SVGNS,"svg");
+  svg.setAttribute("viewBox",`0 0 ${W} ${H}`); svg.setAttribute("width","100%"); svg.setAttribute("role","img");
+  svg.setAttribute("aria-label","วันลาที่อนุมัติแล้วรายเดือน");
+  const mk=(n,a)=>{const e=document.createElementNS(SVGNS,n); for(const k in a) e.setAttribute(k,a[k]); return e;};
+  for(let i=0;i<=4;i++){
+    const v=top/4*i, y=T+ph-ph*v/top;
+    svg.appendChild(mk("line",{x1:L,x2:W-R,y1:y,y2:y,stroke:i?"var(--grid)":"var(--baseline)","stroke-width":1}));
+    const t=mk("text",{x:L-6,y:y+4,"text-anchor":"end"}); t.textContent=HR.fmt(v); svg.appendChild(t);
+  }
+  const slot=pw/12, bw=Math.min(24, slot-8);
+  vals.forEach((v,i)=>{
+    const cx=L+slot*i+slot/2, h=top? ph*v/top : 0, y=T+ph-h;
+    const g=mk("g",{class:"col"});
+    if (h>0){
+      const r=Math.min(4,h), x=cx-bw/2;
+      g.appendChild(mk("path",{d:`M${x},${T+ph} V${y+r} Q${x},${y} ${x+r},${y} H${x+bw-r} Q${x+bw},${y} ${x+bw},${y+r} V${T+ph} Z`,fill:"var(--s1)"}));
+    }
+    g.appendChild(mk("rect",{x:cx-slot/2,y:T,width:slot,height:ph+B-4,fill:"transparent"}));   // พื้นที่โฮเวอร์กว้างกว่าแท่ง
+    attachTip(g, HR.fmt(v)+" วัน", HR.MONTHS[i]+" "+(YEAR+543));
+    svg.appendChild(g);
+    const lb=mk("text",{x:cx,y:H-8,"text-anchor":"middle"}); lb.textContent=HR.MONTHS[i]; svg.appendChild(lb);
+    if (v>0 && v===max){ const vt=mk("text",{x:cx,y:y-4,"text-anchor":"middle",style:"fill:var(--text-primary);font-weight:600"}); vt.textContent=HR.fmt(v); svg.appendChild(vt); }
+  });
+  host.appendChild(svg);
+  if(!max) host.appendChild(emptyEl("ยังไม่มีการลาที่อนุมัติในปีนี้"));
+}
+
+/* ---------- แท่งแนวนอนเรียงอันดับ ---------- */
+function drawRanked(host, key, items, unit){
+  host.replaceChildren();
+  if (!items.length){ host.appendChild(emptyEl("ยังไม่มีข้อมูล")); return; }
+  if (TV[key]){ host.appendChild(tableEl(["ชื่อ","วันลา"], items.map(i=>[i.name, HR.fmt(i.v)]))); return; }
+  const max = Math.max(...items.map(i=>i.v)) || 1;
+  items.forEach(i=>{
+    const row=document.createElement("div"); row.className="rb";
+    const nm=document.createElement("div"); nm.className="nm"; nm.textContent=i.name; nm.title=i.name;
+    const tr=document.createElement("div"); tr.className="tr";
+    const b=document.createElement("div"); b.className="b"; b.style.width=`calc((100% - 70px) * ${i.v/max})`;
+    attachTip(b, HR.fmt(i.v)+" "+(unit||"วัน"), i.name);
+    const val=document.createElement("span"); val.className="val"; val.textContent=HR.fmt(i.v);
+    tr.append(b,val); row.append(nm,tr); host.appendChild(row);
+  });
+}
+
+/* ---------- ส่วนประกอบอื่น ---------- */
+function simpleTable(host, headers, rows, empty){
+  host.replaceChildren();
+  if(!rows.length){ host.appendChild(emptyEl(empty)); return; }
+  host.appendChild(tableEl(headers, rows));
+}
+
+const STATUS_COLOR = { approved:"var(--s1)", pending:"var(--s2)", rejected:"var(--s7)", cancelled:"#8a8a8a" };
+const STATUS_LABEL = { approved:"อนุมัติแล้ว", pending:"รออนุมัติ", rejected:"ไม่อนุมัติ", cancelled:"ยกเลิก" };
+
+/* ---------- คำนวณ + แสดงผล ---------- */
+let LAST = null;
+function inScope(code){
+  const d = $("dept").value; if(!d) return true;
+  const e = EMP.byCode[code]; return e && e.dept === d;
+}
+function leaveScope(l){
+  const d = $("dept").value; if(!d) return true;
+  const e = EMP.byCode[l.employee_id];
+  return (e ? e.dept : l.department_code) === d;
+}
+function render(){
+  const ls = LEAVES.filter(leaveScope);
+  const appr = ls.filter(l=>l.status==="approved");
+  const today = HR.ymd(new Date());
+
+  /* ผู้ใช้สิทธิ์: ต่อคนต่อประเภท (อนุมัติแล้ว) */
+  const used = {};
+  appr.forEach(l=>{ const u=(used[l.employee_id] ||= {}); u[l.leave_type]=(u[l.leave_type]||0)+Number(l.days||0); });
+  const asOf = YEAR >= new Date().getFullYear() ? new Date() : new Date(YEAR,11,31);
+  const active = EMP.list.filter(e=>!HR.isInactive(e) && inScope(e.code));
+  const near = [];
+  active.forEach(e=>{
+    const months = e.hire ? HR.monthsBetween(e.hire, asOf) : 0;
+    TYPES.filter(t=>t.active).forEach(t=>{
+      const q = HR.typeQuota(t, e.gender, months);
+      if (!q) return;
+      const u = (used[e.code]||{})[t.key]||0;
+      if (u/q >= 0.8) near.push({e, t, u, q});
+    });
+  });
+  near.sort((a,b)=>b.u/b.q - a.u/a.q);
+
+  const totalDays = appr.reduce((s,l)=>s+Number(l.days||0),0);
+  const pend = PENDING.filter(leaveScope);
+  const onToday = appr.filter(l=>l.start_date<=today && l.end_date>=today);
+  const onTodayPeople = new Set(onToday.map(l=>l.employee_id)).size;
+
+  const k = [
+    ["วันลาที่อนุมัติแล้ว", HR.fmt(totalDays), "วัน", `${appr.length} ใบลา`],
+    ["รออนุมัติ", pend.length, "ใบ", pend.length? "ดูรายการด้านล่าง":"ไม่มีค้าง"],
+    ["ลาอยู่วันนี้", onTodayPeople, "คน", `จากพนักงาน ${active.length} คน`],
+    ["ใช้สิทธิ์ใกล้เต็ม", new Set(near.map(n=>n.e.code)).size, "คน", "≥ 80% ของสิทธิ์"],
+    ["วันลาเฉลี่ยต่อคน", active.length? HR.fmt(totalDays/active.length):"-", "วัน", "ตามฝ่ายที่เลือก"]
+  ];
+  $("kpis").replaceChildren(...k.map(([l,v,u,n])=>{
+    const d=document.createElement("div"); d.className="card kpi";
+    const a=document.createElement("div"); a.className="l"; a.textContent=l;
+    const b=document.createElement("div"); b.className="v"; b.textContent=v;
+    const s=document.createElement("small"); s.textContent=" "+u; b.appendChild(s);
+    const c=document.createElement("div"); c.className="n"; c.textContent=n;
+    d.append(a,b,c); return d; }));
+
+  /* รายเดือน */
+  const months = Array(12).fill(0);
+  appr.forEach(l=>{ const m=Number(String(l.start_date).slice(5,7))-1; if(m>=0&&m<12) months[m]+=Number(l.days||0); });
+  drawMonth($("month"), months);
+
+  /* ตามประเภท / ฝ่าย */
+  const byType={}, byDept={};
+  appr.forEach(l=>{
+    byType[l.leave_type]=(byType[l.leave_type]||0)+Number(l.days||0);
+    const e=EMP.byCode[l.employee_id]; const d=e?e.dept:(l.department_code||"");
+    byDept[d]=(byDept[d]||0)+Number(l.days||0);
+  });
+  const rank = (o,nm)=>Object.entries(o).map(([k,v])=>({name:nm(k),v})).sort((a,b)=>b.v-a.v);
+  drawRanked($("type"),"type",rank(byType,typeName));
+  drawRanked($("deptc"),"dept",rank(byDept,deptName).slice(0,10));
+
+  /* สถานะ */
+  const cnt={approved:0,pending:0,rejected:0,cancelled:0};
+  ls.forEach(l=>{ const g=HR.statusGroup(l.status); if(g in cnt) cnt[g]++; });
+  const tot=Object.values(cnt).reduce((a,b)=>a+b,0);
+  $("statusSub").textContent = tot? `ทั้งหมด ${tot} ใบ` : "";
+  const sh=$("status"); sh.replaceChildren();
+  if(!tot){ sh.appendChild(emptyEl("ยังไม่มีใบลาในปีนี้")); }
+  else{
+    const seg=document.createElement("div"); seg.className="seg"; seg.setAttribute("role","img");
+    seg.setAttribute("aria-label", Object.keys(cnt).map(s=>STATUS_LABEL[s]+" "+cnt[s]).join(", "));
+    Object.keys(cnt).forEach(s=>{
+      if(!cnt[s]) return;
+      const d=document.createElement("div"); d.style.flex=cnt[s]+" 1 0"; d.style.background=STATUS_COLOR[s];
+      const pct=Math.round(cnt[s]/tot*100);
+      if (pct>=12) d.textContent = pct+"%";
+      attachTip(d, cnt[s]+" ใบ ("+pct+"%)", STATUS_LABEL[s]);
+      seg.appendChild(d);
+    });
+    sh.appendChild(seg);
+    const lg=document.createElement("div"); lg.className="legend";
+    Object.keys(cnt).forEach(s=>{
+      const sp=document.createElement("span"); const i=document.createElement("i"); i.style.background=STATUS_COLOR[s];
+      sp.append(i, document.createTextNode(STATUS_LABEL[s]+" "+cnt[s])); lg.appendChild(sp); });
+    sh.appendChild(lg);
+  }
+
+  /* ลาอยู่/กำลังจะลา */
+  const lim = new Date(); lim.setDate(lim.getDate()+14); const limS = HR.ymd(lim);
+  const up = appr.filter(l=>l.end_date>=today && l.start_date<=limS)
+    .sort((a,b)=>String(a.start_date).localeCompare(b.start_date));
+  simpleTable($("upcoming"), ["ชื่อ","ประเภท","ช่วงวันที่"],
+    up.slice(0,15).map(l=>[empName(l.employee_id), typeName(l.leave_type),
+      HR.thaiDate(l.start_date)+(l.end_date!==l.start_date?" – "+HR.thaiDate(l.end_date):"")]),
+    "ไม่มีผู้ลาในช่วงนี้");
+  if (up.length>15) $("upcoming").appendChild(Object.assign(document.createElement("div"),{className:"note",textContent:`แสดง 15 จาก ${up.length} รายการ — ดูทั้งหมดที่หน้ารายงาน`}));
+
+  /* คิวรออนุมัติ + อายุ */
+  const now=Date.now();
+  const q = pend.map(l=>{
+    const t = l.submitted_at || l.created_at; const age = t? Math.floor((now-new Date(t))/86400000) : null;
+    return {l, age};
+  }).sort((a,b)=>(b.age??-1)-(a.age??-1));
+  const qh=$("queue"); qh.replaceChildren();
+  if(!q.length) qh.appendChild(emptyEl("ไม่มีใบลาค้างอนุมัติ"));
+  else{
+    const wrap=tableEl(["ชื่อ","ประเภท","ขั้นตอน","ค้าง (วัน)"], q.slice(0,12).map(({l,age})=>[
+      empName(l.employee_id), typeName(l.leave_type), HR.STATUS_TH[l.status]||l.status, age==null?"-":age]));
+    qh.appendChild(wrap);
+    if(q.length>12) qh.appendChild(Object.assign(document.createElement("div"),{className:"note",textContent:`แสดง 12 จาก ${q.length} ใบ`}));
+  }
+
+  /* ใกล้เต็ม */
+  simpleTable($("near"), ["ชื่อ","ประเภท","ใช้แล้ว / สิทธิ์","%"],
+    near.slice(0,12).map(n=>[n.e.name, n.t.name, HR.fmt(n.u)+" / "+HR.fmt(n.q), Math.round(n.u/n.q*100)+"%"]),
+    "ยังไม่มีผู้ใช้สิทธิ์ใกล้เต็ม");
+
+  /* พักร้อนคงเหลือมาก */
+  const vt = TYPES.find(t=>t.quota_mode==="tenure") || TYPES.find(t=>t.key==="vacation");
+  const vac=[];
+  if (vt) active.forEach(e=>{
+    const m=e.hire?HR.monthsBetween(e.hire,asOf):0, qq=HR.typeQuota(vt,e.gender,m);
+    if(!qq) return; const u=(used[e.code]||{})[vt.key]||0;
+    vac.push({e, rem:qq-u, qq, u});
+  });
+  vac.sort((a,b)=>b.rem-a.rem);
+  simpleTable($("vac"), ["ชื่อ","ใช้แล้ว","คงเหลือ"], vac.slice(0,10).map(v=>[v.e.name, HR.fmt(v.u), HR.fmt(v.rem)+" / "+HR.fmt(v.qq)]), "ไม่มีข้อมูลสิทธิ์พักร้อน");
+}
+
+/* ---------- โหลดข้อมูล ---------- */
+async function load(){
+  const stage=$("stage"); stage.classList.add("busy");
+  try{
+    YEAR = Number($("year").value) - 543 || YEAR;
+    const [types, emp, dept, leaves, pending] = await Promise.all([
+      HR.loadTypes(sb), HR.loadEmployees(sb), HR.loadDepartments(sb),
+      HR.loadLeaves(sb,{startFrom:`${YEAR}-01-01`,startTo:`${YEAR}-12-31`}),
+      HR.loadLeaves(sb,{status:HR.PENDING})
+    ]);
+    TYPES=types; EMP=emp; DEPT=dept; LEAVES=leaves; PENDING=pending;
+    if(!EMP.list.length) uiAlert({title:"ไม่พบข้อมูลพนักงาน",message:"ตรวจ RLS policy ของตาราง employees ว่า HR อ่านได้",tone:"warn"});
+    fillDepts(); render();
+    $("stamp").textContent = "อัปเดต "+new Date().toLocaleTimeString("th-TH");
+  }catch(err){
+    uiAlert({title:"โหลดข้อมูลไม่สำเร็จ",message:err.message||String(err),tone:"error"});
+  }finally{ stage.classList.remove("busy"); }
+}
+function fillDepts(){
+  const sel=$("dept"), cur=sel.value;
+  const codes=[...new Set(EMP.list.map(e=>e.dept).filter(Boolean))].sort((a,b)=>deptName(a).localeCompare(deptName(b),"th"));
+  sel.replaceChildren(new Option("ทุกฝ่าย",""), ...codes.map(c=>new Option(deptName(c),c)));
+  sel.value = codes.includes(cur)? cur : "";
+}
+
+/* ---------- Auth + เริ่มต้น ---------- */
+async function start(){
+  const { data:{ session } } = await sb.auth.getSession();
+  $("login").style.display = session?"none":"block";
+  $("app").style.display = session?"block":"none";
+  if(session){
+    if(!$("year").options.length){
+      const y=new Date().getFullYear();
+      for(let i=y;i>=y-4;i--) $("year").add(new Option(i+543,i+543));
+    }
+    load();
+  }
+}
+$("loginBtn").onclick = async ()=>{
+  const { error } = await sb.auth.signInWithPassword({email:$("email").value,password:$("password").value});
+  if(error) $("loginErr").textContent=error.message; else start();
+};
+$("password").addEventListener("keydown",e=>{ if(e.key==="Enter") $("loginBtn").click(); });
+$("logout").onclick = async ()=>{ await sb.auth.signOut(); start(); };
+$("year").onchange = load;
+$("reload").onclick = load;
+$("dept").onchange = render;
+document.querySelectorAll(".tv").forEach(b=>b.onclick=()=>{
+  const k=b.dataset.tv; TV[k]=!TV[k]; b.textContent = TV[k]?"ดูเป็นกราฟ":"ดูเป็นตาราง"; render();
+});
+start();
+</script>
+</body>
+</html>
