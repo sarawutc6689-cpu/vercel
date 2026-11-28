@@ -1,0 +1,48 @@
+<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ขออนุญาตออกนอกสถานที่</title><link rel="stylesheet" href="assets/style.css"></head><body><main>
+<h1>ขออนุญาตออกนอกสถานที่</h1>
+<form id="login" class="card">
+  <label>รหัสพนักงาน<input id="code" autocomplete="username" required></label>
+  <label>รหัสผ่าน (วันเริ่มงาน เช่น 01112569)<input id="pass" type="password" autocomplete="current-password" required></label>
+  <button>เข้าสู่ระบบ</button><p class="msg" id="loginMsg"></p>
+  <p class="muted">ผู้จัดการอนุมัติที่ <a href="manager.html">หน้าผู้จัดการ</a></p>
+</form>
+<section id="app" hidden>
+  <p>สวัสดี <b id="who"></b> <button type="button" class="link" id="out">ออกจากระบบ</button></p>
+  <form id="f" class="card">
+    <label>ประเภท<select id="type"><option value="official">ไปราชการ/งานบริษัท</option><option value="personal">ธุระส่วนตัว</option></select></label>
+    <label>สถานที่ที่ไป<input id="dest" required></label>
+    <label>เหตุผล<textarea id="reason" rows="2" required></textarea></label>
+    <label>วันที่<input id="date" type="date" required></label>
+    <div class="row"><label>เวลาออก<input id="tout" type="time" required></label><label>เวลากลับ<input id="tback" type="time" required></label></div>
+    <button>ส่งคำขอ</button><p class="msg" id="fMsg" aria-live="polite"></p>
+  </form>
+  <h2>คำขอของฉัน</h2><div id="list"></div>
+</section></main>
+<script src="assets/app.js"></script>
+<script>
+let C = '', P = '';
+const setDate = () => { $('date').min = $('date').value = new Date().toLocaleDateString('sv'); };
+async function load() {
+  const r = await rpc('outing_my_list', { p_code: C, p_pass: P });
+  $('who').textContent = r.emp;
+  $('list').innerHTML = r.rows.map(o => `<div class="card item"><b>${esc(o.doc_no)} · ${esc(o.destination)}</b>
+    <small>${esc(TYPE[o.outing_type])} · ${esc(o.out_date)} ${hm(o.time_out)}–${hm(o.time_back)}</small>
+    <div class="s-${esc(o.status)}">${esc(STATUS[o.status] || o.status)}${o.manager_note ? ' — ' + esc(o.manager_note) : ''}</div></div>`).join('')
+    || '<p class="muted">ยังไม่มีคำขอ กรอกฟอร์มด้านบนเพื่อส่งคำขอแรก</p>';
+}
+$('login').onsubmit = async e => {
+  e.preventDefault(); C = $('code').value.trim(); P = $('pass').value; $('loginMsg').textContent = '';
+  try { await load(); $('login').hidden = true; $('app').hidden = false; setDate(); }
+  catch (err) { $('loginMsg').textContent = err.message; }
+};
+$('f').onsubmit = async e => {
+  e.preventDefault(); const g = n => $(n).value; $('fMsg').textContent = '';
+  try {
+    const r = await rpc('outing_submit', { p_code: C, p_pass: P, p_type: g('type'), p_dest: g('dest'),
+      p_reason: g('reason'), p_date: g('date'), p_out: g('tout'), p_back: g('tback') });
+    e.target.reset(); setDate(); await load(); $('fMsg').textContent = 'ส่งคำขอแล้ว เลขที่ ' + r.doc_no;
+  } catch (err) { $('fMsg').textContent = err.message; }
+};
+$('out').onclick = () => { C = P = ''; location.reload(); };
+</script></body></html>
