@@ -52,7 +52,7 @@ button.link:hover{color:var(--brand-d);text-decoration:underline}
 <label>อีเมล<input id="email" type="email" autocomplete="username" required></label>
 <label>รหัสผ่าน<input id="pass" type="password" autocomplete="current-password" required></label>
 <button>เข้าสู่ระบบ</button><p class="msg" id="loginMsg"></p></form>
-<section id="app" hidden><nav class="tabs"><a href="hr.html" aria-current="page">อนุมัติ</a></nav><div class="tabs"><button class="tab" data-view="pending">รออนุมัติ</button><button class="tab" data-view="history">ประวัติ</button></div><div id="list"></div><p class="msg" id="msg" aria-live="polite"></p></section></main>
+<section id="app" hidden><div class="tabs"><button class="tab" data-view="pending">รออนุมัติ</button><button class="tab" data-view="history">ประวัติ</button></div><div id="list"></div><p class="msg" id="msg" aria-live="polite"></p></section></main>
 <script src="assets/app.js"></script><script>
 let view = 'pending';
 async function load() {
