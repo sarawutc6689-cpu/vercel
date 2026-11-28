@@ -37,6 +37,8 @@
       font: 15px/1.6 "Noto Sans Thai", "Sarabun", system-ui, sans-serif;
       -webkit-font-smoothing: antialiased;
       min-height: 100vh;
+      display: flex;
+      flex-direction: column;
     }
 
     /* ส่วนหัว Header ด้านบน */
@@ -80,12 +82,14 @@
       font-size: 1rem;
     }
 
-    /* ส่วนเนื้อหาหลัก - ปรับระยะเว้นให้พ้นขอบ Header */
+    /* ส่วนเนื้อหาหลัก - ปรับระยะเว้นให้พ้นขอบ Header และขยายเต็มความสูง */
     main {
       position: relative;
       max-width: 640px;
       margin: 0 auto;
-      padding: 28px 20px 60px;
+      padding: 28px 20px 40px;
+      flex: 1;
+      width: 100%;
     }
 
     main.wide {
@@ -103,7 +107,7 @@
       gap: 8px;
     }
 
-    /* หัวข้อแรกสุด (พนักงาน) - ปรับระยะห่างด้านบนให้พอดี สบายตา */
+    /* หัวข้อแรกสุด (พนักงาน) */
     .sec:first-child {
       margin-top: 4px;
     }
@@ -165,12 +169,39 @@
       background: var(--brand-light);
       color: var(--brand);
     }
+
+    /* ส่วนท้าย Footer */
+    footer.app-footer {
+      border-top: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(8px);
+      padding: 18px 16px;
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--mute);
+      margin-top: auto;
+    }
+
+    footer.app-footer .sep {
+      margin: 0 8px;
+      color: #cbd5e1;
+    }
+
+    @media (max-width: 600px) {
+      footer.app-footer {
+        font-size: 0.8rem;
+        line-height: 1.8;
+      }
+      footer.app-footer .sep {
+        display: inline-block;
+      }
+    }
   </style>
 </head>
 <body>
   <header class="top">
-    <h1>ระบบขออนุญาตออกนอกสถานที่</h1>
-    <p>เลือกเมนูตามหน้าที่ของคุณ</p>
+    <h1>ขออนุญาตออกนอกสถานที่</h1>
+    
   </header>
 
   <main class="wide">
@@ -219,5 +250,14 @@
       </a>
     </div>
   </main>
+
+  <!-- ส่วน Footer -->
+  <footer class="app-footer">
+    <span>ขออนุญาตออกนอกสถานที่</span>
+    <span class="sep">|</span>
+    <span>ใช้ภายในบริษัทเท่านั้น</span>
+    <span class="sep">|</span>
+    <span>พัฒนาโดย Sarawut.C</span>
+  </footer>
 </body>
 </html>
