@@ -1,0 +1,68 @@
+<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>สรุปการอนุมัติ</title><style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap');
+:root{--bg:#f5f9ff;--card:#fff;--ink:#0f1e36;--mute:#64748b;--line:#e2eaf8;--brand:#2563eb;--brand-d:#1d4ed8;--brand-light:#eff6ff;--bad:#e11d48;--bad-light:#fff1f2;--ok:#10b981;--ok-light:#ecfdf5;--pending-light:#fef3c7;--shadow:0 10px 30px -10px rgba(37,99,235,.08),0 1px 3px rgba(0,0,0,.02);--radius:16px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.6 "Noto Sans Thai","Sarabun",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.top{background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 100%);color:#fff;padding:40px 16px 72px;text-align:center;position:relative;overflow:hidden}
+.top::before{content:"";position:absolute;top:-50%;left:-20%;width:140%;height:140%;background:radial-gradient(circle,rgba(255,255,255,.1) 0%,transparent 60%);pointer-events:none}
+.top>*{max-width:640px;margin-left:auto;margin-right:auto;position:relative;z-index:1}
+.top h1{font-size:1.8rem;font-weight:700;letter-spacing:-.025em;margin-bottom:6px}
+.top p{opacity:.9;font-size:.95rem}
+main{position:relative;max-width:640px;margin:-48px auto 0;padding:0 16px 56px}
+h2{font-size:1.1rem;font-weight:600;margin-bottom:16px}
+#app>h2{margin:32px 0 14px;font-size:1.15rem}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:24px;margin-bottom:16px;box-shadow:var(--shadow)}
+label{display:block;margin-bottom:16px;font-size:.88rem;font-weight:600;color:#344054}
+input,select,textarea{display:block;width:100%;margin-top:6px;padding:12px 14px;font:inherit;color:var(--ink);background:#fff;border:1px solid #d0d5dd;border-radius:8px;box-shadow:0 1px 2px rgba(16,24,40,.05)}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 4px rgba(37,99,235,.12)}
+.row{display:flex;gap:12px}.row>label{flex:1;min-width:0}
+button{font:inherit;font-weight:600;padding:12px 20px;border:0;border-radius:8px;background:var(--brand);color:#fff;cursor:pointer;transition:background .15s;box-shadow:0 1px 2px rgba(16,24,40,.05)}
+button:hover{background:var(--brand-d)}
+form button{width:100%}
+button.bad{background:#fff;color:var(--bad);border:1px solid var(--bad)}button.bad:hover{background:var(--bad-light)}
+button.link{width:auto;background:none;color:var(--brand);padding:0;font-weight:500;box-shadow:none}
+button.link:hover{color:var(--brand-d);text-decoration:underline}
+:focus-visible{outline:3px solid rgba(37,99,235,.35);outline-offset:2px}
+.msg:not(:empty){margin-top:14px;padding:12px 16px;border-radius:8px;font-size:.9rem;background:var(--bad-light);border:1px solid #fecdd3;color:var(--bad)}
+.msg.ok:not(:empty){background:var(--brand-light);border-color:#bfdbfe;color:var(--brand)}
+.muted{color:var(--mute);font-size:.9rem}a{color:var(--brand);text-decoration:none;font-weight:500}a:hover{text-decoration:underline}
+.hello{display:flex;justify-content:space-between;align-items:center;background:var(--brand-light);border:1px solid #dbeafe;border-radius:12px;padding:12px 16px;margin-bottom:20px}
+.hello span{font-weight:500;color:var(--brand)}
+.item{display:grid;gap:4px;border-left:4px solid var(--brand)}
+.item small{color:var(--mute);font-size:.82rem}.item .top-row{display:flex;justify-content:space-between;gap:12px;align-items:start}
+.badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:.8rem;font-weight:600;white-space:nowrap}
+.badge.s-pending_manager,.badge.s-pending_hr{background:var(--pending-light);color:#92400e}
+.badge.s-approved{background:var(--ok-light);color:#065f46}.badge.s-rejected{background:var(--bad-light);color:#9f1239}
+.badge.s-cancelled{background:#f1f5f9;color:#475569}
+.note{font-size:.85rem;color:var(--mute);margin-top:8px;padding-top:6px;border-top:1px dashed var(--line)}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.actions input{flex:1 1 100%;margin:0}.actions button{flex:1}
+.tabs{display:flex;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:4px;margin-bottom:14px}
+.tab{flex:1;background:none;color:var(--mute);box-shadow:none}.tab:hover{background:var(--brand-light)}
+.tab[aria-pressed=true]{background:var(--brand);color:#fff}
+.tabs a{flex:1;text-align:center;padding:10px;border-radius:8px;color:var(--mute);font-weight:600}.tabs a:hover{background:var(--brand-light);text-decoration:none}.tabs a[aria-current]{background:var(--brand);color:#fff}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-bottom:14px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;text-align:center}.stat b{display:block;font-size:1.6rem}.stat small{color:var(--mute)}
+.wrap{overflow-x:auto}.tbl{width:100%;border-collapse:collapse;font-size:.9rem}.tbl th,.tbl td{padding:8px;border-bottom:1px solid var(--line);text-align:left}.tbl .n{text-align:right}.tbl th{color:var(--mute);font-weight:600}
+.dayrow{display:flex;gap:8px;align-items:center}.dayrow input{margin:0;flex:2}.dayrow button{flex:1;padding:10px}
+@media print{.top,.tabs,.dayctl,#login,#prt{display:none!important}body{background:#fff}.card{box-shadow:none}}
+
+</style></head><body><header class="top"><h1>สรุปการอนุมัติ</h1><p>ภาพรวมคำขอออกนอกสถานที่ตามช่วงวันที่</p></header><main>
+<form id="login" class="card"><h2>เข้าสู่ระบบ</h2>
+<label>อีเมล<input id="email" type="email" autocomplete="username" required></label>
+<label>รหัสผ่าน<input id="pass" type="password" autocomplete="current-password" required></label>
+<button>เข้าสู่ระบบ</button><p class="msg" id="loginMsg"></p></form>
+<section id="app" hidden><nav class="tabs"><a href="hr.html">อนุมัติ</a><a href="summary.html" aria-current="page">สรุป</a><a href="guard.html">รายงาน รปภ.</a></nav><form id="range" class="card"><div class="row"><label>ตั้งแต่<input id="from" type="date" required></label><label>ถึง<input id="to" type="date" required></label></div><button>ดูสรุป</button></form>
+<div class="stats" id="stats"></div><div class="card wrap"><table class="tbl"><thead><tr><th>แผนก</th><th class="n">ทั้งหมด</th><th class="n">อนุมัติ</th><th class="n">ไม่อนุมัติ</th><th class="n">รอ</th></tr></thead><tbody id="rows"></tbody></table></div><p class="msg" id="msg" aria-live="polite"></p></section></main>
+<script src="assets/app.js"></script><script>
+async function load() {
+  const r = await rpc('outing_summary', { p_from: $('from').value, p_to: $('to').value }, TOKEN), s = r.totals;
+  const g = k => s[k] || 0, pend = g('pending_manager') + g('pending_hr'), tot = Object.values(s).reduce((a, b) => a + b, 0);
+  $('stats').innerHTML = [['ทั้งหมด', tot], ['อนุมัติ', g('approved')], ['ไม่อนุมัติ', g('rejected')], ['รอดำเนินการ', pend]]
+    .map(([l, n]) => `<div class="stat"><b>${n}</b><small>${l}</small></div>`).join('');
+  $('rows').innerHTML = r.by_dept.map(d => `<tr><td>${esc(d.dept)}</td><td class="n">${d.total}</td><td class="n">${d.approved}</td><td class="n">${d.rejected}</td><td class="n">${d.pending}</td></tr>`).join('')
+    || '<tr><td colspan="5" class="muted">ไม่มีคำขอในช่วงวันที่นี้</td></tr>';
+}
+boot(() => { const t = new Date(); $('to').value = t.toLocaleDateString('sv'); $('from').value = new Date(t.getFullYear(), t.getMonth(), 1).toLocaleDateString('sv'); return load(); });
+$('range').onsubmit = e => { e.preventDefault(); run(load); };
+</script></body></html>
