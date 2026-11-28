@@ -56,7 +56,7 @@
 <script>
 const SUPABASE_URL      = "https://ppzdyvomrfiitahxwrwz.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBwemR5dm9tcmZpaXRhaHh3cnd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwMjQ0MjIsImV4cCI6MjEwNDYwMDQyMn0.iArUz6swMfwhFT_1qEvCwK1B3aiCxdWt46_FBjT6_Y0";
-const COUNT_SAT = false;   // true = นับวันเสาร์เป็นวันทำงานตอนคำนวณจำนวนวันลา (ถ้าบริษัททำงานวันเสาร์)
+const COUNT_SAT = true;    // true = นับวันเสาร์เป็นวันทำงาน (จันทร์-เสาร์) ตั้งเป็น false ถ้าต้องการไม่นับวันเสาร์
 </script>
 
 <main>
@@ -321,7 +321,7 @@ function onFormChange(){
 
   let days, hours = null, halfDay = null;
   if (half){
-    if (countDays(s,s)===0){ box.className="info warn"; box.textContent="วันที่เลือกไม่ใช่วันทำงาน (เสาร์-อาทิตย์/วันหยุด)"; return; }
+    if (countDays(s,s)===0){ box.className="info warn"; box.textContent="วันที่เลือกไม่ใช่วันทำงาน (วันอาทิตย์/วันหยุด)"; return; }
     days = 0.5; halfDay = $("fhalf").value;
   } else if (hourly){
     hours = Number($("fhours").value);
@@ -329,7 +329,7 @@ function onFormChange(){
     days = hours/HOURS_PER_DAY;
   } else {
     days = countDays(s,e);
-    if (days===0){ box.className="info warn"; box.textContent="ช่วงวันที่เลือกไม่มีวันทำงาน (เสาร์-อาทิตย์/วันหยุด)"; return; }
+    if (days===0){ box.className="info warn"; box.textContent="ช่วงวันที่เลือกไม่มีวันทำงาน (วันอาทิตย์/วันหยุด)"; return; }
   }
 
   let after = null, txt = `จำนวนที่ลา: <b>${half?`ครึ่งวัน (${halfDay==="AM"?"เช้า":"บ่าย"}) = 0.5 วัน`:hourly?`${fmt(hours)} ชม. (${fmt(days)} วัน)`:daysHours(days)}</b>`;
@@ -350,7 +350,7 @@ function fmsg(t,k){ const m=$("fmsg"); m.textContent=t||""; m.className="msg "+(
 async function submitLeave(){
   fmsg("");
   onFormChange();
-  if (!FCALC) return fmsg("ตรวจสอบประเภท วันที่ และจำนวนชั่วโมงอีกครั้ง","er");
+  if (!FCALC){ const c=$("fcalc"); return fmsg(!c.classList.contains("hide") && c.textContent.trim() ? c.textContent.trim() : "ตรวจสอบประเภท วันที่ และช่วงเวลา/จำนวนชั่วโมงอีกครั้ง","er"); }
   if (FCALC.over) return fmsg("จำนวนวันลาเกินสิทธิ์ที่เหลือ","er");
   const reason = $("freason").value.trim();
   if (!reason) return fmsg("กรุณาระบุเหตุผลการลา","er");
