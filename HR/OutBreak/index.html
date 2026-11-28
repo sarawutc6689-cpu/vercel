@@ -40,6 +40,7 @@ button.link:hover{color:var(--brand-d);text-decoration:underline}
 .tabs{display:flex;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:4px;margin-bottom:14px}
 .tab{flex:1;background:none;color:var(--mute);box-shadow:none}.tab:hover{background:var(--brand-light)}
 .tab[aria-pressed=true]{background:var(--brand);color:#fff}
+.item small b{color:var(--ink);font-weight:500}
 </style></head><body><header class="top"><h1>ขออนุญาตออกนอกสถานที่</h1><p>ส่งคำขอและติดตามสถานะได้ในที่เดียว</p></header><main>
 <form id="login" class="card">
   <h2>เข้าสู่ระบบพนักงาน</h2>
@@ -65,12 +66,15 @@ button.link:hover{color:var(--brand-d);text-decoration:underline}
 <script>
 let C = '', P = '';
 const setDate = () => { $('date').min = $('date').value = new Date().toLocaleDateString('sv'); };
+const dmy = d => String(d).split('-').reverse().join('-');
 async function load() {
   const r = await rpc('outing_my_list', { p_code: C, p_pass: P });
   $('who').textContent = r.emp;
   $('list').innerHTML = r.rows.map(o => `<div class="card item"><div class="top-row"><b>${esc(o.destination)}</b><span class="badge s-${esc(o.status)}">${esc(STATUS[o.status] || o.status)}</span></div>
-    <small>${esc(o.doc_no)} · ${esc(TYPE[o.outing_type])}</small>
-    <small>${esc(o.out_date)} · ${hm(o.time_out)}–${hm(o.time_back)} น.</small>${(o.hr_note || o.manager_note) ? `<div class="note">หมายเหตุ: ${esc((o.hr_note || o.manager_note))}</div>` : ''}</div>`).join('')
+    <small>เลขที่เอกสาร : <b>${esc(o.doc_no)}</b></small>
+    <small>ประเภท : <b>${esc(TYPE[o.outing_type])}</b></small>
+    <small>วันที่ : <b>${esc(dmy(o.out_date))}</b></small>
+    <small>เวลา : <b>${hm(o.time_out)}–${hm(o.time_back)} น.</b></small>${(o.hr_note || o.manager_note) ? `<div class="note">หมายเหตุ: ${esc((o.hr_note || o.manager_note))}</div>` : ''}</div>`).join('')
     || '<p class="muted">ยังไม่มีคำขอ กรอกฟอร์มด้านบนเพื่อส่งคำขอแรก</p>';
 }
 $('login').onsubmit = async e => {
