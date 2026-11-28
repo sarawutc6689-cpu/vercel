@@ -1,5 +1,5 @@
 // ใส่ Project URL และ anon (public) key เท่านั้น — ห้ามใส่ service_role key
-const SB = { url: 'https://ppzdyvomrfiitahxwrwz.supabase.co', key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBwemR5dm9tcmZpaXRhaHh3cnd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwMjQ0MjIsImV4cCI6MjEwNDYwMDQyMn0.iArUz6swMfwhFT_1qEvCwK1B3aiCxdWt46_FBjT6_Y0' };
+const SB = { url: 'https://YOUR-PROJECT.supabase.co', key: 'YOUR_ANON_KEY' };
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 async function rpc(fn, args, token) {
@@ -28,3 +28,16 @@ const ERR = {
 const STATUS = { pending_manager: 'รอผู้จัดการ', pending_hr: 'รอฝ่ายบุคคล', approved: 'อนุมัติแล้ว', rejected: 'ไม่อนุมัติ', cancelled: 'ยกเลิก' };
 const TYPE = { official: 'ไปราชการ/งานบริษัท', personal: 'ธุระส่วนตัว' };
 const hm = t => String(t).slice(0, 5);
+
+// ---- หน้าเจ้าหน้าที่ (ฝ่ายบุคคล / รปภ.) ล็อกอินด้วย Supabase Auth ----
+Object.assign(ERR, { not_hr: 'บัญชีนี้ไม่ใช่ฝ่ายบุคคล', not_guard: 'บัญชีนี้ไม่มีสิทธิ์ดูรายงานนี้' });
+let TOKEN = '';
+function boot(onReady) {
+  $('login').onsubmit = async e => {
+    e.preventDefault(); $('loginMsg').textContent = '';
+    try { TOKEN = await mgrLogin($('email').value, $('pass').value); await onReady();
+          $('login').hidden = true; $('app').hidden = false; }
+    catch (err) { $('loginMsg').textContent = err.message; }
+  };
+}
+const run = async f => { $('msg').textContent = ''; try { await f(); } catch (e) { $('msg').textContent = e.message; } };
