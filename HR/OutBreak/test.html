@@ -460,21 +460,53 @@
       margin: 20px auto 0;
     }
 
+    /* สไตล์สำหรับการพิมพ์และลายน้ำ */
     @media print {
+      @page {
+        margin: 1.5cm;
+      }
+
+      /* ลายน้ำ TOKAISOLIDTIRE เฉพาะตอนสั่งพิมพ์ */
+      body::before {
+        content: "ใช้ภายในบริษัท TOKAISOLIDTIRE เท่านั้น";
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) rotate(-32deg);
+        font-size: 4.8rem;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        color: rgba(15, 30, 54, 0.08); /* สีจางโปร่งแสงเพื่อไม่บังตัวหนังสือ */
+        pointer-events: none;
+        z-index: 9999;
+        white-space: nowrap;
+        text-transform: uppercase;
+        font-family: system-ui, -apple-system, sans-serif;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
       .top, .tabs, .dayctl, #login, #prt {
         display: none !important;
       }
+
       body {
         background: #fff;
       }
+
       .card {
         box-shadow: none;
         border: none;
         padding: 0;
       }
+
       main {
         margin: 0;
         padding: 0;
+      }
+
+      .tbl th {
+        background-color: transparent;
       }
     }
   </style>
