@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>รายงานการลา</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="ui.js"></script>
+<script src="hr-common.js"></script>
+<style>
+  :root{--bg:#eaf3fd;--card:#fff;--text:#1e3a5f;--muted:#5b7391;--line:#d6e4f5;--primary:#1d6fd8;--bad:#dc2626}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Sarabun","Noto Sans Thai",system-ui,sans-serif;background:var(--bg);color:var(--text)}
+  header{background:linear-gradient(90deg,#1558b8,#2f8cf0);color:#fff;padding:14px 20px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+  header h1{font-size:18px;margin:0;flex:1}
+  header a{color:#fff;text-decoration:none;font-size:14px}
+  main{max-width:1300px;margin:0 auto;padding:16px}
+  select,input,button{font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--text)}
+  button{background:var(--primary);color:#fff;border:0;cursor:pointer}
+  button.ghost{background:#fff;color:var(--text);border:1px solid var(--line)}
+  .card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px}
+  .filters{display:flex;gap:12px;align-items:end;flex-wrap:wrap;margin-bottom:16px}
+  .filters label{display:flex;flex-direction:column;font-size:12px;color:var(--muted);gap:4px}
+  .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+  .tabs button{background:#fff;color:var(--text);border:1px solid var(--line)}
+  .tabs button.on{background:var(--primary);color:#fff;border-color:var(--primary)}
+  .bar{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+  .wrap{overflow:auto;max-height:70vh}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+  th{position:sticky;top:0;background:#f3f8fe;cursor:pointer;user-select:none;font-size:12px}
+  th.num,td.num{text-align:right;font-variant-numeric:tabular-nums}
+  th[aria-sort="ascending"]::after{content:" ▲";font-size:9px}
+  th[aria-sort="descending"]::after{content:" ▼";font-size:9px}
+  tfoot td{font-weight:700;background:#f3f8fe;position:sticky;bottom:0}
+  .low{color:var(--bad);font-weight:600}
+  .muted{color:var(--muted);font-size:12px}
+  #stage{transition:opacity .15s}#stage.busy{opacity:.5;pointer-events:none}
+  #login{max-width:340px;margin:80px auto}#login input{width:100%;margin-bottom:10px}
+  .err{color:var(--bad);font-size:13px;min-height:18px}
+  .pager{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:8px;font-size:13px}
+  @media print{header,.filters,.tabs,.pager,button,footer{display:none!important}.wrap{max-height:none;overflow:visible}body{background:#fff}.card{border:0;padding:0}th{position:static}}
+</style>
+</head>
+<body>
+<script>
+const SUPABASE_URL      = "https://YOUR-PROJECT.supabase.co";
+const SUPABASE_ANON_KEY = "YOUR-ANON-KEY";
+</script>
+<div id="login" class="card" style="display:none">
+  <h2 style="margin-top:0">เข้าสู่ระบบ HR</h2>
+  <input id="email" type="email" placeholder="อีเมล">
+  <input id="password" type="password" placeholder="รหัสผ่าน">
+  <div class="err" id="loginErr"></div>
+  <button id="loginBtn" style="width:100%">เข้าสู่ระบบ</button>
+</div>
+
+<div id="app" style="display:none">
+  <header>
+    <h1>รายงานการลา</h1>
+    <a href="index.html">หน้าหลัก</a><a href="dashboard.html">แดชบอร์ด</a><a href="summary.html">สรุปรายคน</a><a href="hr-approve.html">อนุมัติ</a>
+    <button class="ghost" id="logout">ออกจากระบบ</button>
+  </header>
+  <main>
+    <div class="filters">
+      <label>ปี (พ.ศ.)<select id="year"></select></label>
+      <label>ตั้งแต่เดือน<select id="m1"></select></label>
+      <label>ถึงเดือน<select id="m2"></select></label>
+      <label>ฝ่าย<select id="dept"></select></label>
+      <label>ประเภทลา<select id="type"></select></label>
+      <label>สถานะ<select id="status">
+        <option value="">ทุกสถานะ</option><option value="approved">อนุมัติแล้ว</option><option value="pending">รออนุมัติ</option>
+        <option value="rejected">ไม่อนุมัติ</option><option value="cancelled">ยกเลิก</option></select></label>
+      <label>ค้นหา<input id="q" placeholder="ชื่อ / รหัส" style="min-width:160px"></label>
+    </div>
+    <div class="card" id="stage">
+      <div class="tabs" id="tabs"></div>
+      <div class="bar"><span class="muted" id="info"></span>
+        <span><button class="ghost" id="csv">ดาวน์โหลด CSV</button> <button class="ghost" id="print">พิมพ์</button></span></div>
+      <div class="wrap"><table id="tbl"></table></div>
+      <div class="pager" id="pager"></div>
+    </div>
+  </main>
+</div>
+<footer style="text-align:center;padding:16px;margin-top:24px;font-size:12px;color:#5b7391;border-top:1px solid #d6e4f5">ระบบลาออนไลน์ | ใช้ภายในบริษัทเท่านั้น | พัฒนาโดย Sarawut.C</footer>
+
+<script>
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const $ = id => document.getElementById(id);
+let TYPES=[], EMP={list:[],byCode:{}}, DEPT={map:{}}, LEAVES=[], YEAR=new Date().getFullYear();
+let TAB="detail", SORT={col:null,dir:1}, PAGE=0; const PAGE_SIZE=200;
+let VIEW={headers:[],rows:[],foot:null,title:""};
+const deptName=c=>DEPT.map[c]||c||"ไม่ระบุฝ่าย";
+const typeName=k=>(TYPES.find(t=>t.key===k)||{}).name||k;
+const empOf=c=>EMP.byCode[c];
+const TABS=[["detail","รายการลา"],["person","สรุปรายคน"],["dept","สรุปรายฝ่าย"],["balance","สิทธิ์คงเหลือ"]];
+
+const cellText=c=>c&&typeof c==="object"?c.t:(typeof c==="number"?HR.fmt(c):(c==null?"":String(c)));
+const cellSort=c=>c&&typeof c==="object"?c.s:c;
+
+function filtered(){
+  const m1=Number($("m1").value), m2=Number($("m2").value), d=$("dept").value, t=$("type").value, s=$("status").value, q=$("q").value.trim().toLowerCase();
+  return LEAVES.filter(l=>{
+    const m=Number(String(l.start_date).slice(5,7));
+    if(m<m1||m>m2) return false;
+    const e=empOf(l.employee_id), dc=e?e.dept:l.department_code;
+    if(d&&dc!==d) return false;
+    if(t&&l.leave_type!==t) return false;
+    if(s&&HR.statusGroup(l.status)!==s) return false;
+    if(q){ const nm=(e?e.name:"").toLowerCase(); if(!nm.includes(q)&&!String(l.employee_id).toLowerCase().includes(q)) return false; }
+    return true;
+  });
+}
+function peopleInScope(){
+  const d=$("dept").value, q=$("q").value.trim().toLowerCase();
+  return EMP.list.filter(e=>!HR.isInactive(e)&&(!d||e.dept===d)&&(!q||e.name.toLowerCase().includes(q)||e.code.toLowerCase().includes(q)));
+}
+const days=l=>Number(l.days||0);
+
+function build(){
+  const ls=filtered(), T=TYPES.filter(t=>t.active);
+  if(TAB==="detail"){
+    const rows=ls.map(l=>{ const e=empOf(l.employee_id);
+      return [l.employee_id, e?e.name:"-", deptName(e?e.dept:l.department_code), typeName(l.leave_type),
+        {t:HR.thaiDate(l.start_date),s:l.start_date}, {t:HR.thaiDate(l.end_date),s:l.end_date}, days(l),
+        l.hours!=null&&Number(l.hours)?Number(l.hours):"", HR.STATUS_TH[l.status]||l.status, l.reason||""]; });
+    VIEW={title:"รายการลา",headers:["รหัส","ชื่อ-สกุล","ฝ่าย","ประเภท","เริ่ม","สิ้นสุด","วัน","ชั่วโมง","สถานะ","เหตุผล"],rows,foot:["รวม","","","","","",rows.reduce((s,r)=>s+r[6],0),"","",""]};
+  }else if(TAB==="person"){
+    const ap=ls.filter(l=>l.status==="approved"), pe=peopleInScope(), by={};
+    ap.forEach(l=>{ const u=(by[l.employee_id]||={}); u[l.leave_type]=(u[l.leave_type]||0)+days(l); });
+    const rows=pe.map(e=>{ const u=by[e.code]||{}; const per=T.map(t=>u[t.key]||0);
+      return [e.code,e.name,deptName(e.dept),...per,per.reduce((a,b)=>a+b,0)]; });
+    const sums=T.map((t,i)=>rows.reduce((s,r)=>s+r[3+i],0));
+    VIEW={title:"สรุปรายคน (อนุมัติแล้ว)",headers:["รหัส","ชื่อ-สกุล","ฝ่าย",...T.map(t=>t.name),"รวม"],rows,foot:["รวม","","",...sums,sums.reduce((a,b)=>a+b,0)]};
+  }else if(TAB==="dept"){
+    const ap=ls.filter(l=>l.status==="approved"), pe=peopleInScope(), g={};
+    pe.forEach(e=>{ (g[e.dept]||={people:0,req:0,days:0,type:{}}).people++; });
+    ls.forEach(l=>{ const e=empOf(l.employee_id), dc=e?e.dept:(l.department_code||""); (g[dc]||={people:0,req:0,days:0,type:{}}).req++; });
+    ap.forEach(l=>{ const e=empOf(l.employee_id), dc=e?e.dept:(l.department_code||""); const x=(g[dc]||={people:0,req:0,days:0,type:{}}); x.days+=days(l); x.type[l.leave_type]=(x.type[l.leave_type]||0)+days(l); });
+    const rows=Object.entries(g).map(([dc,x])=>[deptName(dc),x.people,x.req,...T.map(t=>x.type[t.key]||0),x.days,x.people?Math.round(x.days/x.people*100)/100:0]);
+    const tot=i=>rows.reduce((s,r)=>s+r[i],0), n=3+T.length;
+    VIEW={title:"สรุปรายฝ่าย",headers:["ฝ่าย","พนักงาน (คน)","ใบลาทั้งหมด",...T.map(t=>t.name),"รวมวัน","เฉลี่ย/คน"],rows,
+      foot:["รวม",tot(1),tot(2),...T.map((t,i)=>tot(3+i)),tot(n),tot(1)?Math.round(tot(n)/tot(1)*100)/100:0]};
+  }else{
+    const asOf=YEAR>=new Date().getFullYear()?new Date():new Date(YEAR,11,31), pe=peopleInScope();
+    const ap={},pd={};
+    LEAVES.forEach(l=>{ const k=l.employee_id+"|"+l.leave_type;
+      if(l.status==="approved") ap[k]=(ap[k]||0)+days(l); else if(HR.PENDING.includes(l.status)) pd[k]=(pd[k]||0)+days(l); });
+    const rows=pe.map(e=>{ const m=e.hire?HR.monthsBetween(e.hire,asOf):0;
+      const per=T.map(t=>{ const q=HR.typeQuota(t,e.gender,m); if(q==null) return {t:"-",s:-1e9};
+        const rem=q-(ap[e.code+"|"+t.key]||0); return {t:HR.fmt(rem)+" / "+HR.fmt(q),s:rem,low:rem<=0}; });
+      return [e.code,e.name,deptName(e.dept),HR.tenureText(m),...per]; });
+    VIEW={title:"สิทธิ์คงเหลือ / สิทธิ์ทั้งปี (วัน) — ไม่รวมใบลาที่รออนุมัติ",headers:["รหัส","ชื่อ-สกุล","ฝ่าย","อายุงาน",...T.map(t=>t.name)],rows,foot:null};
+  }
+}
+
+function render(){
+  build();
+  const {headers,rows,foot}=VIEW;
+  if(SORT.col!=null&&SORT.col<headers.length){
+    rows.sort((a,b)=>{ const x=cellSort(a[SORT.col]),y=cellSort(b[SORT.col]);
+      const r=(typeof x==="number"&&typeof y==="number")?x-y:String(x??"").localeCompare(String(y??""),"th"); return r*SORT.dir; });
+  }
+  const pages=Math.max(1,Math.ceil(rows.length/PAGE_SIZE)); if(PAGE>=pages) PAGE=pages-1;
+  const slice=rows.slice(PAGE*PAGE_SIZE,(PAGE+1)*PAGE_SIZE);
+  const t=$("tbl"); t.replaceChildren();
+  const hr=t.createTHead().insertRow();
+  headers.forEach((h,i)=>{ const th=document.createElement("th"); th.textContent=h;
+    const numeric=rows.length&&(typeof cellSort(rows[0][i])==="number"); if(numeric) th.className="num";
+    th.setAttribute("aria-sort",SORT.col===i?(SORT.dir>0?"ascending":"descending"):"none");
+    th.tabIndex=0; const go=()=>{ SORT=SORT.col===i?{col:i,dir:-SORT.dir}:{col:i,dir:1}; render(); };
+    th.onclick=go; th.onkeydown=e=>{ if(e.key==="Enter"||e.key===" "){e.preventDefault();go();} }; hr.appendChild(th); });
+  const tb=t.createTBody();
+  slice.forEach(r=>{ const tr=tb.insertRow(); r.forEach((c,i)=>{ const td=tr.insertCell(); td.textContent=cellText(c);
+    if(typeof cellSort(c)==="number") td.className="num"; if(c&&c.low) td.classList.add("low"); }); });
+  if(!rows.length){ const tr=tb.insertRow(); const td=tr.insertCell(); td.colSpan=headers.length; td.textContent="ไม่พบข้อมูลตามเงื่อนไข"; td.className="muted"; }
+  if(foot&&rows.length){ const f=t.createTFoot().insertRow(); foot.forEach((c,i)=>{ const td=f.insertCell(); td.textContent=cellText(c); if(typeof c==="number") td.className="num"; }); }
+  $("info").textContent=`${VIEW.title} · ${rows.length} แถว`;
+  const p=$("pager"); p.replaceChildren();
+  if(pages>1){
+    const prev=Object.assign(document.createElement("button"),{className:"ghost",textContent:"ก่อนหน้า",disabled:PAGE===0,onclick:()=>{PAGE--;render();}});
+    const next=Object.assign(document.createElement("button"),{className:"ghost",textContent:"ถัดไป",disabled:PAGE>=pages-1,onclick:()=>{PAGE++;render();}});
+    p.append(prev,document.createTextNode(` หน้า ${PAGE+1} / ${pages} (CSV มีครบทุกแถว) `),next);
+  }
+  document.querySelectorAll("#tabs button").forEach(b=>b.classList.toggle("on",b.dataset.t===TAB));
+}
+
+function exportCSV(){
+  build(); const {headers,rows,foot}=VIEW;
+  const data=rows.map(r=>r.map(c=>{ const v=cellSort(c); return typeof v==="number"&&v>-1e8?v:cellText(c); }));
+  if(foot) data.push(foot.map(cellText));
+  HR.download(`รายงานการลา_${TAB}_${YEAR+543}.csv`, HR.toCSV(headers,data));
+}
+
+async function load(){
+  const st=$("stage"); st.classList.add("busy");
+  try{
+    YEAR=Number($("year").value)-543||YEAR;
+    const [types,emp,dept,leaves]=await Promise.all([HR.loadTypes(sb),HR.loadEmployees(sb),HR.loadDepartments(sb),
+      HR.loadLeaves(sb,{startFrom:`${YEAR}-01-01`,startTo:`${YEAR}-12-31`})]);
+    TYPES=types;EMP=emp;DEPT=dept;LEAVES=leaves;
+    const codes=[...new Set(EMP.list.map(e=>e.dept).filter(Boolean))].sort((a,b)=>deptName(a).localeCompare(deptName(b),"th"));
+    const dv=$("dept").value, tv=$("type").value;
+    $("dept").replaceChildren(new Option("ทุกฝ่าย",""),...codes.map(c=>new Option(deptName(c),c))); if(codes.includes(dv)) $("dept").value=dv;
+    $("type").replaceChildren(new Option("ทุกประเภท",""),...TYPES.map(t=>new Option(t.name,t.key))); if(TYPES.some(t=>t.key===tv)) $("type").value=tv;
+    PAGE=0; render();
+  }catch(err){ uiAlert({title:"โหลดข้อมูลไม่สำเร็จ",message:err.message||String(err),tone:"error"}); }
+  finally{ st.classList.remove("busy"); }
+}
+
+async function start(){
+  const {data:{session}}=await sb.auth.getSession();
+  $("login").style.display=session?"none":"block"; $("app").style.display=session?"block":"none";
+  if(session){
+    if(!$("year").options.length){
+      const y=new Date().getFullYear(); for(let i=y;i>=y-4;i--) $("year").add(new Option(i+543,i+543));
+      HR.MONTHS.forEach((m,i)=>{ $("m1").add(new Option(m,i+1)); $("m2").add(new Option(m,i+1)); }); $("m2").value=12;
+      $("tabs").replaceChildren(...TABS.map(([k,l])=>{ const b=document.createElement("button"); b.textContent=l; b.dataset.t=k;
+        b.onclick=()=>{TAB=k;SORT={col:null,dir:1};PAGE=0;render();}; return b; }));
+    }
+    load();
+  }
+}
+$("loginBtn").onclick=async()=>{ const {error}=await sb.auth.signInWithPassword({email:$("email").value,password:$("password").value}); if(error) $("loginErr").textContent=error.message; else start(); };
+$("password").addEventListener("keydown",e=>{ if(e.key==="Enter") $("loginBtn").click(); });
+$("logout").onclick=async()=>{ await sb.auth.signOut(); start(); };
+$("year").onchange=load;
+["m1","m2","dept","type","status"].forEach(i=>$(i).onchange=()=>{PAGE=0;render();});
+$("q").oninput=()=>{PAGE=0;render();};
+$("csv").onclick=exportCSV; $("print").onclick=()=>window.print();
+start();
+</script>
+</body>
+</html>
