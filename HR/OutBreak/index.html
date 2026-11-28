@@ -1,48 +1,652 @@
-<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ขออนุญาตออกนอกสถานที่</title><link rel="stylesheet" href="assets/style.css"></head><body><main>
-<h1>ขออนุญาตออกนอกสถานที่</h1>
-<form id="login" class="card">
-  <label>รหัสพนักงาน<input id="code" autocomplete="username" required></label>
-  <label>รหัสผ่าน (วันเริ่มงาน เช่น 01112569)<input id="pass" type="password" autocomplete="current-password" required></label>
-  <button>เข้าสู่ระบบ</button><p class="msg" id="loginMsg"></p>
-  <p class="muted">ผู้จัดการอนุมัติที่ <a href="manager.html">หน้าผู้จัดการ</a></p>
-</form>
-<section id="app" hidden>
-  <p>สวัสดี <b id="who"></b> <button type="button" class="link" id="out">ออกจากระบบ</button></p>
-  <form id="f" class="card">
-    <label>ประเภท<select id="type"><option value="official">ไปราชการ/งานบริษัท</option><option value="personal">ธุระส่วนตัว</option></select></label>
-    <label>สถานที่ที่ไป<input id="dest" required></label>
-    <label>เหตุผล<textarea id="reason" rows="2" required></textarea></label>
-    <label>วันที่<input id="date" type="date" required></label>
-    <div class="row"><label>เวลาออก<input id="tout" type="time" required></label><label>เวลากลับ<input id="tback" type="time" required></label></div>
-    <button>ส่งคำขอ</button><p class="msg" id="fMsg" aria-live="polite"></p>
-  </form>
-  <h2>คำขอของฉัน</h2><div id="list"></div>
-</section></main>
-<script src="assets/app.js"></script>
-<script>
-let C = '', P = '';
-const setDate = () => { $('date').min = $('date').value = new Date().toLocaleDateString('sv'); };
-async function load() {
-  const r = await rpc('outing_my_list', { p_code: C, p_pass: P });
-  $('who').textContent = r.emp;
-  $('list').innerHTML = r.rows.map(o => `<div class="card item"><b>${esc(o.doc_no)} · ${esc(o.destination)}</b>
-    <small>${esc(TYPE[o.outing_type])} · ${esc(o.out_date)} ${hm(o.time_out)}–${hm(o.time_back)}</small>
-    <div class="s-${esc(o.status)}">${esc(STATUS[o.status] || o.status)}${o.manager_note ? ' — ' + esc(o.manager_note) : ''}</div></div>`).join('')
-    || '<p class="muted">ยังไม่มีคำขอ กรอกฟอร์มด้านบนเพื่อส่งคำขอแรก</p>';
-}
-$('login').onsubmit = async e => {
-  e.preventDefault(); C = $('code').value.trim(); P = $('pass').value; $('loginMsg').textContent = '';
-  try { await load(); $('login').hidden = true; $('app').hidden = false; setDate(); }
-  catch (err) { $('loginMsg').textContent = err.message; }
-};
-$('f').onsubmit = async e => {
-  e.preventDefault(); const g = n => $(n).value; $('fMsg').textContent = '';
-  try {
-    const r = await rpc('outing_submit', { p_code: C, p_pass: P, p_type: g('type'), p_dest: g('dest'),
-      p_reason: g('reason'), p_date: g('date'), p_out: g('tout'), p_back: g('tback') });
-    e.target.reset(); setDate(); await load(); $('fMsg').textContent = 'ส่งคำขอแล้ว เลขที่ ' + r.doc_no;
-  } catch (err) { $('fMsg').textContent = err.message; }
-};
-$('out').onclick = () => { C = P = ''; location.reload(); };
-</script></body></html>
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ระบบขออนุญาตออกนอกสถานที่</title>
+  <style>
+    :root {
+      --bg: #f0f4f8;
+      --surface: #ffffff;
+      --border: #d0e1fd;
+      --ink: #1e293b;
+      --muted: #64748b;
+      --brand: #0284c7;
+      --brand-hover: #0369a1;
+      --brand-light: #e0f2fe;
+      --accent: #3b82f6;
+      --success: #10b981;
+      --success-light: #ecfdf5;
+      --pending: #f59e0b;
+      --pending-light: #fef3c7;
+      --danger: #ef4444;
+      --danger-light: #fee2e2;
+      --radius: 12px;
+      --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font);
+      background-color: var(--bg);
+      color: var(--ink);
+      line-height: 1.6;
+      padding: 20px 10px;
+    }
+
+    .container {
+      max-width: 640px;
+      margin: 0 auto;
+    }
+
+    /* Header Styling */
+    header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .logo-container {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background-color: var(--brand-light);
+      color: var(--brand);
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 8px rgba(2, 132, 199, 0.15);
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--brand-hover);
+      margin-bottom: 4px;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    /* Card Layout */
+    .card {
+      background-color: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+
+    /* Typography inside Card */
+    h2 {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 16px;
+      border-bottom: 2px solid var(--brand-light);
+      padding-bottom: 8px;
+    }
+
+    /* Forms & Inputs */
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 6px;
+    }
+
+    input[type="text"],
+    input[type="password"],
+    input[type="date"],
+    input[type="time"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 10px 12px;
+      font-size: 14px;
+      font-family: inherit;
+      color: var(--ink);
+      background-color: #fafbfc;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      transition: all 0.2s;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      outline: none;
+      border-color: var(--brand);
+      background-color: #ffffff;
+      box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 11px 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background-color: var(--brand);
+      color: #ffffff;
+    }
+
+    .btn-primary:hover {
+      background-color: var(--brand-hover);
+    }
+
+    .btn-link {
+      background: none;
+      border: none;
+      color: var(--danger);
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 13px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      transition: background-color 0.2s;
+    }
+
+    .btn-link:hover {
+      background-color: var(--danger-light);
+    }
+
+    /* Message / Status Alert styling */
+    .msg {
+      margin-top: 12px;
+      font-size: 13px;
+      padding: 10px;
+      border-radius: 8px;
+      text-align: center;
+      display: none;
+    }
+
+    .msg.error {
+      display: block;
+      background-color: var(--danger-light);
+      color: var(--danger);
+      border: 1px solid #fca5a5;
+    }
+
+    .msg.success {
+      display: block;
+      background-color: var(--success-light);
+      color: var(--success);
+      border: 1px solid #6ee7b7;
+    }
+
+    .muted {
+      font-size: 13px;
+      color: var(--muted);
+      text-align: center;
+      margin-top: 16px;
+    }
+
+    .muted a {
+      color: var(--brand);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .muted a:hover {
+      text-decoration: underline;
+    }
+
+    /* App View Styling */
+    .user-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: var(--brand-light);
+      padding: 10px 16px;
+      border-radius: var(--radius);
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+
+    .user-name {
+      color: var(--brand-hover);
+      font-weight: 700;
+    }
+
+    /* Outing Item (History Card) */
+    .item {
+      padding: 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background-color: #fcfdfe;
+      margin-bottom: 12px;
+      transition: box-shadow 0.2s;
+    }
+
+    .item:hover {
+      box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+    }
+
+    .item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 6px;
+    }
+
+    .item-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    .item-doc {
+      font-size: 11px;
+      color: var(--muted);
+      background-color: #f1f5f9;
+      padding: 1px 6px;
+      border-radius: 4px;
+    }
+
+    .item-details {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .status-badge {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 12px;
+    }
+
+    /* Status variations */
+    .s-pending {
+      background-color: var(--pending-light);
+      color: var(--pending);
+    }
+
+    .s-approved {
+      background-color: var(--success-light);
+      color: var(--success);
+    }
+
+    .s-rejected {
+      background-color: var(--danger-light);
+      color: var(--danger);
+    }
+
+    .manager-note {
+      font-size: 12px;
+      margin-top: 6px;
+      padding-top: 6px;
+      border-top: 1px dashed var(--border);
+      color: var(--muted);
+    }
+
+    .manager-note-label {
+      font-weight: 600;
+    }
+
+    /* Simulation Mode Controller */
+    .sim-panel {
+      background: #e0f2fe;
+      border: 1px solid #bae6fd;
+      border-radius: var(--radius);
+      padding: 12px;
+      margin-bottom: 20px;
+      font-size: 13px;
+    }
+    .sim-title {
+      font-weight: bold;
+      color: #0369a1;
+      margin-bottom: 6px;
+    }
+    .sim-btn {
+      background: #ffffff;
+      border: 1px solid #bae6fd;
+      padding: 4px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      color: #0369a1;
+      font-weight: 600;
+    }
+    .sim-btn:hover {
+      background: #f0f9ff;
+    }
+  </style>
+</head>
+<body>
+
+  <main class="container">
+    <header>
+      <div class="logo-container">
+        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+          <polyline points="10 17 15 12 10 7"></polyline>
+          <line x1="15" y1="12" x2="3" y2="12"></line>
+        </svg>
+      </div>
+      <h1>ขออนุญาตออกนอกสถานที่</h1>
+      <p class="subtitle">ระบบบันทึกและตรวจสอบคำขออนุญาตออกนอกพื้นที่บริษัท</p>
+    </header>
+
+    <!-- Simulation Controls (Mock RPC server simulated in-memory) -->
+    <div class="sim-panel">
+      <div class="sim-title">🛠️ แผงควบคุมระบบจำลอง (Simulation Tools)</div>
+      <p style="margin-bottom: 8px;">คุณสามารถจำลองเปลี่ยนสถานะคำขอเพื่อดูการแสดงผลของธีมฟ้าขาวรูปแบบต่างๆ ได้:</p>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <button type="button" class="sim-btn" onclick="simSetStatus('approved')">อนุมัติคำขอล่าสุด</button>
+        <button type="button" class="sim-btn" onclick="simSetStatus('rejected', 'ไม่อนุมัติเนื่องจากซ้ำซ้อน')">ปฏิเสธคำขอล่าสุด</button>
+        <button type="button" class="sim-btn" onclick="simReset()">รีเซ็ตข้อมูลเริ่มต้น</button>
+      </div>
+    </div>
+
+    <!-- Login Card -->
+    <form id="login" class="card">
+      <h2>เข้าสู่ระบบพนักงาน</h2>
+      
+      <div class="form-group">
+        <label for="code">รหัสพนักงาน</label>
+        <input id="code" autocomplete="username" placeholder="ระบุรหัสพนักงานของคุณ" required>
+      </div>
+
+      <div class="form-group">
+        <label for="pass">รหัสผ่าน (วันเริ่มงาน เช่น 01112569)</label>
+        <input id="pass" type="password" autocomplete="current-password" placeholder="••••••••" required>
+      </div>
+
+      <button class="btn btn-primary">เข้าสู่ระบบ</button>
+      <div class="msg" id="loginMsg"></div>
+      
+      <p class="muted">ผู้จัดการอนุมัติที่ <a href="#" onclick="alert('จำลองหน้าผู้จัดการ: สามารถคลิกจำลองที่ปุ่มแผงควบคุมด้านบนเพื่ออนุมัติ/ปฏิเสธคำขอได้ทันที'); return false;">หน้าผู้จัดการ</a></p>
+    </form>
+
+    <!-- Main App Form & History (Hidden Initially) -->
+    <section id="app" style="display: none;">
+      <div class="user-info">
+        <div>สวัสดี, <span class="user-name" id="who"></span></div>
+        <button type="button" class="btn-link" id="out">ออกจากระบบ</button>
+      </div>
+
+      <!-- Submission Form -->
+      <form id="f" class="card">
+        <h2>ส่งคำขอใหม่</h2>
+
+        <div class="form-group">
+          <label for="type">ประเภท</label>
+          <select id="type">
+            <option value="official">ไปราชการ / งานบริษัท</option>
+            <option value="personal">ธุระส่วนตัว</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="dest">สถานที่ที่ไป</label>
+          <input id="dest" placeholder="ระบุปลายทางหรือชื่อสถานที่" required>
+        </div>
+
+        <div class="form-group">
+          <label for="reason">เหตุผลที่ขออนุญาต</label>
+          <textarea id="reason" rows="2" placeholder="ระบุเหตุผลในการออกนอกสถานที่โดยสังเขป" required></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="date">วันที่ออกนอกสถานที่</label>
+          <input id="date" type="date" required>
+        </div>
+
+        <div class="row">
+          <div class="form-group">
+            <label for="tout">เวลาออก</label>
+            <input id="tout" type="time" required>
+          </div>
+          <div class="form-group">
+            <label for="tback">เวลากลับ</label>
+            <input id="tback" type="time" required>
+          </div>
+        </div>
+
+        <button class="btn btn-primary">ส่งคำขออนุญาต</button>
+        <div class="msg" id="fMsg"></div>
+      </form>
+
+      <!-- History List -->
+      <div class="card">
+        <h2>ประวัติการขออนุญาตของฉัน</h2>
+        <div id="list"></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // Helper helper function to mimic traditional selector
+    const $ = id => document.getElementById(id);
+    const esc = str => String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+    // Map types and status to Thai language
+    const TYPE = {
+      official: 'ไปราชการ/งานบริษัท',
+      personal: 'ธุระส่วนตัว'
+    };
+
+    const STATUS = {
+      pending: 'รออนุมัติ',
+      approved: 'อนุมัติแล้ว',
+      rejected: 'ไม่อนุมัติ'
+    };
+
+    // Keep active user and simulation state in memory
+    let C = '', P = '';
+    
+    // In-memory mock database
+    let database = {
+      user: {
+        code: 'EMP101',
+        pass: '01112569',
+        name: 'คุณ สมชาย ยินดีดี'
+      },
+      requests: [
+        {
+          doc_no: 'OUT-2566-0002',
+          destination: 'สำนักงานใหญ่ พระราม 9',
+          outing_type: 'official',
+          out_date: '2025-11-05',
+          time_out: '13:00',
+          time_back: '16:30',
+          status: 'approved',
+          manager_note: 'เข้าประชุมได้'
+        },
+        {
+          doc_no: 'OUT-2566-0001',
+          destination: 'ธนาคารไทยพาณิชย์ สาขาใกล้เคียง',
+          outing_type: 'personal',
+          out_date: '2025-11-02',
+          time_out: '10:00',
+          time_back: '11:00',
+          status: 'rejected',
+          manager_note: 'ให้เลื่อนไปทำหลังเวลางาน'
+        }
+      ]
+    };
+
+    // Save initial state to allow simulation resets
+    const INITIAL_REQUESTS = JSON.stringify(database.requests);
+
+    // Mock RPC client in-memory logic
+    async function rpc(method, params) {
+      return new Promise((resolve, reject) => {
+        setTimeout(() => {
+          if (method === 'outing_my_list') {
+            if (params.p_code === database.user.code && params.p_pass === database.user.pass) {
+              resolve({
+                emp: database.user.name,
+                rows: database.requests
+              });
+            } else {
+              reject(new Error('รหัสพนักงานหรือรหัสผ่านไม่ถูกต้อง (ทดลองใช้ รหัสพนักงาน: EMP101 และ รหัสผ่าน: 01112569)'));
+            }
+          } else if (method === 'outing_submit') {
+            if (params.p_code === database.user.code && params.p_pass === database.user.pass) {
+              const doc_no = 'OUT-2566-00' + (database.requests.length + 3);
+              const newReq = {
+                doc_no: doc_no,
+                destination: params.p_dest,
+                outing_type: params.p_type,
+                out_date: params.p_date,
+                time_out: params.p_out,
+                time_back: params.p_back,
+                status: 'pending',
+                manager_note: ''
+              };
+              database.requests.unshift(newReq);
+              resolve({ doc_no: doc_no });
+            } else {
+              reject(new Error('เซสชันไม่ถูกต้อง กรุณาเข้าสู่ระบบใหม่'));
+            }
+          }
+        }, 300);
+      });
+    }
+
+    const setDate = () => { 
+      $('date').min = $('date').value = new Date().toISOString().split('T')[0]; 
+    };
+
+    async function load() {
+      try {
+        const r = await rpc('outing_my_list', { p_code: C, p_pass: P });
+        $('who').textContent = r.emp;
+        
+        $('list').innerHTML = r.rows.map(o => `
+          <div class="item">
+            <div class="item-header">
+              <span class="item-title">${esc(o.destination)}</span>
+              <span class="item-doc">${esc(o.doc_no)}</span>
+            </div>
+            <div class="item-details">
+              <strong>ประเภท:</strong> ${esc(TYPE[o.outing_type])} <br>
+              <strong>วันเวลา:</strong> ${esc(o.out_date)} เวลา ${esc(o.time_out)} - ${esc(o.time_back)} น.
+            </div>
+            <div>
+              <span class="status-badge s-${esc(o.status)}">
+                ${esc(STATUS[o.status] || o.status)}
+              </span>
+              ${o.manager_note ? `
+                <div class="manager-note">
+                  <span class="manager-note-label">หมายเหตุจากผู้จัดการ:</span> ${esc(o.manager_note)}
+                </div>
+              ` : ''}
+            </div>
+          </div>
+        `).join('') || '<p class="muted">ยังไม่มีคำขอ กรอกฟอร์มด้านบนเพื่อส่งคำขอแรก</p>';
+      } catch (err) {
+        showMsg('loginMsg', err.message, 'error');
+        throw err;
+      }
+    }
+
+    function showMsg(id, text, type) {
+      const el = $(id);
+      el.className = 'msg ' + type;
+      el.textContent = text;
+      el.style.display = 'block';
+    }
+
+    $('login').onsubmit = async e => {
+      e.preventDefault(); 
+      C = $('code').value.trim(); 
+      P = $('pass').value; 
+      $('loginMsg').style.display = 'none';
+      try { 
+        await load(); 
+        $('login').style.display = 'none'; 
+        $('app').style.display = 'block'; 
+        setDate(); 
+      } catch (err) { 
+        // Managed inside load()
+      }
+    };
+
+    $('f').onsubmit = async e => {
+      e.preventDefault(); 
+      const g = n => $(n).value; 
+      $('fMsg').style.display = 'none';
+      try {
+        const r = await rpc('outing_submit', { 
+          p_code: C, 
+          p_pass: P, 
+          p_type: g('type'), 
+          p_dest: g('dest'),
+          p_reason: g('reason'), 
+          p_date: g('date'), 
+          p_out: g('tout'), 
+          p_back: g('tback') 
+        });
+        e.target.reset(); 
+        setDate(); 
+        await load(); 
+        showMsg('fMsg', 'ส่งคำขอแล้วสำเร็จ! เลขที่ใบขออนุญาตของคุณคือ: ' + r.doc_no, 'success');
+      } catch (err) { 
+        showMsg('fMsg', err.message, 'error'); 
+      }
+    };
+
+    $('out').onclick = () => { 
+      C = ''; 
+      P = ''; 
+      $('login').style.display = 'block';
+      $('app').style.display = 'none';
+      $('code').value = '';
+      $('pass').value = '';
+    };
+
+    // Simulation tool actions
+    window.simSetStatus = function(status, note = '') {
+      if (database.requests.length > 0) {
+        database.requests[0].status = status;
+        database.requests[0].manager_note = note;
+        if (C && P) load();
+        alert('อัปเดตสถานะของคำขอล่าสุดเป็น ' + STATUS[status] + ' แล้ว');
+      } else {
+        alert('ยังไม่มีคำขอในระบบให้เปลี่ยนสถานะ กรุณาส่งคำขอใบอนุญาตก่อน');
+      }
+    };
+
+    window.simReset = function() {
+      database.requests = JSON.parse(INITIAL_REQUESTS);
+      if (C && P) load();
+      alert('รีเซ็ตประวัติข้อมูลคำขอเรียบร้อยแล้ว');
+    };
+  </script>
+</body>
+</html>
