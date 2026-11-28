@@ -40,6 +40,7 @@ button.link:hover{color:var(--brand-d);text-decoration:underline}
 .tabs{display:flex;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:4px;margin-bottom:14px}
 .tab{flex:1;background:none;color:var(--mute);box-shadow:none}.tab:hover{background:var(--brand-light)}
 .tab[aria-pressed=true]{background:var(--brand);color:#fff}
+.item small b{color:var(--ink);font-weight:500}
 </style></head><body><header class="top"><h1>อนุมัติออกนอกสถานที่</h1><p>สำหรับผู้จัดการ</p></header><main>
 <form id="login" class="card">
   <h2>เข้าสู่ระบบ</h2>
@@ -54,13 +55,16 @@ button.link:hover{color:var(--brand-d);text-decoration:underline}
 <script src="assets/app.js"></script>
 <script>
 let T = '', view = 'pending';
+const dmy = d => String(d).split('-').reverse().join('-');
 async function load() {
   document.querySelectorAll('[data-view]').forEach(b => b.setAttribute('aria-pressed', b.dataset.view === view));
   const r = await rpc('outing_manager_list', { p_view: view }, T);
   $('list').innerHTML = r.rows.map(o => `<div class="card item"><div class="top-row"><b>${esc(o.full_name)} (${esc(o.employee_code)})</b><span class="badge s-${esc(o.status)}">${esc(STATUS[o.status])}</span></div>
-    <small>${esc(o.doc_no)} · ${esc(TYPE[o.outing_type])}</small>
     <div>${esc(o.destination)} — ${esc(o.reason)}</div>
-    <small>${esc(o.out_date)} · ${hm(o.time_out)}–${hm(o.time_back)} น.</small>
+    <small>เลขที่เอกสาร : <b>${esc(o.doc_no)}</b></small>
+    <small>ประเภท : <b>${esc(TYPE[o.outing_type])}</b></small>
+    <small>วันที่ : <b>${esc(dmy(o.out_date))}</b></small>
+    <small>เวลา : <b>${hm(o.time_out)}–${hm(o.time_back)} น.</b></small>
     ${o.status === 'pending_manager'
       ? `<div class="actions"><input id="n_${o.id}" placeholder="หมายเหตุ (จำเป็นถ้าไม่อนุมัติ)">
          <button data-id="${o.id}" data-ok="1">อนุมัติ</button><button class="bad" data-id="${o.id}" data-ok="0">ไม่อนุมัติ</button></div>`
