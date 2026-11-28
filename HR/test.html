@@ -3,582 +3,469 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HR Mouldmate - ระบบจัดการทรัพยากรบุคคล</title>
+    <title>HR Management Portal</title>
+    <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Noto Sans Thai & Poppins -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary-blue: #2c8cff;
+            --light-blue: #e6f2ff;
+            --medium-blue: #4da6ff;
+            --dark-blue: #0066cc;
+            --accent-blue: #80ccff;
+            --text-dark: #333333;
+            --text-light: #666666;
+            --background: #f8fbff;
+            --card-bg: #ffffff;
+            --shadow: rgba(44, 140, 255, 0.15);
+            --danger: #ef4444;
+            --danger-bg: #fee2e2;
+        }
+        
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        :root {
-            --primary: #2c3e50;
-            --secondary: #3498db;
-            --accent: #1abc9c;
-            --light: #ecf0f1;
-            --dark: #2c3e50;
-            --success: #2ecc71;
-            --warning: #f39c12;
-            --danger: #e74c3c;
         }
         
         body {
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            min-height: 100vh;
-            padding: 20px;
-            color: var(--dark);
+            font-family: 'Noto Sans Thai', 'Poppins', sans-serif;
+            background-color: var(--background);
+            color: var(--text-dark);
+            line-height: 1.6;
         }
         
         .container {
             max-width: 1200px;
             margin: 0 auto;
+            padding: 20px;
         }
         
         header {
             text-align: center;
+            padding: 40px 0 20px;
+            background: linear-gradient(135deg, var(--primary-blue), var(--dark-blue));
+            color: white;
+            border-radius: 0 0 20px 20px;
+            box-shadow: 0 4px 20px var(--shadow);
             margin-bottom: 40px;
-            padding: 30px;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 5px;
-            background: linear-gradient(to right, var(--secondary), var(--accent));
         }
         
         .logo {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 15px;
-            margin-bottom: 15px;
         }
         
-        .logo-icon {
-            background: var(--primary);
-            color: white;
-            width: 60px;
-            height: 60px;
+        .logo i {
+            color: var(--light-blue);
+            background-color: rgba(255, 255, 255, 0.2);
+            padding: 15px;
             border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 28px;
         }
         
         h1 {
-            font-size: 2.5rem;
-            color: var(--primary);
+            font-size: 2.2rem;
+            font-weight: 700;
             margin-bottom: 10px;
         }
         
         .subtitle {
-            font-size: 1.2rem;
-            color: #7f8c8d;
-            margin-bottom: 20px;
+            font-size: 1.1rem;
+            opacity: 0.9;
+            max-width: 700px;
+            margin: 0 auto;
         }
         
-        .datetime {
-            background: var(--light);
-            padding: 10px 20px;
-            border-radius: 50px;
-            display: inline-block;
-            font-weight: 600;
-            color: var(--primary);
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
-        }
-        
-        .main-content {
+        .cards-container {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 25px;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
             margin-bottom: 40px;
         }
         
         .card {
-            background: white;
-            border-radius: 15px;
-            overflow: hidden;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            height: 100%;
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 25px var(--shadow);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(44, 140, 255, 0.1);
             display: flex;
             flex-direction: column;
+            height: 100%;
         }
         
         .card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+            transform: translateY(-8px);
+            box-shadow: 0 15px 35px rgba(44, 140, 255, 0.2);
         }
         
         .card-header {
-            padding: 25px 25px 15px;
-            border-bottom: 1px solid #f1f1f1;
             display: flex;
             align-items: center;
-            gap: 15px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--light-blue);
         }
         
         .card-icon {
-            width: 50px;
-            height: 50px;
+            width: 60px;
+            height: 60px;
+            background-color: var(--light-blue);
             border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 22px;
-            color: white;
+            margin-right: 15px;
+            color: var(--primary-blue);
+            font-size: 1.8rem;
         }
         
-        .icon-meeting {
-            background: linear-gradient(to right, #3498db, #2980b9);
-        }
-        
-        .icon-car {
-            background: linear-gradient(to right, #1abc9c, #16a085);
-        }
-        
-        .icon-search {
-            background: linear-gradient(to right, #9b59b6, #8e44ad);
-        }
-        
-        .icon-ot {
-            background: linear-gradient(to right, #f39c12, #e67e22);
-        }
-        
-        .icon-register {
-            background: linear-gradient(to right, #2ecc71, #27ae60);
-        }
-        
-        .icon-permission {
-            background: linear-gradient(to right, #e74c3c, #c0392b);
-        }
-        
-        .icon-leave {
-            background: linear-gradient(to right, #3498db, #2980b9);
-        }
-        
-        .icon-hr {
-            background: linear-gradient(to right, #34495e, #2c3e50);
-        }
-
-        .icon-check {
-            background: linear-gradient(to right, #34495e, #2c3e50);
-        }
-
-        .icon-shift {
-            background: linear-gradient(to right, #9b59b6, #8e44ad);
-        }
-
         .card-title {
-            font-size: 1.4rem;
-            color: var(--primary);
-            font-weight: 700;
-        }
-        
-        .card-body {
-            padding: 20px 25px;
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--dark-blue);
         }
         
         .card-description {
-            color: #7f8c8d;
-            line-height: 1.6;
-            margin-bottom: 20px;
+            color: var(--text-light);
+            margin-bottom: 25px;
             flex-grow: 1;
         }
         
-        .btn {
+        .card-link {
             display: inline-block;
-            padding: 12px 25px;
-            background: var(--secondary);
+            background-color: var(--primary-blue);
             color: white;
             text-decoration: none;
+            padding: 12px 25px;
             border-radius: 8px;
-            font-weight: 600;
-            text-align: center;
+            font-weight: 500;
             transition: all 0.3s ease;
-            border: none;
-            cursor: pointer;
-            font-size: 1rem;
-        }
-        
-        .btn:hover {
-            background: var(--primary);
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
-        
-        .btn i {
-            margin-right: 8px;
-        }
-        
-        .footer {
             text-align: center;
-            padding: 25px;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-            color: #7f8c8d;
-            font-size: 0.95rem;
+            margin-top: auto;
         }
         
-        .footer-links {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            margin-top: 15px;
+        .card-link:hover {
+            background-color: var(--dark-blue);
+            transform: scale(1.05);
         }
         
-        .footer-links a {
-            color: var(--secondary);
-            text-decoration: none;
-            transition: color 0.3s ease;
+        .card-link i {
+            margin-left: 8px;
+            font-size: 0.9rem;
         }
         
-        .footer-links a:hover {
-            color: var(--primary);
-            text-decoration: underline;
+        /* Special styles for Pending Approval State */
+        .card-icon.pending {
+            background-color: var(--danger-bg);
+            color: var(--danger);
+            position: relative;
         }
         
-        .card-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            background: #e8f4fc;
-            color: var(--secondary);
-            border-radius: 50px;
-            font-size: 0.8rem;
+        .status-pulse-dot {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            width: 12px;
+            height: 12px;
+            background-color: var(--danger);
+            border-radius: 50%;
+            border: 2px solid var(--card-bg);
+            box-shadow: 0 0 6px rgba(239, 68, 68, 0.5);
+        }
+        
+        .status-pulse-dot::after {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 2px solid var(--danger);
+            animation: pulse-ring 1.5s cubic-bezier(0.215, 0.610, 0.355, 1) infinite;
+            transform-origin: center;
+        }
+        
+        @keyframes pulse-ring {
+            0% {
+                transform: scale(0.95);
+                opacity: 1;
+            }
+            80%, 100% {
+                transform: scale(2.2);
+                opacity: 0;
+            }
+        }
+        
+        .badge-pending {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background-color: var(--danger-bg);
+            color: #b91c1c;
+            padding: 4px 10px;
+            border-radius: 9999px;
+            font-size: 0.85rem;
             font-weight: 600;
-            margin-top: 10px;
+            border: 1px solid #fecaca;
+            margin-top: 8px;
+        }
+        
+        .badge-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--danger);
+            border-radius: 50%;
+            display: inline-block;
+            animation: blink-dot 1.2s ease-in-out infinite;
+        }
+        
+        @keyframes blink-dot {
+            0%, 100% {
+                opacity: 0.4;
+                transform: scale(0.8);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.2);
+            }
+        }
+        
+        .status-container {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 25px var(--shadow);
+            margin-top: 20px;
+            border-left: 6px solid var(--primary-blue);
+        }
+        
+        .status-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: var(--dark-blue);
             margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .status-title i {
+            color: var(--primary-blue);
+        }
+        
+        .status-content {
+            color: var(--text-light);
+            line-height: 1.8;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 60px;
+            padding: 25px;
+            color: var(--text-light);
+            font-size: 0.9rem;
+            border-top: 1px solid rgba(44, 140, 255, 0.1);
+        }
+        
+        .update-time {
+            margin-top: 10px;
+            font-size: 0.85rem;
+            color: var(--medium-blue);
+            background-color: rgba(44, 140, 255, 0.1);
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
         }
         
         @media (max-width: 768px) {
-            .main-content {
+            .cards-container {
                 grid-template-columns: 1fr;
             }
             
-            h1 {
-                font-size: 2rem;
+            .container {
+                padding: 15px;
             }
             
-            .card-header {
-                flex-direction: column;
-                text-align: center;
-                gap: 10px;
+            header {
+                padding: 30px 20px 20px;
             }
-        }
-
-        /* ===== Modal ===== */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 9999;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .modal-overlay.active {
-            display: flex;
-        }
-
-        .modal-box {
-            background: white;
-            border-radius: 15px;
-            padding: 35px 30px;
-            max-width: 400px;
-            width: 90%;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            text-align: center;
-            position: relative;
-        }
-
-        .modal-box::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 5px;
-            background: linear-gradient(to right, #34495e, #2c3e50);
-            border-radius: 15px 15px 0 0;
-        }
-
-        .modal-icon {
-            width: 65px; height: 65px;
-            background: linear-gradient(to right, #34495e, #2c3e50);
-            border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 28px; color: white;
-            margin: 0 auto 20px;
-        }
-
-        .modal-title {
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: var(--primary);
-            margin-bottom: 8px;
-        }
-
-        .modal-subtitle {
-            color: #7f8c8d;
-            font-size: 0.9rem;
-            margin-bottom: 25px;
-        }
-
-        .modal-input {
-            width: 100%;
-            padding: 12px 15px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 1rem;
-            text-align: center;
-            letter-spacing: 2px;
-            outline: none;
-            transition: border-color 0.3s;
-            margin-bottom: 10px;
-        }
-
-        .modal-input:focus {
-            border-color: var(--secondary);
-        }
-
-        .modal-input.error {
-            border-color: var(--danger);
-            animation: shake 0.3s ease;
-        }
-
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-8px); }
-            75% { transform: translateX(8px); }
-        }
-
-        .modal-error {
-            color: var(--danger);
-            font-size: 0.85rem;
-            margin-bottom: 15px;
-            min-height: 20px;
-        }
-
-        .modal-buttons {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-        }
-
-        .btn-cancel {
-            background: #ecf0f1;
-            color: var(--dark);
-        }
-
-        .btn-cancel:hover {
-            background: #bdc3c7;
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .logo {
+                font-size: 2rem;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
+    <header>
+        <div class="container">
             <div class="logo">
-                <div class="logo-icon">
-                    <i class="fas fa-users"></i>
-                </div>
-                <div>
-                    <h1>HR Mouldmate</h1>
-                    <div class="subtitle">ระบบจัดการทรัพยากรบุคคลแบบครบวงจร</div>
-                </div>
+                <i class="fas fa-laptop-code"></i>
+                <div>HR Management Portal</div>
             </div>
-            <div class="datetime" id="datetime"></div>
-        </header>
-        
-        <main class="main-content">
-            <!-- จองห้องประชุม -->
+            <h1>ศูนย์กลางระบบฝ่ายทรัพยากรบุคคล</h1>
+            <p class="subtitle">เข้าถึงระบบงานทรัพยากรบุคคลทั้งหมดผ่านจุดเดียว พร้อมคู่มือและข้อมูลครบครัน</p>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="cards-container">
             <div class="card">
                 <div class="card-header">
-                    <div class="card-icon icon-meeting">
-                        <i class="fas fa-calendar-alt"></i>
+                    <div class="card-icon">
+                        <i class="fas fa-user-plus"></i>
                     </div>
-                    <div class="card-title">จองห้องประชุม</div>
+                    <h2 class="card-title">ฐานข้อมูลพนักงาน</h2>
                 </div>
-                <div class="card-body">
-                    <p class="card-description">จองห้องประชุมสำหรับการประชุมภายในบริษัท สามารถตรวจสอบตารางการใช้งานห้องประชุมและจองล่วงหน้าได้</p>
-                    <a href="https://mouldmate.vercel.app/HR/Reservation/index.html" target="_blank" class="btn">
-                        <i class="fas fa-external-link-alt"></i> เข้าดู
-                    </a>
-                    <a href="https://drive.google.com/file/d/1hE_Z3edd-rHbhGF-Hyr1VwWscrkn7znw/view?usp=sharing" target="_blank" class="btn">
-                        <i class="fas fa-external-link-alt"></i> คู่มือการใช้
-                    </a>
-                </div>
+                <p class="card-description">
+                    -ลงทะเบียนสำหรับการใช้งานระบบ Mouldmate Helpdesk เพื่อเข้าถึงบริการแบบออนไลน์<br>
+                    -แก้ไขข้อมูลพนักงาน
+                </p>
+                <a href="https://mouldmate.vercel.app/HR/HR-Master/HR-admin.html" target="_blank" rel="noopener" class="card-link">
+                    เข้าดู <i class="fas fa-external-link-alt"></i>
+                </a>
             </div>
-        
-            <!-- ขอโอที -->
+
             <div class="card">
                 <div class="card-header">
-                    <div class="card-icon icon-ot">
-                        <i class="fas fa-clock"></i>
+                    <div class="card-icon">
+                        <i class="fas fa-search"></i>
                     </div>
-                    <div class="card-title">ขอโอที (OT)</div>
+                    <h2 class="card-title">ค้นหารายชื่อพนักงาน</h2>
                 </div>
-                <div class="card-body">
-                    <p class="card-description">ส่งคำขอทำงานล่วงเวลา (Overtime) เพื่อบันทึกเวลาการทำงานและคำนวณค่าล่วงหน้า</p>
-                    <a href="https://mouldmate.vercel.app/HR/OT/main.html" target="_blank" class="btn">
-                        <i class="fas fa-external-link-alt"></i> เข้าดู
-                    </a>
-                </div>
+                <p class="card-description">
+                   ตรวจสอบข้อมูลรายชื่อและรหัสพนักงานทั้งหมด
+                </p>
+                <a href="https://mouldmate.vercel.app/HR/HR-Master/Search-Employees.html" target="_blank" rel="noopener" class="card-link">
+                    เข้าดู <i class="fas fa-external-link-alt"></i>
+                </a>
             </div>
-            
-            <!-- เฉพาะเจ้าหน้าฝ่ายทรัพยากรบุคคล -->
+
             <div class="card">
                 <div class="card-header">
-                    <div class="card-icon icon-hr">
-                        <i class="fas fa-user-tie"></i>
+                    <div class="card-icon">
+                        <i class="fas fa-warehouse"></i>
                     </div>
-                    <div class="card-title">เฉพาะเจ้าหน้าที่ฝ่ายทรัพยากรบุคคล</div>
+                    <h2 class="card-title">จัดการแผนก</h2>
                 </div>
-                <div class="card-body">
-                    <p class="card-description">ระบบสำหรับเจ้าหน้าที่ฝ่ายทรัพยากรบุคคลในการจัดการข้อมูลพนักงาน ตรวจสอบรายงาน และบริหารงานบุคคล</p>
-                    <div class="card-badge">สำหรับ HR เท่านั้น</div>
-                    <button onclick="openHRModal()" class="btn">
-                        <i class="fas fa-external-link-alt"></i> เข้าดู
-                    </button>
-                </div>
+                <p class="card-description">
+                   จัดการ เพิ่ม/แก้ไข/ลบ รายชื่อแผนก
+                </p>
+                <a href="https://mouldmate.vercel.app/HR/HR-Master/hr-departments.html" target="_blank" rel="noopener" class="card-link">
+                    เข้าดู <i class="fas fa-external-link-alt"></i>
+                </a>
             </div>
 
-           
-            
-            
-
-            <!-- FaceLogin -->
             <div class="card">
                 <div class="card-header">
-                    <div class="card-icon icon-register">
-                        <i class="fas fa-user-clock"></i>
+                    <div class="card-icon">
+                        <i class="fa-solid fa-video"></i>
                     </div>
-                    <div class="card-title">ลงเวลานอกสถานที่</div>
+                    <h2 class="card-title">รายงานกล้องวงจรปิด</h2>
                 </div>
-                <div class="card-body">
-                    <p class="card-description">ลงเวลาทำงานนอกสถานที่</p>
-                    <a href="https://mouldmate.vercel.app/HR/FaceLogin/index.html" target="_blank" class="btn">
-                        <i class="fas fa-external-link-alt"></i> เข้าดู
-                    </a>
-                </div>
+                <p class="card-description">
+                   รายงานการทำงานกล้องวงจรปิด 
+                </p>
+                <a href="https://mouldmate.vercel.app/IT/CCTV/ChecklistCCTV.html" target="_blank" rel="noopener" class="card-link">
+                    เข้าดู <i class="fas fa-external-link-alt"></i>
+                </a>
             </div>
-
             
-             <!-- Transfer Staff -->
-             <div class="card">
+            <div class="card">
                 <div class="card-header">
-                    <div class="card-icon icon-ot">
-                        <i class="fas fa-arrow-right-arrow-left"></i> 
+                    <div class="card-icon">
+                        <i class="fa-solid fa-video"></i>
                     </div>
-                    <div class="card-title">การยืมพนักงานปฏิบัติงาน</div>
+                    <h2 class="card-title">จำลองกล้องวงจรปิด</h2>
                 </div>
-                <div class="card-body">
-                    <p class="card-description">ส่งคำขอโอนย้ายพนักงานระหว่างแผนก</p>
-                    <a href="https://mouldmate.vercel.app/HR/Transfer/login.html" target="_blank" class="btn">
-                        <i class="fas fa-external-link-alt"></i> เข้าดู
-                    </a>
-                </div>
+                <p class="card-description">
+                   จำลองผังโรงงานกล้องวงจรปิดรอบบริเวณภายนอก 
+                </p>
+                <a href="https://mouldmate.vercel.app/IT/CCTV/CCTV.html" target="_blank" rel="noopener" class="card-link">
+                    เข้าดู <i class="fas fa-external-link-alt"></i>
+                </a>
             </div>
 
-
-             <!-- Form Request -->
-             <div class="card">
+            <div class="card">
                 <div class="card-header">
-                    <div class="card-icon icon-ot">
-                        <i class="fas fa-file-lines"></i> 
+                    <div class="card-icon">
+                        <i class="fa-solid fa-car"></i>
                     </div>
-                    <div class="card-title">ขอหนังสือรับรอง</div>
+                    <h2 class="card-title">รายงานแบบสำรวจยานพาหนะ</h2>
                 </div>
-                <div class="card-body">
-                    <p class="card-description">ขอหนังสือรับรองการทำงาน ขอหนังสือรับรองเงินเดือน ขอหนังสือผ่านงาน และสลิปเงินเดือน</p>
-                    <a href="https://mouldmate.vercel.app/HR/Form/landing.html" target="_blank" class="btn">
-                        <i class="fas fa-external-link-alt"></i> เข้าดู
-                    </a>
-                </div>
+                <p class="card-description">
+                   สำรวจยานพาหนะพนักงาน
+                </p>
+                <a href="https://mouldmate.vercel.app/HR/Inspect-Vehicle/vehicle-survey-admin.html" target="_blank" rel="noopener" class="card-link">
+                    เข้าดู <i class="fas fa-external-link-alt"></i>
+                </a>
             </div>
 
-
-             <!-- Shift Schedule -->
-             <div class="card">
+            <div class="card">
                 <div class="card-header">
-                    <div class="card-icon icon-shift">
-                        <i class="fas fa-calendar-week"></i> 
+                    <div class="card-icon">
+                        <i class="fas fa-broom"></i>
                     </div>
-                    <div class="card-title">แบบฟอร์มตารางกะทำงาน</div>
+                    <h2 class="card-title">เบิกพัสดุของใช้แม่บ้าน</h2>
                 </div>
-                <div class="card-body">
-                    <p class="card-description">กรอกและตรวจสอบตารางกะทำงานของพนักงาน เพื่อวางแผนการปฏิบัติงานในแต่ละกะ</p>
-                    <a href="https://mouldmate.vercel.app/HR/Shift/index.html" target="_blank" class="btn">
-                        <i class="fas fa-external-link-alt"></i> เร็วๆนี้
-                    </a>
-                </div>
+                <p class="card-description">
+                   ตรวจสอบพัสดุคงเหลือ รายงานการเบิกพัสดุและของใช้ต่างๆ 
+                </p>
+                <a href="https://mouldmate.vercel.app/HR/maid/portal.html" target="_blank" rel="noopener" class="card-link">
+                    เข้าดู <i class="fas fa-external-link-alt"></i>
+                </a>
             </div>
 
-
-
-
-
-
+            <!-- Wait Approval Card with Red Pulsing Animation and Badge -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon pending">
+                        <i class="fas fa-broom"></i>
+                        <span class="status-pulse-dot"></span>
+                    </div>
+                    <h2 class="card-title">รออนุมัติการใช้งาน</h2>
+                </div>
+                <p class="card-description">
+                   รออนุมัติการใช้งาน <br>
+                   <span class="badge-pending">
+                       <span class="badge-dot"></span> รอการอนุมัติ
+                   </span>
+                </p>
+                <a href="https://mouldmate.vercel.app/HR/WaitApprove.html" target="_blank" rel="noopener" class="card-link" style="background-color: var(--danger); border-color: var(--danger);">
+                    เข้าดู <i class="fas fa-external-link-alt"></i>
+                </a>
+            </div>
             
-        </main>
-        
-        <footer class="footer">
-            <p>ระบบจัดการทรัพยากรบุคคล - © 2026 HR Mouldmate</p>
-            <p>ออกแบบเพื่อให้พนักงานใช้งานได้สะดวกและมีประสิทธิภาพ</p>
-            <span>พัฒนาระบบโดย Sarawut.C</span>
-            <div class="footer-links">
-                <a href="mailto:hr@tokaisolidtire.com">ติดต่อฝ่ายทรัพยากรบุคคล</a>
-            </div>
-        </footer>
-    </div>
-
-    <!-- HR Modal -->
-    <div class="modal-overlay" id="hrModal">
-        <div class="modal-box">
-            <div class="modal-icon">
-                <i class="fas fa-lock"></i>
-            </div>
-            <div class="modal-title">เข้าสู่ระบบ HR</div>
-            <div class="modal-subtitle">กรุณาใส่รหัสผ่านเพื่อเข้าใช้งาน<br>เฉพาะเจ้าหน้าที่ฝ่ายทรัพยากรบุคคลเท่านั้น</div>
-            <input 
-                type="password" 
-                class="modal-input" 
-                id="hrPassword" 
-                placeholder="กรอกรหัสผ่าน"
-                onkeydown="if(event.key==='Enter') checkHRPassword()"
-            >
-            <div class="modal-error" id="hrError"></div>
-            <div class="modal-buttons">
-                <button class="btn btn-cancel" onclick="closeHRModal()">
-                    <i class="fas fa-times"></i> ยกเลิก
-                </button>
-                <button class="btn" onclick="checkHRPassword()">
-                    <i class="fas fa-unlock"></i> เข้าสู่ระบบ
-                </button>
-            </div>
         </div>
     </div>
-
+    
+    <footer>
+        <div class="container">
+            <p>HR Management Portal &copy; 2026 - ศูนย์กลางข้อมูลระบบทรัพยากรบุคคล</p>
+            <p>ออกแบบเพื่อให้ใช้งานง่ายและเข้าถึงข้อมูลได้รวดเร็ว || พัฒนาระบบโดย Sarawut.C</p>
+            
+            <div class="update-time">
+                อัพเดทล่าสุด: 09 มิถุนายน 2569
+            </div>
+        </div>
+    </footer>
+    
     <script>
-        // อัพเดตวันที่และเวลา
         function updateDateTime() {
             const now = new Date();
             const options = { 
@@ -587,64 +474,40 @@
                 month: 'long', 
                 day: 'numeric',
                 hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                hour12: false
+                minute: '2-digit'
             };
+            
             const thaiDateTime = now.toLocaleDateString('th-TH', options);
-            document.getElementById('datetime').textContent = thaiDateTime;
+            const updateElement = document.querySelector('.update-time');
+            if (updateElement) {
+                updateElement.textContent = `อัพเดทล่าสุด: ${thaiDateTime}`;
+            }
         }
-
-        // อัพเดตทุกวินาที
-        updateDateTime();
-        setInterval(updateDateTime, 1000);
-
-        // เพิ่มเอฟเฟกต์เมื่อโหลดหน้าเว็บ
+        
         document.addEventListener('DOMContentLoaded', function() {
+            updateDateTime();
+            
             const cards = document.querySelectorAll('.card');
             cards.forEach((card, index) => {
                 card.style.opacity = '0';
                 card.style.transform = 'translateY(20px)';
+                
                 setTimeout(() => {
                     card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
                     card.style.opacity = '1';
                     card.style.transform = 'translateY(0)';
-                }, 100 * index);
+                }, 100 * (index + 1));
+            });
+            
+            const links = document.querySelectorAll('.card-link');
+            links.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    console.log(`กำลังเปิด: ${this.textContent.trim()}`);
+                });
             });
         });
-
-        // ===== HR Modal Functions =====
-        function openHRModal() {
-            document.getElementById('hrModal').classList.add('active');
-            document.getElementById('hrPassword').value = '';
-            document.getElementById('hrError').textContent = '';
-            document.getElementById('hrPassword').classList.remove('error');
-            setTimeout(() => document.getElementById('hrPassword').focus(), 100);
-        }
-
-        function closeHRModal() {
-            document.getElementById('hrModal').classList.remove('active');
-        }
-
-        function checkHRPassword() {
-            const input = document.getElementById('hrPassword');
-            const error = document.getElementById('hrError');
-            
-            if (input.value === 'mm169Moo4') {
-                closeHRModal();
-                window.open('https://mouldmate.vercel.app/HR/hr-only.html', '_blank');
-            } else {
-                input.classList.add('error');
-                error.textContent = '❌ รหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง';
-                input.value = '';
-                setTimeout(() => input.classList.remove('error'), 500);
-            }
-        }
-
-        // ปิด modal เมื่อคลิกพื้นหลัง
-        document.getElementById('hrModal').addEventListener('click', function(e) {
-            if (e.target === this) closeHRModal();
-        });
+        
+        setInterval(updateDateTime, 60000);
     </script>
 </body>
 </html>
