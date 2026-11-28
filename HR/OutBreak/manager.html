@@ -67,7 +67,6 @@ async function load() {
       : (o.manager_note ? `<div class="note">หมายเหตุ: ${esc(o.manager_note)}</div>` : '')}</div>`).join('')
     || `<p class="muted">${view === 'pending' ? 'ไม่มีคำขอที่รออนุมัติ' : 'ยังไม่มีประวัติ'}</p>`;
 }
-const run = async f => { $('msg').textContent = ''; try { await f(); } catch (e) { $('msg').textContent = e.message; } };
 $('login').onsubmit = e => { e.preventDefault(); $('loginMsg').textContent = '';
   mgrLogin($('email').value, $('pass').value).then(async t => { T = t; await load(); $('login').hidden = true; $('app').hidden = false; })
     .catch(err => { $('loginMsg').textContent = err.message; }); };
