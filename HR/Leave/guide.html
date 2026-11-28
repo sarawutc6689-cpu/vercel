@@ -1,1 +1,545 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>คู่มือการใช้งาน</title>
+<style>
+  :root{--bg:#eaf3fd;--card:#fff;--text:#1e3a5f;--muted:#5b7391;--line:#d6e4f5;--primary:#1d6fd8;--ok:#16a34a;--warn:#d97706;--bad:#dc2626}
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;font-family:"Sarabun","Noto Sans Thai",system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.65}
+  header{background:linear-gradient(90deg,#1558b8,#2f8cf0);color:#fff;padding:14px 20px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+  header h1{font-size:18px;margin:0;flex:1}
+  @media (max-width:520px){header h1 .sub{display:none}}
+  header a,header button{color:#fff;text-decoration:none;font-size:14px;background:none;border:0;cursor:pointer;font-family:inherit;padding:0}
+  header button{border:1px solid rgba(255,255,255,.55);border-radius:8px;padding:5px 12px}
+  main{max-width:880px;margin:0 auto;padding:16px}
+  .hero{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:16px}
+  .hero h2{margin:0 0 4px;font-size:20px}
+  .hero p{margin:0 0 14px;color:var(--muted);font-size:14px}
+  .tabs{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+  .tabs button{font:inherit;font-size:15px;padding:11px 10px;border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--text);cursor:pointer;text-align:center;line-height:1.3}
+  .tabs button small{display:block;font-size:12px;color:var(--muted);margin-top:2px}
+  .tabs button:hover{border-color:var(--primary)}
+  .tabs button[aria-selected="true"]{background:var(--primary);border-color:var(--primary);color:#fff;font-weight:600}
+  .tabs button[aria-selected="true"] small{color:#dbeafe}
+  .tabs button:focus-visible,details summary:focus-visible,a:focus-visible,header button:focus-visible{outline:3px solid rgba(29,111,216,.45);outline-offset:2px}
 
+  .panel{display:none}
+  .panel.on{display:block}
+  .toc{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 16px}
+  .toc a{font-size:13px;color:var(--primary);text-decoration:none;background:#fff;border:1px solid var(--line);border-radius:99px;padding:3px 12px}
+  .toc a:hover{border-color:var(--primary)}
+
+  section{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-bottom:16px;scroll-margin-top:12px}
+  section h3{margin:0 0 4px;font-size:17px;display:flex;align-items:center;gap:10px}
+  section h3 .n{flex:none;width:28px;height:28px;border-radius:8px;background:#dbeafe;color:var(--primary);display:inline-flex;align-items:center;justify-content:center;font-size:14px}
+  section .lead{margin:0 0 12px;color:var(--muted);font-size:14px}
+  p{margin:8px 0}
+  ul{margin:8px 0;padding-left:22px}
+  li{margin:3px 0}
+  b,strong{font-weight:700}
+
+  ol.steps{counter-reset:s;list-style:none;padding:0;margin:12px 0}
+  ol.steps>li{counter-increment:s;position:relative;padding:0 0 12px 44px;margin:0}
+  ol.steps>li::before{content:counter(s);position:absolute;left:0;top:0;width:30px;height:30px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px}
+  ol.steps>li::after{content:"";position:absolute;left:14px;top:34px;bottom:4px;width:2px;background:var(--line)}
+  ol.steps>li:last-child::after{display:none}
+  ol.steps>li>b:first-child{display:block}
+
+  .note,.tip,.warn{border-radius:10px;padding:10px 14px;font-size:14px;margin:12px 0;border:1px solid}
+  .tip{background:#f0f9ff;border-color:#bae0fb}
+  .note{background:#f0f5ff;border-color:#dbe6ff}
+  .warn{background:#fffbeb;border-color:#fde68a}
+  .note>b:first-child,.tip>b:first-child,.warn>b:first-child{display:block;margin-bottom:2px}
+
+  .flow{display:flex;align-items:stretch;gap:6px;margin:14px 0}
+  .flow .node{flex:1;background:#f3f8fe;border:1px solid var(--line);border-radius:12px;padding:10px 8px;text-align:center;font-size:14px;font-weight:600}
+  .flow .node small{display:block;font-weight:400;color:var(--muted);font-size:12px}
+  .flow .node.end{background:#dcfce7;border-color:#bbf7d0;color:#166534}
+  .flow .arr{align-self:center;color:var(--muted);font-size:20px}
+  @media (max-width:640px){.flow{flex-direction:column}.flow .arr{transform:rotate(90deg)}}
+
+  .tag{display:inline-block;padding:2px 10px;border-radius:99px;font-size:12px;white-space:nowrap}
+  .st-wait{background:#fef3c7;color:#92400e}
+  .st-ok{background:#dcfce7;color:#166534}
+  .st-no{background:#fee2e2;color:#991b1b}
+  .st-info{background:#dbeafe;color:#1e40af}
+
+  table{width:100%;border-collapse:collapse;font-size:14px;margin:10px 0}
+  th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  th{background:#f3f8fe;font-weight:600}
+  .wrap{overflow-x:auto}
+  /* จอแคบ: แต่ละแถวของตารางเรียงเป็นการ์ด แทนที่จะบีบคอลัมน์ (หัวคอลัมน์ถูกใส่เป็น data-label โดยสคริปต์ด้านล่าง) */
+  @media (max-width:560px){
+    table.rs thead{display:none}
+    table.rs,table.rs tbody,table.rs tr,table.rs td{display:block;width:100%}
+    table.rs tr{border:1px solid var(--line);border-radius:10px;margin:0 0 10px;padding:6px 0;background:#fff}
+    table.rs td{border:0;padding:4px 12px}
+    table.rs td:first-child{font-weight:600}
+    table.rs td:not(:first-child)::before{content:attr(data-label);display:block;font-size:12px;color:var(--muted);font-weight:400}
+    table.rs td:empty{display:none}
+    .tag{white-space:normal}
+  }
+  code{background:#eef4fb;padding:1px 6px;border-radius:6px;font-size:13px;word-break:break-word}
+  kbd{background:#fff;border:1px solid var(--line);border-bottom-width:2px;border-radius:6px;padding:0 6px;font-size:13px}
+
+  details{border:1px solid var(--line);border-radius:10px;margin:8px 0;background:#fff}
+  details summary{cursor:pointer;padding:10px 14px;font-weight:600;font-size:15px;list-style:none;display:flex;gap:10px;align-items:center}
+  details summary::-webkit-details-marker{display:none}
+  details summary::before{content:"+";flex:none;width:22px;height:22px;border-radius:6px;background:#dbeafe;color:var(--primary);display:inline-flex;align-items:center;justify-content:center;font-weight:700}
+  details[open] summary::before{content:"–"}
+  details>div{padding:0 14px 12px 46px;font-size:14px}
+  details>div p:first-child{margin-top:0}
+
+  footer{text-align:center;padding:16px;margin-top:24px;font-size:12px;color:#5b7391;border-top:1px solid #d6e4f5}
+  .btnlink{display:inline-block;background:var(--primary);color:#fff;text-decoration:none;border-radius:8px;padding:6px 14px;font-size:14px;margin:4px 6px 4px 0}
+
+  @media print{
+    body{background:#fff}
+    header,.tabs,.hero p,.toc,.btnlink{display:none}
+    .hero{border:0;padding:0}
+    .panel{display:block!important;page-break-before:always}
+    .panel:first-of-type{page-break-before:avoid}
+    section{break-inside:avoid;border-color:#ccc}
+    details{display:block}
+    details>div{display:block}
+    .print-title{display:block!important}
+  }
+  .print-title{display:none;font-size:22px;font-weight:700;margin:0 0 8px}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>คู่มือการใช้งาน<span class="sub"> — ระบบตรวจสอบวันลา</span></h1>
+  <a href="index.html">หน้าหลัก</a>
+  <button id="printBtn" type="button">พิมพ์คู่มือ</button>
+</header>
+
+<main>
+  <div class="hero">
+    <h2>เลือกบทบาทของคุณ</h2>
+    <p>คู่มือแยกตามบทบาท กดแท็บเพื่อดูเฉพาะส่วนที่เกี่ยวกับคุณ</p>
+    <div class="tabs" role="tablist" aria-label="บทบาทผู้ใช้">
+      <button role="tab" id="t-employee" aria-controls="employee" aria-selected="true" data-tab="employee">พนักงาน<small>ยื่นใบลา / ดูวันลาคงเหลือ</small></button>
+      <button role="tab" id="t-manager" aria-controls="manager" aria-selected="false" data-tab="manager">ผู้จัดการฝ่าย<small>อนุมัติใบลาของฝ่าย</small></button>
+      <button role="tab" id="t-hr" aria-controls="hr" aria-selected="false" data-tab="hr">ฝ่ายบุคคล (HR)<small>อนุมัติ / บันทึก / ตั้งค่า</small></button>
+      <button role="tab" id="t-admin" aria-controls="admin" aria-selected="false" data-tab="admin">ผู้ดูแลระบบ<small>ติดตั้ง / แก้ปัญหา</small></button>
+    </div>
+  </div>
+
+  <!-- ====================== พนักงาน ====================== -->
+  <div class="panel on" id="employee" role="tabpanel" aria-labelledby="t-employee">
+    <div class="print-title">คู่มือสำหรับพนักงาน</div>
+    <div class="toc">
+      <a href="#e-flow">ขั้นตอนโดยรวม</a><a href="#e-login">เข้าสู่ระบบ</a><a href="#e-balance">ดูวันลาคงเหลือ</a>
+      <a href="#e-submit">ยื่นใบลา</a><a href="#e-status">ติดตามสถานะ</a><a href="#e-cancel">ยกเลิกใบลา</a>
+      <a href="#e-rules">สิทธิ์การลา</a><a href="#e-faq">ถามบ่อย</a>
+    </div>
+
+    <section id="e-flow">
+      <h3><span class="n">1</span>ขั้นตอนโดยรวม</h3>
+      <p class="lead">ใบลาทุกใบต้องผ่านการอนุมัติ 2 ขั้น เมื่อฝ่ายบุคคลอนุมัติแล้วจึงนับเป็นวันลาที่ใช้ไป</p>
+      <div class="flow">
+        <div class="node">พนักงานยื่นใบลา<small>หน้า "การลาของฉัน"</small></div><div class="arr">→</div>
+        <div class="node">ผู้จัดการฝ่ายอนุมัติ<small>ขั้นที่ 1</small></div><div class="arr">→</div>
+        <div class="node">ฝ่ายบุคคลอนุมัติ<small>ขั้นที่ 2</small></div><div class="arr">→</div>
+        <div class="node end">อนุมัติแล้ว<small>นับเป็นวันลาที่ใช้</small></div>
+      </div>
+      <div class="note"><b>ข้ามขั้นผู้จัดการ</b>ถ้าผู้ยื่นเป็นผู้จัดการฝ่ายเอง หรือฝ่ายของคุณยังไม่มีผู้จัดการในระบบ ใบลาจะส่งให้ฝ่ายบุคคลโดยตรง</div>
+    </section>
+
+    <section id="e-login">
+      <h3><span class="n">2</span>เข้าสู่ระบบ</h3>
+      <p class="lead">ไม่ต้องสมัครสมาชิก ใช้รหัสพนักงานกับวันเริ่มงานของคุณ</p>
+      <ol class="steps">
+        <li><b>เปิดหน้า "การลาของฉัน"</b>จากหน้าหลัก กดการ์ด "การลาของฉัน"</li>
+        <li><b>กรอกรหัสพนักงาน</b>ตัวอย่าง <code>E001</code></li>
+        <li><b>กรอกรหัสผ่าน = วันเริ่มงาน (วัน เดือน ปี พ.ศ. ต่อกัน)</b>
+          ตัวอย่าง เริ่มงาน 01/11/2569 → รหัสผ่านคือ <code>01112569</code> พิมพ์ <code>01/11/2569</code> ก็ได้</li>
+        <li><b>กด "เข้าสู่ระบบ"</b></li>
+      </ol>
+      <div class="warn"><b>ใส่ผิดเกิน 5 ครั้ง</b>ระบบจะล็อกรหัสพนักงานนั้นไว้ 15 นาที ถ้าเข้าไม่ได้ทั้งที่ใส่ถูก อาจเป็นเพราะวันเริ่มงานในระบบไม่ตรงกับที่คุณจำ ให้ติดต่อฝ่ายบุคคลตรวจสอบ</div>
+    </section>
+
+    <section id="e-balance">
+      <h3><span class="n">3</span>ดูวันลาคงเหลือ</h3>
+      <p class="lead">เมื่อเข้าสู่ระบบ ด้านบนจะเห็นการ์ดของลาแต่ละประเภท</p>
+      <ul>
+        <li><b>ตัวเลขใหญ่</b> = วันที่เหลือ / สิทธิ์ทั้งปี นับเฉพาะใบลาที่อนุมัติแล้ว</li>
+        <li><b>ใช้แล้ว</b> = วันลาที่อนุมัติแล้ว และ <b>รออนุมัติ</b> = ใบลาที่ยังอยู่ระหว่างพิจารณา</li>
+        <li>แถบสีเขียว → เหลือง → แดง บอกว่าใช้สิทธิ์ไปมากแค่ไหน</li>
+        <li>ประเภทที่มีป้าย <span class="tag st-info">ลารายชั่วโมงได้</span> ลาเป็นชั่วโมงได้</li>
+        <li>การ์ดจางๆ ที่เขียนว่า <b>"ไม่มีสิทธิ์"</b> คือประเภทที่คุณไม่มีสิทธิ์ลา (เช่น ลาคลอดสำหรับผู้ชาย หรืออายุงานยังไม่ถึงเกณฑ์)</li>
+        <li>เลือกปีที่มุมขวาบนเพื่อดูย้อนหลัง</li>
+      </ul>
+      <div class="tip"><b>วันลาคงเหลือในฟอร์มยื่นลา</b>ตัวเลข "เหลือ" ในรายการประเภทของฟอร์มยื่นลาจะหักใบลาที่รออนุมัติออกด้วย เพื่อกันไม่ให้ยื่นเกินสิทธิ์ จึงอาจน้อยกว่าตัวเลขบนการ์ดด้านบนได้</div>
+    </section>
+
+    <section id="e-submit">
+      <h3><span class="n">4</span>ยื่นใบลา</h3>
+      <p class="lead">กรอกในกล่อง "ยื่นใบลา" ใต้การ์ดวันลา</p>
+      <ol class="steps">
+        <li><b>เลือกประเภทการลา</b>รายการแสดงเฉพาะประเภทที่คุณมีสิทธิ์ พร้อมจำนวนวันที่เหลือ</li>
+        <li><b>เลือกรูปแบบการลา</b> (เฉพาะประเภทที่ลารายชั่วโมงได้)
+          <ul>
+            <li><b>เต็มวัน / หลายวัน</b> เลือกวันที่เริ่มและวันที่สิ้นสุด</li>
+            <li><b>รายชั่วโมง</b> ลาได้ภายใน 1 วัน ไม่เกิน 8 ชั่วโมง ทีละ 0.5 ชั่วโมง (เช่น ลาครึ่งวัน = 4 ชั่วโมง)</li>
+          </ul></li>
+        <li><b>เลือกวันที่ลา</b>ระบบนับจำนวนวันทำงานให้เอง ไม่นับวันอาทิตย์ วันเสาร์ (ตามที่บริษัทตั้งค่า) และวันหยุดนักขัตฤกษ์</li>
+        <li><b>ตรวจกล่องสรุป</b>ระบบแสดงจำนวนที่ลา และวันที่เหลือ ก่อนลา → หลังลา ถ้าเกินสิทธิ์จะส่งไม่ได้</li>
+        <li><b>ระบุเหตุผล</b>จำเป็นต้องกรอก</li>
+        <li><b>กด "ส่งใบลา"</b>แล้วตรวจรายละเอียดในหน้าต่างยืนยัน กด "ส่งใบลา" อีกครั้งเพื่อยืนยัน</li>
+      </ol>
+      <div class="note">
+        <b>ระบบจะไม่รับใบลา เมื่อ</b>
+        <ul style="margin:4px 0 0">
+          <li>จำนวนวันเกินสิทธิ์ที่เหลือ (รวมใบลาที่รออนุมัติ)</li>
+          <li>ช่วงวันที่ซ้ำกับใบลาที่รออนุมัติหรืออนุมัติแล้ว</li>
+          <li>ลาข้ามปี — ให้แยกเป็นสองใบ คือส่วนที่อยู่ในปีเก่าและปีใหม่</li>
+          <li>ช่วงที่เลือกไม่มีวันทำงานเลย (เช่น เสาร์-อาทิตย์ล้วน)</li>
+        </ul>
+      </div>
+      <div class="tip"><b>ลาครึ่งวัน</b>ทำได้เฉพาะประเภทที่ลารายชั่วโมงได้ (ปัจจุบันคือลากิจ) โดยเลือก "รายชั่วโมง" แล้วใส่ 4 ชั่วโมง ประเภทอื่นลาได้ทีละเต็มวันเท่านั้น</div>
+    </section>
+
+    <section id="e-status">
+      <h3><span class="n">5</span>ติดตามสถานะ</h3>
+      <p class="lead">ดูได้ที่ตาราง "ประวัติการลา" ด้านล่างของหน้า</p>
+      <div class="wrap"><table>
+        <thead><tr><th>สถานะ</th><th>ความหมาย</th></tr></thead>
+        <tbody>
+          <tr><td><span class="tag st-wait">รอผู้จัดการฝ่ายอนุมัติ</span></td><td>ส่งแล้ว กำลังรอผู้จัดการฝ่ายของคุณพิจารณา</td></tr>
+          <tr><td><span class="tag st-wait">รอฝ่ายบุคคลอนุมัติ</span></td><td>ผู้จัดการอนุมัติแล้ว (หรือข้ามขั้นนี้) กำลังรอฝ่ายบุคคล</td></tr>
+          <tr><td><span class="tag st-ok">อนุมัติแล้ว</span></td><td>เสร็จสิ้น นับเป็นวันลาที่ใช้แล้ว</td></tr>
+          <tr><td><span class="tag st-no">ไม่อนุมัติ (ผู้จัดการฝ่าย / ฝ่ายบุคคล)</span></td><td>ไม่ได้รับอนุมัติ มี <b>เหตุผล</b> แสดงใต้สถานะ วันลาที่กันไว้จะถูกคืนให้ทันที</td></tr>
+          <tr><td><span class="tag st-no">ยกเลิก</span></td><td>ใบลาถูกยกเลิกแล้ว วันลาถูกคืนให้</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <section id="e-cancel">
+      <h3><span class="n">6</span>ยกเลิกใบลา</h3>
+      <ul>
+        <li>ใบลาที่ยังเป็น <span class="tag st-wait">รอผู้จัดการฝ่าย</span> หรือ <span class="tag st-wait">รอฝ่ายบุคคล</span> จะมีปุ่ม <b>"ยกเลิก"</b> ท้ายแถว กดแล้วยืนยันได้ทันที</li>
+        <li>ใบลาที่ <b>อนุมัติแล้ว</b> พนักงานยกเลิกเองไม่ได้ ให้แจ้งฝ่ายบุคคลเป็นผู้ยกเลิกให้</li>
+        <li>ถ้ายื่นผิด (ผิดวัน/ผิดประเภท) ให้ยกเลิกใบเดิมก่อน แล้วยื่นใหม่</li>
+      </ul>
+    </section>
+
+    <section id="e-rules">
+      <h3><span class="n">7</span>สิทธิ์การลา</h3>
+      <p class="lead">ค่าเริ่มต้นของบริษัท ฝ่ายบุคคลปรับเปลี่ยนหรือเพิ่มประเภทได้ ตัวเลขจริงของคุณดูได้จากการ์ดในหน้า "การลาของฉัน"</p>
+      <div class="wrap"><table>
+        <thead><tr><th>ประเภท</th><th>สิทธิ์ต่อปี</th><th>หมายเหตุ</th></tr></thead>
+        <tbody>
+          <tr><td>ลาพักร้อน</td><td>อายุงานไม่ถึง 4 เดือน = 0 วัน<br>ตั้งแต่ 4 เดือน = 6 วัน<br>ตั้งแต่ 2 ปี = 7 วัน<br>ตั้งแต่ 3 ปีขึ้นไป = 8 วัน</td><td>นับอายุงานจากวันเริ่มงาน</td></tr>
+          <tr><td>ลากิจ (รับค่าจ้าง)</td><td>6 วัน</td><td>ลารายชั่วโมงได้</td></tr>
+          <tr><td>ลากิจ (ไม่รับค่าจ้าง)</td><td>6 วัน</td><td>ลารายชั่วโมงได้</td></tr>
+          <tr><td>ลาป่วย</td><td>30 วัน</td><td></td></tr>
+          <tr><td>ลาคลอด</td><td>90 วัน</td><td>เฉพาะผู้หญิง (นางสาว / น.ส. / นาง)</td></tr>
+          <tr><td>ลาราชการทหาร</td><td>3 วัน</td><td>เฉพาะผู้ชาย (นาย)</td></tr>
+        </tbody>
+      </table></div>
+      <p style="font-size:13px;color:var(--muted)">สิทธิ์นับเป็นปีปฏิทิน (1 ม.ค. – 31 ธ.ค.) และเริ่มนับใหม่ทุกปี</p>
+    </section>
+
+    <section id="e-faq">
+      <h3><span class="n">8</span>ถามบ่อย</h3>
+      <details><summary>ลืมรหัสผ่านทำอย่างไร</summary><div>รหัสผ่านคือวันเริ่มงานของคุณ (วัน เดือน ปี พ.ศ. ต่อกัน) จึงไม่ต้องจำรหัสแยก และไม่มีการรีเซ็ตรหัส ถ้าไม่แน่ใจวันเริ่มงาน ให้สอบถามฝ่ายบุคคล</div></details>
+      <details><summary>ขึ้นว่า "ใส่ผิดหลายครั้ง กรุณารอ 15 นาที"</summary><div>เพื่อความปลอดภัย ระบบล็อกรหัสพนักงานชั่วคราวหลังใส่ผิด 5 ครั้ง รอ 15 นาทีแล้วลองใหม่ หรือติดต่อฝ่ายบุคคล</div></details>
+      <details><summary>ใบลาค้างที่ "รอผู้จัดการฝ่ายอนุมัติ" นานแล้ว</summary><div>ติดตามกับผู้จัดการฝ่ายของคุณโดยตรง ระบบยังไม่ได้ส่งการแจ้งเตือนอัตโนมัติ ถ้าต้องการเปลี่ยนเป็นส่งฝ่ายบุคคล ให้ยกเลิกใบนี้แล้วแจ้งฝ่ายบุคคลช่วยบันทึกให้</div></details>
+      <details><summary>ทำไมวันลาคงเหลือในการ์ดไม่เท่ากับในช่องเลือกประเภท</summary><div>การ์ดนับเฉพาะใบลาที่อนุมัติแล้ว ส่วนช่องเลือกประเภทในฟอร์มยื่นลาหักใบลาที่รออนุมัติออกด้วย เพื่อกันการยื่นเกินสิทธิ์</div></details>
+      <details><summary>ลาข้ามสิ้นปี (เช่น 30 ธ.ค. – 3 ม.ค.) ทำอย่างไร</summary><div>ระบบไม่รับใบลาข้ามปี ให้ยื่นสองใบ ใบแรก 30–31 ธ.ค. ใบที่สองเริ่ม 1 ม.ค. (ปีใหม่)</div></details>
+      <details><summary>ทำไมไม่มีประเภทการลาที่ต้องการ</summary><div>อาจเป็นเพราะคุณไม่มีสิทธิ์ (เพศหรืออายุงานไม่ตรงเงื่อนไข) หรือฝ่ายบุคคลปิดใช้งานประเภทนั้นอยู่ สอบถามฝ่ายบุคคล</div></details>
+      <details><summary>วันเสาร์นับเป็นวันลาไหม</summary><div>ขึ้นกับการตั้งค่าของบริษัท ค่าเริ่มต้นไม่นับวันเสาร์และวันอาทิตย์ ดูจำนวนวันที่ระบบคำนวณได้จากกล่องสรุปก่อนกดส่ง</div></details>
+    </section>
+  </div>
+
+  <!-- ====================== ผู้จัดการฝ่าย ====================== -->
+  <div class="panel" id="manager" role="tabpanel" aria-labelledby="t-manager" hidden>
+    <div class="print-title">คู่มือสำหรับผู้จัดการฝ่าย</div>
+    <div class="toc">
+      <a href="#m-login">เข้าสู่ระบบ</a><a href="#m-review">ตรวจใบลา</a><a href="#m-decide">อนุมัติ / ไม่อนุมัติ</a>
+      <a href="#m-history">ประวัติ</a><a href="#m-faq">ถามบ่อย</a>
+    </div>
+
+    <section id="m-login">
+      <h3><span class="n">1</span>เข้าสู่ระบบ</h3>
+      <p class="lead">ผู้จัดการฝ่ายล็อกอินด้วยอีเมลและรหัสผ่าน</p>
+      <ol class="steps">
+        <li><b>เปิดหน้า "อนุมัติใบลา (ผู้จัดการฝ่าย)"</b>จากหน้าหลัก</li>
+        <li><b>กรอกอีเมลและรหัสผ่าน</b>ต้องเป็นอีเมลเดียวกับที่ลงทะเบียนเป็นผู้จัดการในระบบ ถ้าไม่ได้รับบัญชี ให้ติดต่อผู้ดูแลระบบ</li>
+        <li><b>ตรวจชื่อด้านบน</b>แถวแรกแสดงอีเมลของคุณและฝ่ายที่คุณดูแล</li>
+      </ol>
+      <div class="note"><b>เห็นเฉพาะฝ่ายของตัวเอง</b>คุณจะเห็นเฉพาะใบลาของพนักงานในฝ่ายที่คุณดูแล ถ้าดูแลหลายฝ่าย จะเห็นรวมกัน</div>
+    </section>
+
+    <section id="m-review">
+      <h3><span class="n">2</span>ตรวจใบลาที่รออนุมัติ</h3>
+      <p class="lead">แท็บ "รออนุมัติ" แสดงใบลาที่รอคุณ เรียงจากยื่นก่อนไปหลัง และมีจำนวนที่รออยู่ที่ชื่อแท็บ</p>
+      <p>แต่ละใบแสดง</p>
+      <ul>
+        <li>ชื่อ รหัสพนักงาน และฝ่ายของผู้ยื่น</li>
+        <li>ประเภทการลา วันที่ลา จำนวน (วัน หรือชั่วโมง) และเวลาที่ยื่น</li>
+        <li><b>คงเหลือหลังอนุมัติ</b> = สิทธิ์ทั้งปี หักการลาอื่นของพนักงานคนนี้ และใบนี้</li>
+        <li>เหตุผลที่พนักงานระบุ</li>
+      </ul>
+      <div class="warn"><b>กรอบเตือนสีเหลือง</b>ถ้าขึ้น "เกินสิทธิ์" หรือ "พนักงานไม่มีสิทธิ์ลาประเภทนี้" แปลว่าใบลานี้ผิดเงื่อนไข ควรสอบถามพนักงาน หรือไม่อนุมัติพร้อมระบุเหตุผล</div>
+    </section>
+
+    <section id="m-decide">
+      <h3><span class="n">3</span>อนุมัติหรือไม่อนุมัติ</h3>
+      <ol class="steps">
+        <li><b>อนุมัติ</b>กดปุ่ม "อนุมัติ" (สีเขียว) แล้วยืนยันในหน้าต่างที่ขึ้นมา ใบลาจะส่งต่อให้ฝ่ายบุคคล</li>
+        <li><b>ไม่อนุมัติ</b>พิมพ์เหตุผลในช่อง "หมายเหตุ" ก่อน แล้วกด "ไม่อนุมัติ" (สีแดง) และยืนยัน พนักงานจะเห็นเหตุผลนี้ในประวัติการลา</li>
+      </ol>
+      <ul>
+        <li><b>ต้องระบุเหตุผลทุกครั้งที่ไม่อนุมัติ</b> ระบบไม่ให้ผ่านถ้าเว้นว่าง</li>
+        <li>หมายเหตุตอนอนุมัติเป็นตัวเลือก ใส่เพื่อแจ้งฝ่ายบุคคลได้</li>
+        <li>อนุมัติใบลาของตัวเองไม่ได้ ใบลาของผู้จัดการจะส่งตรงไปฝ่ายบุคคล</li>
+        <li>เมื่อตัดสินแล้วแก้ไขไม่ได้ ตรวจรายละเอียดในหน้าต่างยืนยันให้ดี</li>
+      </ul>
+    </section>
+
+    <section id="m-history">
+      <h3><span class="n">4</span>ดูประวัติ</h3>
+      <p>แท็บ "ประวัติที่ตัดสินแล้ว" แสดงใบลาที่คุณอนุมัติหรือไม่อนุมัติไปแล้ว พร้อมเวลาและหมายเหตุที่ให้ไว้ ใช้ตรวจย้อนหลังได้</p>
+    </section>
+
+    <section id="m-faq">
+      <h3><span class="n">5</span>ถามบ่อย</h3>
+      <details><summary>ขึ้นว่า "บัญชีนี้ไม่ใช่ผู้จัดการฝ่าย"</summary><div>อีเมลที่ล็อกอินไม่ตรงกับอีเมลของผู้จัดการในระบบ ตรวจว่าใช้อีเมลถูกต้อง หรือแจ้งผู้ดูแลระบบให้ตรวจตารางผู้จัดการ</div></details>
+      <details><summary>ไม่เห็นใบลาของลูกน้องบางคน</summary><div>ระบบแสดงตามฝ่ายของพนักงาน (รหัสฝ่ายต้องตรงกับฝ่ายที่คุณดูแล) ถ้าพนักงานย้ายฝ่ายหรือข้อมูลฝ่ายไม่ตรง ให้แจ้งฝ่ายบุคคลแก้ข้อมูลพนักงาน</div></details>
+      <details><summary>ขึ้นว่า "ใบลานี้ถูกดำเนินการไปแล้ว"</summary><div>พนักงานอาจยกเลิกใบลาไปก่อน หรือมีคนตัดสินไปแล้ว กดรีเฟรชหน้าเพื่อดูสถานะล่าสุด</div></details>
+      <details><summary>จะเกิดอะไรขึ้นหลังฉันอนุมัติ</summary><div>ใบลาส่งต่อให้ฝ่ายบุคคลพิจารณาเป็นขั้นสุดท้าย ยังไม่นับเป็นวันลาที่ใช้จนกว่าฝ่ายบุคคลจะอนุมัติ</div></details>
+    </section>
+  </div>
+
+  <!-- ====================== ฝ่ายบุคคล ====================== -->
+  <div class="panel" id="hr" role="tabpanel" aria-labelledby="t-hr" hidden>
+    <div class="print-title">คู่มือสำหรับฝ่ายบุคคล</div>
+    <div class="toc">
+      <a href="#h-pages">หน้าที่ใช้</a><a href="#h-approve">อนุมัติใบลา</a><a href="#h-summary">สรุปการลา</a>
+      <a href="#h-add">บันทึกการลาแทน</a><a href="#h-types">ประเภทการลา</a><a href="#h-faq">ถามบ่อย</a>
+    </div>
+
+    <section id="h-pages">
+      <h3><span class="n">1</span>หน้าที่ฝ่ายบุคคลใช้</h3>
+      <p class="lead">ทุกหน้าล็อกอินด้วยอีเมลและรหัสผ่านของฝ่ายบุคคล บัญชีต้องอยู่ในรายชื่อผู้ใช้ฝ่ายบุคคลของระบบ ถ้าเข้าไม่ได้ให้ติดต่อผู้ดูแลระบบ</p>
+      <div class="wrap"><table>
+        <thead><tr><th>หน้า</th><th>ใช้ทำอะไร</th></tr></thead>
+        <tbody>
+          <tr><td><a href="hr-approve.html">อนุมัติใบลา (ฝ่ายบุคคล)</a></td><td>อนุมัติขั้นสุดท้ายของใบลาที่พนักงานยื่น</td></tr>
+          <tr><td><a href="summary.html">สรุปการลาพนักงาน</a></td><td>ดูวันลาคงเหลือของพนักงานทุกคน</td></tr>
+          <tr><td><a href="add-leave.html">บันทึกการลา</a></td><td>บันทึกหรือยกเลิกการลาแทนพนักงาน</td></tr>
+          <tr><td><a href="leave-types.html">จัดการประเภทการลา</a></td><td>เพิ่ม แก้ไข ปิดใช้งานประเภทการลา และสิทธิ์</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <section id="h-approve">
+      <h3><span class="n">2</span>อนุมัติใบลา (ขั้นสุดท้าย)</h3>
+      <p class="lead">หน้า "อนุมัติใบลา (ฝ่ายบุคคล)" มี 3 แท็บ</p>
+      <ul>
+        <li><b>รออนุมัติ</b> — ใบลาที่ผ่านผู้จัดการแล้ว ใบลาที่ข้ามขั้นผู้จัดการ และรายการที่ HR บันทึกเป็น "รออนุมัติ" ตัดสินได้ที่นี่</li>
+        <li><b>รอผู้จัดการฝ่าย (ดูอย่างเดียว)</b> — ใบลาที่ยังค้างที่ผู้จัดการ ใช้ติดตามว่าค้างฝ่ายไหน ตัดสินแทนผู้จัดการไม่ได้</li>
+        <li><b>ประวัติที่ตัดสินแล้ว</b> — ที่ฝ่ายบุคคลตัดสินแล้ว พร้อมผู้ตัดสินและเวลา</li>
+      </ul>
+      <ol class="steps">
+        <li><b>ตรวจใบลา</b>ดูประเภท วันที่ จำนวน เหตุผล ผลการพิจารณาของผู้จัดการ (ถ้ามี) และ "คงเหลือหลังอนุมัติ"</li>
+        <li><b>อนุมัติ</b>กด "อนุมัติ" แล้วยืนยัน ใบลาเป็น <span class="tag st-ok">อนุมัติแล้ว</span> และนับเป็นวันลาที่ใช้ทันที</li>
+        <li><b>ไม่อนุมัติ</b>พิมพ์เหตุผลในช่องหมายเหตุ แล้วกด "ไม่อนุมัติ" และยืนยัน พนักงานเห็นเหตุผลนี้</li>
+      </ol>
+      <div class="warn"><b>ตรวจกรอบเตือน</b>ถ้ามีข้อความ "เกินสิทธิ์" หรือ "ไม่มีสิทธิ์ลาประเภทนี้" ให้ตรวจก่อนอนุมัติ โดยเฉพาะใบลาที่ HR บันทึกเองหรือหลังจากมีการแก้สิทธิ์ภายหลัง</div>
+      <p style="font-size:13px;color:var(--muted)">อนุมัติใบลาของตัวเองไม่ได้ ต้องให้ผู้ใช้ฝ่ายบุคคลคนอื่นอนุมัติ</p>
+    </section>
+
+    <section id="h-summary">
+      <h3><span class="n">3</span>สรุปการลาของพนักงาน</h3>
+      <ul>
+        <li>ตารางแสดงวันลาคงเหลือ / สิทธิ์ ของทุกประเภทที่เปิดใช้งาน ตัวเลขสีแดง = ใช้สิทธิ์หมดแล้ว</li>
+        <li>ช่อง "-" = พนักงานไม่มีสิทธิ์ประเภทนั้น</li>
+        <li>พิมพ์ชื่อหรือรหัสที่ช่องค้นหา เลือกปีที่มุมบน</li>
+        <li><b>คลิกที่แถว</b> เพื่อดูรายละเอียดรายคน: เริ่มงาน อายุงาน และแถบแสดงการใช้สิทธิ์ของลาแต่ละประเภท</li>
+        <li>ยอด "ใช้แล้ว" ในหน้านี้รวมใบลาที่รออนุมัติด้วย เพื่อให้ตรงกับยอดที่พนักงานเห็น</li>
+      </ul>
+    </section>
+
+    <section id="h-add">
+      <h3><span class="n">4</span>บันทึกการลาแทนพนักงาน</h3>
+      <p class="lead">ใช้เมื่อพนักงานแจ้งลาด้วยวิธีอื่น เช่น โทรหรือใบลากระดาษ</p>
+      <ol class="steps">
+        <li><b>เลือกพนักงาน</b>พิมพ์ชื่อหรือรหัสที่ช่องค้นหา แล้วเลือกจากรายการ จะเห็นอายุงานและวันลาคงเหลือ</li>
+        <li><b>เลือกประเภท รูปแบบ และสถานะ</b>สถานะเลือก "อนุมัติแล้ว" ถ้าตกลงกันเรียบร้อย หรือ "รออนุมัติ" ถ้าต้องการให้ตรวจก่อน</li>
+        <li><b>เลือกวันที่</b>หรือใส่จำนวนชั่วโมงถ้าลารายชั่วโมง ตั้งค่า "นับวันเสาร์" และ "ไม่นับวันหยุดนักขัตฤกษ์" ได้ตามความเหมาะสม</li>
+        <li><b>ตรวจกล่องสรุป</b>แล้วกด "บันทึกการลา" ถ้าเกินสิทธิ์ ระบบจะถามยืนยันก่อน</li>
+      </ol>
+      <div class="note"><b>ยกเลิกรายการ</b>ตารางประวัติด้านล่างมีปุ่ม "ยกเลิก" ซึ่งเปลี่ยนสถานะเป็นยกเลิกและคืนวันลา ไม่ลบข้อมูล ใช้กับใบลาที่อนุมัติแล้วซึ่งพนักงานขอยกเลิก</div>
+      <div class="warn"><b>ข้อควรระวัง</b>การบันทึกโดย HR ไม่ผ่านขั้นตอนผู้จัดการฝ่าย ควรใช้เมื่อได้รับความเห็นชอบแล้วเท่านั้น</div>
+    </section>
+
+    <section id="h-types">
+      <h3><span class="n">5</span>จัดการประเภทการลา</h3>
+      <p class="lead">ประเภทการลาและสิทธิ์ทั้งหมดกำหนดที่หน้านี้ ทุกหน้าของระบบใช้ข้อมูลชุดเดียวกัน</p>
+      <p><b>เพิ่มประเภทใหม่</b> กด "+ เพิ่มประเภทการลา" แล้วกำหนด</p>
+      <ul>
+        <li><b>ชื่อ</b> และลำดับการแสดง (เลขน้อยแสดงก่อน)</li>
+        <li><b>วิธีกำหนดสิทธิ์</b> — จำนวนวันคงที่ต่อปี หรือ ตามอายุงาน (ใส่ช่วง "ตั้งแต่อายุงานกี่เดือน ได้กี่วัน")
+          <br>ตัวอย่างตามอายุงาน: 0 เดือน = 2 วัน, 12 เดือน = 5 วัน ต่ำกว่าช่วงแรกสุดจะได้ 0 วัน</li>
+        <li><b>ลารายชั่วโมงได้</b> — ติ๊กถ้าอนุญาต (8 ชั่วโมง = 1 วัน)</li>
+        <li><b>เพศที่มีสิทธิ์</b> — ทุกคน / หญิง / ชาย (ดูจากคำนำหน้าชื่อ)</li>
+        <li><b>เปิดใช้งาน</b> — พนักงานยื่นลาประเภทที่เปิดอยู่เท่านั้น</li>
+      </ul>
+      <p><b>แก้ไข</b> กดปุ่ม "แก้ไข" ที่แถวนั้น <b>ปิด/เปิดใช้งาน</b> กดปุ่มที่ท้ายแถว</p>
+      <div class="warn"><b>ผลของการแก้สิทธิ์</b>การเปลี่ยนจำนวนวันของประเภทที่มีคนลาไปแล้ว ส่งผลกับยอดคงเหลือของพนักงานทุกคนทันที รวมถึงใบลาที่ยื่นไปแล้วของปีนั้น ควรแก้ตอนต้นปีหรือเมื่อมีนโยบายใหม่เท่านั้น</div>
+      <div class="note"><b>ไม่มีการลบประเภท</b>ถ้าไม่ใช้แล้วให้ปิดใช้งาน ใบลาเก่ายังแสดงชื่อได้ถูกต้อง และพนักงานที่เคยลาประเภทนั้นในปีนั้นยังเห็นในประวัติ</div>
+    </section>
+
+    <section id="h-faq">
+      <h3><span class="n">6</span>ถามบ่อย</h3>
+      <details><summary>พนักงานอยู่ฝ่ายที่ไม่มีผู้จัดการ ใบลาไปไหน</summary><div>ใบลาจะข้ามไปรอฝ่ายบุคคลโดยตรง และมีหมายเหตุกำกับในรายการ ควรเพิ่มผู้จัดการของฝ่ายนั้นในข้อมูลเพื่อให้ผ่านขั้นตอนครบ</div></details>
+      <details><summary>พนักงานยื่นผิด ขอให้ยกเลิกใบที่อนุมัติแล้ว</summary><div>ไปที่ "บันทึกการลา" เลือกพนักงานคนนั้น กด "ยกเลิก" ที่แถวใบลา แล้วให้พนักงานยื่นใหม่หรือบันทึกให้ใหม่</div></details>
+      <details><summary>ลาคลอด/ลาราชการทหารไม่ขึ้นให้พนักงานคนหนึ่ง</summary><div>ระบบดูเพศจากคำนำหน้าชื่อในชื่อ-สกุล (นาย / นาง / นางสาว / น.ส.) ตรวจว่าคำนำหน้าในข้อมูลพนักงานถูกต้อง</div></details>
+      <details><summary>ลาพักร้อนของพนักงานใหม่เป็น 0 วัน</summary><div>เป็นไปตามกติกา อายุงานไม่ถึง 4 เดือนยังไม่มีสิทธิ์ ปรับตัวเลขได้ที่ประเภท "ลาพักร้อน" ในหน้าจัดการประเภทการลา</div></details>
+    </section>
+  </div>
+
+  <!-- ====================== ผู้ดูแลระบบ ====================== -->
+  <div class="panel" id="admin" role="tabpanel" aria-labelledby="t-admin" hidden>
+    <div class="print-title">คู่มือสำหรับผู้ดูแลระบบ</div>
+    <div class="toc">
+      <a href="#a-install">ติดตั้ง</a><a href="#a-accounts">บัญชีผู้ใช้</a><a href="#a-data">ข้อมูลที่ระบบต้องใช้</a>
+      <a href="#a-config">การตั้งค่า</a><a href="#a-trouble">แก้ปัญหา</a>
+    </div>
+
+    <section id="a-install">
+      <h3><span class="n">1</span>ติดตั้งและอัปเดต</h3>
+      <ol class="steps">
+        <li><b>รัน SQL ใน Supabase</b>เมนู SQL Editor รันตามลำดับ ไม่ข้ามไฟล์:
+          <br><code>leave_requests.sql</code> → <code>employee_portal.sql</code> → <code>approval_flow.sql</code> → <code>leave_types.sql</code>
+          <br>ทุกไฟล์รันซ้ำได้ (ไม่ทำให้ข้อมูลเดิมหาย)</li>
+        <li><b>ใส่ค่าเชื่อมต่อ</b>แก้ <code>SUPABASE_URL</code> และ <code>SUPABASE_ANON_KEY</code> ใน <code>me.html</code>, <code>manager.html</code>, <code>hr-approve.html</code>, <code>summary.html</code>, <code>add-leave.html</code>, <code>leave-types.html</code> ใช้ anon key เท่านั้น ห้ามใส่ service_role key</li>
+        <li><b>อัปโหลดขึ้น GitHub</b>ต้องรวมไฟล์ <code>ui.js</code> ไว้ข้างๆ ไฟล์ HTML ด้วย</li>
+        <li><b>Vercel</b>นำเข้าโปรเจกต์ (Framework: Other, ไม่ต้อง build) เมื่อ push ใหม่ Vercel จะ deploy ให้เอง</li>
+      </ol>
+      <div class="warn"><b>ก่อนทับไฟล์เดิม</b>ถ้าใส่ค่า Supabase จริงไว้ในไฟล์ที่ใช้อยู่ อย่าเอาไฟล์ใหม่ไปทับโดยไม่ใส่ค่าซ้ำ</div>
+    </section>
+
+    <section id="a-accounts">
+      <h3><span class="n">2</span>บัญชีผู้ใช้</h3>
+      <div class="wrap"><table>
+        <thead><tr><th>ผู้ใช้</th><th>ล็อกอินด้วย</th><th>ต้องเตรียม</th></tr></thead>
+        <tbody>
+          <tr><td>พนักงาน</td><td>รหัสพนักงาน + วันเริ่มงาน (DDMM + ปี พ.ศ.)</td><td>ไม่ต้องสร้างบัญชี ต้องมีแถวใน <code>employees</code> พร้อม <code>employee_code</code> และ <code>hire_date</code></td></tr>
+          <tr><td>ผู้จัดการฝ่าย</td><td>อีเมล + รหัสผ่าน (Supabase Auth)</td><td>สร้างผู้ใช้ที่ Authentication › Users ด้วยอีเมลเดียวกับ <code>managers.email</code></td></tr>
+          <tr><td>ฝ่ายบุคคล</td><td>อีเมล + รหัสผ่าน (Supabase Auth)</td><td>สร้างผู้ใช้ใน Authentication และเพิ่มอีเมลใน <code>hr_users</code> หรือ <code>hr_admins</code></td></tr>
+        </tbody>
+      </table></div>
+      <div class="note"><b>อีเมลต้องตรงกัน</b>การเทียบอีเมลไม่สนตัวพิมพ์เล็ก-ใหญ่ แต่ต้องสะกดตรง ผู้ใช้ที่มีบัญชีแต่ไม่อยู่ในรายชื่อ จะล็อกอินได้แต่เข้าหน้าไม่ได้</div>
+    </section>
+
+    <section id="a-data">
+      <h3><span class="n">3</span>ข้อมูลที่ระบบต้องใช้</h3>
+      <ul>
+        <li><code>employees</code> — <code>employee_code</code>, <code>full_name</code> (ขึ้นต้นด้วยคำนำหน้า นาย/นาง/นางสาว/น.ส. เพื่อกำหนดเพศ), <code>department_code</code>, <code>hire_date</code> (ชนิด date)</li>
+        <li><code>managers</code> — <code>email</code>, <code>emp_code</code>, <code>division_code</code> ซึ่งต้องตรงกับ <code>employees.department_code</code> ของลูกทีม</li>
+        <li><code>departments</code> — <code>department_code</code>, <code>name</code> (ใช้แสดงชื่อฝ่าย)</li>
+        <li><code>hr_users</code> / <code>hr_admins</code> — อีเมลของฝ่ายบุคคล</li>
+        <li><code>holidays</code> — วันหยุดนักขัตฤกษ์ (คอลัมน์วันที่ชื่อ <code>holiday_date</code>, <code>date</code>, <code>day</code> หรือ <code>holiday</code>) ถ้าไม่มี ระบบนับทุกวันที่ไม่ใช่วันหยุดสุดสัปดาห์</li>
+        <li><code>leave_requests</code>, <code>leave_types</code> — ระบบสร้างให้จากไฟล์ SQL</li>
+      </ul>
+    </section>
+
+    <section id="a-config">
+      <h3><span class="n">4</span>การตั้งค่า</h3>
+      <div class="wrap"><table>
+        <thead><tr><th>เรื่อง</th><th>ตั้งที่ไหน</th></tr></thead>
+        <tbody>
+          <tr><td>ประเภทการลา / สิทธิ์ / ลารายชั่วโมง / เพศ</td><td>หน้า "จัดการประเภทการลา" (ฝ่ายบุคคลทำเองได้)</td></tr>
+          <tr><td>นับวันเสาร์เป็นวันทำงานในหน้าพนักงาน</td><td>ตัวแปร <code>COUNT_SAT</code> ในไฟล์ <code>me.html</code> (ค่าเริ่มต้น <code>false</code>) ส่วนหน้าบันทึกการลาของ HR มีช่องติ๊กให้ทุกครั้ง</td></tr>
+          <tr><td>ชั่วโมงทำงานต่อวัน</td><td>ตัวแปร <code>HOURS_PER_DAY</code> (ค่าเริ่มต้น 8) ในหน้าเว็บ ส่วนฐานข้อมูลคำนวณที่ 8 ชั่วโมงเท่ากัน ถ้าเปลี่ยนต้องแก้ SQL ด้วย</td></tr>
+          <tr><td>ล็อกการเดารหัสผ่าน</td><td>ผิด 5 ครั้งใน 15 นาที ต่อรหัสพนักงาน (กำหนดในฟังก์ชัน <code>_emp_auth</code> ของ <code>approval_flow.sql</code>)</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <section id="a-trouble">
+      <h3><span class="n">5</span>แก้ปัญหา</h3>
+      <div class="wrap"><table>
+        <thead><tr><th>อาการ</th><th>สาเหตุที่พบบ่อย / วิธีแก้</th></tr></thead>
+        <tbody>
+          <tr><td>พนักงานเข้าไม่ได้ ทั้งที่ใส่ถูก</td><td><code>hire_date</code> ในระบบไม่ตรงกับที่พนักงานจำ หรือเก็บไม่ใช่ชนิด date ตรวจที่ตาราง <code>employees</code></td></tr>
+          <tr><td>"บัญชีนี้ไม่ใช่ผู้จัดการฝ่าย"</td><td>อีเมลที่ล็อกอินไม่ตรงกับ <code>managers.email</code></td></tr>
+          <tr><td>"บัญชีนี้ไม่ใช่ฝ่ายบุคคล"</td><td>อีเมลไม่อยู่ใน <code>hr_users</code> / <code>hr_admins</code></td></tr>
+          <tr><td>ผู้จัดการไม่เห็นใบลาของลูกทีม</td><td><code>managers.division_code</code> ไม่ตรงกับ <code>employees.department_code</code></td></tr>
+          <tr><td>ใบลาข้ามผู้จัดการไปที่ฝ่ายบุคคลเสมอ</td><td>ฝ่ายนั้นไม่มีแถวใน <code>managers</code> หรืออีเมลผู้จัดการว่าง</td></tr>
+          <tr><td>หน้า HR ขึ้น "ไม่พบข้อมูลในตาราง employees"</td><td>ตาราง <code>employees</code> ยังไม่มี policy <code>select</code> ให้ผู้ใช้ฝ่ายบุคคลอ่าน (RLS)</td></tr>
+          <tr><td>หน้า HR ขึ้น "โหลดการลาไม่สำเร็จ"</td><td>ยังไม่ได้รันไฟล์ SQL หรืออีเมลที่ล็อกอินไม่ใช่ฝ่ายบุคคล</td></tr>
+          <tr><td>กดยืนยัน/อนุมัติแล้วไม่มีอะไรเกิดขึ้น</td><td>ไม่ได้อัปโหลด <code>ui.js</code> ไว้ข้างๆ ไฟล์ HTML</td></tr>
+          <tr><td>ไม่มีประเภทการลาในหน้า (หน้า HR)</td><td>ยังไม่ได้รัน <code>leave_types.sql</code> หน้า HR ใช้ค่าเริ่มต้นสำรองจนกว่าจะรัน แต่หน้าพนักงานต้องมีตารางนี้</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+  </div>
+</main>
+
+<footer>ตรวจสอบวันลา | ใช้ภายในบริษัทเท่านั้น | พัฒนาโดย Sarawut.C</footer>
+
+<script>
+(function(){
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('[role="tab"]'));
+  var panels = Array.prototype.slice.call(document.querySelectorAll('.panel'));
+  function show(id, push){
+    if (!document.getElementById(id)) id = 'employee';
+    tabs.forEach(function(t){ t.setAttribute('aria-selected', String(t.dataset.tab === id)); t.tabIndex = t.dataset.tab === id ? 0 : -1; });
+    panels.forEach(function(p){
+      var on = p.id === id;
+      p.classList.toggle('on', on);
+      if (on) p.removeAttribute('hidden'); else p.setAttribute('hidden', '');
+    });
+    if (push) { try { history.replaceState(null, '', '#' + id); } catch(e){} window.scrollTo({ top: 0 }); }
+  }
+  tabs.forEach(function(t, i){
+    t.addEventListener('click', function(){ show(t.dataset.tab, true); });
+    t.addEventListener('keydown', function(e){
+      var j = e.key === 'ArrowRight' ? i + 1 : e.key === 'ArrowLeft' ? i - 1 : -1;
+      if (j < 0) return;
+      e.preventDefault();
+      var n = tabs[(j + tabs.length) % tabs.length];
+      n.focus(); show(n.dataset.tab, true);
+    });
+  });
+  // เปิดตาม #hash เช่น guide.html#manager หรือ guide.html#hr (รวมลิงก์หัวข้อย่อย เช่น #h-types)
+  function fromHash(){
+    var h = (location.hash || '').slice(1);
+    if (!h) return show('employee');
+    if (document.getElementById(h) && document.getElementById(h).classList.contains('panel')) return show(h);
+    var el = document.getElementById(h);
+    var p = el && el.closest('.panel');
+    if (p) { show(p.id); setTimeout(function(){ el.scrollIntoView(); }, 0); }
+  }
+  // ใส่ data-label ให้ทุกเซลล์ตามหัวคอลัมน์ (ใช้แสดงตอนเรียงเป็นการ์ดบนจอแคบ)
+  Array.prototype.forEach.call(document.querySelectorAll('table'), function(t){
+    t.classList.add('rs');
+    var heads = Array.prototype.map.call(t.querySelectorAll('thead th'), function(h){ return h.textContent.trim(); });
+    Array.prototype.forEach.call(t.querySelectorAll('tbody tr'), function(tr){
+      Array.prototype.forEach.call(tr.children, function(td, i){ if (heads[i]) td.setAttribute('data-label', heads[i]); });
+    });
+  });
+  window.addEventListener('hashchange', fromHash);
+  fromHash();
+  // พิมพ์: เปิดคำถามถามบ่อยทุกข้อให้เห็นคำตอบ แล้วคืนสภาพหลังพิมพ์
+  var opened = [];
+  window.addEventListener('beforeprint', function(){
+    opened = [];
+    Array.prototype.forEach.call(document.querySelectorAll('details'), function(d){ if (!d.open){ d.open = true; opened.push(d); } });
+  });
+  window.addEventListener('afterprint', function(){ opened.forEach(function(d){ d.open = false; }); opened = []; });
+  document.getElementById('printBtn').addEventListener('click', function(){ window.print(); });
+})();
+</script>
+</body>
+</html>
