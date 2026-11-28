@@ -7,48 +7,23 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="ui.js"></script>
 <style>
-  :root{
-    --bg:#eaf3fd;
-    --card:#fff;
-    --text:#1e3a5f;
-    --muted:#5b7391;
-    --line:#d6e4f5;
-    --primary:#1d6fd8;
-    --ok:#16a34a;
-    --warn:#f59e0b;
-    --bad:#dc2626
-  }
+  :root{--bg:#eaf3fd;--card:#fff;--text:#1e3a5f;--muted:#5b7391;--line:#d6e4f5;--primary:#1d6fd8;--ok:#16a34a;--warn:#f59e0b;--bad:#dc2626}
   *{box-sizing:border-box}
   body::before{content:"";display:block;height:8px;background:linear-gradient(90deg,#1558b8,#2f8cf0)}
   body{margin:0;font-family:"Sarabun","Noto Sans Thai",system-ui,sans-serif;background:var(--bg);color:var(--text)}
-  
-  /* ขยายเต็มพื้นที่ (Full width container with max-width increased to 100% and proper padding) */
-  main{
-    width: 100%;
-    max-width: 100%;
-    margin: 0;
-    padding: 24px;
-  }
-  
+  main{max-width:900px;margin:0 auto;padding:16px}
   select,input,textarea,button{font:inherit;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:#fff}
   button{background:var(--primary);color:#fff;border:0;cursor:pointer}
   button.ghost{background:#fff;color:var(--text);border:1px solid var(--line)}
   button.small{padding:4px 10px;font-size:13px}
   button:disabled{opacity:.6}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:24px;margin-bottom:24px;box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);}
-  
-  /* ปรับปรุง Grid การลาให้รองรับหน้าจอที่กว้างขึ้นและขยายเต็มพื้นที่อย่างสวยงาม */
-  .grid{
-    display:grid;
-    grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
-    gap:16px;
-  }
-  
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:16px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
   .lt{margin:0}
-  .lt h3{margin:0 0 4px;font-size:16px;font-weight:700}
+  .lt h3{margin:0 0 2px;font-size:15px}
   .lt .sub{color:var(--muted);font-size:12px;min-height:16px}
-  .lt .num{font-size:28px;font-weight:700;margin:8px 0 4px}
-  .lt .num small{font-size:14px;font-weight:400;color:var(--muted)}
+  .lt .num{font-size:26px;font-weight:700;margin:8px 0 4px}
+  .lt .num small{font-size:13px;font-weight:400;color:var(--muted)}
   .bar{height:8px;background:var(--line);border-radius:99px;overflow:hidden}
   .bar>i{display:block;height:100%}
   .lt.na{opacity:.45}
@@ -57,97 +32,81 @@
   .st-approved{background:#dcfce7;color:#166534}
   .st-pending,.st-pending_manager,.st-pending_hr{background:#fef3c7;color:#92400e}
   .st-rejected,.st-cancelled{background:#fee2e2;color:#991b1b}
-  #login{max-width:420px;margin:80px auto}
-  #login input{width:100%;margin-bottom:12px}
+  #login{max-width:380px;margin:60px auto}
+  #login input{width:100%;margin-bottom:10px}
   .err{color:var(--bad);font-size:13px;min-height:18px;margin-bottom:6px}
   table{width:100%;border-collapse:collapse;font-size:14px}
-  th,td{padding:12px 14px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
-  th{font-weight:700;background:#f8fafc;color:var(--text)}
-  .wrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px}
-  .top{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
-  .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px;margin-bottom:16px}
-  label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px;font-weight:600}
+  th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  .wrap{overflow-x:auto}
+  .top{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:flex-start;margin-bottom:12px}
+  .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:12px}
+  label{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
   .row input,.row select,.row textarea{width:100%}
-  .info{background:#f0f5ff;border:1px solid #dbe6ff;border-radius:8px;padding:12px 16px;font-size:14px;margin-bottom:16px}
+  .info{background:#f0f5ff;border:1px solid #dbe6ff;border-radius:8px;padding:10px 12px;font-size:14px;margin-bottom:12px}
   .info.warn{background:#fffbeb;border-color:#fde68a}
   .info.bad{background:#fef2f2;border-color:#fecaca;color:#991b1b}
   .msg{font-size:14px;min-height:20px;margin:8px 0}
   .msg.ok{color:var(--ok)} .msg.er{color:var(--bad)}
   .hide{display:none}
   .note{font-size:12px;color:#991b1b;margin-top:4px}
-  
-  /* ตัวเสริมสำหรับการจัดระเบียบโครงสร้างในโหมดขยายเต็มจอ */
-  .section-title {
-    font-size: 18px;
-    font-weight: 700;
-    margin-bottom: 16px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: var(--text);
-    border-bottom: 2px solid var(--line);
-    padding-bottom: 8px;
-  }
 </style>
-<style data-link-removed-style>a[data-link-removed],a[href*="zPythonSafez"]:not([onclick]){pointer-events:none!important;cursor:default!important;opacity:.6}</style></head>
+</head>
 <body>
 
 <script>
-const SUPABASE_URL      = "https://ppzdyvomrfiitahxwrwz.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBwemR5dm9tcmZpaXRhaHh3cnd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwMjQ0MjIsImV4cCI6MjEwNDYwMDQyMn0.iArUz6swMfwhFT_1qEvCwK1B3aiCxdWt46_FBjT6_Y0";
+const SUPABASE_URL      = "https://YOUR-PROJECT.supabase.co";
+const SUPABASE_ANON_KEY = "YOUR-ANON-KEY";
 const COUNT_SAT = false;   // true = นับวันเสาร์เป็นวันทำงานตอนคำนวณจำนวนวันลา (ถ้าบริษัททำงานวันเสาร์)
 </script>
 
 <main>
   <div id="login" class="card">
-    <h2 style="margin-top:0;text-align:center;">การลาของฉัน</h2>
+    <h2 style="margin-top:0">การลาของฉัน</h2>
     <input id="code" placeholder="รหัสพนักงาน" autocomplete="username" inputmode="text">
     <input id="pass" type="password" placeholder="รหัสผ่าน (วันเริ่มงาน เช่น 01112569)" autocomplete="current-password" inputmode="numeric">
     <div class="err" id="err"></div>
     <button id="loginBtn" style="width:100%">เข้าสู่ระบบ</button>
-    <p class="muted" style="font-size:12px;margin-bottom:0;text-align:center;margin-top:12px;">รหัสผ่าน = วัน/เดือน/ปี พ.ศ. ที่เริ่มงาน ต่อกันไม่มีเครื่องหมาย</p>
-    <p style="font-size:13px;text-align:center;margin:16px 0 0"><a href="index.html" style="color:var(--primary);text-decoration:none">← กลับหน้าหลัก</a> &nbsp;·&nbsp; <a href="guide.html#employee" style="color:var(--primary);text-decoration:none">คู่มือการใช้งาน</a></p>
+    <p class="muted" style="font-size:12px;margin-bottom:0">รหัสผ่าน = วัน/เดือน/ปี พ.ศ. ที่เริ่มงาน ต่อกันไม่มีเครื่องหมาย</p>
+    <p style="font-size:13px;text-align:center;margin:12px 0 0"><a href="index.html" style="color:var(--primary);text-decoration:none">← กลับหน้าหลัก</a> &nbsp;·&nbsp; <a href="guide.html#employee" style="color:var(--primary);text-decoration:none">คู่มือการใช้งาน</a></p>
   </div>
 
   <div id="app" style="display:none">
     <div class="card">
       <div class="top">
-        <div><b style="font-size:22px" id="name"></b><br><span class="muted" id="info" style="font-size:14px;"></span></div>
-        <div style="display:flex;gap:12px">
-          <select id="year" style="padding:8px 12px;"></select>
+        <div><b style="font-size:18px" id="name"></b><br><span class="muted" id="info"></span></div>
+        <div style="display:flex;gap:8px">
+          <select id="year"></select>
           <button class="ghost" id="logout">ออกจากระบบ</button>
         </div>
       </div>
       <div class="grid" id="cards"></div>
     </div>
 
-    <div style="display: grid; grid-template-columns: 1fr; gap: 24px; align-items: start;">
-      <!-- ฟอร์มยื่นใบลา และ ประวัติการลา จัดวางในสไตล์ที่รองรับขนาดหน้าจอกว้างได้อย่างยอดเยี่ยม -->
-      <div class="card">
-        <div class="section-title">ยื่นใบลา</div>
-        <p class="muted" style="font-size:13px;margin:-8px 0 16px">ใบลาจะส่งให้ผู้จัดการฝ่ายอนุมัติก่อน แล้วส่งต่อฝ่ายบุคคล เมื่อฝ่ายบุคคลอนุมัติจึงนับเป็นวันลาที่ใช้แล้ว</p>
-        <div class="row">
-          <div><label>ประเภทการลา</label><select id="ftype"></select></div>
-          <div id="fmodeBox" class="hide">
-            <label>รูปแบบการลา</label>
-            <select id="fmode"><option value="day">เต็มวัน / หลายวัน</option><option value="hour">รายชั่วโมง</option></select>
-          </div>
+    <div class="card">
+      <b>ยื่นใบลา</b>
+      <p class="muted" style="font-size:13px;margin:4px 0 12px">ใบลาจะส่งให้ผู้จัดการฝ่ายอนุมัติก่อน แล้วส่งต่อฝ่ายบุคคล เมื่อฝ่ายบุคคลอนุมัติจึงนับเป็นวันลาที่ใช้แล้ว</p>
+      <div class="row">
+        <div><label>ประเภทการลา</label><select id="ftype"></select></div>
+        <div id="fmodeBox">
+          <label>รูปแบบการลา</label>
+          <select id="fmode"><option value="day">เต็มวัน / หลายวัน</option><option value="half">ครึ่งวัน</option><option value="hour">รายชั่วโมง</option></select>
         </div>
-        <div class="row">
-          <div><label>วันที่เริ่มลา</label><input type="date" id="fstart"></div>
-          <div id="fendBox"><label>ถึงวันที่</label><input type="date" id="fend"></div>
-          <div id="fhoursBox" class="hide"><label>จำนวนชั่วโมง (ไม่เกิน 8)</label><input type="number" id="fhours" min="0.5" max="8" step="0.5" placeholder="เช่น 2"></div>
-        </div>
-        <div class="row"><div style="grid-column:1/-1"><label>เหตุผล</label><textarea id="freason" rows="2" placeholder="ระบุเหตุผลการลา"></textarea></div></div>
-        <div id="fcalc" class="info hide"></div>
-        <div class="msg" id="fmsg"></div>
-        <button id="fsubmit" style="min-width: 150px;">ส่งใบลา</button>
       </div>
+      <div class="row">
+        <div><label>วันที่เริ่มลา</label><input type="date" id="fstart"></div>
+        <div id="fendBox"><label>ถึงวันที่</label><input type="date" id="fend"></div>
+        <div id="fhalfBox" class="hide"><label>ช่วงเวลา</label><select id="fhalf"><option value="AM">ครึ่งเช้า</option><option value="PM">ครึ่งบ่าย</option></select></div>
+        <div id="fhoursBox" class="hide"><label>จำนวนชั่วโมง (ไม่เกิน 8)</label><input type="number" id="fhours" min="0.5" max="8" step="0.5" placeholder="เช่น 2"></div>
+      </div>
+      <div class="row"><div style="grid-column:1/-1"><label>เหตุผล</label><textarea id="freason" rows="2" placeholder="ระบุเหตุผลการลา"></textarea></div></div>
+      <div id="fcalc" class="info hide"></div>
+      <div class="msg" id="fmsg"></div>
+      <button id="fsubmit">ส่งใบลา</button>
+    </div>
 
-      <div class="card">
-        <div class="section-title">ประวัติการลา</div>
-        <div class="wrap"><table id="hist"></table></div>
-      </div>
+    <div class="card">
+      <b>ประวัติการลา</b>
+      <div class="wrap"><table id="hist" style="margin-top:8px"></table></div>
     </div>
   </div>
 </main>
@@ -187,6 +146,7 @@ const ERR = {
   invalid_dates: "ช่วงวันที่ไม่ถูกต้อง",
   invalid_hours: "ลารายชั่วโมงทำได้เฉพาะลากิจ วันเดียว และไม่เกิน 8 ชั่วโมง",
   invalid_days:  "จำนวนวันลาไม่ถูกต้อง",
+  invalid_half:  "ลาครึ่งวันทำได้เฉพาะวันเดียว (เลือกครึ่งเช้าหรือครึ่งบ่าย)",
   cross_year:    "ลาข้ามปีไม่ได้ กรุณาแยกเป็นสองใบ",
   overlap:       "ช่วงวันที่ซ้ำกับใบลาที่มีอยู่แล้ว (รออนุมัติหรืออนุมัติแล้ว)",
   not_entitled:  "ไม่มีสิทธิ์ลาประเภทนี้",
@@ -289,7 +249,7 @@ function renderHist(rows){
           return `<tr>
           <td>${thaiDate(l.start_date)}${l.end_date!==l.start_date?` – ${thaiDate(l.end_date)}`:""}</td>
           <td>${esc(l.type_name||l.leave_type)}</td>
-          <td>${l.hours?`${fmt(Number(l.hours))} ชม.`:daysHours(Number(l.days))}</td>
+          <td>${l.half_day?`ครึ่งวัน (${l.half_day==="AM"?"เช้า":"บ่าย"})`:l.hours?`${fmt(Number(l.hours))} ชม.`:daysHours(Number(l.days))}</td>
           <td>${statusCell(l)}</td>
           <td class="muted">${esc(l.reason||"")}</td>
           <td>${canCancel?`<button class="ghost small" data-cancel="${esc(l.id)}">ยกเลิก</button>`:""}</td></tr>`; }).join("")}</tbody>`
@@ -345,20 +305,25 @@ function onFormChange(){
   FCALC = null;
   if (!CTX) return;
   const key = $("ftype").value, t = CTX.types.find(x=>x.code===key);
-  $("fmodeBox").classList.toggle("hide", !t?.hourly);
-  if (!t?.hourly) $("fmode").value = "day";
-  const hourly = $("fmode").value==="hour";
+  const hourOpt = [...$("fmode").options].find(o=>o.value==="hour");
+  hourOpt.hidden = hourOpt.disabled = !t?.hourly;        // รายชั่วโมง เฉพาะประเภทที่อนุญาต
+  if (!t?.hourly && $("fmode").value==="hour") $("fmode").value = "day";
+  const hourly = $("fmode").value==="hour", half = $("fmode").value==="half";
   $("fhoursBox").classList.toggle("hide", !hourly);
-  $("fendBox").classList.toggle("hide", hourly);
+  $("fhalfBox").classList.toggle("hide", !half);
+  $("fendBox").classList.toggle("hide", hourly || half);
 
   const box = $("fcalc"), s = $("fstart").value;
   if (!key || !s){ box.className="info hide"; return; }
-  const e = hourly ? s : ($("fend").value || s);
+  const e = (hourly || half) ? s : ($("fend").value || s);
   if (e < s){ box.className="info bad"; box.textContent="วันที่สิ้นสุดต้องไม่ก่อนวันที่เริ่ม"; return; }
   if (s.slice(0,4)!==e.slice(0,4)){ box.className="info bad"; box.textContent="ลาข้ามปีไม่ได้ กรุณาแยกเป็นสองใบ"; return; }
 
-  let days, hours = null;
-  if (hourly){
+  let days, hours = null, halfDay = null;
+  if (half){
+    if (countDays(s,s)===0){ box.className="info warn"; box.textContent="วันที่เลือกไม่ใช่วันทำงาน (เสาร์-อาทิตย์/วันหยุด)"; return; }
+    days = 0.5; halfDay = $("fhalf").value;
+  } else if (hourly){
     hours = Number($("fhours").value);
     if (!hours || hours<=0 || hours>8){ box.className="info hide"; return; }
     days = hours/HOURS_PER_DAY;
@@ -367,7 +332,7 @@ function onFormChange(){
     if (days===0){ box.className="info warn"; box.textContent="ช่วงวันที่เลือกไม่มีวันทำงาน (เสาร์-อาทิตย์/วันหยุด)"; return; }
   }
 
-  let after = null, txt = `จำนวนที่ลา: <b>${hourly?`${fmt(hours)} ชม. (${fmt(days)} วัน)`:daysHours(days)}</b>`;
+  let after = null, txt = `จำนวนที่ลา: <b>${half?`ครึ่งวัน (${halfDay==="AM"?"เช้า":"บ่าย"}) = 0.5 วัน`:hourly?`${fmt(hours)} ชม. (${fmt(days)} วัน)`:daysHours(days)}</b>`;
   if (Number(s.slice(0,4)) === CTX.year){
     const r = remainOf(key);
     after = r.remain - days;
@@ -377,7 +342,7 @@ function onFormChange(){
   }
   box.className = "info" + (after!=null && after<0 ? " warn" : "");
   box.innerHTML = txt;
-  FCALC = { days, hours, start:s, end:e, over: after!=null && after<0 };
+  FCALC = { days, hours, half:halfDay, start:s, end:e, over: after!=null && after<0 };
 }
 
 function fmsg(t,k){ const m=$("fmsg"); m.textContent=t||""; m.className="msg "+(k||""); }
@@ -394,7 +359,7 @@ async function submitLeave(){
     rows:[
       ["ประเภท", CTX.types.find(x=>x.code===$("ftype").value).name],
       ["วันที่ลา", thaiDate(FCALC.start) + (FCALC.end!==FCALC.start ? " – "+thaiDate(FCALC.end) : "")],
-      ["จำนวน", FCALC.hours!=null ? `${fmt(FCALC.hours)} ชม.` : daysHours(FCALC.days)],
+      ["จำนวน", FCALC.half ? `ครึ่งวัน (${FCALC.half==="AM"?"เช้า":"บ่าย"})` : FCALC.hours!=null ? `${fmt(FCALC.hours)} ชม.` : daysHours(FCALC.days)],
       ["เหตุผล", reason]
     ],
     okText:"ส่งใบลา", cancelText:"กลับไปแก้ไข", tone:"primary" });
@@ -404,7 +369,7 @@ async function submitLeave(){
   const hourly = FCALC.hours!=null;
   const r = await rpc("employee_submit_leave", {
     p_type: $("ftype").value, p_start: FCALC.start, p_end: FCALC.end,
-    p_hours: hourly ? FCALC.hours : null, p_days: hourly ? null : FCALC.days, p_reason: reason });
+    p_hours: hourly ? FCALC.hours : null, p_days: (hourly || FCALC.half) ? null : FCALC.days, p_half: FCALC.half || null, p_reason: reason });
   $("fsubmit").disabled = false;
   if (r.error) return fmsg(errText(r),"er");
 
@@ -433,6 +398,7 @@ $("logout").onclick = ()=>{
 };
 $("ftype").onchange = onFormChange;
 $("fmode").onchange = onFormChange;
+$("fhalf").onchange = onFormChange;
 $("fstart").onchange = ()=>{ if(!$("fend").value || $("fend").value<$("fstart").value) $("fend").value=$("fstart").value; onFormChange(); };
 ["fend","fhours"].forEach(id=>$(id).addEventListener("input", onFormChange));
 $("fsubmit").onclick = submitLeave;
