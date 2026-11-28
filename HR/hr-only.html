@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HR Management Portal</title>
+    <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Noto Sans Thai & Poppins -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -20,6 +22,8 @@
             --background: #f8fbff;
             --card-bg: #ffffff;
             --shadow: rgba(44, 140, 255, 0.15);
+            --danger: #ef4444;
+            --danger-bg: #fee2e2;
         }
         
         * {
@@ -160,6 +164,83 @@
             font-size: 0.9rem;
         }
         
+        /* Special styles for Pending Approval State */
+        .card-icon.pending {
+            background-color: var(--danger-bg);
+            color: var(--danger);
+            position: relative;
+        }
+        
+        .status-pulse-dot {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            width: 12px;
+            height: 12px;
+            background-color: var(--danger);
+            border-radius: 50%;
+            border: 2px solid var(--card-bg);
+            box-shadow: 0 0 6px rgba(239, 68, 68, 0.5);
+        }
+        
+        .status-pulse-dot::after {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 2px solid var(--danger);
+            animation: pulse-ring 1.5s cubic-bezier(0.215, 0.610, 0.355, 1) infinite;
+            transform-origin: center;
+        }
+        
+        @keyframes pulse-ring {
+            0% {
+                transform: scale(0.95);
+                opacity: 1;
+            }
+            80%, 100% {
+                transform: scale(2.2);
+                opacity: 0;
+            }
+        }
+        
+        .badge-pending {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background-color: var(--danger-bg);
+            color: #b91c1c;
+            padding: 4px 10px;
+            border-radius: 9999px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border: 1px solid #fecaca;
+            margin-top: 8px;
+        }
+        
+        .badge-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--danger);
+            border-radius: 50%;
+            display: inline-block;
+            animation: blink-dot 1.2s ease-in-out infinite;
+        }
+        
+        @keyframes blink-dot {
+            0%, 100% {
+                opacity: 0.4;
+                transform: scale(0.8);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.2);
+            }
+        }
+        
         .status-container {
             background-color: var(--card-bg);
             border-radius: 16px;
@@ -237,14 +318,13 @@
                 <i class="fas fa-laptop-code"></i>
                 <div>HR Management Portal</div>
             </div>
-            <h1>ศูนย์กลางระบบฝ่ายทรัพยากรบุุคล</h1>
-            <p class="subtitle">เข้าถึงระบบงานทรัพยากรบุคคคลทั้งหมดผ่านจุดเดียว พร้อมคู่มือและข้อมูลครบครัน</p>
+            <h1>ศูนย์กลางระบบฝ่ายทรัพยากรบุคคล</h1>
+            <p class="subtitle">เข้าถึงระบบงานทรัพยากรบุคคลทั้งหมดผ่านจุดเดียว พร้อมคู่มือและข้อมูลครบครัน</p>
         </div>
     </header>
     
     <div class="container">
         <div class="cards-container">
-
             <div class="card">
                 <div class="card-header">
                     <div class="card-icon">
@@ -253,15 +333,15 @@
                     <h2 class="card-title">ฐานข้อมูลพนักงาน</h2>
                 </div>
                 <p class="card-description">
-                    -ลงทะเบียนสำหรับการใช้งานระบบ Mouldmate Helpdesk เพื่อเข้าถึงบริการแบบออนไลน์
+                    -ลงทะเบียนสำหรับการใช้งานระบบ Mouldmate Helpdesk เพื่อเข้าถึงบริการแบบออนไลน์<br>
                     -แก้ไขข้อมูลพนักงาน
                 </p>
-                <a href="https://mouldmate.vercel.app/HR/HR-Master/HR-admin.html" target="_blank" class="card-link">
+                <a href="https://mouldmate.vercel.app/HR/HR-Master/HR-admin.html" target="_blank" rel="noopener" class="card-link">
                     เข้าดู <i class="fas fa-external-link-alt"></i>
                 </a>
             </div>
 
-             <div class="card">
+            <div class="card">
                 <div class="card-header">
                     <div class="card-icon">
                         <i class="fas fa-search"></i>
@@ -271,12 +351,12 @@
                 <p class="card-description">
                    ตรวจสอบข้อมูลรายชื่อและรหัสพนักงานทั้งหมด
                 </p>
-                <a href="https://mouldmate.vercel.app/HR/HR-Master/Search-Employees.html" target="_blank" class="card-link">
+                <a href="https://mouldmate.vercel.app/HR/HR-Master/Search-Employees.html" target="_blank" rel="noopener" class="card-link">
                     เข้าดู <i class="fas fa-external-link-alt"></i>
                 </a>
             </div>
 
-              <div class="card">
+            <div class="card">
                 <div class="card-header">
                     <div class="card-icon">
                         <i class="fas fa-warehouse"></i>
@@ -286,13 +366,12 @@
                 <p class="card-description">
                    จัดการ เพิ่ม/แก้ไข/ลบ รายชื่อแผนก
                 </p>
-                <a href="https://mouldmate.vercel.app/HR/HR-Master/hr-departments.html" target="_blank" class="card-link">
+                <a href="https://mouldmate.vercel.app/HR/HR-Master/hr-departments.html" target="_blank" rel="noopener" class="card-link">
                     เข้าดู <i class="fas fa-external-link-alt"></i>
                 </a>
             </div>
 
-
-           <div class="card">
+            <div class="card">
                 <div class="card-header">
                     <div class="card-icon">
                         <i class="fa-solid fa-video"></i>
@@ -302,7 +381,7 @@
                 <p class="card-description">
                    รายงานการทำงานกล้องวงจรปิด 
                 </p>
-                <a href="https://mouldmate.vercel.app/IT/CCTV/ChecklistCCTV.html" target="_blank" class="card-link">
+                <a href="https://mouldmate.vercel.app/IT/CCTV/ChecklistCCTV.html" target="_blank" rel="noopener" class="card-link">
                     เข้าดู <i class="fas fa-external-link-alt"></i>
                 </a>
             </div>
@@ -317,7 +396,7 @@
                 <p class="card-description">
                    จำลองผังโรงงานกล้องวงจรปิดรอบบริเวณภายนอก 
                 </p>
-                <a href="https://mouldmate.vercel.app/IT/CCTV/CCTV.html" target="_blank" class="card-link">
+                <a href="https://mouldmate.vercel.app/IT/CCTV/CCTV.html" target="_blank" rel="noopener" class="card-link">
                     เข้าดู <i class="fas fa-external-link-alt"></i>
                 </a>
             </div>
@@ -332,7 +411,7 @@
                 <p class="card-description">
                    สำรวจยานพาหนะพนักงาน
                 </p>
-                <a href="https://mouldmate.vercel.app/HR/Inspect-Vehicle/vehicle-survey-admin.html" target="_blank" class="card-link">
+                <a href="https://mouldmate.vercel.app/HR/Inspect-Vehicle/vehicle-survey-admin.html" target="_blank" rel="noopener" class="card-link">
                     เข้าดู <i class="fas fa-external-link-alt"></i>
                 </a>
             </div>
@@ -347,20 +426,31 @@
                 <p class="card-description">
                    ตรวจสอบพัสดุคงเหลือ รายงานการเบิกพัสดุและของใช้ต่างๆ 
                 </p>
-                <a href="https://mouldmate.vercel.app/HR/maid/portal.html" target="_blank" class="card-link">
+                <a href="https://mouldmate.vercel.app/HR/maid/portal.html" target="_blank" rel="noopener" class="card-link">
                     เข้าดู <i class="fas fa-external-link-alt"></i>
                 </a>
             </div>
 
-
-
-
-
-
-
-
+            <!-- Wait Approval Card with Red Pulsing Animation and Badge -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon pending">
+                        <i class="fas fa-hourglass"></i>
+                        <span class="status-pulse-dot"></span>
+                    </div>
+                    <h2 class="card-title">รออนุมัติการใช้งาน</h2>
+                </div>
+                <p class="card-description">
+                   รออนุมัติการใช้งาน <br>
+                   <span class="badge-pending">
+                       <span class="badge-dot"></span> รอการอนุมัติ
+                   </span>
+                </p>
+                <a href="https://mouldmate.vercel.app/HR/WaitApprove.html" target="_blank" rel="noopener" class="card-link" style="background-color: var(--danger); border-color: var(--danger);">
+                    เข้าดู <i class="fas fa-external-link-alt"></i>
+                </a>
+            </div>
             
-
         </div>
     </div>
     
@@ -376,7 +466,6 @@
     </footer>
     
     <script>
-        // เพิ่มฟังก์ชันเพื่อแสดงเวลาและวันที่ปัจจุบัน
         function updateDateTime() {
             const now = new Date();
             const options = { 
@@ -388,25 +477,18 @@
                 minute: '2-digit'
             };
             
-            // สำหรับภาษาไทย
             const thaiDateTime = now.toLocaleDateString('th-TH', options);
-            
-            // อัพเดทวันที่และเวลาใน footer
             const updateElement = document.querySelector('.update-time');
             if (updateElement) {
                 updateElement.textContent = `อัพเดทล่าสุด: ${thaiDateTime}`;
             }
         }
         
-        // เพิ่มเอฟเฟกต์เมื่อโหลดหน้าเว็บ
         document.addEventListener('DOMContentLoaded', function() {
-            // อัพเดทวันที่และเวลา
             updateDateTime();
             
-            // เพิ่มเอฟเฟกต์เมื่อโหลดการ์ด
             const cards = document.querySelectorAll('.card');
             cards.forEach((card, index) => {
-                // เพิ่มดีเลย์สำหรับแสดงการ์ดทีละอัน
                 card.style.opacity = '0';
                 card.style.transform = 'translateY(20px)';
                 
@@ -417,17 +499,14 @@
                 }, 100 * (index + 1));
             });
             
-            // เพิ่มการแจ้งเตือนเมื่อคลิกลิงก์
             const links = document.querySelectorAll('.card-link');
             links.forEach(link => {
                 link.addEventListener('click', function(e) {
-                    // แสดงข้อความแจ้งเตือนเมื่อเปิดลิงก์ใหม่
                     console.log(`กำลังเปิด: ${this.textContent.trim()}`);
                 });
             });
         });
         
-        // อัพเดทเวลาทุก 60 วินาที
         setInterval(updateDateTime, 60000);
     </script>
 </body>
