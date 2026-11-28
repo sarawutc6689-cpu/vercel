@@ -45,8 +45,8 @@
 <body>
 
 <script>
-const SUPABASE_URL      = "https://ppzdyvomrfiitahxwrwz.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBwemR5dm9tcmZpaXRhaHh3cnd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwMjQ0MjIsImV4cCI6MjEwNDYwMDQyMn0.iArUz6swMfwhFT_1qEvCwK1B3aiCxdWt46_FBjT6_Y0";
+const SUPABASE_URL      = "https://YOUR-PROJECT.supabase.co";
+const SUPABASE_ANON_KEY = "YOUR-ANON-KEY";
 const T = { employees:"employees", leaves:"leave_requests", holidays:"holidays" };
 const HOURS_PER_DAY = 8;
 </script>
@@ -86,10 +86,11 @@ const HOURS_PER_DAY = 8;
           <label>ประเภทการลา</label>
           <select id="type"></select>
         </div>
-        <div id="modeBox" class="hide">
+        <div id="modeBox">
           <label>รูปแบบการลา</label>
           <select id="mode">
             <option value="day">เต็มวัน / หลายวัน</option>
+            <option value="half">ครึ่งวัน</option>
             <option value="hour">รายชั่วโมง</option>
           </select>
         </div>
@@ -105,6 +106,7 @@ const HOURS_PER_DAY = 8;
       <div class="row">
         <div><label>วันที่เริ่มลา</label><input type="date" id="start"></div>
         <div id="endBox"><label>ถึงวันที่</label><input type="date" id="end"></div>
+        <div id="halfBox" class="hide"><label>ช่วงเวลา</label><select id="half"><option value="AM">ครึ่งเช้า</option><option value="PM">ครึ่งบ่าย</option></select></div>
         <div id="hoursBox" class="hide"><label>จำนวนชั่วโมง</label><input type="number" id="hours" min="0.5" step="0.5" placeholder="เช่น 2"></div>
       </div>
 
@@ -277,7 +279,7 @@ function renderHist(rows){
       rows.map(l=>`<tr>
         <td>${thaiDate(l.start_date)}${l.end_date!==l.start_date?` – ${thaiDate(l.end_date)}`:""}</td>
         <td>${esc(TYPE[l.leave_type]?.name||l.leave_type)}</td>
-        <td>${l.hours?`${fmt(Number(l.hours))} ชม.`:daysHours(Number(l.days))}</td>
+        <td>${l.half_day?`ครึ่งวัน (${l.half_day==="AM"?"เช้า":"บ่าย"})`:l.hours?`${fmt(Number(l.hours))} ชม.`:daysHours(Number(l.days))}</td>
         <td><span class="tag st-${esc(l.status)}">${esc(STATUS_TH[l.status]||l.status)}</span></td>
         <td>${l.status==="cancelled"||l.status==="rejected"?"":`<button class="ghost small" data-cancel="${esc(l.id)}">ยกเลิก</button>`}</td>
       </tr>`).join("")}</tbody>`
@@ -308,13 +310,14 @@ function countDays(s, e){
 
 function onTypeChange(){
   const t = TYPE[$("type").value];
-  const hourlyOk = !!t?.hourly;
-  $("modeBox").classList.toggle("hide", !hourlyOk);
-  if (!hourlyOk) $("mode").value = "day";
-  const hourly = $("mode").value==="hour";
+  const hourOpt = [...$("mode").options].find(o=>o.value==="hour");
+  hourOpt.hidden = hourOpt.disabled = !t?.hourly;
+  if (!t?.hourly && $("mode").value==="hour") $("mode").value = "day";
+  const hourly = $("mode").value==="hour", half = $("mode").value==="half";
   $("hoursBox").classList.toggle("hide", !hourly);
-  $("endBox").classList.toggle("hide", hourly);
-  $("optDay").classList.toggle("hide", hourly);
+  $("halfBox").classList.toggle("hide", !half);
+  $("endBox").classList.toggle("hide", hourly || half);
+  $("optDay").classList.toggle("hide", hourly || half);
   calcDays();
 }
 
@@ -322,10 +325,13 @@ function calcDays(){
   CALC = null;
   const box = $("calc");
   if (!CUR || !$("start").value){ box.classList.add("hide"); return; }
-  const key = $("type").value, hourly = $("mode").value==="hour";
-  let days = 0, hours = null, s = $("start").value, e = hourly ? s : ($("end").value || s);
+  const key = $("type").value, hourly = $("mode").value==="hour", half = $("mode").value==="half";
+  let days = 0, hours = null, halfDay = null, s = $("start").value, e = (hourly||half) ? s : ($("end").value || s);
   if (e < s){ box.className="info bad"; box.textContent="วันที่สิ้นสุดต้องไม่ก่อนวันที่เริ่ม"; return; }
-  if (hourly){
+  if (half){
+    if (countDays(s,s)===0){ box.className="info warn"; box.textContent="วันที่เลือกไม่ใช่วันทำงาน (เสาร์-อาทิตย์/วันหยุด)"; return; }
+    days = 0.5; halfDay = $("half").value;
+  } else if (hourly){
     hours = Number($("hours").value);
     if (!hours || hours<=0){ box.classList.add("hide"); return; }
     days = hours / HOURS_PER_DAY;
@@ -336,9 +342,9 @@ function calcDays(){
   const r = key && CUR ? remainOf(key) : null;
   const after = r ? r.remain - days : null;
   box.className = "info" + (after!=null && after<0 ? " warn" : "");
-  box.innerHTML = `จำนวนที่ลา: <b>${hourly?`${fmt(hours)} ชม. (${fmt(days)} วัน)`:daysHours(days)}</b>` +
+  box.innerHTML = `จำนวนที่ลา: <b>${half?`ครึ่งวัน (${halfDay==="AM"?"เช้า":"บ่าย"}) = 0.5 วัน`:hourly?`${fmt(hours)} ชม. (${fmt(days)} วัน)`:daysHours(days)}</b>` +
     (r ? `<br>คงเหลือก่อนลา ${fmt(r.remain)} วัน → หลังลา <b>${fmt(after)}</b> วัน${after<0?" ⚠ เกินสิทธิ์":""}` : "");
-  CALC = { days, hours, start:s, end:e, over: after!=null && after<0 };
+  CALC = { days, hours, half:halfDay, start:s, end:e, over: after!=null && after<0 };
 }
 
 /* ---------- บันทึก ---------- */
@@ -350,7 +356,7 @@ async function save(){
   if (!$("start").value) return setMsg("เลือกวันที่เริ่มลา","err");
   calcDays();
   if (!CALC) return setMsg("ตรวจสอบวันที่/จำนวนชั่วโมงอีกครั้ง","err");
-  if (CALC.over && !await uiConfirm({ title:"ลาเกินสิทธิ์คงเหลือ", message:"จำนวนวันลาเกินสิทธิ์ที่เหลืออยู่ ต้องการบันทึกต่อหรือไม่?", rows:[["พนักงาน", CUR.name], ["จำนวนที่ลา", CALC.hours!=null ? `${fmt(CALC.hours)} ชม.` : daysHours(CALC.days)]], okText:"บันทึกต่อ", cancelText:"กลับไปแก้ไข", tone:"warn" })) return;
+  if (CALC.over && !await uiConfirm({ title:"ลาเกินสิทธิ์คงเหลือ", message:"จำนวนวันลาเกินสิทธิ์ที่เหลืออยู่ ต้องการบันทึกต่อหรือไม่?", rows:[["พนักงาน", CUR.name], ["จำนวนที่ลา", CALC.half ? "ครึ่งวัน" : CALC.hours!=null ? `${fmt(CALC.hours)} ชม.` : daysHours(CALC.days)]], okText:"บันทึกต่อ", cancelText:"กลับไปแก้ไข", tone:"warn" })) return;
   if (CALC.start.slice(0,4) !== CALC.end.slice(0,4))
     return setMsg("ช่วงลาข้ามปี กรุณาแยกบันทึกเป็นสองรายการ","err");
 
@@ -358,11 +364,11 @@ async function save(){
   const { error } = await sb.from(T.leaves).insert({
     employee_id: CUR.id, leave_type: $("type").value,
     start_date: CALC.start, end_date: CALC.end,
-    hours: CALC.hours, days: CALC.days,
+    hours: CALC.hours, half_day: CALC.half, days: CALC.days,
     status: $("status").value, reason: $("reason").value.trim() || null
   });
   $("save").disabled = false;
-  if (error) return setMsg("บันทึกไม่สำเร็จ: "+error.message+" (ตรวจว่ารัน leave_write_policy.sql แล้ว)","err");
+  if (error) return setMsg("บันทึกไม่สำเร็จ: "+error.message+" (ตรวจว่ารัน approval_flow.sql และ half_day.sql แล้ว)","err");
   setMsg("บันทึกการลาเรียบร้อย","ok");
   $("reason").value=""; $("hours").value=""; 
   refreshEmp();
@@ -389,6 +395,7 @@ $("empSearch").oninput = fillEmpSelect;
 $("emp").onchange = onEmpChange;
 $("type").onchange = ()=>{ onTypeChange(); };
 $("mode").onchange = onTypeChange;
+$("half").onchange = calcDays;
 $("start").onchange = ()=>{ if(!$("end").value || $("end").value<$("start").value) $("end").value=$("start").value; refreshEmp(); };
 ["end","hours","countSat","skipHol"].forEach(id=>$(id).addEventListener("input",calcDays));
 $("save").onclick = save;
