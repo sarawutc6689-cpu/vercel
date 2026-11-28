@@ -111,7 +111,7 @@ const HOURS_PER_DAY = 8;
       </div>
 
       <div class="row" id="optDay">
-        <label class="chk"><input type="checkbox" id="countSat"> นับวันเสาร์เป็นวันทำงาน</label>
+        <label class="chk"><input type="checkbox" id="countSat" checked> นับวันเสาร์เป็นวันทำงาน</label>
         <label class="chk"><input type="checkbox" id="skipHol" checked> ไม่นับวันหยุดนักขัตฤกษ์ (ตาราง holidays)</label>
       </div>
 
@@ -329,7 +329,7 @@ function calcDays(){
   let days = 0, hours = null, halfDay = null, s = $("start").value, e = (hourly||half) ? s : ($("end").value || s);
   if (e < s){ box.className="info bad"; box.textContent="วันที่สิ้นสุดต้องไม่ก่อนวันที่เริ่ม"; return; }
   if (half){
-    if (countDays(s,s)===0){ box.className="info warn"; box.textContent="วันที่เลือกไม่ใช่วันทำงาน (เสาร์-อาทิตย์/วันหยุด)"; return; }
+    if (countDays(s,s)===0){ box.className="info warn"; box.textContent="วันที่เลือกไม่ใช่วันทำงาน (วันอาทิตย์/วันหยุด)"; return; }
     days = 0.5; halfDay = $("half").value;
   } else if (hourly){
     hours = Number($("hours").value);
@@ -337,7 +337,7 @@ function calcDays(){
     days = hours / HOURS_PER_DAY;
   } else {
     days = countDays(s, e);
-    if (days===0){ box.className="info warn"; box.textContent="ช่วงวันที่เลือกไม่มีวันทำงาน (เสาร์-อาทิตย์/วันหยุด)"; return; }
+    if (days===0){ box.className="info warn"; box.textContent="ช่วงวันที่เลือกไม่มีวันทำงาน (วันอาทิตย์/วันหยุด)"; return; }
   }
   const r = key && CUR ? remainOf(key) : null;
   const after = r ? r.remain - days : null;
