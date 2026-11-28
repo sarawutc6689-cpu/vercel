@@ -1,28 +1,29 @@
 <!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ผู้จัดการ · อนุมัติออกนอกสถานที่</title><link rel="stylesheet" href="assets/style.css"></head><body><main>
-<h1>อนุมัติออกนอกสถานที่</h1>
+<title>ผู้จัดการ · อนุมัติออกนอกสถานที่</title><link rel="stylesheet" href="assets/style.css"></head><body><header class="top"><h1>อนุมัติออกนอกสถานที่</h1><p>สำหรับผู้จัดการ</p></header><main>
 <form id="login" class="card">
+  <h2>เข้าสู่ระบบ</h2>
   <label>อีเมล<input id="email" type="email" autocomplete="username" required></label>
   <label>รหัสผ่าน (วันเริ่มงาน เช่น 01112569)<input id="pass" type="password" autocomplete="current-password" required></label>
   <button>เข้าสู่ระบบ</button><p class="msg" id="loginMsg"></p>
 </form>
 <section id="app" hidden>
-  <div class="actions"><button class="ghost" data-view="pending">รออนุมัติ</button><button class="ghost" data-view="history">ประวัติ</button></div>
+  <div class="tabs"><button class="tab" data-view="pending">รออนุมัติ</button><button class="tab" data-view="history">ประวัติ</button></div>
   <p class="msg" id="msg" aria-live="polite"></p><div id="list"></div>
 </section></main>
 <script src="assets/app.js"></script>
 <script>
 let T = '', view = 'pending';
 async function load() {
+  document.querySelectorAll('[data-view]').forEach(b => b.setAttribute('aria-pressed', b.dataset.view === view));
   const r = await rpc('outing_manager_list', { p_view: view }, T);
-  $('list').innerHTML = r.rows.map(o => `<div class="card item"><b>${esc(o.full_name)} (${esc(o.employee_code)})</b>
+  $('list').innerHTML = r.rows.map(o => `<div class="card item"><div class="top-row"><b>${esc(o.full_name)} (${esc(o.employee_code)})</b><span class="badge s-${esc(o.status)}">${esc(STATUS[o.status])}</span></div>
     <small>${esc(o.doc_no)} · ${esc(TYPE[o.outing_type])}</small>
     <div>${esc(o.destination)} — ${esc(o.reason)}</div>
-    <small>${esc(o.out_date)} ${hm(o.time_out)}–${hm(o.time_back)}</small>
+    <small>${esc(o.out_date)} · ${hm(o.time_out)}–${hm(o.time_back)} น.</small>
     ${o.status === 'pending_manager'
       ? `<div class="actions"><input id="n_${o.id}" placeholder="หมายเหตุ (จำเป็นถ้าไม่อนุมัติ)">
          <button data-id="${o.id}" data-ok="1">อนุมัติ</button><button class="bad" data-id="${o.id}" data-ok="0">ไม่อนุมัติ</button></div>`
-      : `<div class="s-${esc(o.status)}">${esc(STATUS[o.status])}${o.manager_note ? ' — ' + esc(o.manager_note) : ''}</div>`}</div>`).join('')
+      : (o.manager_note ? `<div class="note">หมายเหตุ: ${esc(o.manager_note)}</div>` : '')}</div>`).join('')
     || `<p class="muted">${view === 'pending' ? 'ไม่มีคำขอที่รออนุมัติ' : 'ยังไม่มีประวัติ'}</p>`;
 }
 const run = async f => { $('msg').textContent = ''; try { await f(); } catch (e) { $('msg').textContent = e.message; } };
