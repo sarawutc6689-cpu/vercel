@@ -1,5 +1,5 @@
 // ใส่ Project URL และ anon (public) key เท่านั้น — ห้ามใส่ service_role key
-const SB = { url: 'https://YOUR-PROJECT.supabase.co', key: 'YOUR_ANON_KEY' };
+const SB = { url: 'https://ppzdyvomrfiitahxwrwz.supabase.co', key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBwemR5dm9tcmZpaXRhaHh3cnd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwMjQ0MjIsImV4cCI6MjEwNDYwMDQyMn0.iArUz6swMfwhFT_1qEvCwK1B3aiCxdWt46_FBjT6_Y0' };
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 async function rpc(fn, args, token) {
