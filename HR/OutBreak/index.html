@@ -70,7 +70,7 @@ async function load() {
   $('who').textContent = r.emp;
   $('list').innerHTML = r.rows.map(o => `<div class="card item"><div class="top-row"><b>${esc(o.destination)}</b><span class="badge s-${esc(o.status)}">${esc(STATUS[o.status] || o.status)}</span></div>
     <small>${esc(o.doc_no)} · ${esc(TYPE[o.outing_type])}</small>
-    <small>${esc(o.out_date)} · ${hm(o.time_out)}–${hm(o.time_back)} น.</small>${o.manager_note ? `<div class="note">หมายเหตุ: ${esc(o.manager_note)}</div>` : ''}</div>`).join('')
+    <small>${esc(o.out_date)} · ${hm(o.time_out)}–${hm(o.time_back)} น.</small>${(o.hr_note || o.manager_note) ? `<div class="note">หมายเหตุ: ${esc((o.hr_note || o.manager_note))}</div>` : ''}</div>`).join('')
     || '<p class="muted">ยังไม่มีคำขอ กรอกฟอร์มด้านบนเพื่อส่งคำขอแรก</p>';
 }
 $('login').onsubmit = async e => {
