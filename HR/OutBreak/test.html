@@ -1,0 +1,665 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>ขออนุญาตออกนอกสถานที่</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap');
+    
+    :root {
+      --bg: #f5f9ff;
+      --card: #ffffff;
+      --ink: #0f1e36;
+      --mute: #64748b;
+      --line: #e2eaf8;
+      --brand: #2563eb;
+      --brand-d: #1d4ed8;
+      --brand-light: #eff6ff;
+      --tint: #e0f2fe;
+      --bad: #e11d48;
+      --bad-light: #fff1f2;
+      --ok: #10b981;
+      --ok-light: #ecfdf5;
+      --pending: #f59e0b;
+      --pending-light: #fef3c7;
+      --shadow: 0 10px 30px -10px rgba(37, 99, 235, 0.08), 0 1px 3px rgba(0, 0, 0, 0.02);
+      --radius: 16px;
+      --font: "Noto Sans Thai", "Sarabun", system-ui, -apple-system, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--font);
+      line-height: 1.6;
+      font-size: 15px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Simulation Controller Widget */
+    .sim-widget {
+      max-width: 640px;
+      margin: 16px auto 0;
+      padding: 0 16px;
+    }
+
+    .sim-card {
+      background: #ffffff;
+      border: 1px dashed #cbd5e1;
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: var(--mute);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+    }
+
+    .sim-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 600;
+      color: #334155;
+      margin-bottom: 8px;
+    }
+
+    .sim-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .sim-btn {
+      font-family: inherit;
+      background: var(--brand-light);
+      border: 1px solid #bfdbfe;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      color: var(--brand);
+      font-weight: 500;
+      transition: all 0.15s ease;
+    }
+
+    .sim-btn:hover {
+      background: var(--brand);
+      color: #ffffff;
+      border-color: var(--brand);
+    }
+
+    .sim-btn-reset {
+      background: #f1f5f9;
+      border-color: #cbd5e1;
+      color: #475569;
+    }
+
+    .sim-btn-reset:hover {
+      background: #e2e8f0;
+      color: #1e293b;
+    }
+
+    /* Top Premium Header */
+    .top {
+      background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+      color: #ffffff;
+      padding: 40px 16px 72px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .top::before {
+      content: "";
+      position: absolute;
+      top: -50%;
+      left: -20%;
+      width: 140%;
+      height: 140%;
+      background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .top > * {
+      max-width: 640px;
+      margin-left: auto;
+      margin-right: auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    .top h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      margin-bottom: 6px;
+    }
+
+    .top p {
+      opacity: 0.9;
+      font-size: 0.95rem;
+      font-weight: 400;
+    }
+
+    /* Main Container layout */
+    main {
+      position: relative;
+      max-width: 640px;
+      margin: -48px auto 0;
+      padding: 0 16px 56px;
+    }
+
+    /* Typography & Headers */
+    h2 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 16px;
+    }
+
+    main > h2, #app > h2 {
+      margin: 32px 0 14px;
+      font-size: 1.15rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    /* Input & Labels styling */
+    label {
+      display: block;
+      margin-bottom: 16px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: #344054;
+    }
+
+    input, select, textarea {
+      display: block;
+      width: 100%;
+      margin-top: 6px;
+      padding: 12px 14px;
+      font: inherit;
+      color: var(--ink);
+      background: #ffffff;
+      border: 1px solid #d0d5dd;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+      box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--brand);
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+    }
+
+    .row {
+      display: flex;
+      gap: 12px;
+    }
+
+    .row > label {
+      flex: 1;
+      min-width: 0;
+    }
+
+    /* Buttons and controls */
+    button {
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 600;
+      padding: 12px 20px;
+      border: 0;
+      border-radius: 8px;
+      background: var(--brand);
+      color: #ffffff;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
+    }
+
+    button:hover {
+      background: var(--brand-d);
+    }
+
+    form button {
+      width: 100%;
+    }
+
+    button.bad {
+      background: #ffffff;
+      color: var(--bad);
+      border: 1px solid var(--bad);
+    }
+
+    button.bad:hover {
+      background: var(--bad-light);
+    }
+
+    button.link {
+      width: auto;
+      background: none;
+      color: var(--brand);
+      padding: 0;
+      font-weight: 500;
+      text-decoration: none;
+      box-shadow: none;
+    }
+
+    button.link:hover {
+      color: var(--brand-d);
+      text-decoration: underline;
+    }
+
+    :focus-visible {
+      outline: 3px solid rgba(37, 99, 235, 0.35);
+      outline-offset: 2px;
+    }
+
+    /* Message / Status banner */
+    .msg {
+      font-size: 0.9rem;
+      transition: all 0.2s ease;
+    }
+
+    .msg:not(:empty) {
+      margin-top: 14px;
+      padding: 12px 16px;
+      border-radius: 8px;
+      background-color: var(--brand-light);
+      border: 1px solid #bfdbfe;
+      color: var(--brand);
+    }
+
+    #loginMsg:not(:empty) {
+      background-color: var(--bad-light);
+      border-color: #fecdd3;
+      color: var(--bad);
+    }
+
+    .muted {
+      color: var(--mute);
+      font-size: 0.9rem;
+    }
+
+    a {
+      color: var(--brand);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    /* User Greeting Info section */
+    .hello {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--brand-light);
+      border: 1px solid #dbeafe;
+      border-radius: 12px;
+      padding: 12px 16px;
+      margin-bottom: 20px;
+    }
+
+    .hello span {
+      font-weight: 500;
+      color: var(--brand);
+    }
+
+    /* Request Item layout (Modern Dashboard lists) */
+    .item {
+      display: grid;
+      gap: 4px;
+      border-left: 4px solid var(--brand);
+    }
+
+    .item b {
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    .item small {
+      color: var(--mute);
+      font-size: 0.82rem;
+    }
+
+    .item .top-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: start;
+    }
+
+    /* Badge & status styling */
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    /* Status variations mapped properly */
+    .badge.s-pending, .badge.s-pending_manager, .badge.s-pending_hr {
+      background: var(--pending-light);
+      color: #92400e;
+    }
+
+    .badge.s-approved {
+      background: var(--ok-light);
+      color: #065f46;
+    }
+
+    .badge.s-rejected {
+      background: var(--bad-light);
+      color: #9f1239;
+    }
+
+    .badge.s-cancelled {
+      background: #f1f5f9;
+      color: #475569;
+    }
+
+    .note {
+      font-size: 0.85rem;
+      color: var(--mute);
+      margin-top: 8px;
+      padding-top: 6px;
+      border-top: 1px dashed var(--line);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Simulation Controller for Premium Demo experience -->
+  <div class="sim-widget">
+    <div class="sim-card">
+      <div class="sim-header">
+        <span>🛠️ แผงควบคุมการทำงานจำลอง (Simulation Tools)</span>
+      </div>
+      <div class="sim-actions">
+        <button type="button" class="sim-btn" onclick="simSetStatus('approved')">อนุมัติใบขออนุภาคล่าสุด</button>
+        <button type="button" class="sim-btn" onclick="simSetStatus('rejected', 'เนื่องจากมีประชุมทับซ้อน')">ปฏิเสธใบขออนุภาคล่าสุด</button>
+        <button type="button" class="sim-btn sim-btn-reset" onclick="simReset()">รีเซ็ตข้อมูลเริ่มต้น</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Header Section -->
+  <header class="top">
+    <h1>ขออนุญาตออกนอกสถานที่</h1>
+    <p>ส่งคำขอและติดตามสถานะได้ในที่เดียว</p>
+  </header>
+
+  <main>
+    <!-- Login Form -->
+    <form id="login" class="card">
+      <h2>เข้าสู่ระบบพนักงาน</h2>
+      <label>
+        รหัสพนักงาน
+        <input id="code" autocomplete="username" placeholder="ระบุรหัสพนักงานของคุณ (เช่น EMP101)" required>
+      </label>
+      <label>
+        รหัสผ่าน (วันเริ่มงาน เช่น 01112569)
+        <input id="pass" type="password" autocomplete="current-password" placeholder="••••••••" required>
+      </label>
+      <button>เข้าสู่ระบบ</button>
+      <p class="msg" id="loginMsg"></p>
+      <p class="muted" style="margin-top: 16px; text-align: center;">ผู้จัดการอนุมัติที่ <a href="#" onclick="alert('แผงควบคุมจำลองด้านบนสามารถใช้เพื่อจำลองการกระทำอนุมัติ/ปฏิเสธของผู้จัดการได้ทันทีครับ'); return false;">หน้าผู้จัดการ</a></p>
+    </form>
+
+    <!-- Main App Panel -->
+    <section id="app" hidden>
+      <p class="hello">
+        <span>สวัสดี <b id="who"></b></span> 
+        <button type="button" class="link" id="out">ออกจากระบบ</button>
+      </p>
+
+      <form id="f" class="card">
+        <h2>แบบขออนุญาต</h2>
+        
+        <label>
+          ประเภท
+          <select id="type">
+            <option value="official">ไปราชการ/งานบริษัท</option>
+            <option value="personal">ธุระส่วนตัว</option>
+          </select>
+        </label>
+
+        <label>
+          สถานที่ที่ไป
+          <input id="dest" placeholder="ระบุปลายทางหรือชื่อสถานที่" required>
+        </label>
+
+        <label>
+          เหตุผล
+          <textarea id="reason" rows="2" placeholder="ระบุความจำเป็นโดยสังเขป" required></textarea>
+        </label>
+
+        <label>
+          วันที่
+          <input id="date" type="date" required>
+        </label>
+
+        <div class="row">
+          <label>
+            เวลาออก
+            <input id="tout" type="time" required>
+          </label>
+          <label>
+            เวลากลับ
+            <input id="tback" type="time" required>
+          </label>
+        </div>
+
+        <button>ส่งคำขอ</button>
+        <p class="msg" id="fMsg" aria-live="polite"></p>
+      </form>
+
+      <h2>คำขอของฉัน</h2>
+      <div id="list"></div>
+    </section>
+  </main>
+
+  <script>
+    // Traditional DOM helpers
+    const $ = id => document.getElementById(id);
+    const esc = str => String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    const hm = time => time;
+
+    // Database configurations
+    const TYPE = {
+      official: 'ไปราชการ/งานบริษัท',
+      personal: 'ธุระส่วนตัว'
+    };
+
+    const STATUS = {
+      pending: 'รออนุมัติ',
+      pending_manager: 'รออนุมัติ',
+      pending_hr: 'รออนุมัติ',
+      approved: 'อนุมัติแล้ว',
+      rejected: 'ไม่อนุมัติ',
+      cancelled: 'ยกเลิกแล้ว'
+    };
+
+    let C = '', P = '';
+
+    // Mock local memory state
+    let database = {
+      user: {
+        code: 'EMP101',
+        pass: '01112569',
+        name: 'คุณ สมชาย ยินดีดี'
+      },
+      requests: [
+        {
+          doc_no: 'OUT-2566-0002',
+          destination: 'สำนักงานใหญ่ พระราม 9',
+          outing_type: 'official',
+          out_date: '2025-11-05',
+          time_out: '13:00',
+          time_back: '16:30',
+          status: 'approved',
+          manager_note: 'เข้าประชุมได้'
+        },
+        {
+          doc_no: 'OUT-2566-0001',
+          destination: 'ธนาคารไทยพาณิชย์ สาขาใกล้เคียง',
+          outing_type: 'personal',
+          out_date: '2025-11-02',
+          time_out: '10:00',
+          time_back: '11:00',
+          status: 'rejected',
+          manager_note: 'ให้เลื่อนไปทำหลังเวลางาน'
+        }
+      ]
+    };
+
+    const INITIAL_REQUESTS = JSON.stringify(database.requests);
+
+    // Mock RPC mechanism
+    async function rpc(method, params) {
+      return new Promise((resolve, reject) => {
+        setTimeout(() => {
+          if (method === 'outing_my_list') {
+            if (params.p_code === database.user.code && params.p_pass === database.user.pass) {
+              resolve({
+                emp: database.user.name,
+                rows: database.requests
+              });
+            } else {
+              reject(new Error('รหัสพนักงานหรือรหัสผ่านไม่ถูกต้อง (รหัสพนักงาน: EMP101, รหัสผ่าน: 01112569)'));
+            }
+          } else if (method === 'outing_submit') {
+            if (params.p_code === database.user.code && params.p_pass === database.user.pass) {
+              const doc_no = 'OUT-2566-00' + (database.requests.length + 3);
+              const newReq = {
+                doc_no: doc_no,
+                destination: params.p_dest,
+                outing_type: params.p_type,
+                out_date: params.p_date,
+                time_out: params.p_out,
+                time_back: params.p_back,
+                status: 'pending',
+                manager_note: ''
+              };
+              database.requests.unshift(newReq);
+              resolve({ doc_no: doc_no });
+            } else {
+              reject(new Error('เซสชันไม่ถูกต้อง กรุณาเข้าสู่ระบบใหม่'));
+            }
+          }
+        }, 300);
+      });
+    }
+
+    const setDate = () => { 
+      $('date').min = $('date').value = new Date().toLocaleDateString('sv'); 
+    };
+
+    async function load() {
+      const r = await rpc('outing_my_list', { p_code: C, p_pass: P });
+      $('who').textContent = r.emp;
+      $('list').innerHTML = r.rows.map(o => `
+        <div class="card item">
+          <div class="top-row">
+            <b>${esc(o.destination)}</b>
+            <span class="badge s-${esc(o.status)}">${esc(STATUS[o.status] || o.status)}</span>
+          </div>
+          <small>${esc(o.doc_no)} · ${esc(TYPE[o.outing_type])}</small>
+          <small>${esc(o.out_date)} · ${hm(o.time_out)}–${hm(o.time_back)} น.</small>
+          ${o.manager_note ? `<div class="note">หมายเหตุ: ${esc(o.manager_note)}</div>` : ''}
+        </div>
+      `).join('') || '<p class="muted">ยังไม่มีคำขอ กรอกฟอร์มด้านบนเพื่อส่งคำขอแรก</p>';
+    }
+
+    $('login').onsubmit = async e => {
+      e.preventDefault(); 
+      C = $('code').value.trim(); 
+      P = $('pass').value; 
+      $('loginMsg').textContent = '';
+      try { 
+        await load(); 
+        $('login').hidden = true; 
+        $('app').hidden = false; 
+        setDate(); 
+      }
+      catch (err) { 
+        $('loginMsg').textContent = err.message; 
+      }
+    };
+
+    $('f').onsubmit = async e => {
+      e.preventDefault(); 
+      const g = n => $(n).value; 
+      $('fMsg').textContent = '';
+      try {
+        const r = await rpc('outing_submit', { 
+          p_code: C, 
+          p_pass: P, 
+          p_type: g('type'), 
+          p_dest: g('dest'),
+          p_reason: g('reason'), 
+          p_date: g('date'), 
+          p_out: g('tout'), 
+          p_back: g('tback') 
+        });
+        e.target.reset(); 
+        setDate(); 
+        await load(); 
+        $('fMsg').textContent = 'ส่งคำขอแล้วสำเร็จ! เลขที่ใบคำขอของคุณคือ ' + r.doc_no;
+      } catch (err) { 
+        $('fMsg').textContent = err.message; 
+      }
+    };
+
+    $('out').onclick = () => { 
+      C = P = ''; 
+      location.reload(); 
+    };
+
+    // Simulation Tools Functions
+    window.simSetStatus = function(status, note = '') {
+      if (database.requests.length > 0) {
+        database.requests[0].status = status;
+        database.requests[0].manager_note = note;
+        if (C && P) load();
+        alert('เปลี่ยนสถานะใบขออนุภาคล่าสุดเป็น "' + STATUS[status] + '" สำเร็จแล้ว!');
+      } else {
+        alert('ยังไม่มีใบคำขอในระบบ กรุณาส่งคำขอผ่านฟอร์มก่อนทำการจำลองครับ');
+      }
+    };
+
+    window.simReset = function() {
+      database.requests = JSON.parse(INITIAL_REQUESTS);
+      if (C && P) load();
+      alert('รีเซ็ตข้อมูลทั้งหมดกลับสู่ค่าเริ่มต้นเรียบร้อยแล้ว');
+    };
+  </script>
+</body>
+</html>
